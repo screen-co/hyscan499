@@ -27,6 +27,8 @@
 #define MAX_COLOR_MAPS                 3
 #define BLACK_BG                       0xff000000
 
+#define PF_TRACK_PREFIX                ".pf"
+
 enum
 {
   DATE_SORT_COLUMN,
@@ -240,7 +242,7 @@ tracks_changed (HyScanDBInfo *db_info,
       //forward_look_info = g_hash_table_lookup (track_info->sources, GINT_TO_POINTER (HYSCAN_SOURCE_FORWARD_LOOK));
       //if (!forward_look_info || !forward_look_info->raw)
       //  continue;
-      if (g_str_has_prefix (track_info->name, "pf"))
+      if (g_str_has_prefix (track_info->name, PF_TRACK_PREFIX))
         continue;
 
       /* Добавляем в список галсов. */
@@ -293,6 +295,7 @@ track_changed (GtkTreeView *list,
   GtkTreePath *path = NULL;
   GtkTreeIter iter;
   const gchar *track_name;
+  gchar *pftrack;
 
   /* Определяем название нового галса. */
   gtk_tree_view_get_cursor (list, &path, NULL);
@@ -307,13 +310,14 @@ track_changed (GtkTreeView *list,
   hyscan_forward_look_player_open (global->GFL.fl_player, global->db, global->project_name, track_name, TRUE);
   hyscan_gtk_waterfall_open (global->GSS.wf, global->db, global->project_name, track_name, TRUE);
 
-  gchar *pftrack = g_strdup_printf ("pf%s", track_name);
+  pftrack = g_strdup_printf (PF_TRACK_PREFIX "%s", track_name);
   hyscan_gtk_waterfall_open (global->GPF.wf, global->db, global->project_name, pftrack, TRUE);
+  g_free (pftrack);
 
   g_value_unset (&value);
 
   /* Режим отображения. */
-  if (gtk_switch_get_state (global->gui.start_stop_switch))
+  if (global->gui.start_stop_switch != NULL && gtk_switch_get_state (global->gui.start_stop_switch))
     {
       hyscan_forward_look_player_real_time (global->GFL.fl_player);
       hyscan_gtk_waterfall_drawer_automove (HYSCAN_GTK_WATERFALL_DRAWER (global->GSS.wf), TRUE);
@@ -614,7 +618,7 @@ signal_set (Global *global,
 /* Функция устанавливает параметры ВАРУ. */
 static gboolean
 tvg_set (Global  *global,
-         gdouble  gain0,
+         gdouble *gain0,
          gdouble  step)
 {
   gchar *gain_text, *step_text;
@@ -629,13 +633,13 @@ tvg_set (Global  *global,
     {
       case W_SIDESCAN:
         hyscan_tvg_control_get_gain_range (global->GSS.sonar.tvg_ctl, STARBOARD, &min_gain, &max_gain);
-        gain0 = CLAMP (gain0, min_gain, max_gain);
-        status = hyscan_tvg_control_set_linear_db (global->GSS.sonar.tvg_ctl, STARBOARD, gain0, step);
+        *gain0 = CLAMP (*gain0, min_gain, max_gain);
+        status = hyscan_tvg_control_set_linear_db (global->GSS.sonar.tvg_ctl, STARBOARD, *gain0, step);
         hyscan_return_val_if_fail (status, FALSE);
 
         hyscan_tvg_control_get_gain_range (global->GSS.sonar.tvg_ctl, PORTSIDE, &min_gain, &max_gain);
-        gain0 = CLAMP (gain0, min_gain, max_gain);
-        status = hyscan_tvg_control_set_linear_db (global->GSS.sonar.tvg_ctl, PORTSIDE, gain0, step);
+        *gain0 = CLAMP (*gain0, min_gain, max_gain);
+        status = hyscan_tvg_control_set_linear_db (global->GSS.sonar.tvg_ctl, PORTSIDE, *gain0, step);
         hyscan_return_val_if_fail (status, FALSE);
 
         tvg_value = global->GSS.gui.tvg_value;
@@ -644,10 +648,8 @@ tvg_set (Global  *global,
 
       case W_PROFILER:
         hyscan_tvg_control_get_gain_range (global->GPF.sonar.tvg_ctl, PROFILER, &min_gain, &max_gain);
-        g_message ("GPF tvg_set: min max req %f %f %f", min_gain, max_gain, gain0);
-        gain0 = CLAMP (gain0, min_gain, max_gain);
-        status = hyscan_tvg_control_set_linear_db (global->GPF.sonar.tvg_ctl, PROFILER, gain0, step);
-        g_message ("GPF tvg_set: status %i", status);
+        *gain0 = CLAMP (*gain0, min_gain, max_gain);
+        status = hyscan_tvg_control_set_linear_db (global->GPF.sonar.tvg_ctl, PROFILER, *gain0, step);
         hyscan_return_val_if_fail (status, FALSE);
 
         tvg_value = global->GPF.gui.tvg_value;
@@ -655,7 +657,9 @@ tvg_set (Global  *global,
         break;
 
       case W_FORWARDL:
-        status = hyscan_tvg_control_set_linear_db (global->GFL.sonar.tvg_ctl, FORWARDLOOK, gain0, step);
+        hyscan_tvg_control_get_gain_range (global->GFL.sonar.tvg_ctl, FORWARDLOOK, &min_gain, &max_gain);
+        *gain0 = CLAMP (*gain0, min_gain, max_gain);
+        status = hyscan_tvg_control_set_linear_db (global->GFL.sonar.tvg_ctl, FORWARDLOOK, *gain0, step);
         hyscan_return_val_if_fail (status, FALSE);
 
         tvg_value = global->GFL.gui.tvg_value;
@@ -666,7 +670,7 @@ tvg_set (Global  *global,
         return FALSE;
     }
 
-  gain_text = g_strdup_printf ("<small><b>%.1f dB</b></small>", gain0);
+  gain_text = g_strdup_printf ("<small><b>%.1f dB</b></small>", *gain0);
   gtk_label_set_markup (tvg0_value, gain_text);
   g_free (gain_text);
   step_text = g_strdup_printf ("<small><b>%.1f dB</b></small>", step);
@@ -989,12 +993,12 @@ live_view (GtkWidget  *widget,
   GtkSwitch *live_view;
   HyScanGtkWaterfallDrawer *wfd;
 
-  if (widget == global->GSS.live_view)
+  if (GTK_WIDGET (widget) == GTK_WIDGET (global->GSS.live_view))
     {
       live_view = global->GSS.live_view;
       wfd = HYSCAN_GTK_WATERFALL_DRAWER (global->GSS.wf);
     }
-  else if (widget == global->GPF.live_view)
+  else if (GTK_WIDGET (widget) == GTK_WIDGET (global->GPF.live_view))
     {
       live_view = global->GPF.live_view;
       wfd = HYSCAN_GTK_WATERFALL_DRAWER (global->GPF.wf);
@@ -1017,13 +1021,11 @@ live_view_off (GtkWidget  *widget,
                gboolean    state,
                Global     *global)
 {
-  GtkSwitch *sw;
-
-  if (widget == global->GSS.wf)
+  if (GTK_WIDGET (widget) == GTK_WIDGET (global->GSS.wf))
     {
       gtk_switch_set_active (global->GSS.live_view, state);
     }
-  else if (widget == global->GPF.wf)
+  else if (GTK_WIDGET (widget) == GTK_WIDGET (global->GPF.wf))
     {
       gtk_switch_set_active (global->GPF.live_view, state);
     }
@@ -1095,19 +1097,19 @@ tvg0_up (GtkWidget *widget,
     {
     case W_FORWARDL:
       cur_gain0 = global->GFL.sonar.cur_gain0 + 0.5;
-      if (tvg_set (global, cur_gain0, global->GFL.sonar.cur_gain_step))
+      if (tvg_set (global, &cur_gain0, global->GFL.sonar.cur_gain_step))
         global->GFL.sonar.cur_gain0 = cur_gain0;
       break;
 
     case W_SIDESCAN:
       cur_gain0 = global->GSS.sonar.cur_gain0 + 0.5;
-      if (tvg_set (global, cur_gain0, global->GSS.sonar.cur_gain_step))
+      if (tvg_set (global, &cur_gain0, global->GSS.sonar.cur_gain_step))
         global->GSS.sonar.cur_gain0 = cur_gain0;
       break;
 
     case W_PROFILER:
       cur_gain0 = global->GPF.sonar.cur_gain0 + 0.5;
-      if (tvg_set (global, cur_gain0, global->GPF.sonar.cur_gain_step))
+      if (tvg_set (global, &cur_gain0, global->GPF.sonar.cur_gain_step))
         global->GPF.sonar.cur_gain0 = cur_gain0;
       break;
     }
@@ -1118,25 +1120,24 @@ tvg0_down (GtkWidget *widget,
            Global    *global)
 {
   gdouble cur_gain0;
-  g_message ("tvg0_down");
 
   switch (global->sonar_selector)
     {
     case W_FORWARDL:
       cur_gain0 = global->GFL.sonar.cur_gain0 - 0.5;
-      if (tvg_set (global, cur_gain0, global->GFL.sonar.cur_gain_step))
+      if (tvg_set (global, &cur_gain0, global->GFL.sonar.cur_gain_step))
         global->GFL.sonar.cur_gain0 = cur_gain0;
       break;
 
     case W_SIDESCAN:
       cur_gain0 = global->GSS.sonar.cur_gain0 - 0.5;
-      if (tvg_set (global, cur_gain0, global->GSS.sonar.cur_gain_step))
+      if (tvg_set (global, &cur_gain0, global->GSS.sonar.cur_gain_step))
         global->GSS.sonar.cur_gain0 = cur_gain0;
       break;
 
     case W_PROFILER:
       cur_gain0 = global->GPF.sonar.cur_gain0 - 0.5;
-      if (tvg_set (global, cur_gain0, global->GPF.sonar.cur_gain_step))
+      if (tvg_set (global, &cur_gain0, global->GPF.sonar.cur_gain_step))
         global->GPF.sonar.cur_gain0 = cur_gain0;
     }
 }
@@ -1146,25 +1147,24 @@ tvg_up (GtkWidget *widget,
         Global    *global)
 {
   gdouble cur_gain_step;
-  g_message ("tvg_up");
 
   switch (global->sonar_selector)
     {
     case W_FORWARDL:
       cur_gain_step = global->GFL.sonar.cur_gain_step + 2.5;
-      if (tvg_set (global, global->GFL.sonar.cur_gain0, cur_gain_step))
+      if (tvg_set (global, &global->GFL.sonar.cur_gain0, cur_gain_step))
         global->GFL.sonar.cur_gain_step = cur_gain_step;
       break;
 
     case W_SIDESCAN:
       cur_gain_step = global->GSS.sonar.cur_gain_step + 2.5;
-      if (tvg_set (global, global->GSS.sonar.cur_gain0, cur_gain_step))
+      if (tvg_set (global, &global->GSS.sonar.cur_gain0, cur_gain_step))
         global->GSS.sonar.cur_gain_step = cur_gain_step;
       break;
 
     case W_PROFILER:
       cur_gain_step = global->GPF.sonar.cur_gain_step + 2.5;
-      if (tvg_set (global, global->GPF.sonar.cur_gain0, cur_gain_step))
+      if (tvg_set (global, &global->GPF.sonar.cur_gain0, cur_gain_step))
         global->GPF.sonar.cur_gain_step = cur_gain_step;
     }
 }
@@ -1174,25 +1174,24 @@ tvg_down (GtkWidget *widget,
           Global    *global)
 {
   gdouble cur_gain_step;
-  g_message ("tvg_down");
 
   switch (global->sonar_selector)
     {
     case W_FORWARDL:
       cur_gain_step = global->GFL.sonar.cur_gain_step - 2.5;
-      if (tvg_set (global, global->GFL.sonar.cur_gain0, cur_gain_step))
+      if (tvg_set (global, &global->GFL.sonar.cur_gain0, cur_gain_step))
         global->GFL.sonar.cur_gain_step = cur_gain_step;
       break;
 
     case W_SIDESCAN:
       cur_gain_step = global->GSS.sonar.cur_gain_step - 2.5;
-      if (tvg_set (global, global->GSS.sonar.cur_gain0, cur_gain_step))
+      if (tvg_set (global, &global->GSS.sonar.cur_gain0, cur_gain_step))
         global->GSS.sonar.cur_gain_step = cur_gain_step;
       break;
 
     case W_PROFILER:
       cur_gain_step = global->GPF.sonar.cur_gain_step - 2.5;
-      if (tvg_set (global, global->GPF.sonar.cur_gain0, cur_gain_step))
+      if (tvg_set (global, &global->GPF.sonar.cur_gain0, cur_gain_step))
         global->GPF.sonar.cur_gain_step = cur_gain_step;
     }
 }
@@ -1317,6 +1316,7 @@ start_stop (GtkWidget *widget,
             gboolean   state,
             Global    *global)
 {
+  gchar *pftrack;
   gint old_selector = global->sonar_selector;
 
   /* Включаем излучение. */
@@ -1331,26 +1331,29 @@ start_stop (GtkWidget *widget,
       /* Задаем параметры гидролокаторов. */
       global->sonar_selector = W_SIDESCAN;
       if (!signal_set   (global, global->GSS.sonar.cur_signal) ||
-          !tvg_set      (global, global->GSS.sonar.cur_gain0, global->GSS.sonar.cur_gain_step) ||
+          !tvg_set      (global, &global->GSS.sonar.cur_gain0, global->GSS.sonar.cur_gain_step) ||
           !distance_set (global, global->GSS.sonar.cur_distance))
         {
           gtk_switch_set_active (GTK_SWITCH (widget), FALSE);
+          global->sonar_selector = old_selector;
           return TRUE;
         }
       global->sonar_selector = W_PROFILER;
       if (!signal_set   (global, global->GPF.sonar.cur_signal) ||
-          !tvg_set      (global, global->GPF.sonar.cur_gain0, global->GPF.sonar.cur_gain_step) ||
+          !tvg_set      (global, &global->GPF.sonar.cur_gain0, global->GPF.sonar.cur_gain_step) ||
           !distance_set (global, global->GPF.sonar.cur_distance))
         {
           gtk_switch_set_active (GTK_SWITCH (widget), FALSE);
+          global->sonar_selector = old_selector;
           return TRUE;
         }
       global->sonar_selector = W_FORWARDL;
       if (!signal_set   (global, global->GFL.sonar.cur_signal) ||
-          !tvg_set      (global, global->GFL.sonar.cur_gain0, global->GFL.sonar.cur_gain_step) ||
+          !tvg_set      (global, &global->GFL.sonar.cur_gain0, global->GFL.sonar.cur_gain_step) ||
           !distance_set (global, global->GFL.sonar.cur_distance))
         {
           gtk_switch_set_active (GTK_SWITCH (widget), FALSE);
+          global->sonar_selector = old_selector;
           return TRUE;
         }
 
@@ -1358,21 +1361,28 @@ start_stop (GtkWidget *widget,
       /* Число галсов в проекте. */
       if (n_tracks < 0)
         {
+          gint n_filtered = 0;
           gint32 project_id;
           gchar **tracks;
+          gchar **strs;
 
           project_id = hyscan_db_project_open (global->db, global->project_name);
           tracks = hyscan_db_track_list (global->db, project_id);
-          // TODO: посчитать вручную, игнорируя галсы с префиксом пф.
-          n_tracks = (tracks == NULL) ? 0 : g_strv_length (tracks);
 
+          // TODO: посчитать вручную, игнорируя галсы с префиксом пф.
+          for (strs = tracks; strs != NULL && *strs != NULL; strs++)
+            {
+              if (!g_str_has_prefix (*strs, PF_TRACK_PREFIX))
+                n_tracks++;
+            }
+          
           hyscan_db_close (global->db, project_id);
           g_free (tracks);
         }
 
       /* Включаем запись нового галса. */
       global->track_name = g_strdup_printf ("%s%d", global->track_prefix, ++n_tracks);
-      gchar *pftrack = g_strdup_printf ("pf%s", global->track_name);
+      g_message ("n_tracks = %d", n_tracks);
 
       status = hyscan_sonar_control_start (global->GSS.sonar.sonar_ctl, global->track_name, HYSCAN_TRACK_SURVEY);
 
@@ -1383,7 +1393,10 @@ start_stop (GtkWidget *widget,
           return TRUE;
         }
 
+      pftrack = g_strdup_printf (PF_TRACK_PREFIX "%s", global->track_name);
       status = hyscan_sonar_control_start (global->GPF.sonar.sonar_ctl, pftrack, HYSCAN_TRACK_SURVEY);
+      g_free (pftrack);
+
       if (!status)
         {
           gtk_switch_set_active (GTK_SWITCH (widget), FALSE);
@@ -1647,21 +1660,21 @@ main (int argc, char **argv)
       /* Подключение к гидролокатору с помощью HyScanSonarClient */
       if (driver_name == NULL)
         {
-          // client = hyscan_sonar_client_new (flss_uri);
-          // if (client == NULL)
-          //   {
-          //     g_message ("can't connect to sonar_ctl '%s'", flss_uri);
-          //     goto exit;
-          //   }
-          //
-          // if (!hyscan_sonar_client_set_master (client))
-          //   {
-          //     g_message ("can't set master mode on sonar_ctl '%s'", flss_uri);
-          //     g_object_unref (client);
-          //     goto exit;
-          //   }
-          //
-          // sonar_ctl = HYSCAN_PARAM (client);
+          client = hyscan_sonar_client_new (flss_uri);
+          if (client == NULL)
+            {
+              g_message ("can't connect to flss_sonar '%s'", flss_uri);
+              goto exit;
+            }
+
+          if (!hyscan_sonar_client_set_master (client))
+            {
+              g_message ("can't set master mode on flss_sonar '%s'", flss_uri);
+              g_object_unref (client);
+              goto exit;
+            }
+
+          flss_sonar = HYSCAN_PARAM (client);
         }
 
       /* Подключение с помощью драйвера гидролокатора. */
@@ -1770,21 +1783,21 @@ main (int argc, char **argv)
         /* Подключение к гидролокатору с помощью HyScanSonarClient */
         if (driver_name == NULL)
           {
-            // client = hyscan_sonar_client_new (prof_uri);
-            // if (client == NULL)
-            //   {
-            //     g_message ("can't connect to sonar_ctl '%s'", prof_uri);
-            //     goto exit;
-            //   }
-            //
-            // if (!hyscan_sonar_client_set_master (client))
-            //   {
-            //     g_message ("can't set master mode on sonar_ctl '%s'", prof_uri);
-            //     g_object_unref (client);
-            //     goto exit;
-            //   }
-            //
-            // sonar_ctl = HYSCAN_PARAM (client);
+            client = hyscan_sonar_client_new (prof_uri);
+            if (client == NULL)
+              {
+                g_message ("can't connect to sonar_ctl '%s'", prof_uri);
+                goto exit;
+              }
+
+            if (!hyscan_sonar_client_set_master (client))
+              {
+                g_message ("can't set master mode on sonar_ctl '%s'", prof_uri);
+                g_object_unref (client);
+                goto exit;
+              }
+
+            prof_sonar = HYSCAN_PARAM (client);
           }
 
         /* Подключение с помощью драйвера гидролокатора. */
@@ -1910,13 +1923,16 @@ main (int argc, char **argv)
     }
   else /* (global.GFL.sonar.sonar_ctl == NULL || global.GPF.sonar.sonar_ctl == NULL) */
     {
-      global.gui.record_control = global.gui.start_stop_switch = NULL;
+      *(void**)&global.gui.record_control = *(void**)&global.gui.start_stop_switch = NULL;
     }
 
   /* Запихиваем всё в бокс: */
   gtk_box_pack_start (GTK_BOX (global.gui.right_box), global.gui.selector, FALSE, FALSE, 2);
   gtk_box_pack_start (GTK_BOX (global.gui.right_box), global.gui.stack, TRUE, TRUE, 2);
-  gtk_box_pack_end (GTK_BOX (global.gui.right_box), global.gui.record_control, FALSE, FALSE, 2);
+
+  if (global.gui.record_control != NULL)
+
+    gtk_box_pack_end (GTK_BOX (global.gui.right_box), global.gui.record_control, FALSE, FALSE, 2);
 
   /* Бокс запихиваем в правую панель арии: */
   hyscan_gtk_area_set_right (HYSCAN_GTK_AREA (global.gui.gtk_area), global.gui.right_box);
@@ -2175,7 +2191,7 @@ main (int argc, char **argv)
   if (global.GSS.sonar.sonar_ctl != NULL)
     {
       distance_set (&global, global.GSS.sonar.cur_distance);
-      tvg_set (&global, global.GSS.sonar.cur_gain0, global.GSS.sonar.cur_gain_step);
+      tvg_set (&global, &global.GSS.sonar.cur_gain0, global.GSS.sonar.cur_gain_step);
       signal_set (&global, 1);
     }
 
@@ -2186,7 +2202,7 @@ main (int argc, char **argv)
   if (global.GPF.sonar.sonar_ctl != NULL)
     {
       distance_set (&global, global.GPF.sonar.cur_distance);
-      tvg_set (&global, global.GPF.sonar.cur_gain0, global.GPF.sonar.cur_gain_step);
+      tvg_set (&global, &global.GPF.sonar.cur_gain0, global.GPF.sonar.cur_gain_step);
       signal_set (&global, 1);
     }
 
@@ -2197,7 +2213,7 @@ main (int argc, char **argv)
   if (global.GFL.sonar.sonar_ctl != NULL)
     {
       distance_set (&global, global.GFL.sonar.cur_distance);
-      tvg_set (&global, global.GFL.sonar.cur_gain0, global.GPF.sonar.cur_gain_step);
+      tvg_set (&global, &global.GFL.sonar.cur_gain0, global.GPF.sonar.cur_gain_step);
       signal_set (&global, 1);
     }
 
