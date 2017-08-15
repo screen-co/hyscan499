@@ -170,15 +170,15 @@ typedef struct
     GtkSwitch                           *live_view;
   } GSS;
 
-} NewGlobal;
+} Global;
 
-NewGlobal global = { 0 };
+Global global = { 0 };
 
 /* Функция изменяет режим окна full screen. */
 static gboolean
 key_press (GtkWidget   *widget,
            GdkEventKey *event,
-           NewGlobal      *global)
+           Global      *global)
 {
   if (event->keyval != GDK_KEY_F11)
     return FALSE;
@@ -196,7 +196,7 @@ key_press (GtkWidget   *widget,
 /* Функция вызывается при изменении списка проектов. */
 static void
 projects_changed (HyScanDBInfo *db_info,
-                  NewGlobal       *global)
+                  Global       *global)
 {
   GHashTable *projects = hyscan_db_info_get_projects (db_info);
 
@@ -210,9 +210,8 @@ projects_changed (HyScanDBInfo *db_info,
 /* Функция вызывается при изменении списка галсов. */
 static void
 tracks_changed (HyScanDBInfo *db_info,
-                NewGlobal       *global)
+                Global       *global)
 {
-  g_message ("tracks_changed");
   GtkTreePath *null_path;
   GtkTreeIter tree_iter;
   GHashTable *tracks;
@@ -269,7 +268,7 @@ tracks_changed (HyScanDBInfo *db_info,
 static gboolean
 track_scroll (GtkWidget *widget,
               GdkEvent  *event,
-              NewGlobal    *global)
+              Global    *global)
 {
   gdouble position;
   gdouble step_x, step_y;
@@ -288,7 +287,7 @@ track_scroll (GtkWidget *widget,
 /* Обработчик изменения галса. */
 static void
 track_changed (GtkTreeView *list,
-               NewGlobal      *global)
+               Global      *global)
 {
   GValue value = G_VALUE_INIT;
   GtkTreePath *path = NULL;
@@ -331,13 +330,13 @@ track_changed (GtkTreeView *list,
 /* Функция обрабатывает данные для текущего индекса. */
 static void
 position_changed (GtkAdjustment *range,
-                  NewGlobal        *global)
+                  Global        *global)
 {
 }
 
 /* Функция устанавливает яркость отображения. */
 static gboolean
-brightness_set (NewGlobal  *global,
+brightness_set (Global  *global,
                 gdouble  cur_brightness)
 {
   gchar *text;
@@ -377,8 +376,9 @@ brightness_set (NewGlobal  *global,
 
 /* Функция устанавливает масштаб отображения. */
 static gboolean
-scale_set (NewGlobal   *global,
-           gboolean  scale_up)
+scale_set (Global   *global,
+           gboolean  scale_up,
+           gpointer  user_data)
 {
   GtkCifroAreaZoomType zoom_dir;
   gdouble from_y, to_y;
@@ -393,6 +393,9 @@ scale_set (NewGlobal   *global,
   switch (global->sonar_selector)
     {
     case W_SIDESCAN:
+      if (user_data == NULL)
+        hyscan_gtk_waterfall_zoom (global->GSS.wf, scale_up);
+
       i_scale = hyscan_gtk_waterfall_drawer_get_scale (HYSCAN_GTK_WATERFALL_DRAWER (global->GSS.wf),
                                                        &scales, &n_scales);
 
@@ -401,6 +404,9 @@ scale_set (NewGlobal   *global,
       break;
 
     case W_PROFILER:
+      if (user_data == NULL)
+        hyscan_gtk_waterfall_zoom (global->GPF.wf, scale_up);
+
       i_scale = hyscan_gtk_waterfall_drawer_get_scale (HYSCAN_GTK_WATERFALL_DRAWER (global->GPF.wf),
                                                        &scales, &n_scales);
 
@@ -438,7 +444,7 @@ scale_set (NewGlobal   *global,
 
 /* Функция устанавливает новую палитру. */
 static gboolean
-color_map_set (NewGlobal *global,
+color_map_set (Global *global,
                guint   cur_color_map)
 {
   HyScanGtkWaterfallDrawer *wfd = NULL;
@@ -499,7 +505,7 @@ color_map_set (NewGlobal *global,
 
 /* Функция устанавливает порог чувствительности. */
 static gboolean
-sensitivity_set (NewGlobal  *global,
+sensitivity_set (Global  *global,
                  gdouble  cur_sensitivity)
  {
    gchar *text;
@@ -521,7 +527,7 @@ sensitivity_set (NewGlobal  *global,
 
 /* Функция устанавливает излучаемый сигнал. */
 static gboolean
-signal_set (NewGlobal *global,
+signal_set (Global *global,
             guint   cur_signal)
 {
   gchar *text;
@@ -607,7 +613,7 @@ signal_set (NewGlobal *global,
 
 /* Функция устанавливает параметры ВАРУ. */
 static gboolean
-tvg_set (NewGlobal  *global,
+tvg_set (Global  *global,
          gdouble  gain0,
          gdouble  step)
 {
@@ -638,9 +644,12 @@ tvg_set (NewGlobal  *global,
 
       case W_PROFILER:
         hyscan_tvg_control_get_gain_range (global->GPF.sonar.tvg_ctl, PROFILER, &min_gain, &max_gain);
+        g_message ("GPF tvg_set: min max req %f %f %f", min_gain, max_gain, gain0);
         gain0 = CLAMP (gain0, min_gain, max_gain);
         status = hyscan_tvg_control_set_linear_db (global->GPF.sonar.tvg_ctl, PROFILER, gain0, step);
+        g_message ("GPF tvg_set: status %i", status);
         hyscan_return_val_if_fail (status, FALSE);
+
         tvg_value = global->GPF.gui.tvg_value;
         tvg0_value = global->GPF.gui.tvg0_value;
         break;
@@ -648,6 +657,7 @@ tvg_set (NewGlobal  *global,
       case W_FORWARDL:
         status = hyscan_tvg_control_set_linear_db (global->GFL.sonar.tvg_ctl, FORWARDLOOK, gain0, step);
         hyscan_return_val_if_fail (status, FALSE);
+
         tvg_value = global->GFL.gui.tvg_value;
         tvg0_value = global->GFL.gui.tvg0_value;
         break;
@@ -668,7 +678,7 @@ tvg_set (NewGlobal  *global,
 
 /* Функция устанавливает рабочую дистанцию. */
 static gboolean
-distance_set (NewGlobal  *global,
+distance_set (Global  *global,
               gdouble  cur_distance)
 {
   gchar *text;
@@ -727,7 +737,7 @@ void_callback (gpointer data)
 
 static void
 brightness_up (GtkWidget *widget,
-               NewGlobal    *global)
+               Global    *global)
 {
   gdouble new_brightness;
 
@@ -794,7 +804,7 @@ brightness_up (GtkWidget *widget,
 
 static void
 brightness_down (GtkWidget *widget,
-                 NewGlobal    *global)
+                 Global    *global)
 {
   gdouble new_brightness;
 
@@ -861,21 +871,21 @@ brightness_down (GtkWidget *widget,
 
 static void
 scale_up (GtkWidget *widget,
-          NewGlobal    *global)
+          Global    *global)
 {
-  scale_set (global, TRUE);
+  scale_set (global, TRUE, NULL);
 }
 
 static void
 scale_down (GtkWidget *widget,
-            NewGlobal    *global)
+            Global    *global)
 {
-  scale_set (global, FALSE);
+  scale_set (global, FALSE, NULL);
 }
 
 static void
 sensitivity_up (GtkWidget *widget,
-                NewGlobal    *global)
+                Global    *global)
 {
   gdouble new_sensitivity;
 
@@ -888,7 +898,7 @@ sensitivity_up (GtkWidget *widget,
 
 static void
 sensitivity_down (GtkWidget *widget,
-                  NewGlobal    *global)
+                  Global    *global)
 {
   gdouble new_sensitivity;
 
@@ -901,7 +911,7 @@ sensitivity_down (GtkWidget *widget,
 
 static void
 color_map_up (GtkWidget *widget,
-              NewGlobal    *global)
+              Global    *global)
 {
   guint cur_color_map;
 
@@ -926,7 +936,7 @@ color_map_up (GtkWidget *widget,
 
 static void
 color_map_down (GtkWidget *widget,
-                NewGlobal    *global)
+                Global    *global)
 {
   guint cur_color_map;
 
@@ -953,7 +963,7 @@ color_map_down (GtkWidget *widget,
 static gboolean
 mode_changed (GtkWidget *widget,
               gboolean   state,
-              NewGlobal    *global)
+              Global    *global)
 {
   if (global->sonar_selector != W_FORWARDL)
     {
@@ -974,29 +984,30 @@ mode_changed (GtkWidget *widget,
 static gboolean
 live_view (GtkWidget  *widget,
            gboolean    state,
-           NewGlobal     *global)
+           Global     *global)
 {
   GtkSwitch *live_view;
   HyScanGtkWaterfallDrawer *wfd;
 
-  switch (global->sonar_selector)
+  if (widget == global->GSS.live_view)
     {
-      case W_SIDESCAN:
-        live_view = global->GSS.live_view;
-        wfd = HYSCAN_GTK_WATERFALL_DRAWER (global->GSS.wf);
-        break;
-      case W_PROFILER:
-        live_view = global->GPF.live_view;
-        wfd = HYSCAN_GTK_WATERFALL_DRAWER (global->GPF.wf);
-        break;
-      case W_FORWARDL:
-      default:
-        g_message ("live_view: wrong sonar_selector");
-        return TRUE;
+      live_view = global->GSS.live_view;
+      wfd = HYSCAN_GTK_WATERFALL_DRAWER (global->GSS.wf);
+    }
+  else if (widget == global->GPF.live_view)
+    {
+      live_view = global->GPF.live_view;
+      wfd = HYSCAN_GTK_WATERFALL_DRAWER (global->GPF.wf);
+    }
+  else
+    {
+      g_message ("live_view triggerred by wrong widget");
+      return TRUE;
     }
 
   if (state != gtk_switch_get_state (live_view))
     hyscan_gtk_waterfall_drawer_automove (wfd, state);
+  gtk_switch_set_state (live_view, state);
 
   return TRUE;
 }
@@ -1004,21 +1015,27 @@ live_view (GtkWidget  *widget,
 static void
 live_view_off (GtkWidget  *widget,
                gboolean    state,
-               NewGlobal     *global)
+               Global     *global)
 {
   GtkSwitch *sw;
 
   if (widget == global->GSS.wf)
-    gtk_switch_set_active (global->GSS.live_view, state);
+    {
+      gtk_switch_set_active (global->GSS.live_view, state);
+    }
   else if (widget == global->GPF.wf)
-    gtk_switch_set_active (global->GPF.live_view, state);
+    {
+      gtk_switch_set_active (global->GPF.live_view, state);
+    }
   else
-    g_message ("live_view_off: wrong calling instance!");
+    {
+      g_message ("live_view_off: wrong calling instance!");
+    }
 }
 
 static void
 distance_up (GtkWidget *widget,
-             NewGlobal    *global)
+             Global    *global)
 {
   gdouble cur_distance;
 
@@ -1035,16 +1052,16 @@ distance_up (GtkWidget *widget,
           global->GSS.sonar.cur_distance = cur_distance;
         break;
       case W_PROFILER:
-        cur_distance = global->GSS.sonar.cur_distance + 5.0;
+        cur_distance = global->GPF.sonar.cur_distance + 5.0;
         if (distance_set (global, cur_distance))
-          global->GSS.sonar.cur_distance = cur_distance;
+          global->GPF.sonar.cur_distance = cur_distance;
         break;
     }
 }
 
 static void
 distance_down (GtkWidget *widget,
-               NewGlobal    *global)
+               Global    *global)
 {
   gdouble cur_distance;
 
@@ -1061,16 +1078,16 @@ distance_down (GtkWidget *widget,
           global->GSS.sonar.cur_distance = cur_distance;
         break;
       case W_PROFILER:
-        cur_distance = global->GSS.sonar.cur_distance - 5.0;
+        cur_distance = global->GPF.sonar.cur_distance - 5.0;
         if (distance_set (global, cur_distance))
-          global->GSS.sonar.cur_distance = cur_distance;
+          global->GPF.sonar.cur_distance = cur_distance;
         break;
     }
 }
 
 static void
 tvg0_up (GtkWidget *widget,
-         NewGlobal    *global)
+         Global    *global)
 {
   gdouble cur_gain0;
 
@@ -1089,7 +1106,7 @@ tvg0_up (GtkWidget *widget,
       break;
 
     case W_PROFILER:
-      cur_gain0 = global->GPF.sonar.cur_gain_step - 2.5;
+      cur_gain0 = global->GPF.sonar.cur_gain0 + 0.5;
       if (tvg_set (global, cur_gain0, global->GPF.sonar.cur_gain_step))
         global->GPF.sonar.cur_gain0 = cur_gain0;
       break;
@@ -1098,9 +1115,10 @@ tvg0_up (GtkWidget *widget,
 
 static void
 tvg0_down (GtkWidget *widget,
-           NewGlobal    *global)
+           Global    *global)
 {
   gdouble cur_gain0;
+  g_message ("tvg0_down");
 
   switch (global->sonar_selector)
     {
@@ -1117,7 +1135,7 @@ tvg0_down (GtkWidget *widget,
       break;
 
     case W_PROFILER:
-      cur_gain0 = global->GPF.sonar.cur_gain0 - 2.5;
+      cur_gain0 = global->GPF.sonar.cur_gain0 - 0.5;
       if (tvg_set (global, cur_gain0, global->GPF.sonar.cur_gain_step))
         global->GPF.sonar.cur_gain0 = cur_gain0;
     }
@@ -1125,9 +1143,10 @@ tvg0_down (GtkWidget *widget,
 
 static void
 tvg_up (GtkWidget *widget,
-        NewGlobal    *global)
+        Global    *global)
 {
   gdouble cur_gain_step;
+  g_message ("tvg_up");
 
   switch (global->sonar_selector)
     {
@@ -1144,7 +1163,7 @@ tvg_up (GtkWidget *widget,
       break;
 
     case W_PROFILER:
-      cur_gain_step = global->GPF.sonar.cur_gain_step - 2.5;
+      cur_gain_step = global->GPF.sonar.cur_gain_step + 2.5;
       if (tvg_set (global, global->GPF.sonar.cur_gain0, cur_gain_step))
         global->GPF.sonar.cur_gain_step = cur_gain_step;
     }
@@ -1152,9 +1171,10 @@ tvg_up (GtkWidget *widget,
 
 static void
 tvg_down (GtkWidget *widget,
-          NewGlobal    *global)
+          Global    *global)
 {
   gdouble cur_gain_step;
+  g_message ("tvg_down");
 
   switch (global->sonar_selector)
     {
@@ -1179,7 +1199,7 @@ tvg_down (GtkWidget *widget,
 
 static void
 signal_up (GtkWidget *widget,
-           NewGlobal    *global)
+           Global    *global)
 {
   guint cur_signal;
 
@@ -1207,7 +1227,7 @@ signal_up (GtkWidget *widget,
 
 static void
 signal_down (GtkWidget *widget,
-             NewGlobal    *global)
+             Global    *global)
 {
   guint cur_signal;
 
@@ -1285,7 +1305,7 @@ widget_swap (GtkToggleButton *togglebutton,
 
 void
 one_window (GtkToggleButton *togglebutton,
-            NewGlobal          *global)
+            Global          *global)
 {
   gboolean active = gtk_toggle_button_get_active (togglebutton);
   gtk_widget_set_visible (global->gui.v_pane, !active);
@@ -1295,7 +1315,7 @@ one_window (GtkToggleButton *togglebutton,
 static gboolean
 start_stop (GtkWidget *widget,
             gboolean   state,
-            NewGlobal    *global)
+            Global    *global)
 {
   gint old_selector = global->sonar_selector;
 
@@ -1374,6 +1394,13 @@ start_stop (GtkWidget *widget,
       /* Если локатор включён, переходим в режим онлайн. */
       gtk_switch_set_state (GTK_SWITCH (widget), TRUE);
       gtk_widget_set_sensitive (GTK_WIDGET (global->gui.track_view), FALSE);
+
+      gtk_switch_set_active (global->GSS.live_view, TRUE);
+      gtk_switch_set_active (global->GPF.live_view, TRUE);
+      gtk_switch_set_state (global->GSS.live_view, TRUE);
+      gtk_switch_set_state (global->GPF.live_view, TRUE);
+      hyscan_gtk_waterfall_drawer_automove (HYSCAN_GTK_WATERFALL_DRAWER (global->GSS.wf), TRUE);
+      hyscan_gtk_waterfall_drawer_automove (HYSCAN_GTK_WATERFALL_DRAWER (global->GPF.wf), TRUE);
     }
 
   /* Выключаем излучение и блокируем режим онлайн. */
@@ -2138,13 +2165,13 @@ main (int argc, char **argv)
   global.GFL.cur_sensitivity = 8.0;
   global.GFL.sonar.cur_signal = 1;
   global.GFL.sonar.cur_gain0 = 0.0;
-  global.GFL.sonar.cur_gain_step = 10.0;
+  global.GFL.sonar.cur_gain_step = 20.0;
   global.GFL.sonar.cur_distance = PROFILER_MAX_DISTANCE;
 
   global.sonar_selector = W_SIDESCAN;
   brightness_set (&global, global.GSS.cur_brightness);
   color_map_set (&global, global.GSS.cur_color_map);
-  scale_set (&global, FALSE);
+  scale_set (&global, FALSE, NULL);
   if (global.GSS.sonar.sonar_ctl != NULL)
     {
       distance_set (&global, global.GSS.sonar.cur_distance);
@@ -2155,7 +2182,7 @@ main (int argc, char **argv)
   global.sonar_selector = W_PROFILER;
   brightness_set (&global, global.GPF.cur_brightness);
   color_map_set (&global, global.GPF.cur_color_map);
-  scale_set (&global, FALSE);
+  scale_set (&global, FALSE, NULL);
   if (global.GPF.sonar.sonar_ctl != NULL)
     {
       distance_set (&global, global.GPF.sonar.cur_distance);
@@ -2166,7 +2193,7 @@ main (int argc, char **argv)
   global.sonar_selector = W_FORWARDL;
   brightness_set (&global, global.GFL.cur_brightness);
   sensitivity_set (&global, global.GFL.cur_sensitivity);
-  scale_set (&global, FALSE);
+  scale_set (&global, FALSE, NULL);
   if (global.GFL.sonar.sonar_ctl != NULL)
     {
       distance_set (&global, global.GFL.sonar.cur_distance);
