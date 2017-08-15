@@ -24,4 +24,4 @@ add_executable (triple
                 triple.c
                 ${CMAKE_BINARY_DIR}/resources/triple-resources.c)
 
-target_link_libraries (triple ${GTK3_LIBRARIES} ${HYSCAN_LIBRARIES} ${MATH_LIBRARIES})
+target_link_libraries (triple ${GLIB_LIBRARIES} ${GTK3_LIBRARIES} ${HYSCAN_LIBRARIES} ${MATH_LIBRARIES})
