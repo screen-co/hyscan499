@@ -7,6 +7,7 @@
 #include <hyscan-tile-color.h>
 #include <hyscan-db-info.h>
 #include <hyscan-cached.h>
+#include <urpc-server.h>
 #include <math.h>
 
 #include "sonar-configure.h"
@@ -28,6 +29,16 @@
 #define BLACK_BG                       0xff000000
 
 #define PF_TRACK_PREFIX                ".pf"
+
+#define AME_KEY_RIGHT 39
+#define AME_KEY_LEFT 37
+#define AME_KEY_ENTER 10
+#define AME_KEY_UP 38
+#define AME_KEY_ESCAPE 27
+#define AME_KEY_EXIT 1
+
+#define URPC_KEYCODE_NO_ACTION -1
+
 
 enum
 {
@@ -93,6 +104,12 @@ typedef struct
   gint                                 sonar_selector;
   //} common;
 
+  //struct
+  //{
+  uRpcServer *urpc_server;
+  gint        urpc_keycode;
+  //} urpc;
+
   struct
     {
       GtkWidget                           *window; // окно
@@ -115,6 +132,12 @@ typedef struct
 
       GtkWidget                           *ctrl_widgets[W_LAST];
       GtkWidget                           *disp_widgets[W_LAST];
+
+
+      GtkToggleButton                     *ss_selector;
+      GtkToggleButton                     *pf_selector;
+      GtkToggleButton                     *fl_selector;
+      GtkToggleButton                     *single_window;
 
   } gui;
 
@@ -1361,7 +1384,6 @@ start_stop (GtkWidget *widget,
       /* Число галсов в проекте. */
       if (n_tracks < 0)
         {
-          gint n_filtered = 0;
           gint32 project_id;
           gchar **tracks;
           gchar **strs;
@@ -1375,14 +1397,13 @@ start_stop (GtkWidget *widget,
               if (!g_str_has_prefix (*strs, PF_TRACK_PREFIX))
                 n_tracks++;
             }
-          
+
           hyscan_db_close (global->db, project_id);
           g_free (tracks);
         }
 
       /* Включаем запись нового галса. */
       global->track_name = g_strdup_printf ("%s%d", global->track_prefix, ++n_tracks);
-      g_message ("n_tracks = %d", n_tracks);
 
       status = hyscan_sonar_control_start (global->GSS.sonar.sonar_ctl, global->track_name, HYSCAN_TRACK_SURVEY);
 
@@ -1516,6 +1537,65 @@ get_sonar_specific_gui (SonarSpecificGui *gui,
   gui->signal_value     = GTK_LABEL (get_from_builder (builder, "signal_value"));
 
   return check_sonar_specific_gui (gui, sonar);
+}
+
+static gint
+urpc_cb (uint32_t  session,
+         uRpcData *urpc_data,
+         void     *proc_data,
+         void     *key_data)
+{
+  gint keycode = GPOINTER_TO_INT (proc_data);
+  g_atomic_int_set (&global.urpc_keycode, keycode);
+
+  return 0;
+}
+
+static gboolean
+ame_key_func (gpointer user_data)
+{
+  Global *global = user_data;
+  gint keycode;
+  gboolean st;
+
+
+  keycode = g_atomic_int_get (&global->urpc_keycode);
+
+  if (keycode == URPC_KEYCODE_NO_ACTION)
+    return G_SOURCE_CONTINUE;
+
+  switch (keycode)
+    {
+    case AME_KEY_RIGHT:
+      gtk_toggle_button_set_active (global->gui.ss_selector, TRUE);
+      break;
+
+    case AME_KEY_LEFT:
+      gtk_toggle_button_set_active (global->gui.pf_selector, TRUE);
+      break;
+
+    case AME_KEY_ENTER:
+      gtk_toggle_button_set_active (global->gui.fl_selector, TRUE);
+      break;
+
+    case AME_KEY_UP:
+      st = gtk_toggle_button_get_active (global->gui.single_window);
+      gtk_toggle_button_set_active (global->gui.single_window, !st);
+      break;
+
+    case AME_KEY_EXIT:
+      gtk_main_quit ();
+      return G_SOURCE_REMOVE;
+
+    case AME_KEY_ESCAPE:
+    default:
+      g_message ("This key is not supported yet. ");
+    }
+
+  /* Сбрасываем значение кнопки, если его больше никто не перетер. */
+  g_atomic_int_compare_and_exchange (&global->urpc_keycode, keycode, URPC_KEYCODE_NO_ACTION);
+
+  return G_SOURCE_CONTINUE;
 }
 
 int
@@ -1771,99 +1851,99 @@ main (int argc, char **argv)
       hyscan_exit_if (!status, "forward-look: can't set working project");
     }
 
-    if (prof_uri != NULL)
-      {
-        HyScanGeneratorModeType gen_cap;
-        HyScanTVGModeType tvg_cap;
-        HyScanSonarClient *client;
-        GKeyFile *config;
-        gboolean status;
-        guint i;
+  if (prof_uri != NULL)
+    {
+      HyScanGeneratorModeType gen_cap;
+      HyScanTVGModeType tvg_cap;
+      HyScanSonarClient *client;
+      GKeyFile *config;
+      gboolean status;
+      guint i;
 
-        /* Подключение к гидролокатору с помощью HyScanSonarClient */
-        if (driver_name == NULL)
-          {
-            client = hyscan_sonar_client_new (prof_uri);
-            if (client == NULL)
-              {
-                g_message ("can't connect to sonar_ctl '%s'", prof_uri);
-                goto exit;
-              }
+      /* Подключение к гидролокатору с помощью HyScanSonarClient */
+      if (driver_name == NULL)
+        {
+          client = hyscan_sonar_client_new (prof_uri);
+          if (client == NULL)
+            {
+              g_message ("can't connect to sonar_ctl '%s'", prof_uri);
+              goto exit;
+            }
 
-            if (!hyscan_sonar_client_set_master (client))
-              {
-                g_message ("can't set master mode on sonar_ctl '%s'", prof_uri);
-                g_object_unref (client);
-                goto exit;
-              }
+          if (!hyscan_sonar_client_set_master (client))
+            {
+              g_message ("can't set master mode on sonar_ctl '%s'", prof_uri);
+              g_object_unref (client);
+              goto exit;
+            }
 
-            prof_sonar = HYSCAN_PARAM (client);
-          }
+          prof_sonar = HYSCAN_PARAM (client);
+        }
 
-        /* Подключение с помощью драйвера гидролокатора. */
-        else
-          {
-            prof_driver = hyscan_sonar_driver_new (driver_path, driver_name);
-            hyscan_exit_if_w_param (prof_driver == NULL, "can't load prof_sonar driver '%s'", driver_name);
+      /* Подключение с помощью драйвера гидролокатора. */
+      else
+        {
+          prof_driver = hyscan_sonar_driver_new (driver_path, driver_name);
+          hyscan_exit_if_w_param (prof_driver == NULL, "can't load prof_sonar driver '%s'", driver_name);
 
-            prof_sonar = hyscan_sonar_discover_connect (HYSCAN_SONAR_DISCOVER (prof_driver), prof_uri, NULL);
-            hyscan_exit_if_w_param (prof_sonar == NULL, "can't connect to prof_sonar '%s'", prof_uri);
-          }
+          prof_sonar = hyscan_sonar_discover_connect (HYSCAN_SONAR_DISCOVER (prof_driver), prof_uri, NULL);
+          hyscan_exit_if_w_param (prof_sonar == NULL, "can't connect to prof_sonar '%s'", prof_uri);
+        }
 
-        /* Управление локатором. */
-        global.GPF.sonar.sonar_ctl = hyscan_sonar_control_new (prof_sonar, 4, 4, global.db);
-        hyscan_exit_if_w_param (global.GPF.sonar.sonar_ctl == NULL, "unsupported sonar_ctl '%s'", prof_uri);
+      /* Управление локатором. */
+      global.GPF.sonar.sonar_ctl = hyscan_sonar_control_new (prof_sonar, 4, 4, global.db);
+      hyscan_exit_if_w_param (global.GPF.sonar.sonar_ctl == NULL, "unsupported sonar_ctl '%s'", prof_uri);
 
-        global.GPF.sonar.gen_ctl = HYSCAN_GENERATOR_CONTROL (global.GPF.sonar.sonar_ctl);
-        global.GPF.sonar.tvg_ctl = HYSCAN_TVG_CONTROL (global.GPF.sonar.sonar_ctl);
+      global.GPF.sonar.gen_ctl = HYSCAN_GENERATOR_CONTROL (global.GPF.sonar.sonar_ctl);
+      global.GPF.sonar.tvg_ctl = HYSCAN_TVG_CONTROL (global.GPF.sonar.sonar_ctl);
 
-        /* Параметры генераторов. */
-        gen_cap = hyscan_generator_control_get_capabilities (global.GPF.sonar.gen_ctl, PROFILER);
-        hyscan_exit_if (!(gen_cap | HYSCAN_GENERATOR_MODE_PRESET), "profiler: unsupported generator mode");
+      /* Параметры генераторов. */
+      gen_cap = hyscan_generator_control_get_capabilities (global.GPF.sonar.gen_ctl, PROFILER);
+      hyscan_exit_if (!(gen_cap | HYSCAN_GENERATOR_MODE_PRESET), "profiler: unsupported generator mode");
 
-        status = hyscan_generator_control_set_enable (global.GPF.sonar.gen_ctl, PROFILER, TRUE);
-        hyscan_exit_if (!status, "profiler: can't enable generator");
+      status = hyscan_generator_control_set_enable (global.GPF.sonar.gen_ctl, PROFILER, TRUE);
+      hyscan_exit_if (!status, "profiler: can't enable generator");
 
-        /* Параметры ВАРУ. */
-        tvg_cap = hyscan_tvg_control_get_capabilities (global.GPF.sonar.tvg_ctl, PROFILER);
-        hyscan_exit_if (!(tvg_cap | HYSCAN_TVG_MODE_LINEAR_DB), "profiler: unsupported tvg_ctl mode");
+      /* Параметры ВАРУ. */
+      tvg_cap = hyscan_tvg_control_get_capabilities (global.GPF.sonar.tvg_ctl, PROFILER);
+      hyscan_exit_if (!(tvg_cap | HYSCAN_TVG_MODE_LINEAR_DB), "profiler: unsupported tvg_ctl mode");
 
-        status = hyscan_tvg_control_set_enable (global.GPF.sonar.tvg_ctl, PROFILER, TRUE);
-        hyscan_exit_if (!status, "profiler: can't enable tvg_ctl");
+      status = hyscan_tvg_control_set_enable (global.GPF.sonar.tvg_ctl, PROFILER, TRUE);
+      hyscan_exit_if (!status, "profiler: can't enable tvg_ctl");
 
-        /* Сигналы зондирования. */
-        global.GPF.pf_signals = hyscan_generator_control_list_presets (global.GPF.sonar.gen_ctl, PROFILER);
-        hyscan_exit_if (global.GPF.pf_signals == NULL, "profiler: can't load signal presets");
+      /* Сигналы зондирования. */
+      global.GPF.pf_signals = hyscan_generator_control_list_presets (global.GPF.sonar.gen_ctl, PROFILER);
+      hyscan_exit_if (global.GPF.pf_signals == NULL, "profiler: can't load signal presets");
 
-        for (i = 0; global.GPF.pf_signals[i] != NULL; i++);
-        global.GPF.pf_n_signals = i;
+      for (i = 0; global.GPF.pf_signals[i] != NULL; i++);
+      global.GPF.pf_n_signals = i;
 
-        /* Настройка датчиков и антенн. */
-        // if (config_file != NULL)
-        //   {
-        //     config = g_key_file_new ();
-        //     g_key_file_load_from_file (config, config_file, G_KEY_FILE_NONE, NULL);
+      /* Настройка датчиков и антенн. */
+      // if (config_file != NULL)
+      //   {
+      //     config = g_key_file_new ();
+      //     g_key_file_load_from_file (config, config_file, G_KEY_FILE_NONE, NULL);
 
-        //     if (!setup_sensors (HYSCAN_SENSOR_CONTROL (global.GPF.sonar_ctl.sonar_ctl), config) ||
-        //         !setup_sonar_antenna (global.GPF.sonar_ctl.sonar_ctl, PROFILER, config))
-        //       {
-        //         status = FALSE;
-        //       }
-        //     else
-        //       {
-        //         status = TRUE;
-        //       }
+      //     if (!setup_sensors (HYSCAN_SENSOR_CONTROL (global.GPF.sonar_ctl.sonar_ctl), config) ||
+      //         !setup_sonar_antenna (global.GPF.sonar_ctl.sonar_ctl, PROFILER, config))
+      //       {
+      //         status = FALSE;
+      //       }
+      //     else
+      //       {
+      //         status = TRUE;
+      //       }
 
-        //     g_key_file_unref (config);
+      //     g_key_file_unref (config);
 
-        //     if (!status)
-        //       goto exit;
-        //   }
+      //     if (!status)
+      //       goto exit;
+      //   }
 
-        /* Рабочий проект. */
-        status = hyscan_data_writer_set_project (HYSCAN_DATA_WRITER (global.GPF.sonar.sonar_ctl), project_name);
-        hyscan_exit_if (!status, "profiler: can't set working project");
-      }
+      /* Рабочий проект. */
+      status = hyscan_data_writer_set_project (HYSCAN_DATA_WRITER (global.GPF.sonar.sonar_ctl), project_name);
+      hyscan_exit_if (!status, "profiler: can't set working project");
+    }
   /* Закончили подключение к гидролокатору. */
 
   /***
@@ -1958,10 +2038,14 @@ main (int argc, char **argv)
 
 
   /* Сигналы sonar_selector'a. */
-  g_signal_connect (gtk_builder_get_object (common_builder, "ss_selector"), "toggled", G_CALLBACK (widget_swap), GINT_TO_POINTER (W_SIDESCAN));
-  g_signal_connect (gtk_builder_get_object (common_builder, "pf_selector"), "toggled", G_CALLBACK (widget_swap), GINT_TO_POINTER (W_PROFILER));
-  g_signal_connect (gtk_builder_get_object (common_builder, "fl_selector"), "toggled", G_CALLBACK (widget_swap), GINT_TO_POINTER (W_FORWARDL));
-  g_signal_connect (gtk_builder_get_object (common_builder, "single_window"), "toggled", G_CALLBACK (one_window), &global);
+  global.gui.ss_selector = g_object_ref (get_from_builder (common_builder, "ss_selector"));
+  global.gui.pf_selector = g_object_ref (get_from_builder (common_builder, "pf_selector"));
+  global.gui.fl_selector = g_object_ref (get_from_builder (common_builder, "fl_selector"));
+  global.gui.single_window = g_object_ref (get_from_builder (common_builder, "single_window"));
+  g_signal_connect (global.gui.ss_selector, "toggled", G_CALLBACK (widget_swap), GINT_TO_POINTER (W_SIDESCAN));
+  g_signal_connect (global.gui.pf_selector, "toggled", G_CALLBACK (widget_swap), GINT_TO_POINTER (W_PROFILER));
+  g_signal_connect (global.gui.fl_selector, "toggled", G_CALLBACK (widget_swap), GINT_TO_POINTER (W_FORWARDL));
+  g_signal_connect (global.gui.single_window, "toggled", G_CALLBACK (one_window), &global);
 
   /* Управление гидролокаторами и отображением. */
   fl_control_box = create_sonar_box (fl_builder, "fl_view_control", "sonar_control", global.GFL.sonar.sonar_ctl);
@@ -1981,72 +2065,82 @@ main (int argc, char **argv)
   status = get_sonar_specific_gui (&global.GPF.gui, pf_builder, "ss_brightness_value", "ss_scale_value", "ss_color_map_value", "PF");
   hyscan_exit_if (!status, "failed to get PF-specific GUI");
 
-  /* Теперь немного гемора: цепляемся к сигналам кнопок. Их много, а потому увы. */
-  gtk_builder_add_callback_symbol (fl_builder, "brightness_up", G_CALLBACK (brightness_up));
-  gtk_builder_add_callback_symbol (fl_builder, "brightness_down", G_CALLBACK (brightness_down));
-  gtk_builder_add_callback_symbol (fl_builder, "scale_up", G_CALLBACK (scale_up));
-  gtk_builder_add_callback_symbol (fl_builder, "scale_down", G_CALLBACK (scale_down));
-  gtk_builder_add_callback_symbol (fl_builder, "sensitivity_up", G_CALLBACK (sensitivity_up));
-  gtk_builder_add_callback_symbol (fl_builder, "sensitivity_down", G_CALLBACK (sensitivity_down));
-  gtk_builder_add_callback_symbol (fl_builder, "mode_changed", G_CALLBACK (mode_changed));
+  /***
+   *     ___         ___   ___   ___               ___   ___   ___         ___         ___
+   *      | | |   |   |     |   |   | |\  |       |       |   |     |\  | |   | |     |
+   *      +-  |   |   +     +   |   | | + |        -+-    +   | +-  | + | |-+-| |      -+-
+   *      | | |   |   |     |   |   | |  \|           |   |   |   | |  \| |   | |         |
+   *     ---   ---               ---               ---   ---   ---               ---   ---
+   *
+   * Теперь немного гемора: цепляемся к сигналам кнопок. Их много, а потому увы.
+   */
+  {
+    gtk_builder_add_callback_symbol (fl_builder, "brightness_up", G_CALLBACK (brightness_up));
+    gtk_builder_add_callback_symbol (fl_builder, "brightness_down", G_CALLBACK (brightness_down));
+    gtk_builder_add_callback_symbol (fl_builder, "scale_up", G_CALLBACK (scale_up));
+    gtk_builder_add_callback_symbol (fl_builder, "scale_down", G_CALLBACK (scale_down));
+    gtk_builder_add_callback_symbol (fl_builder, "sensitivity_up", G_CALLBACK (sensitivity_up));
+    gtk_builder_add_callback_symbol (fl_builder, "sensitivity_down", G_CALLBACK (sensitivity_down));
+    gtk_builder_add_callback_symbol (fl_builder, "mode_changed", G_CALLBACK (mode_changed));
 
-  gtk_builder_add_callback_symbol (fl_builder, "distance_up", G_CALLBACK (distance_up));
-  gtk_builder_add_callback_symbol (fl_builder, "distance_down", G_CALLBACK (distance_down));
-  gtk_builder_add_callback_symbol (fl_builder, "tvg0_up", G_CALLBACK (tvg0_up));
-  gtk_builder_add_callback_symbol (fl_builder, "tvg0_down", G_CALLBACK (tvg0_down));
-  gtk_builder_add_callback_symbol (fl_builder, "tvg_up", G_CALLBACK (tvg_up));
-  gtk_builder_add_callback_symbol (fl_builder, "tvg_down", G_CALLBACK (tvg_down));
-  gtk_builder_add_callback_symbol (fl_builder, "signal_up", G_CALLBACK (signal_up));
-  gtk_builder_add_callback_symbol (fl_builder, "signal_down", G_CALLBACK (signal_down));
+    gtk_builder_add_callback_symbol (fl_builder, "distance_up", G_CALLBACK (distance_up));
+    gtk_builder_add_callback_symbol (fl_builder, "distance_down", G_CALLBACK (distance_down));
+    gtk_builder_add_callback_symbol (fl_builder, "tvg0_up", G_CALLBACK (tvg0_up));
+    gtk_builder_add_callback_symbol (fl_builder, "tvg0_down", G_CALLBACK (tvg0_down));
+    gtk_builder_add_callback_symbol (fl_builder, "tvg_up", G_CALLBACK (tvg_up));
+    gtk_builder_add_callback_symbol (fl_builder, "tvg_down", G_CALLBACK (tvg_down));
+    gtk_builder_add_callback_symbol (fl_builder, "signal_up", G_CALLBACK (signal_up));
+    gtk_builder_add_callback_symbol (fl_builder, "signal_down", G_CALLBACK (signal_down));
 
-  gtk_builder_add_callback_symbol (fl_builder, "color_map_up", G_CALLBACK (void_callback));
-  gtk_builder_add_callback_symbol (fl_builder, "color_map_down", G_CALLBACK (void_callback));
-  gtk_builder_add_callback_symbol (fl_builder, "live_view", G_CALLBACK (void_callback));
-  gtk_builder_connect_signals (fl_builder, &global);
+    gtk_builder_add_callback_symbol (fl_builder, "color_map_up", G_CALLBACK (void_callback));
+    gtk_builder_add_callback_symbol (fl_builder, "color_map_down", G_CALLBACK (void_callback));
+    gtk_builder_add_callback_symbol (fl_builder, "live_view", G_CALLBACK (void_callback));
+    gtk_builder_connect_signals (fl_builder, &global);
 
-  gtk_builder_add_callback_symbol (ss_builder, "brightness_up", G_CALLBACK (brightness_up));
-  gtk_builder_add_callback_symbol (ss_builder, "brightness_down", G_CALLBACK (brightness_down));
-  gtk_builder_add_callback_symbol (ss_builder, "scale_up", G_CALLBACK (scale_up));
-  gtk_builder_add_callback_symbol (ss_builder, "scale_down", G_CALLBACK (scale_down));
-  gtk_builder_add_callback_symbol (ss_builder, "color_map_up", G_CALLBACK (color_map_up));
-  gtk_builder_add_callback_symbol (ss_builder, "color_map_down", G_CALLBACK (color_map_down));
-  gtk_builder_add_callback_symbol (ss_builder, "live_view", G_CALLBACK (live_view));
+    gtk_builder_add_callback_symbol (ss_builder, "brightness_up", G_CALLBACK (brightness_up));
+    gtk_builder_add_callback_symbol (ss_builder, "brightness_down", G_CALLBACK (brightness_down));
+    gtk_builder_add_callback_symbol (ss_builder, "scale_up", G_CALLBACK (scale_up));
+    gtk_builder_add_callback_symbol (ss_builder, "scale_down", G_CALLBACK (scale_down));
+    gtk_builder_add_callback_symbol (ss_builder, "color_map_up", G_CALLBACK (color_map_up));
+    gtk_builder_add_callback_symbol (ss_builder, "color_map_down", G_CALLBACK (color_map_down));
+    gtk_builder_add_callback_symbol (ss_builder, "live_view", G_CALLBACK (live_view));
 
-  gtk_builder_add_callback_symbol (ss_builder, "distance_up", G_CALLBACK (distance_up));
-  gtk_builder_add_callback_symbol (ss_builder, "distance_down", G_CALLBACK (distance_down));
-  gtk_builder_add_callback_symbol (ss_builder, "tvg0_up", G_CALLBACK (tvg0_up));
-  gtk_builder_add_callback_symbol (ss_builder, "tvg0_down", G_CALLBACK (tvg0_down));
-  gtk_builder_add_callback_symbol (ss_builder, "tvg_up", G_CALLBACK (tvg_up));
-  gtk_builder_add_callback_symbol (ss_builder, "tvg_down", G_CALLBACK (tvg_down));
-  gtk_builder_add_callback_symbol (ss_builder, "signal_up", G_CALLBACK (signal_up));
-  gtk_builder_add_callback_symbol (ss_builder, "signal_down", G_CALLBACK (signal_down));
+    gtk_builder_add_callback_symbol (ss_builder, "distance_up", G_CALLBACK (distance_up));
+    gtk_builder_add_callback_symbol (ss_builder, "distance_down", G_CALLBACK (distance_down));
+    gtk_builder_add_callback_symbol (ss_builder, "tvg0_up", G_CALLBACK (tvg0_up));
+    gtk_builder_add_callback_symbol (ss_builder, "tvg0_down", G_CALLBACK (tvg0_down));
+    gtk_builder_add_callback_symbol (ss_builder, "tvg_up", G_CALLBACK (tvg_up));
+    gtk_builder_add_callback_symbol (ss_builder, "tvg_down", G_CALLBACK (tvg_down));
+    gtk_builder_add_callback_symbol (ss_builder, "signal_up", G_CALLBACK (signal_up));
+    gtk_builder_add_callback_symbol (ss_builder, "signal_down", G_CALLBACK (signal_down));
 
-  gtk_builder_add_callback_symbol (ss_builder, "sensitivity_up", G_CALLBACK (void_callback));
-  gtk_builder_add_callback_symbol (ss_builder, "sensitivity_down", G_CALLBACK (void_callback));
-  gtk_builder_add_callback_symbol (ss_builder, "mode_changed", G_CALLBACK (void_callback));
-  gtk_builder_connect_signals (ss_builder, &global);
+    gtk_builder_add_callback_symbol (ss_builder, "sensitivity_up", G_CALLBACK (void_callback));
+    gtk_builder_add_callback_symbol (ss_builder, "sensitivity_down", G_CALLBACK (void_callback));
+    gtk_builder_add_callback_symbol (ss_builder, "mode_changed", G_CALLBACK (void_callback));
+    gtk_builder_connect_signals (ss_builder, &global);
 
-  gtk_builder_add_callback_symbol (pf_builder, "brightness_up", G_CALLBACK (brightness_up));
-  gtk_builder_add_callback_symbol (pf_builder, "brightness_down", G_CALLBACK (brightness_down));
-  gtk_builder_add_callback_symbol (pf_builder, "scale_up", G_CALLBACK (scale_up));
-  gtk_builder_add_callback_symbol (pf_builder, "scale_down", G_CALLBACK (scale_down));
-  gtk_builder_add_callback_symbol (pf_builder, "color_map_up", G_CALLBACK (color_map_up));
-  gtk_builder_add_callback_symbol (pf_builder, "color_map_down", G_CALLBACK (color_map_down));
-  gtk_builder_add_callback_symbol (pf_builder, "live_view", G_CALLBACK (live_view));
+    gtk_builder_add_callback_symbol (pf_builder, "brightness_up", G_CALLBACK (brightness_up));
+    gtk_builder_add_callback_symbol (pf_builder, "brightness_down", G_CALLBACK (brightness_down));
+    gtk_builder_add_callback_symbol (pf_builder, "scale_up", G_CALLBACK (scale_up));
+    gtk_builder_add_callback_symbol (pf_builder, "scale_down", G_CALLBACK (scale_down));
+    gtk_builder_add_callback_symbol (pf_builder, "color_map_up", G_CALLBACK (color_map_up));
+    gtk_builder_add_callback_symbol (pf_builder, "color_map_down", G_CALLBACK (color_map_down));
+    gtk_builder_add_callback_symbol (pf_builder, "live_view", G_CALLBACK (live_view));
 
-  gtk_builder_add_callback_symbol (pf_builder, "distance_up", G_CALLBACK (distance_up));
-  gtk_builder_add_callback_symbol (pf_builder, "distance_down", G_CALLBACK (distance_down));
-  gtk_builder_add_callback_symbol (pf_builder, "tvg0_up", G_CALLBACK (tvg0_up));
-  gtk_builder_add_callback_symbol (pf_builder, "tvg0_down", G_CALLBACK (tvg0_down));
-  gtk_builder_add_callback_symbol (pf_builder, "tvg_up", G_CALLBACK (tvg_up));
-  gtk_builder_add_callback_symbol (pf_builder, "tvg_down", G_CALLBACK (tvg_down));
-  gtk_builder_add_callback_symbol (pf_builder, "signal_up", G_CALLBACK (signal_up));
-  gtk_builder_add_callback_symbol (pf_builder, "signal_down", G_CALLBACK (signal_down));
+    gtk_builder_add_callback_symbol (pf_builder, "distance_up", G_CALLBACK (distance_up));
+    gtk_builder_add_callback_symbol (pf_builder, "distance_down", G_CALLBACK (distance_down));
+    gtk_builder_add_callback_symbol (pf_builder, "tvg0_up", G_CALLBACK (tvg0_up));
+    gtk_builder_add_callback_symbol (pf_builder, "tvg0_down", G_CALLBACK (tvg0_down));
+    gtk_builder_add_callback_symbol (pf_builder, "tvg_up", G_CALLBACK (tvg_up));
+    gtk_builder_add_callback_symbol (pf_builder, "tvg_down", G_CALLBACK (tvg_down));
+    gtk_builder_add_callback_symbol (pf_builder, "signal_up", G_CALLBACK (signal_up));
+    gtk_builder_add_callback_symbol (pf_builder, "signal_down", G_CALLBACK (signal_down));
 
-  gtk_builder_add_callback_symbol (pf_builder, "sensitivity_up", G_CALLBACK (void_callback));
-  gtk_builder_add_callback_symbol (pf_builder, "sensitivity_down", G_CALLBACK (void_callback));
-  gtk_builder_add_callback_symbol (pf_builder, "mode_changed", G_CALLBACK (void_callback));
-  gtk_builder_connect_signals (pf_builder, &global);
+    gtk_builder_add_callback_symbol (pf_builder, "sensitivity_up", G_CALLBACK (void_callback));
+    gtk_builder_add_callback_symbol (pf_builder, "sensitivity_down", G_CALLBACK (void_callback));
+    gtk_builder_add_callback_symbol (pf_builder, "mode_changed", G_CALLBACK (void_callback));
+    gtk_builder_connect_signals (pf_builder, &global);
+  }
 
   /* Управление воспроизведением. */
   // play_control = GTK_WIDGET (gtk_builder_get_object (builder, "play_control"));
@@ -2067,12 +2161,15 @@ main (int argc, char **argv)
   gtk_stack_add_titled (GTK_STACK (global.gui.stack), pf_control_box, "pf_control_box", "pf");
   gtk_stack_add_titled (GTK_STACK (global.gui.stack), fl_control_box, "fl_control_box", "fl");
 
-  //GtkWidget *ssw = gtk_stack_switcher_new (); //todo: remove when debugged
-  //gtk_stack_switcher_set_stack (GTK_STACK_SWITCHER (ssw), GTK_STACK (global.gui.stack)); //todo: remove when debugged
-  //gtk_box_pack_end (GTK_BOX (global.gui.right_box), ssw, FALSE, FALSE, 2); //todo: remove when debugged
-
-  /* Создаем виджеты просмотра. */
-  // /* Секторный обзор. */
+  /***
+   *     ___   ___   ___   ___         ___                     ___   ___   ___   ___   ___   ___
+   *      | |   |   |     |   | |     |   |  \ /        |   |   |     | | |     |       |   |
+   *      + |   +    -+-  |-+-  |     |-+-|   +         | + |   +     + | | +-  |-+-    +    -+-
+   *      | |   |       | |     |     |   |   |         |/ \|   |     | | |   | |       |       |
+   *     ---   ---   ---         ---                           ---   ---   ---   ---         ---
+   *
+   * Создаем виджеты просмотра.
+   */
   global.GSS.wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_grid_new ());
   global.gui.disp_widgets[W_SIDESCAN] = g_object_ref (global.GSS.wf);
 
@@ -2099,11 +2196,6 @@ main (int argc, char **argv)
   gtk_box_pack_start (GTK_BOX (global.gui.v_pane), GTK_WIDGET (global.GFL.fl), TRUE, TRUE, 1);
   gtk_box_pack_end (GTK_BOX (global.gui.v_pane), GTK_WIDGET (global.GPF.wf), TRUE, TRUE, 1);
   gtk_box_pack_start (GTK_BOX (global.gui.h_pane), GTK_WIDGET (global.GSS.wf), TRUE, TRUE, 1);
-  /* if you prefer paned...
-   * gtk_paned_add1 (GTK_PANED (global.gui.v_pane), global.GFL.fl);
-   * gtk_paned_add2 (GTK_PANED (global.gui.v_pane), global.GPF.wf);
-   * gtk_paned_add1 (GTK_PANED (global.gui.h_pane), global.GSS.wf);
-   */
 
   /* Cache */
   hyscan_forward_look_player_set_cache (global.GFL.fl_player, global.cache, NULL);
@@ -2126,10 +2218,6 @@ main (int argc, char **argv)
   hyscan_gtk_waterfall_drawer_set_regeneration_period (HYSCAN_GTK_WATERFALL_DRAWER (global.GSS.wf), 500000);
   hyscan_gtk_waterfall_drawer_set_regeneration_period (HYSCAN_GTK_WATERFALL_DRAWER (global.GPF.wf), 500000);
 
-  // gtk_widget_set_hexpand (GTK_WIDGET (global.fl), TRUE);
-  // gtk_widget_set_vexpand (GTK_WIDGET (global.fl), TRUE);
-  // gtk_widget_set_margin_top (GTK_WIDGET (global.fl), 12);
-  //
   // gtk_cifro_area_control_set_scroll_mode (GTK_CIFRO_AREA_CONTROL (global.fl), GTK_CIFRO_AREA_SCROLL_MODE_COMBINED);
   //
   // /* Управление отображением. */
@@ -2219,19 +2307,49 @@ main (int argc, char **argv)
 
   global.sonar_selector = W_SIDESCAN;
 
+  /***
+   *           ___   ___   ___
+   *    |   | |   | |   | |
+   *    |   | |-+-  |-+-  |
+   *    |   | |  \  |     |
+   *     ---               ---
+   *
+   */
+  gchar *urpc_uri = "udp://127.0.0.3:3301";
+  gint urpc_status = 0;
+  global.urpc_keycode = URPC_KEYCODE_NO_ACTION;
+
+  global.urpc_server = urpc_server_create (urpc_uri,
+                                           1,
+                                           10,
+                                           URPC_DEFAULT_SESSION_TIMEOUT,
+                                           URPC_DEFAULT_DATA_SIZE,
+                                           URPC_DEFAULT_DATA_TIMEOUT);
+
+  hyscan_exit_if_w_param (global.urpc_server == NULL, "Unable to create uRpc server at %s", urpc_uri);
+
+  urpc_status = urpc_server_add_proc (global.urpc_server, AME_KEY_RIGHT  + URPC_PROC_USER, urpc_cb, GINT_TO_POINTER (AME_KEY_RIGHT));
+  hyscan_exit_if (urpc_status != 0, "Failed to register AME_KEY_RIGHT callback. ");
+  urpc_status = urpc_server_add_proc (global.urpc_server, AME_KEY_LEFT   + URPC_PROC_USER, urpc_cb, GINT_TO_POINTER (AME_KEY_LEFT));
+  hyscan_exit_if (urpc_status != 0, "Failed to register AME_KEY_LEFT callback. ");
+  urpc_status = urpc_server_add_proc (global.urpc_server, AME_KEY_ENTER  + URPC_PROC_USER, urpc_cb, GINT_TO_POINTER (AME_KEY_ENTER));
+  hyscan_exit_if (urpc_status != 0, "Failed to register AME_KEY_ENTER callback. ");
+  urpc_status = urpc_server_add_proc (global.urpc_server, AME_KEY_UP     + URPC_PROC_USER, urpc_cb, GINT_TO_POINTER (AME_KEY_UP));
+  hyscan_exit_if (urpc_status != 0, "Failed to register AME_KEY_UP callback. ");
+  urpc_status = urpc_server_add_proc (global.urpc_server, AME_KEY_ESCAPE + URPC_PROC_USER, urpc_cb, GINT_TO_POINTER (AME_KEY_ESCAPE));
+  hyscan_exit_if (urpc_status != 0, "Failed to register AME_KEY_ESCAPE callback. ");
+  urpc_status = urpc_server_add_proc (global.urpc_server, AME_KEY_EXIT   + URPC_PROC_USER, urpc_cb, GINT_TO_POINTER (AME_KEY_EXIT));
+  hyscan_exit_if (urpc_status != 0, "Failed to register AME_KEY_EXIT callback. ");
+
+  urpc_status = urpc_server_bind (global.urpc_server);
+  hyscan_exit_if (urpc_status != 0, "Unable to start uRpc server. ");
+  g_timeout_add (100, ame_key_func, &global);
+
 
   if (full_screen)
     gtk_window_fullscreen (GTK_WINDOW (global.gui.window));
 
   gtk_widget_show_all (global.gui.window);
-
-  /* If you prefer paned...
-   * gtk_paned_set_position (global.gui.v_pane, gtk_widget_get_allocated_height (global.gui.v_pane)/2);
-   * gtk_paned_set_position (global.gui.h_pane, gtk_widget_get_allocated_width (global.gui.h_pane)/2);
-   * g_object_set (global.gui.v_pane, "resize", TRUE);
-   * g_object_set (global.gui.h_pane, "resize", TRUE);
-   */
-
   gtk_main ();
 
   if (global.GSS.sonar.sonar_ctl != NULL)
@@ -2263,19 +2381,33 @@ exit:
   g_clear_pointer (&global.GFL.fl_signals, hyscan_data_schema_free_enum_values);
   g_clear_pointer (&global.GSS.sb_signals, hyscan_data_schema_free_enum_values);
   g_clear_pointer (&global.GSS.ps_signals, hyscan_data_schema_free_enum_values);
+  g_clear_pointer (&global.GPF.pf_signals, hyscan_data_schema_free_enum_values);
   g_clear_object (&global.GFL.sonar.sonar_ctl);
+  g_clear_object (&global.GPF.sonar.sonar_ctl);
+  g_clear_object (&global.GSS.sonar.sonar_ctl);
+  g_clear_object (&flss_sonar);
+  g_clear_object (&prof_sonar);
   g_clear_object (&flss_driver);
-  /*
+  g_clear_object (&prof_driver);
+
+  g_free (global.GSS.color_maps[0]);
+  g_free (global.GSS.color_maps[1]);
+  g_free (global.GSS.color_maps[2]);
+  g_free (global.GPF.color_maps[0]);
+  g_free (global.GPF.color_maps[1]);
+  g_free (global.GPF.color_maps[2]);
+
+  g_clear_object (&global.GSS.wf);
+  g_clear_object (&global.GPF.wf);
+  g_clear_object (&global.GFL.fl);
 
   g_free (global.track_name);
   g_free (driver_path);
   g_free (driver_name);
-  g_free (sonar_uri);
   g_free (db_uri);
   g_free (project_name);
   g_free (track_prefix);
   g_free (config_file);
-*/
 
   return 0;
 }
