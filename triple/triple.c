@@ -1588,6 +1588,13 @@ ame_key_func (gpointer user_data)
       return G_SOURCE_REMOVE;
 
     case AME_KEY_ESCAPE:
+      if (global->full_screen)
+        gtk_window_unfullscreen (GTK_WINDOW (global->gui.window));
+      else
+        gtk_window_fullscreen (GTK_WINDOW (global->gui.window));
+      global->full_screen = !global->full_screen;
+      break;
+
     default:
       g_message ("This key is not supported yet. ");
     }
@@ -1632,6 +1639,8 @@ main (int argc, char **argv)
   GtkWidget         *fl_control_box  = NULL;
   GtkWidget         *ss_control_box  = NULL;
   GtkWidget         *pf_control_box  = NULL;
+
+  GtkWidget         *fl_play_control = NULL;
 
   gboolean status;
 
@@ -1685,8 +1694,8 @@ main (int argc, char **argv)
         return 0;
       }
 
-    //if (args[1] != NULL)
-      //config_file = g_strdup (args[1]); //// TODO: what?!
+    if (args[1] != NULL)
+      config_file = g_strdup (args[1]); //// TODO: what?!
 
     g_option_context_free (context);
     g_strfreev (args);
@@ -1825,26 +1834,21 @@ main (int argc, char **argv)
       global.GSS.ps_n_signals = i;
 
       /* Настройка датчиков и антенн. */
-      // if (config_file != NULL)
-      //   {
-      //     config = g_key_file_new ();
-      //     g_key_file_load_from_file (config, config_file, G_KEY_FILE_NONE, NULL);
+      if (config_file != NULL)
+        {
+          config = g_key_file_new ();
+          g_key_file_load_from_file (config, config_file, G_KEY_FILE_NONE, NULL);
 
-      //     if (!setup_sensors (HYSCAN_SENSOR_CONTROL (global.GFL.sonar_ctl.sonar_ctl), config) ||
-      //         !setup_sonar_antenna (global.GFL.sonar_ctl.sonar_ctl, FORWARDLOOK, config))
-      //       {
-      //         status = FALSE;
-      //       }
-      //     else
-      //       {
-      //         status = TRUE;
-      //       }
+          status = TRUE;
+          status &= setup_sensors (HYSCAN_SENSOR_CONTROL (global.GFL.sonar.sonar_ctl), config);
+          status &= setup_sonar_antenna (global.GFL.sonar.sonar_ctl, FORWARDLOOK, config);
+          status &= setup_sonar_antenna (global.GSS.sonar.sonar_ctl, STARBOARD, config);
+          status &= setup_sonar_antenna (global.GSS.sonar.sonar_ctl, PORTSIDE, config);
 
-      //     g_key_file_unref (config);
+          g_key_file_unref (config);
 
-      //     if (!status)
-      //       goto exit;
-      //   }
+          hyscan_exit_if (!status, "Failed to parse configuration file. ");
+        }
 
       /* Рабочий проект. */
       status = hyscan_data_writer_set_project (HYSCAN_DATA_WRITER (global.GFL.sonar.sonar_ctl), project_name);
@@ -1919,26 +1923,19 @@ main (int argc, char **argv)
       global.GPF.pf_n_signals = i;
 
       /* Настройка датчиков и антенн. */
-      // if (config_file != NULL)
-      //   {
-      //     config = g_key_file_new ();
-      //     g_key_file_load_from_file (config, config_file, G_KEY_FILE_NONE, NULL);
+      if (config_file != NULL)
+        {
+          config = g_key_file_new ();
+          g_key_file_load_from_file (config, config_file, G_KEY_FILE_NONE, NULL);
 
-      //     if (!setup_sensors (HYSCAN_SENSOR_CONTROL (global.GPF.sonar_ctl.sonar_ctl), config) ||
-      //         !setup_sonar_antenna (global.GPF.sonar_ctl.sonar_ctl, PROFILER, config))
-      //       {
-      //         status = FALSE;
-      //       }
-      //     else
-      //       {
-      //         status = TRUE;
-      //       }
+          status = setup_sonar_antenna (global.GPF.sonar.sonar_ctl, PROFILER, config);
+          g_key_file_unref (config);
 
-      //     g_key_file_unref (config);
+          hyscan_exit_if (!status, "Failed to parse configuration file. ");
 
-      //     if (!status)
-      //       goto exit;
-      //   }
+          if (!status)
+            goto exit;
+        }
 
       /* Рабочий проект. */
       status = hyscan_data_writer_set_project (HYSCAN_DATA_WRITER (global.GPF.sonar.sonar_ctl), project_name);
@@ -2142,20 +2139,6 @@ main (int argc, char **argv)
     gtk_builder_connect_signals (pf_builder, &global);
   }
 
-  /* Управление воспроизведением. */
-  // play_control = GTK_WIDGET (gtk_builder_get_object (builder, "play_control"));
-  // if (play_control == NULL)
-  //   {
-  //     g_message ("can't load play control ui");
-  //     goto exit;
-  //   }
-  //
-  // global.position = GTK_SCALE (gtk_builder_get_object (builder, "position"));
-  // if (global.position == NULL)
-  //   {
-  //     g_message ("incorrect play control ui");
-  //     goto exit;
-  //   }
   /* Кладем гидролокаторские боксы в гткстэк. */
   gtk_stack_add_titled (GTK_STACK (global.gui.stack), ss_control_box, "ss_control_box", "ss");
   gtk_stack_add_titled (GTK_STACK (global.gui.stack), pf_control_box, "pf_control_box", "pf");
@@ -2181,11 +2164,20 @@ main (int argc, char **argv)
   global.gui.disp_widgets[W_FORWARDL] = g_object_ref (global.GFL.fl);
   global.GFL.fl_player = hyscan_gtk_forward_look_get_player (global.GFL.fl);
 
-  gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (global.GSS.wf), TRUE);
-  gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (global.GPF.wf), TRUE);
+  /* Управление воспроизведением FL. */
+  fl_play_control = GTK_WIDGET (get_from_builder (fl_builder, "fl_play_control"));
+  hyscan_exit_if (fl_play_control == NULL, "can't load play control ui");
+  global.GFL.position = GTK_SCALE (get_from_builder (fl_builder, "position"));
+  hyscan_exit_if (global.GFL.position == NULL, "incorrect play control ui");
+  global.GFL.position_range = hyscan_gtk_forward_look_get_adjustment (global.GFL.fl);
+  gtk_range_set_adjustment (GTK_RANGE (global.GFL.position), global.GFL.position_range);
+
+  hyscan_gtk_area_set_bottom (HYSCAN_GTK_AREA (global.gui.gtk_area), fl_play_control);
+
+  gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (global.GSS.wf), FALSE);
+  gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (global.GPF.wf), FALSE);
   gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (global.GFL.fl), TRUE);
 
-  //TODO: waterfall signals and switches
   global.GSS.live_view = GTK_SWITCH (get_from_builder (ss_builder, "ss_live_view"));
   global.GPF.live_view = GTK_SWITCH (get_from_builder (pf_builder, "ss_live_view"));
   g_signal_connect (G_OBJECT (global.GSS.wf), "automove-state", G_CALLBACK (live_view_off), &global);
