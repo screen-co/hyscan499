@@ -1,6 +1,7 @@
 
 cmake_minimum_required (VERSION 2.6)
 
+set (HYSCAN_MAJOR 5)
 project (triple)
 
 include (FindPkgConfig)
@@ -63,7 +64,15 @@ link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancontrol/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscanmodel/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscangui/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../urpc/bin")
-set (HYSCAN_LIBRARIES gtkcifroarea-3.1 hyscantypes hyscandb hyscancache hyscancore hyscancontrol hyscanmodel hyscangui urpc)
+set (HYSCAN_LIBRARIES gtkcifroarea-3.1
+                      hyscantypes-${HYSCAN_MAJOR}
+                      hyscandb-${HYSCAN_MAJOR}
+                      hyscancache-${HYSCAN_MAJOR}
+                      hyscancore-${HYSCAN_MAJOR}
+                      hyscancontrol-${HYSCAN_MAJOR}
+                      hyscanmodel-${HYSCAN_MAJOR}
+                      hyscangui-${HYSCAN_MAJOR}
+                      urpc)
 
 add_definitions (-DG_LOG_DOMAIN="HyScan-triple")
 add_subdirectory ("triple")

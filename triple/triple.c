@@ -3,7 +3,9 @@
 #include <hyscan-sonar-client.h>
 #include <hyscan-sonar-control.h>
 #include <hyscan-forward-look-data.h>
+#include <hyscan-gtk-waterfall.h>
 #include <hyscan-gtk-waterfall-grid.h>
+#include <hyscan-gtk-waterfall-control.h>
 #include <hyscan-tile-color.h>
 #include <hyscan-db-info.h>
 #include <hyscan-cached.h>
@@ -16,6 +18,9 @@
 #define hyscan_return_val_if_fail(expr,val) do {if (!(expr)) return (val);} while (FALSE)
 #define hyscan_exit_if(expr,msg) do {if (!(expr)) break; g_message ((msg)); goto exit;} while (FALSE)
 #define hyscan_exit_if_w_param(expr,msg,param) do {if (!(expr)) break; g_message ((msg),(param)); goto exit;} while (FALSE)
+
+#define WRONG_SELECTOR { g_message ("Wrong sonar selector @%i", __LINE__); }
+
 #define STARBOARD HYSCAN_SOURCE_SIDE_SCAN_STARBOARD
 #define PORTSIDE HYSCAN_SOURCE_SIDE_SCAN_PORT
 #define PROFILER HYSCAN_SOURCE_PROFILER
@@ -174,6 +179,8 @@ typedef struct
     SonarSpecificGui                     gui;
 
     HyScanGtkWaterfall                  *wf;
+    HyScanGtkWaterfallGrid              *wf_grid;
+    HyScanGtkWaterfallControl           *wf_ctrl;
     GtkSwitch                           *live_view;
   } GPF;
 
@@ -192,6 +199,8 @@ typedef struct
 
     SonarSpecificGui                     gui;
     HyScanGtkWaterfall                  *wf;
+    HyScanGtkWaterfallGrid              *wf_grid;
+    HyScanGtkWaterfallControl           *wf_ctrl;
     GtkSwitch                           *live_view;
   } GSS;
 
@@ -331,10 +340,12 @@ track_changed (GtkTreeView *list,
   track_name = g_value_get_string (&value);
 
   hyscan_forward_look_player_open (global->GFL.fl_player, global->db, global->project_name, track_name, TRUE);
-  hyscan_gtk_waterfall_open (global->GSS.wf, global->db, global->project_name, track_name, TRUE);
+  hyscan_gtk_waterfall_state_set_track (HYSCAN_GTK_WATERFALL_STATE (global->GSS.wf),
+                                        global->db, global->project_name, track_name, TRUE);
 
   pftrack = g_strdup_printf (PF_TRACK_PREFIX "%s", track_name);
-  hyscan_gtk_waterfall_open (global->GPF.wf, global->db, global->project_name, pftrack, TRUE);
+  hyscan_gtk_waterfall_state_set_track (HYSCAN_GTK_WATERFALL_STATE (global->GPF.wf),
+                                        global->db, global->project_name, pftrack, TRUE);
   g_free (pftrack);
 
   g_value_unset (&value);
@@ -343,14 +354,14 @@ track_changed (GtkTreeView *list,
   if (global->gui.start_stop_switch != NULL && gtk_switch_get_state (global->gui.start_stop_switch))
     {
       hyscan_forward_look_player_real_time (global->GFL.fl_player);
-      hyscan_gtk_waterfall_drawer_automove (HYSCAN_GTK_WATERFALL_DRAWER (global->GSS.wf), TRUE);
-      hyscan_gtk_waterfall_drawer_automove (HYSCAN_GTK_WATERFALL_DRAWER (global->GPF.wf), TRUE);
+      hyscan_gtk_waterfall_automove (HYSCAN_GTK_WATERFALL (global->GSS.wf), TRUE);
+      hyscan_gtk_waterfall_automove (HYSCAN_GTK_WATERFALL (global->GPF.wf), TRUE);
     }
   else
     {
       hyscan_forward_look_player_pause (global->GFL.fl_player);
-      hyscan_gtk_waterfall_drawer_automove (HYSCAN_GTK_WATERFALL_DRAWER (global->GSS.wf), FALSE);
-      hyscan_gtk_waterfall_drawer_automove (HYSCAN_GTK_WATERFALL_DRAWER (global->GPF.wf), FALSE);
+      hyscan_gtk_waterfall_automove (HYSCAN_GTK_WATERFALL (global->GSS.wf), FALSE);
+      hyscan_gtk_waterfall_automove (HYSCAN_GTK_WATERFALL (global->GPF.wf), FALSE);
     }
 }
 
@@ -383,11 +394,11 @@ brightness_set (Global  *global,
   switch (global->sonar_selector)
     {
     case W_SIDESCAN:
-      hyscan_gtk_waterfall_drawer_set_levels_for_all (HYSCAN_GTK_WATERFALL_DRAWER (global->GSS.wf), b, g, w);
+      hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (global->GSS.wf), b, g, w);
       gtk_label_set_markup (global->GSS.gui.brightness_value, text);
       break;
     case W_PROFILER:
-      hyscan_gtk_waterfall_drawer_set_levels_for_all (HYSCAN_GTK_WATERFALL_DRAWER (global->GPF.wf), b, g, w);
+      hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (global->GPF.wf), b, g, w);
       gtk_label_set_markup (global->GPF.gui.brightness_value, text);
       break;
     case W_FORWARDL:
@@ -421,10 +432,10 @@ scale_set (Global   *global,
     {
     case W_SIDESCAN:
       if (user_data == NULL)
-        hyscan_gtk_waterfall_zoom (global->GSS.wf, scale_up);
+        hyscan_gtk_waterfall_control_zoom (global->GSS.wf_ctrl, scale_up);
 
-      i_scale = hyscan_gtk_waterfall_drawer_get_scale (HYSCAN_GTK_WATERFALL_DRAWER (global->GSS.wf),
-                                                       &scales, &n_scales);
+      i_scale = hyscan_gtk_waterfall_get_scale (HYSCAN_GTK_WATERFALL (global->GSS.wf),
+                                                &scales, &n_scales);
 
       text = g_strdup_printf ("<small><b>1:%.0f</b></small>", scales[i_scale]);
       gtk_label_set_markup (global->GSS.gui.scale_value, text);
@@ -432,10 +443,10 @@ scale_set (Global   *global,
 
     case W_PROFILER:
       if (user_data == NULL)
-        hyscan_gtk_waterfall_zoom (global->GPF.wf, scale_up);
+        hyscan_gtk_waterfall_control_zoom (global->GPF.wf_ctrl, scale_up);
 
-      i_scale = hyscan_gtk_waterfall_drawer_get_scale (HYSCAN_GTK_WATERFALL_DRAWER (global->GPF.wf),
-                                                       &scales, &n_scales);
+      i_scale = hyscan_gtk_waterfall_get_scale (HYSCAN_GTK_WATERFALL (global->GPF.wf),
+                                                &scales, &n_scales);
 
       text = g_strdup_printf ("<small><b>1:%.0f</b></small>", scales[i_scale]);
       gtk_label_set_markup (global->GPF.gui.scale_value, text);
@@ -474,7 +485,7 @@ static gboolean
 color_map_set (Global *global,
                guint   cur_color_map)
 {
-  HyScanGtkWaterfallDrawer *wfd = NULL;
+  HyScanGtkWaterfall *wfd = NULL;
   GtkLabel *label = NULL;
   guint32 **cmap = NULL;
   guint   *len = NULL;
@@ -487,13 +498,13 @@ color_map_set (Global *global,
   switch (global->sonar_selector)
     {
     case W_SIDESCAN:
-      wfd = HYSCAN_GTK_WATERFALL_DRAWER (global->GSS.wf);
+      wfd = HYSCAN_GTK_WATERFALL (global->GSS.wf);
       cmap = global->GSS.color_maps;
       len = global->GSS.color_map_len;
       label = global->GSS.gui.third_value;
       break;
     case W_PROFILER:
-      wfd = HYSCAN_GTK_WATERFALL_DRAWER (global->GPF.wf);
+      wfd = HYSCAN_GTK_WATERFALL (global->GPF.wf);
       cmap = global->GPF.color_maps;
       len = global->GPF.color_map_len;
       label = global->GPF.gui.third_value;
@@ -519,9 +530,8 @@ color_map_set (Global *global,
       return FALSE;
     }
 
-
-  hyscan_gtk_waterfall_drawer_set_colormap_for_all (wfd, cmap[cur_color_map], len[cur_color_map], BLACK_BG);
-  hyscan_gtk_waterfall_drawer_set_substrate (wfd, BLACK_BG);
+  hyscan_gtk_waterfall_set_colormap_for_all (wfd, cmap[cur_color_map], len[cur_color_map], BLACK_BG);
+  hyscan_gtk_waterfall_set_substrate (wfd, BLACK_BG);
 
   text = g_strdup_printf ("<small><b>%s</b></small>", color_map_name);
   gtk_label_set_markup (label, text);
@@ -1014,17 +1024,17 @@ live_view (GtkWidget  *widget,
            Global     *global)
 {
   GtkSwitch *live_view;
-  HyScanGtkWaterfallDrawer *wfd;
+  HyScanGtkWaterfall *wfd;
 
   if (GTK_WIDGET (widget) == GTK_WIDGET (global->GSS.live_view))
     {
       live_view = global->GSS.live_view;
-      wfd = HYSCAN_GTK_WATERFALL_DRAWER (global->GSS.wf);
+      wfd = HYSCAN_GTK_WATERFALL (global->GSS.wf);
     }
   else if (GTK_WIDGET (widget) == GTK_WIDGET (global->GPF.live_view))
     {
       live_view = global->GPF.live_view;
-      wfd = HYSCAN_GTK_WATERFALL_DRAWER (global->GPF.wf);
+      wfd = HYSCAN_GTK_WATERFALL (global->GPF.wf);
     }
   else
     {
@@ -1033,7 +1043,7 @@ live_view (GtkWidget  *widget,
     }
 
   if (state != gtk_switch_get_state (live_view))
-    hyscan_gtk_waterfall_drawer_automove (wfd, state);
+    hyscan_gtk_waterfall_automove (wfd, state);
   gtk_switch_set_state (live_view, state);
 
   return TRUE;
@@ -1081,6 +1091,8 @@ distance_up (GtkWidget *widget,
         if (distance_set (global, cur_distance))
           global->GPF.sonar.cur_distance = cur_distance;
         break;
+      default:
+        WRONG_SELECTOR;
     }
 }
 
@@ -1107,6 +1119,8 @@ distance_down (GtkWidget *widget,
         if (distance_set (global, cur_distance))
           global->GPF.sonar.cur_distance = cur_distance;
         break;
+      default:
+        WRONG_SELECTOR;
     }
 }
 
@@ -1135,6 +1149,8 @@ tvg0_up (GtkWidget *widget,
       if (tvg_set (global, &cur_gain0, global->GPF.sonar.cur_gain_step))
         global->GPF.sonar.cur_gain0 = cur_gain0;
       break;
+    default:
+      WRONG_SELECTOR;
     }
 }
 
@@ -1433,8 +1449,8 @@ start_stop (GtkWidget *widget,
       gtk_switch_set_active (global->GPF.live_view, TRUE);
       gtk_switch_set_state (global->GSS.live_view, TRUE);
       gtk_switch_set_state (global->GPF.live_view, TRUE);
-      hyscan_gtk_waterfall_drawer_automove (HYSCAN_GTK_WATERFALL_DRAWER (global->GSS.wf), TRUE);
-      hyscan_gtk_waterfall_drawer_automove (HYSCAN_GTK_WATERFALL_DRAWER (global->GPF.wf), TRUE);
+      hyscan_gtk_waterfall_automove (HYSCAN_GTK_WATERFALL (global->GSS.wf), TRUE);
+      hyscan_gtk_waterfall_automove (HYSCAN_GTK_WATERFALL (global->GPF.wf), TRUE);
     }
 
   /* Выключаем излучение и блокируем режим онлайн. */
@@ -2153,11 +2169,15 @@ main (int argc, char **argv)
    *
    * Создаем виджеты просмотра.
    */
-  global.GSS.wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_grid_new ());
+  global.GSS.wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new ());
+  global.GSS.wf_grid = hyscan_gtk_waterfall_grid_new (global.GSS.wf);
+  global.GSS.wf_ctrl = hyscan_gtk_waterfall_control_new (global.GSS.wf);
   global.gui.disp_widgets[W_SIDESCAN] = g_object_ref (global.GSS.wf);
 
-  global.GPF.wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_grid_new ());
-  hyscan_gtk_waterfall_echosounder (global.GPF.wf, PROFILER);
+  global.GPF.wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new ());
+  global.GPF.wf_grid = hyscan_gtk_waterfall_grid_new (global.GPF.wf);
+  global.GPF.wf_ctrl = hyscan_gtk_waterfall_control_new (global.GPF.wf);
+  hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (global.GPF.wf), PROFILER);
   global.gui.disp_widgets[W_PROFILER] = g_object_ref (global.GPF.wf);
 
   global.GFL.fl = HYSCAN_GTK_FORWARD_LOOK (hyscan_gtk_forward_look_new ());
@@ -2191,8 +2211,10 @@ main (int argc, char **argv)
 
   /* Cache */
   hyscan_forward_look_player_set_cache (global.GFL.fl_player, global.cache, NULL);
-  hyscan_gtk_waterfall_set_cache (global.GSS.wf, global.cache, global.cache, NULL);
-  hyscan_gtk_waterfall_set_cache (global.GPF.wf, global.cache, global.cache, NULL);
+  hyscan_gtk_waterfall_state_set_cache (HYSCAN_GTK_WATERFALL_STATE (global.GSS.wf),
+                                        global.cache, global.cache, NULL);
+  hyscan_gtk_waterfall_state_set_cache (HYSCAN_GTK_WATERFALL_STATE (global.GPF.wf),
+                                        global.cache, global.cache, NULL);
 
   /* SV. */
   global.sound_velocity = sound_velocity;
@@ -2202,13 +2224,13 @@ main (int argc, char **argv)
   g_array_insert_val (svp, 0, svp_val);
 
   hyscan_forward_look_player_set_sv (global.GFL.fl_player, global.sound_velocity);
-  hyscan_gtk_waterfall_set_sound_velocity (global.GSS.wf, svp);
-  hyscan_gtk_waterfall_set_sound_velocity (global.GPF.wf, svp);
+  hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (global.GSS.wf), svp);
+  hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (global.GPF.wf), svp);
 
-  hyscan_gtk_waterfall_drawer_set_automove_period (HYSCAN_GTK_WATERFALL_DRAWER (global.GSS.wf), 100000);
-  hyscan_gtk_waterfall_drawer_set_automove_period (HYSCAN_GTK_WATERFALL_DRAWER (global.GPF.wf), 100000);
-  hyscan_gtk_waterfall_drawer_set_regeneration_period (HYSCAN_GTK_WATERFALL_DRAWER (global.GSS.wf), 500000);
-  hyscan_gtk_waterfall_drawer_set_regeneration_period (HYSCAN_GTK_WATERFALL_DRAWER (global.GPF.wf), 500000);
+  hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (global.GSS.wf), 100000);
+  hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (global.GPF.wf), 100000);
+  hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (global.GSS.wf), 500000);
+  hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (global.GPF.wf), 500000);
 
   // gtk_cifro_area_control_set_scroll_mode (GTK_CIFRO_AREA_CONTROL (global.fl), GTK_CIFRO_AREA_SCROLL_MODE_COMBINED);
   //
@@ -2230,7 +2252,7 @@ main (int argc, char **argv)
   kolors[1] = hyscan_tile_color_converter_d2i (1.0, 1.0, 0.0, 1.0); /* Желтый. */
   global.GSS.color_maps[1] = hyscan_tile_color_compose_colormap (kolors, 2, &global.GSS.color_map_len[1]);
   global.GPF.color_maps[1] = hyscan_tile_color_compose_colormap (kolors, 2, &global.GPF.color_map_len[1]);
-  kolors[1] = hyscan_tile_color_converter_d2i (0.0, 1.0, 1.0, 1.0); /* Зеленый. */
+  kolors[1] = hyscan_tile_color_converter_d2i (0.0, 1.0, 0.0, 1.0); /* Зеленый. */
   global.GSS.color_maps[2] = hyscan_tile_color_compose_colormap (kolors, 2, &global.GSS.color_map_len[2]);
   global.GPF.color_maps[2] = hyscan_tile_color_compose_colormap (kolors, 2, &global.GPF.color_map_len[2]);
 
