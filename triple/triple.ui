@@ -349,6 +349,149 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-zoom-in</property>
   </object>
+  <object class="GtkGrid" id="sonar_control">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="margin_bottom">12</property>
+    <property name="hexpand">False</property>
+    <property name="column_spacing">1</property>
+    <child>
+      <object class="GtkLabel" id="distance_label">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">start</property>
+        <property name="valign">center</property>
+        <property name="margin_bottom">6</property>
+        <property name="label" translatable="yes">Дистанция</property>
+        <property name="justify">center</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">0</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="distance_down">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">distance_image_down</property>
+        <signal name="clicked" handler="distance_down" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="distance_up">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">distance_image_up</property>
+        <signal name="clicked" handler="distance_up" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="distance_value">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="valign">center</property>
+        <property name="hexpand">True</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;100 m&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="use_markup">True</property>
+        <property name="justify">center</property>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="distance_separator">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">6</property>
+        <property name="margin_bottom">6</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">2</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="signal_label">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">start</property>
+        <property name="valign">center</property>
+        <property name="margin_bottom">6</property>
+        <property name="label" translatable="yes">Сигнал</property>
+        <property name="justify">center</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">3</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="signal_down">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">signal_image_down</property>
+        <signal name="clicked" handler="signal_down" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="signal_value">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="valign">center</property>
+        <property name="hexpand">True</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;Tone 100&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="use_markup">True</property>
+        <property name="justify">center</property>
+        <property name="single_line_mode">True</property>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="signal_up">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">signal_image_up</property>
+        <signal name="clicked" handler="signal_up" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">4</property>
+      </packing>
+    </child>
+  </object>
   <object class="GtkImage" id="ss_brightness_image_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -661,21 +804,18 @@
     <property name="can_focus">False</property>
     <property name="stock">gtk-zoom-in</property>
   </object>
-  <object class="GtkGrid" id="sonar_control">
+  <object class="GtkGrid" id="lin_tvg_control">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="margin_bottom">12</property>
     <property name="hexpand">False</property>
-    <property name="column_spacing">1</property>
     <child>
-      <object class="GtkLabel" id="distance_label">
+      <object class="GtkLabel" id="tvg_label0">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="halign">start</property>
         <property name="valign">center</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Дистанция</property>
-        <property name="justify">center</property>
+        <property name="label" translatable="yes">Усиление-0</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -684,14 +824,14 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="distance_down">
+      <object class="GtkButton" id="tvg0_down">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="halign">center</property>
         <property name="valign">center</property>
-        <property name="image">distance_image_down</property>
-        <signal name="clicked" handler="distance_down" swapped="no"/>
+        <property name="image">tvg0_image_down</property>
+        <signal name="clicked" handler="tvg0_down" swapped="no"/>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -699,29 +839,13 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="distance_up">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">distance_image_up</property>
-        <signal name="clicked" handler="distance_up" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">1</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="distance_value">
+      <object class="GtkLabel" id="tvg0_value">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="valign">center</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;100 m&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;0 dB&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
-        <property name="justify">center</property>
       </object>
       <packing>
         <property name="left_attach">1</property>
@@ -729,10 +853,25 @@
       </packing>
     </child>
     <child>
-      <object class="GtkSeparator" id="distance_separator">
+      <object class="GtkButton" id="tvg0_up">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">tvg0_image_up</property>
+        <signal name="clicked" handler="tvg0_up" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="tvg0_separator">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="margin_top">9</property>
         <property name="margin_bottom">6</property>
       </object>
       <packing>
@@ -753,7 +892,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">6</property>
+        <property name="top_attach">3</property>
         <property name="width">3</property>
       </packing>
     </child>
@@ -769,7 +908,21 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">7</property>
+        <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="tvg_value">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="valign">center</property>
+        <property name="hexpand">True</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;20 dB&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="use_markup">True</property>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">4</property>
       </packing>
     </child>
     <child>
@@ -784,106 +937,55 @@
       </object>
       <packing>
         <property name="left_attach">2</property>
-        <property name="top_attach">7</property>
+        <property name="top_attach">4</property>
       </packing>
     </child>
+  </object>
+  <object class="GtkImage" id="tvg_level_down_image">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-zoom-out</property>
+  </object>
+  <object class="GtkImage" id="tvg_level_up_image">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-zoom-in</property>
+  </object>
+  <object class="GtkImage" id="tvg_sensitivity_down_image">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-zoom-out</property>
+  </object>
+  <object class="GtkImage" id="tvg_sensitivity_up_image">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="stock">gtk-zoom-in</property>
+  </object>
+  <object class="GtkGrid" id="auto_tvg_control">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="hexpand">False</property>
     <child>
-      <object class="GtkLabel" id="tvg_value">
+      <object class="GtkLabel" id="tvg_level_label">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="valign">center</property>
-        <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;20 dB&lt;/b&gt;&lt;/small&gt;</property>
-        <property name="use_markup">True</property>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">7</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkSeparator" id="tvg_separator">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="halign">start</property>
         <property name="margin_bottom">6</property>
+        <property name="label" translatable="yes">Уровень</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">8</property>
+        <property name="top_attach">0</property>
         <property name="width">3</property>
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="signal_label">
+      <object class="GtkLabel" id="tvg_sensitivity_label">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="halign">start</property>
-        <property name="valign">center</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Сигнал</property>
-        <property name="justify">center</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">9</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="signal_value">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="valign">center</property>
-        <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;Tone 100&lt;/b&gt;&lt;/small&gt;</property>
-        <property name="use_markup">True</property>
-        <property name="justify">center</property>
-        <property name="single_line_mode">True</property>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">10</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="signal_down">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">signal_image_down</property>
-        <signal name="clicked" handler="signal_down" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">10</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="signal_up">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">signal_image_up</property>
-        <signal name="clicked" handler="signal_up" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">10</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="tvg_label0">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">start</property>
-        <property name="valign">center</property>
-        <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Усиление-0</property>
+        <property name="label" translatable="yes">Чувственность</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -892,14 +994,24 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="tvg0_down">
+      <object class="GtkButton" id="tvg_level_down">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">tvg0_image_down</property>
-        <signal name="clicked" handler="tvg0_down" swapped="no"/>
+        <property name="image">tvg_level_down_image</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="tvg_sensitivity_down">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="image">tvg_sensitivity_down_image</property>
+        <property name="xalign">0.55000001192092896</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -907,14 +1019,23 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="tvg0_up">
+      <object class="GtkButton" id="tvg_level_up">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">tvg0_image_up</property>
-        <signal name="clicked" handler="tvg0_up" swapped="no"/>
+        <property name="image">tvg_level_up_image</property>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="tvg_sensitivity_up">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="image">tvg_sensitivity_up_image</property>
       </object>
       <packing>
         <property name="left_attach">2</property>
@@ -922,30 +1043,42 @@
       </packing>
     </child>
     <child>
-      <object class="GtkSeparator" id="tvg0_separator">
+      <object class="GtkLabel" id="tvg_level_value">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
-        <property name="margin_bottom">6</property>
+        <property name="hexpand">True</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;0.5&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="use_markup">True</property>
       </object>
       <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">5</property>
-        <property name="width">3</property>
+        <property name="left_attach">1</property>
+        <property name="top_attach">1</property>
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="tvg0_value">
+      <object class="GtkLabel" id="tvg_sensitivity_value">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="valign">center</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;0 dB&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;1.0&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
       </object>
       <packing>
         <property name="left_attach">1</property>
         <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="separator1">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">9</property>
+        <property name="margin_bottom">6</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">2</property>
+        <property name="width">3</property>
       </packing>
     </child>
   </object>
