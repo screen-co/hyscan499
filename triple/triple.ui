@@ -999,6 +999,7 @@
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="image">tvg_level_down_image</property>
+        <signal name="clicked" handler="tvg_level_down" swapped="no"/>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -1012,6 +1013,7 @@
         <property name="receives_default">True</property>
         <property name="image">tvg_sensitivity_down_image</property>
         <property name="xalign">0.55000001192092896</property>
+        <signal name="clicked" handler="tvg_sensitivity_down" swapped="no"/>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -1024,6 +1026,7 @@
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="image">tvg_level_up_image</property>
+        <signal name="clicked" handler="tvg_level_up" swapped="no"/>
       </object>
       <packing>
         <property name="left_attach">2</property>
@@ -1036,6 +1039,7 @@
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="image">tvg_sensitivity_up_image</property>
+        <signal name="clicked" handler="tvg_sensitivity_up" swapped="no"/>
       </object>
       <packing>
         <property name="left_attach">2</property>

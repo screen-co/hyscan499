@@ -17,7 +17,7 @@
 #include "sonar-configure.h"
 #include "hyscan-gtk-forward-look.h"
 
-#define hyscan_return_val_if_fail(expr,val) do {if (!(expr)) return (val);} while (FALSE)
+#define hyscan_return_val_if_fail(expr,val) do {if (!(expr)) {return (val);}} while (FALSE)
 #define hyscan_exit_if(expr,msg) do {if (!(expr)) break; g_message ((msg)); goto exit;} while (FALSE)
 #define hyscan_exit_if_w_param(expr,msg,param) do {if (!(expr)) break; g_message ((msg),(param)); goto exit;} while (FALSE)
 
@@ -748,7 +748,7 @@ auto_tvg_set (Global  *global,
         break;
 
       case W_PROFILER:
-        status = hyscan_tvg_control_set_auto (global->GSS.sonar.tvg_ctl,
+        status = hyscan_tvg_control_set_auto (global->GPF.sonar.tvg_ctl,
                                               PROFILER, level, sensitivity);
         hyscan_return_val_if_fail (status, FALSE);
         
@@ -757,7 +757,7 @@ auto_tvg_set (Global  *global,
         break;
 
       case W_FORWARDL:
-        status = hyscan_tvg_control_set_auto (global->GSS.sonar.tvg_ctl,
+        status = hyscan_tvg_control_set_auto (global->GFL.sonar.tvg_ctl,
                                               FORWARDLOOK, level, sensitivity);
         hyscan_return_val_if_fail (status, FALSE);
 
@@ -770,10 +770,10 @@ auto_tvg_set (Global  *global,
     }
 
   sens_text = g_strdup_printf ("<small><b>%.1f</b></small>", sensitivity);
-  gtk_label_set_markup (tvg0_value, sens_text);
+  gtk_label_set_markup (tvg_value, sens_text);
   g_free (sens_text);
   level_text = g_strdup_printf ("<small><b>%.1f</b></small>", level);
-  gtk_label_set_markup (tvg_value, level_text);
+  gtk_label_set_markup (tvg0_value, level_text);
   g_free (level_text);
 
   return TRUE;
@@ -1556,7 +1556,8 @@ start_stop (GtkWidget *widget,
       /* Задаем параметры гидролокаторов. */
       global->sonar_selector = W_SIDESCAN;
       if (!signal_set   (global, global->GSS.sonar.cur_signal) ||
-          !tvg_set      (global, &global->GSS.sonar.cur_gain0, global->GSS.sonar.cur_gain_step) ||
+          !auto_tvg_set (global, global->GSS.sonar.cur_level, global->GSS.sonar.cur_sensitivity) ||
+          // !tvg_set      (global, &global->GSS.sonar.cur_gain0, global->GSS.sonar.cur_gain_step) ||
           !distance_set (global, global->GSS.sonar.cur_distance))
         {
           gtk_switch_set_active (GTK_SWITCH (widget), FALSE);
@@ -1689,8 +1690,7 @@ create_sonar_box (GtkBuilder         *builder,
 
   gtk_box_pack_start (GTK_BOX (box), view_wdgt, FALSE, FALSE, 0);
 
-  // if (sonar_control != NULL)
-  if (sonar_control == NULL)
+  if (sonar_control != NULL)
     {
       sonar_wdgt = GTK_WIDGET (get_from_builder (builder, sonr_ctl_name));
       tvg_wdgt = GTK_WIDGET (get_from_builder (builder, tvg_ctl_name));
@@ -1744,6 +1744,8 @@ get_sonar_specific_gui (SonarSpecificGui *gui,
   gui->tvg0_value       = GTK_LABEL (get_from_builder (builder, tvg_1_value));
   gui->tvg_value        = GTK_LABEL (get_from_builder (builder, tvg_2_value));
   gui->signal_value     = GTK_LABEL (get_from_builder (builder, "signal_value"));
+
+  g_message ("!!!!! %s %s %s", sonar,  tvg_1_value, tvg_2_value);
 
   return check_sonar_specific_gui (gui, sonar);
 }
@@ -2009,7 +2011,7 @@ main (int argc, char **argv)
    *
    * Подключение к гидролокатору.
    */
-  goto no_sonar;
+  // goto no_sonar;
   if (flss_uri != NULL)
     {
       HyScanGeneratorModeType gen_cap;
@@ -2565,7 +2567,7 @@ main (int argc, char **argv)
   if (global.GSS.sonar.sonar_ctl != NULL)
     {
       distance_set (&global, global.GSS.sonar.cur_distance);
-      tvg_set (&global, &global.GSS.sonar.cur_gain0, global.GSS.sonar.cur_gain_step);
+      auto_tvg_set (&global, 0, 0);
       signal_set (&global, 1);
     }
 
