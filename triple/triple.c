@@ -8,6 +8,7 @@
 #include <hyscan-gtk-waterfall-control.h>
 #include <hyscan-gtk-waterfall-meter.h>
 #include <hyscan-gtk-waterfall-mark.h>
+#include <hyscan-mark-manager.h>
 #include <hyscan-tile-color.h>
 #include <hyscan-db-info.h>
 #include <hyscan-cached.h>
@@ -108,6 +109,7 @@ typedef struct
   gchar                               *track_name;
 
   HyScanCache                         *cache;
+  HyScanMarkManager                   *mman;
 
   gboolean                             full_screen;
   gdouble                              sound_velocity;
@@ -144,6 +146,7 @@ typedef struct
       GtkWidget                           *ctrl_widgets[W_LAST];
       GtkWidget                           *disp_widgets[W_LAST];
 
+      GtkWidget                           *mlist;
 
       GtkToggleButton                     *ss_selector;
       GtkToggleButton                     *pf_selector;
@@ -217,6 +220,11 @@ typedef struct
 } Global;
 
 Global global = { 0 };
+
+void no_processing_needed (void)
+{
+  return;
+}
 
 /* Функция изменяет режим окна full screen. */
 static gboolean
@@ -355,7 +363,7 @@ track_changed (GtkTreeView *list,
 
   pftrack = g_strdup_printf (PF_TRACK_PREFIX "%s", track_name);
   hyscan_gtk_waterfall_state_set_track (HYSCAN_GTK_WATERFALL_STATE (global->GPF.wf),
-                                        global->db, global->project_name, pftrack, TRUE);
+                                        global->db, global->project_name, pftrack, FALSE);
   g_free (pftrack);
 
   g_value_unset (&value);
@@ -1477,6 +1485,22 @@ signal_down (GtkWidget *widget,
     }
 }
 
+void 
+bottom_shower (Global *global)
+{
+  GtkToggleButton *button = global->gui.single_window;
+  gboolean single = gtk_toggle_button_get_active (button);
+
+  if (!single)
+    return;
+
+  /* Полноэкранный режим форвард-лука приводит к появлению нижней панели. */
+  if (global->sonar_selector == W_FORWARDL)
+    hyscan_gtk_area_set_bottom_visible (HYSCAN_GTK_AREA (global->gui.gtk_area), TRUE);
+  else
+    hyscan_gtk_area_set_bottom_visible (HYSCAN_GTK_AREA (global->gui.gtk_area), FALSE);
+}
+
 void
 widget_swap (GtkToggleButton *togglebutton,
              gpointer         user_data)
@@ -1525,7 +1549,11 @@ widget_swap (GtkToggleButton *togglebutton,
   pack_func (GTK_BOX (global.gui.v_pane), will_go_right, TRUE, TRUE, 0);
 
   gtk_stack_set_visible_child (GTK_STACK (global.gui.stack), global.gui.ctrl_widgets[selector]);
+
+  bottom_shower (&global);
 }
+
+
 
 void
 one_window (GtkToggleButton *togglebutton,
@@ -1533,6 +1561,8 @@ one_window (GtkToggleButton *togglebutton,
 {
   gboolean active = gtk_toggle_button_get_active (togglebutton);
   gtk_widget_set_visible (global->gui.v_pane, !active);
+
+  bottom_shower (global);
 }
 
 /* Функция включает/выключает излучение. */
@@ -1690,20 +1720,20 @@ create_sonar_box (GtkBuilder         *builder,
 
   gtk_box_pack_start (GTK_BOX (box), view_wdgt, FALSE, FALSE, 0);
 
-  if (sonar_control != NULL)
-    {
-      sonar_wdgt = GTK_WIDGET (get_from_builder (builder, sonr_ctl_name));
-      tvg_wdgt = GTK_WIDGET (get_from_builder (builder, tvg_ctl_name));
-      if (sonar_wdgt == NULL)
-        {
-          g_clear_object (&box);
-          return NULL;
-        }
+  if (sonar_control == NULL)
+    return box;
 
-      gtk_box_pack_end (GTK_BOX (box), tvg_wdgt, FALSE, FALSE, 0);
-      gtk_box_pack_end (GTK_BOX (box), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
-      gtk_box_pack_end (GTK_BOX (box), sonar_wdgt, FALSE, FALSE, 0);
+  sonar_wdgt = GTK_WIDGET (get_from_builder (builder, sonr_ctl_name));
+  tvg_wdgt = GTK_WIDGET (get_from_builder (builder, tvg_ctl_name));
+  if (sonar_wdgt == NULL)
+    {
+      g_clear_object (&box);
+      return NULL;
     }
+
+  gtk_box_pack_end (GTK_BOX (box), tvg_wdgt, FALSE, FALSE, 0);
+  gtk_box_pack_end (GTK_BOX (box), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
+  gtk_box_pack_end (GTK_BOX (box), sonar_wdgt, FALSE, FALSE, 0);
 
   return box;
 }
@@ -1744,8 +1774,6 @@ get_sonar_specific_gui (SonarSpecificGui *gui,
   gui->tvg0_value       = GTK_LABEL (get_from_builder (builder, tvg_1_value));
   gui->tvg_value        = GTK_LABEL (get_from_builder (builder, tvg_2_value));
   gui->signal_value     = GTK_LABEL (get_from_builder (builder, "signal_value"));
-
-  g_message ("!!!!! %s %s %s", sonar,  tvg_1_value, tvg_2_value);
 
   return check_sonar_specific_gui (gui, sonar);
 }
@@ -2368,6 +2396,10 @@ main (int argc, char **argv)
     gtk_builder_add_callback_symbol (fl_builder, "tvg0_down", G_CALLBACK (tvg0_down));
     gtk_builder_add_callback_symbol (fl_builder, "tvg_up", G_CALLBACK (tvg_up));
     gtk_builder_add_callback_symbol (fl_builder, "tvg_down", G_CALLBACK (tvg_down));
+    gtk_builder_add_callback_symbol (fl_builder, "tvg_level_up", G_CALLBACK (tvg_level_up));
+    gtk_builder_add_callback_symbol (fl_builder, "tvg_level_down", G_CALLBACK (tvg_level_down));
+    gtk_builder_add_callback_symbol (fl_builder, "tvg_sensitivity_up", G_CALLBACK (tvg_sensitivity_up));
+    gtk_builder_add_callback_symbol (fl_builder, "tvg_sensitivity_down", G_CALLBACK (tvg_sensitivity_down));
     gtk_builder_add_callback_symbol (fl_builder, "signal_up", G_CALLBACK (signal_up));
     gtk_builder_add_callback_symbol (fl_builder, "signal_down", G_CALLBACK (signal_down));
 
@@ -2386,6 +2418,10 @@ main (int argc, char **argv)
 
     gtk_builder_add_callback_symbol (ss_builder, "distance_up", G_CALLBACK (distance_up));
     gtk_builder_add_callback_symbol (ss_builder, "distance_down", G_CALLBACK (distance_down));
+    gtk_builder_add_callback_symbol (ss_builder, "tvg0_up", G_CALLBACK (tvg0_up));
+    gtk_builder_add_callback_symbol (ss_builder, "tvg0_down", G_CALLBACK (tvg0_down));
+    gtk_builder_add_callback_symbol (ss_builder, "tvg_up", G_CALLBACK (tvg_up));
+    gtk_builder_add_callback_symbol (ss_builder, "tvg_down", G_CALLBACK (tvg_down));
     gtk_builder_add_callback_symbol (ss_builder, "tvg_level_up", G_CALLBACK (tvg_level_up));
     gtk_builder_add_callback_symbol (ss_builder, "tvg_level_down", G_CALLBACK (tvg_level_down));
     gtk_builder_add_callback_symbol (ss_builder, "tvg_sensitivity_up", G_CALLBACK (tvg_sensitivity_up));
@@ -2412,6 +2448,10 @@ main (int argc, char **argv)
     gtk_builder_add_callback_symbol (pf_builder, "tvg0_down", G_CALLBACK (tvg0_down));
     gtk_builder_add_callback_symbol (pf_builder, "tvg_up", G_CALLBACK (tvg_up));
     gtk_builder_add_callback_symbol (pf_builder, "tvg_down", G_CALLBACK (tvg_down));
+    gtk_builder_add_callback_symbol (pf_builder, "tvg_level_up", G_CALLBACK (tvg_level_up));
+    gtk_builder_add_callback_symbol (pf_builder, "tvg_level_down", G_CALLBACK (tvg_level_down));
+    gtk_builder_add_callback_symbol (pf_builder, "tvg_sensitivity_up", G_CALLBACK (tvg_sensitivity_up));
+    gtk_builder_add_callback_symbol (pf_builder, "tvg_sensitivity_down", G_CALLBACK (tvg_sensitivity_down));
     gtk_builder_add_callback_symbol (pf_builder, "signal_up", G_CALLBACK (signal_up));
     gtk_builder_add_callback_symbol (pf_builder, "signal_down", G_CALLBACK (signal_down));
 

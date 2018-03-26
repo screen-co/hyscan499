@@ -53,6 +53,7 @@ include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancore/hyscancore")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancontrol/hyscancontrol")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscanmodel/hyscanmodel")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscangui/hyscangui")
+include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscangtk/hyscangtk")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../urpc/urpc")
 
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../gtkcifroarea/bin")
@@ -63,6 +64,7 @@ link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancore/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancontrol/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscanmodel/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscangui/bin")
+link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscangtk/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../urpc/bin")
 set (HYSCAN_LIBRARIES gtkcifroarea-3.1
                       hyscantypes-${HYSCAN_MAJOR}
@@ -72,6 +74,7 @@ set (HYSCAN_LIBRARIES gtkcifroarea-3.1
                       hyscancontrol-${HYSCAN_MAJOR}
                       hyscanmodel-${HYSCAN_MAJOR}
                       hyscangui-${HYSCAN_MAJOR}
+                      hyscangtk-${HYSCAN_MAJOR}
                       urpc)
 
 add_definitions (-DG_LOG_DOMAIN="HyScan-triple")
