@@ -9,6 +9,8 @@
 #include <hyscan-gtk-waterfall-meter.h>
 #include <hyscan-gtk-waterfall-mark.h>
 #include <hyscan-mark-manager.h>
+#include <hyscan-gtk-project-viewer.h>
+#include <hyscan-gtk-mark-editor.h>
 #include <hyscan-tile-color.h>
 #include <hyscan-db-info.h>
 #include <hyscan-cached.h>
@@ -138,7 +140,7 @@ typedef struct
 
       GtkSwitch                           *start_stop_switch;
 
-      GtkWidget                           *track_control;
+      GtkWidget                           *left_box;
       GtkTreeView                         *track_view;
       GtkTreeModel                        *track_list;
       GtkAdjustment                       *track_range;
@@ -147,6 +149,7 @@ typedef struct
       GtkWidget                           *disp_widgets[W_LAST];
 
       GtkWidget                           *mlist;
+      GtkWidget                           *meditor;
 
       GtkToggleButton                     *ss_selector;
       GtkToggleButton                     *pf_selector;
@@ -314,6 +317,114 @@ tracks_changed (HyScanDBInfo *db_info,
 
   g_hash_table_unref (tracks);
   g_free (cur_track_name);
+}
+
+static void
+active_mark_changed (HyScanGtkProjectViewer *marks_viewer,
+                     Global                 *global)
+{
+  const gchar *mark_id;
+  GHashTable *marks;
+  HyScanWaterfallMark *mark;
+
+  mark_id = hyscan_gtk_project_viewer_get_selected_item (marks_viewer);
+  // hyscan_db_model_set_mark (priv->db_model, mark_id);
+
+  if ((marks = hyscan_mark_manager_get (global->mman)) == NULL)
+    return;
+    
+  if ((mark = g_hash_table_lookup (marks, mark_id)) != NULL)
+    {
+      hyscan_gtk_mark_editor_set_mark (HYSCAN_GTK_MARK_EDITOR (global->gui.meditor),
+                                       mark_id,
+                                       mark->name,
+                                       mark->operator_name,
+                                       mark->description);
+    }
+
+  g_hash_table_unref (marks);
+}
+
+static void
+mark_manager_changed (HyScanMarkManager *mark_manager,
+                      Global            *global)
+{
+  GtkTreeIter tree_iter;
+  GHashTable *marks;
+  GHashTableIter marks_iter;
+  gpointer key, value;
+  const gchar *mark_id;
+  GtkListStore *ls;
+
+  hyscan_gtk_project_viewer_clear (HYSCAN_GTK_PROJECT_VIEWER (global->gui.mlist));
+
+  if ((marks = hyscan_mark_manager_get (mark_manager)) == NULL)
+    return;
+
+  ls = hyscan_gtk_project_viewer_get_liststore (HYSCAN_GTK_PROJECT_VIEWER (global->gui.mlist));
+
+  g_hash_table_iter_init (&marks_iter, marks);
+  while (g_hash_table_iter_next (&marks_iter, &key, &value))
+    {
+      mark_id = key;
+      HyScanWaterfallMark *mark = value;
+      GDateTime *mtime;
+      gchar *mtime_str;
+
+      mtime = g_date_time_new_from_unix_local (mark->modification_time / 1e6);
+      mtime_str =  g_date_time_format (mtime, "%d/%m/%y %H:%M");
+
+      gtk_list_store_append (ls, &tree_iter);
+      gtk_list_store_set (ls, &tree_iter,
+                          0, mark_id,
+                          1, mark->name,
+                          2, mtime_str,
+                          3, mark->modification_time,
+                          -1);
+
+      g_free (mtime_str);
+      g_date_time_unref (mtime);
+    }
+
+  g_hash_table_unref (marks);
+
+  // if ((mark_id = hyscan_db_model_get_mark (priv->db_model)) != NULL)
+    // hyscan_gtk_project_viewer_set_selected_item (HYSCAN_GTK_PROJECT_VIEWER (global->gui.mlist), mark_id);
+}
+
+static void
+mark_modified (HyScanGtkMarkEditor *med,
+               Global              *global)
+{
+  gchar *mark_id = NULL;
+  GHashTable *marks;
+  HyScanWaterfallMark *mark;
+
+  hyscan_gtk_mark_editor_get_mark (med, &mark_id, NULL, NULL, NULL);
+
+  if ((marks = hyscan_mark_manager_get (global->mman)) == NULL)
+    return;
+    
+  if ((mark = g_hash_table_lookup (marks, mark_id)) != NULL)
+    {
+      HyScanWaterfallMark *modified_mark = hyscan_waterfall_mark_copy (mark);
+      g_clear_pointer (&modified_mark->name, g_free);
+      g_clear_pointer (&modified_mark->operator_name, g_free);
+      g_clear_pointer (&modified_mark->description, g_free);
+
+      hyscan_gtk_mark_editor_get_mark (med,
+                                       NULL,
+                                       &modified_mark->name,
+                                       &modified_mark->operator_name,
+                                       &modified_mark->description);
+
+      hyscan_mark_manager_modify_mark (global->mman, mark_id, modified_mark);
+
+      hyscan_waterfall_mark_free (modified_mark);
+    }
+
+  g_free (mark_id);  
+  g_hash_table_unref (marks);
 }
 
 /* Функция прокручивает список галсов. */
@@ -2271,21 +2382,51 @@ main (int argc, char **argv)
   /* Основная раскладка окна. */
   global.gui.gtk_area = hyscan_gtk_area_new ();
 
-  /* Слева у нас список галсов. */
-  global.gui.track_control = GTK_WIDGET (gtk_builder_get_object (common_builder, "track_control"));
-  hyscan_exit_if (global.gui.track_control == NULL, "can't load track control ui");
+  /* Слева у нас список галсов и меток. */
+  {
+    GtkWidget *track_control, *mark_list, *mark_editor;
+    global.gui.left_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
+    track_control = GTK_WIDGET (gtk_builder_get_object (common_builder, "track_control"));
+    hyscan_exit_if (track_control == NULL, "can't load track control ui");
 
-  global.gui.track_view = GTK_TREE_VIEW (get_from_builder (common_builder, "track_view"));
-  global.gui.track_list = GTK_TREE_MODEL (get_from_builder (common_builder, "track_list"));
-  global.gui.track_range = GTK_ADJUSTMENT (get_from_builder (common_builder, "track_range"));
-  hyscan_exit_if ((global.gui.track_view == NULL) ||
-                  (global.gui.track_list == NULL) ||
-                  (global.gui.track_range == NULL),
-                  "incorrect track control ui");
-  /* Сортировка списка галсов. */
-  gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (global.gui.track_list), 0, GTK_SORT_DESCENDING);
-  /* Список галсов кладем слева. */
-  hyscan_gtk_area_set_left (HYSCAN_GTK_AREA (global.gui.gtk_area), global.gui.track_control);
+    global.gui.track_view = GTK_TREE_VIEW (get_from_builder (common_builder, "track_view"));
+    global.gui.track_list = GTK_TREE_MODEL (get_from_builder (common_builder, "track_list"));
+    global.gui.track_range = GTK_ADJUSTMENT (get_from_builder (common_builder, "track_range"));
+    hyscan_exit_if ((global.gui.track_view == NULL) ||
+                    (global.gui.track_list == NULL) ||
+                    (global.gui.track_range == NULL),
+                    "incorrect track control ui");
+    /* Сортировка списка галсов. */
+    gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (global.gui.track_list), 0, GTK_SORT_DESCENDING);
+
+    /* Список меток. */
+    global.mman = hyscan_mark_manager_new ();
+    global.gui.mlist = mark_list = hyscan_gtk_project_viewer_new ();
+    global.gui.meditor = mark_editor = hyscan_gtk_mark_editor_new ();
+    
+    g_object_set (track_control, "vexpand", TRUE, "valign", GTK_ALIGN_FILL, 
+                                 "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
+    g_object_set (mark_list, "vexpand", TRUE, "valign", GTK_ALIGN_FILL, 
+                                 "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
+    g_object_set (mark_editor, "vexpand", FALSE, "valign", GTK_ALIGN_END, 
+                                 "hexpand", FALSE, "halign", GTK_ALIGN_FILL,
+                                 "margin-top", 6, "margin-bottom", 6, NULL);
+
+    gtk_box_pack_start (GTK_BOX (global.gui.left_box), track_control, TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (global.gui.left_box), mark_list, TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (global.gui.left_box), mark_editor, FALSE, FALSE, 0);
+
+    /* Список галсов кладем слева. */
+    hyscan_gtk_area_set_left (HYSCAN_GTK_AREA (global.gui.gtk_area), global.gui.left_box);
+    
+    hyscan_mark_manager_set_project (global.mman, global.db, global.project_name);
+    
+    g_signal_connect (global.mman, "changed", G_CALLBACK (mark_manager_changed), &global);
+    g_signal_connect (mark_editor, "mark-modified", G_CALLBACK (mark_modified), &global);
+    g_signal_connect (mark_list, "item-changed", G_CALLBACK (active_mark_changed), &global);
+
+
+  }
 
   /* Справа у нас виджет управления просмотром и локаторами.
    * А в нём:
