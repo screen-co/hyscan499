@@ -609,6 +609,47 @@ scale_set (Global   *global,
   return TRUE;
 }
 
+#define INCR(color,next) if (incr_##color)   \
+                    {                        \
+                      if (++color == 255)      \
+                        {incr_##color = FALSE;\
+                         next = TRUE; continue;} \
+                    }
+#define DECR(color,next) if (decr_##color)   \
+                    {                        \
+                      if (--color == 0)      \
+                        {decr_##color = FALSE;\
+                         next = TRUE; continue;} \
+                    }
+guint32*
+hyscan_tile_color_compose_colormap_pf (guint *length)
+{
+  guint32 *out;
+  guint len = 1022;
+  guint i;
+  gboolean incr_g = TRUE;
+  gboolean decr_b = FALSE;
+  gboolean incr_r = FALSE;
+  gboolean decr_g = FALSE;
+  guchar r = 0, g = 0, b = 255;
+  out = g_malloc0 (len * sizeof (guint32));
+
+  // out[0] = hyscan_tile_color_converter_c2i (127, 127, 127, 0);
+
+  for (i = 1; i < 1022; ++i)
+    {
+      // out[i] = hyscan_tile_color_converter_c2i (r, g, b, 0);
+      INCR (g, decr_b);
+      DECR (b, incr_r);
+      INCR (r, decr_g);
+      DECR (g, decr_g);
+    }
+
+  if (length != NULL)
+    *length = len;
+  return out;
+}
+
 /* Функция устанавливает новую палитру. */
 static gboolean
 color_map_set (Global *global,
@@ -2407,10 +2448,10 @@ main (int argc, char **argv)
     g_object_set (track_control, "vexpand", TRUE, "valign", GTK_ALIGN_FILL, 
                                  "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
     g_object_set (mark_list, "vexpand", TRUE, "valign", GTK_ALIGN_FILL, 
-                                 "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
+                             "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
     g_object_set (mark_editor, "vexpand", FALSE, "valign", GTK_ALIGN_END, 
-                                 "hexpand", FALSE, "halign", GTK_ALIGN_FILL,
-                                 "margin-top", 6, "margin-bottom", 6, NULL);
+                                "hexpand", FALSE, "halign", GTK_ALIGN_FILL,
+                                "margin-top", 6, "margin-bottom", 6, NULL);
 
     gtk_box_pack_start (GTK_BOX (global.gui.left_box), track_control, TRUE, TRUE, 0);
     gtk_box_pack_start (GTK_BOX (global.gui.left_box), mark_list, TRUE, TRUE, 0);
@@ -2424,8 +2465,6 @@ main (int argc, char **argv)
     g_signal_connect (global.mman, "changed", G_CALLBACK (mark_manager_changed), &global);
     g_signal_connect (mark_editor, "mark-modified", G_CALLBACK (mark_modified), &global);
     g_signal_connect (mark_list, "item-changed", G_CALLBACK (active_mark_changed), &global);
-
-
   }
 
   /* Справа у нас виджет управления просмотром и локаторами.
@@ -2819,6 +2858,19 @@ main (int argc, char **argv)
     gtk_window_fullscreen (GTK_WINDOW (global.gui.window));
 
   gtk_widget_show_all (global.gui.window);
+  /* Профилографная магия. У ПФ только одна цветовая схема. */
+  {
+    // gtk_widget_set_visible (GTK_WIDGET (get_from_builder (pf_builder,
+    //                                                       "ss_color_map_label")), FALSE);
+    // gtk_widget_set_visible (GTK_WIDGET (get_from_builder (pf_builder,
+    //                                                       "ss_color_map_up")), FALSE);
+    // gtk_widget_set_visible (GTK_WIDGET (get_from_builder (pf_builder,
+    //                                                       "ss_color_map_down")), FALSE);
+    // gtk_widget_set_visible (GTK_WIDGET (get_from_builder (pf_builder,
+    //                                                       "ss_color_map_value")), FALSE);
+    // gtk_widget_set_visible (GTK_WIDGET (get_from_builder (pf_builder,
+    //                                                       "ss_color_map_separator")), FALSE);
+  }
   gtk_main ();
 
   if (global.GSS.sonar.sonar_ctl != NULL)
