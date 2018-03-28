@@ -985,7 +985,7 @@
         <property name="can_focus">False</property>
         <property name="halign">start</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Чувственность</property>
+        <property name="label" translatable="yes">Чувствительность</property>
       </object>
       <packing>
         <property name="left_attach">0</property>

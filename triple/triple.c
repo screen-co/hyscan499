@@ -2034,6 +2034,7 @@ make_overlay (HyScanGtkWaterfall          *wf,
   GtkWidget *lay_metr = make_layer_btn (HYSCAN_GTK_WATERFALL_LAYER (meter), lay_mark);
   GtkWidget *lay_box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
 
+  hyscan_gtk_waterfall_control_set_wheel_behaviour (ctrl, FALSE);
   gtk_style_context_add_class (gtk_widget_get_style_context (lay_box), "linked");
 
   gtk_box_pack_start (GTK_BOX (lay_box), lay_ctrl, FALSE, TRUE, 0);
@@ -2764,6 +2765,8 @@ main (int argc, char **argv)
   global.GSS.sonar.cur_signal = 1;
   global.GSS.sonar.cur_gain0 = 0.0;
   global.GSS.sonar.cur_gain_step = 10.0;
+  global.GSS.sonar.cur_level = 0.5;
+  global.GSS.sonar.cur_sensitivity = 0.6;
   global.GSS.sonar.cur_distance = SIDE_SCAN_MAX_DISTANCE;
 
   global.GPF.cur_brightness = 80.0;
@@ -2787,7 +2790,7 @@ main (int argc, char **argv)
   if (global.GSS.sonar.sonar_ctl != NULL)
     {
       distance_set (&global, global.GSS.sonar.cur_distance);
-      auto_tvg_set (&global, 0, 0);
+      auto_tvg_set (&global, global.GSS.sonar.cur_level, global.GSS.sonar.cur_sensitivity);
       signal_set (&global, 1);
     }
 
