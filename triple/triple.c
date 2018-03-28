@@ -2034,7 +2034,7 @@ make_overlay (HyScanGtkWaterfall          *wf,
   GtkWidget *lay_metr = make_layer_btn (HYSCAN_GTK_WATERFALL_LAYER (meter), lay_mark);
   GtkWidget *lay_box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
 
-  hyscan_gtk_waterfall_control_set_wheel_behaviour (ctrl, FALSE);
+  hyscan_gtk_waterfall_control_set_wheel_behaviour (ctrl, TRUE);
   gtk_style_context_add_class (gtk_widget_get_style_context (lay_box), "linked");
 
   gtk_box_pack_start (GTK_BOX (lay_box), lay_ctrl, FALSE, TRUE, 0);
