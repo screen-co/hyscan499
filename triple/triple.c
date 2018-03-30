@@ -49,6 +49,7 @@
 
 #define URPC_KEYCODE_NO_ACTION -1
 
+gboolean power = TRUE;
 
 enum
 {
@@ -1737,18 +1738,29 @@ start_stop (GtkWidget *widget,
 
       /* Задаем параметры гидролокаторов. */
       global->sonar_selector = W_SIDESCAN;
-      if (!signal_set   (global, global->GSS.sonar.cur_signal) ||
-          !auto_tvg_set (global, global->GSS.sonar.cur_level, global->GSS.sonar.cur_sensitivity) ||
-          // !tvg_set      (global, &global->GSS.sonar.cur_gain0, global->GSS.sonar.cur_gain_step) ||
+      if (power && !signal_set (global, global->GSS.sonar.cur_signal))
+        {
+          gtk_switch_set_active (GTK_SWITCH (widget), FALSE);
+          global->sonar_selector = old_selector;
+          return TRUE;
+        }
+      if (!auto_tvg_set (global, global->GSS.sonar.cur_level, global->GSS.sonar.cur_sensitivity) ||
           !distance_set (global, global->GSS.sonar.cur_distance))
         {
           gtk_switch_set_active (GTK_SWITCH (widget), FALSE);
           global->sonar_selector = old_selector;
           return TRUE;
         }
+
       global->sonar_selector = W_PROFILER;
-      if (!signal_set   (global, global->GPF.sonar.cur_signal) ||
-          !tvg_set      (global, &global->GPF.sonar.cur_gain0, global->GPF.sonar.cur_gain_step) ||
+      if (power && !signal_set (global, global->GPF.sonar.cur_signal))
+         {
+           gtk_switch_set_active (GTK_SWITCH (widget), FALSE);
+           global->sonar_selector = old_selector;
+           return TRUE;
+         }
+
+      if (!tvg_set      (global, &global->GPF.sonar.cur_gain0, global->GPF.sonar.cur_gain_step) ||
           !distance_set (global, global->GPF.sonar.cur_distance))
         {
           gtk_switch_set_active (GTK_SWITCH (widget), FALSE);
@@ -1756,8 +1768,13 @@ start_stop (GtkWidget *widget,
           return TRUE;
         }
       global->sonar_selector = W_FORWARDL;
-      if (!signal_set   (global, global->GFL.sonar.cur_signal) ||
-          !tvg_set      (global, &global->GFL.sonar.cur_gain0, global->GFL.sonar.cur_gain_step) ||
+      if (power && !signal_set   (global, global->GFL.sonar.cur_signal))
+          {
+            gtk_switch_set_active (GTK_SWITCH (widget), FALSE);
+            global->sonar_selector = old_selector;
+            return TRUE;
+          }
+      if (!tvg_set      (global, &global->GFL.sonar.cur_gain0, global->GFL.sonar.cur_gain_step) ||
           !distance_set (global, global->GFL.sonar.cur_distance))
         {
           gtk_switch_set_active (GTK_SWITCH (widget), FALSE);
@@ -2098,6 +2115,7 @@ main (int argc, char **argv)
   GtkWidget         *fl_play_control = NULL;
 
   gboolean status;
+  
 
   gtk_init (&argc, &argv);
 
@@ -2124,6 +2142,8 @@ main (int argc, char **argv)
         { "sound-velocity",  'v',   0, G_OPTION_ARG_DOUBLE,  &sound_velocity,  "Sound velocity, m/s", NULL },
         { "ship-speed",      'e',   0, G_OPTION_ARG_DOUBLE,  &ship_speed,      "Ship speed, m/s", NULL },
         { "full-screen",     'f',   0, G_OPTION_ARG_NONE,    &full_screen,     "Full screen mode", NULL },
+        { "no-power",          0,   G_OPTION_FLAG_REVERSE,
+                                       G_OPTION_ARG_NONE,    &power,        "Disable generator", NULL },
         { NULL }
       };
 
@@ -2250,12 +2270,25 @@ main (int argc, char **argv)
       gen_cap = hyscan_generator_control_get_capabilities (global.GSS.sonar.gen_ctl, PORTSIDE);
       hyscan_exit_if (!(gen_cap | HYSCAN_GENERATOR_MODE_PRESET), "portside: unsupported generator mode");
 
-      status = hyscan_generator_control_set_enable (global.GFL.sonar.gen_ctl, FORWARDLOOK, TRUE);
-      hyscan_exit_if (!status, "forward-look: can't enable generator");
-      status = hyscan_generator_control_set_enable (global.GSS.sonar.gen_ctl, STARBOARD, TRUE);
-      hyscan_exit_if (!status, "starboard: can't enable generator");
-      status = hyscan_generator_control_set_enable (global.GSS.sonar.gen_ctl, PORTSIDE, TRUE);
-      hyscan_exit_if (!status, "portside: can't enable generator");
+      
+          status = hyscan_generator_control_set_enable (global.GFL.sonar.gen_ctl, FORWARDLOOK, TRUE);
+          hyscan_exit_if (!status, "forward-look: can't enable generator");
+          status = hyscan_generator_control_set_enable (global.GSS.sonar.gen_ctl, STARBOARD, TRUE);
+          hyscan_exit_if (!status, "starboard: can't enable generator");
+          status = hyscan_generator_control_set_enable (global.GSS.sonar.gen_ctl, PORTSIDE, TRUE);
+          hyscan_exit_if (!status, "portside: can't enable generator");
+      
+      if (!power)
+        {
+          status = hyscan_generator_control_set_enable (global.GFL.sonar.gen_ctl, FORWARDLOOK, FALSE);
+          hyscan_exit_if (!status, "forward-look: can't disable generator");
+          status = hyscan_generator_control_set_enable (global.GSS.sonar.gen_ctl, STARBOARD, FALSE);
+          hyscan_exit_if (!status, "starboard: can't disable generator");
+          status = hyscan_generator_control_set_enable (global.GSS.sonar.gen_ctl, PORTSIDE, FALSE);
+          hyscan_exit_if (!status, "portside: can't disable generator");
+          g_message ("FLSS generator disabled!");
+        }
+      
 
       /* Параметры ВАРУ. */
       tvg_cap = hyscan_tvg_control_get_capabilities (global.GFL.sonar.tvg_ctl, FORWARDLOOK);
@@ -2361,8 +2394,16 @@ main (int argc, char **argv)
       gen_cap = hyscan_generator_control_get_capabilities (global.GPF.sonar.gen_ctl, PROFILER);
       hyscan_exit_if (!(gen_cap | HYSCAN_GENERATOR_MODE_PRESET), "profiler: unsupported generator mode");
 
-      status = hyscan_generator_control_set_enable (global.GPF.sonar.gen_ctl, PROFILER, TRUE);
-      hyscan_exit_if (!status, "profiler: can't enable generator");
+        {
+          status = hyscan_generator_control_set_enable (global.GPF.sonar.gen_ctl, PROFILER, TRUE);
+          hyscan_exit_if (!status, "profiler: can't enable generator");
+        }
+      if (!power)
+        {
+          status = hyscan_generator_control_set_enable (global.GPF.sonar.gen_ctl, PROFILER, FALSE);
+          hyscan_exit_if (!status, "profiler: can't disable generator");
+          g_message ("PF generator disabled!");
+        }
 
       /* Параметры ВАРУ. */
       tvg_cap = hyscan_tvg_control_get_capabilities (global.GPF.sonar.tvg_ctl, PROFILER);
