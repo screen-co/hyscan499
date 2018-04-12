@@ -2784,13 +2784,16 @@ main (int argc, char **argv)
   kolors[0] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
   kolors[1] = hyscan_tile_color_converter_d2i (1.0, 1.0, 1.0, 1.0); /* Белый. */
   global.GSS.color_maps[0] = hyscan_tile_color_compose_colormap (kolors, 2, &global.GSS.color_map_len[0]);
-  global.GPF.color_maps[0] = hyscan_tile_color_compose_colormap (kolors, 2, &global.GPF.color_map_len[0]);
+  // global.GPF.color_maps[0] = hyscan_tile_color_compose_colormap (kolors, 2, &global.GPF.color_map_len[0]);
+  global.GPF.color_maps[0] = hyscan_tile_color_compose_colormap_pf (&global.GPF.color_map_len[0]);
   kolors[1] = hyscan_tile_color_converter_d2i (1.0, 1.0, 0.0, 1.0); /* Желтый. */
   global.GSS.color_maps[1] = hyscan_tile_color_compose_colormap (kolors, 2, &global.GSS.color_map_len[1]);
-  global.GPF.color_maps[1] = hyscan_tile_color_compose_colormap (kolors, 2, &global.GPF.color_map_len[1]);
+  // global.GPF.color_maps[1] = hyscan_tile_color_compose_colormap (kolors, 2, &global.GPF.color_map_len[1]);
+  global.GPF.color_maps[1] = hyscan_tile_color_compose_colormap_pf (&global.GPF.color_map_len[1]);
   kolors[1] = hyscan_tile_color_converter_d2i (0.0, 1.0, 0.0, 1.0); /* Зеленый. */
   global.GSS.color_maps[2] = hyscan_tile_color_compose_colormap (kolors, 2, &global.GSS.color_map_len[2]);
-  global.GPF.color_maps[2] = hyscan_tile_color_compose_colormap (kolors, 2, &global.GPF.color_map_len[2]);
+  // global.GPF.color_maps[2] = hyscan_tile_color_compose_colormap (kolors, 2, &global.GPF.color_map_len[2]);
+  global.GPF.color_maps[2] = hyscan_tile_color_compose_colormap_pf (&global.GPF.color_map_len[2]);
 
 /***
  *     ___   ___   ___   ___               ___               ___               ___   ___
