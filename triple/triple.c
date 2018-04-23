@@ -39,6 +39,7 @@
 #define BLACK_BG                       0xff000000
 
 #define PF_TRACK_PREFIX                ".pf"
+#define DRY_TRACK_SUFFIX                "-dry"
 
 #define AME_KEY_RIGHT 39
 #define AME_KEY_LEFT 37
@@ -110,6 +111,8 @@ typedef struct
   gchar                               *project_name;
   gchar                               *track_prefix;
   gchar                               *track_name;
+
+  gboolean                             dry;
 
   HyScanCache                         *cache;
   HyScanMarkManager                   *mman;
@@ -288,15 +291,12 @@ tracks_changed (HyScanDBInfo *db_info,
 
   while (g_hash_table_iter_next (&hash_iter, &key, &value))
     {
-      HyScanTrackInfo *track_info;
+      HyScanTrackInfo *track_info = value;
 
-      //HyScanSourceInfo *forward_look_info;
-      track_info = value;
-
-      //forward_look_info = g_hash_table_lookup (track_info->sources, GINT_TO_POINTER (HYSCAN_SOURCE_FORWARD_LOOK));
-      //if (!forward_look_info || !forward_look_info->raw)
-      //  continue;
       if (g_str_has_prefix (track_info->name, PF_TRACK_PREFIX))
+        continue;
+
+      if (!global->dry && g_str_has_suffix (track_info->name, DRY_TRACK_SUFFIX))
         continue;
 
       /* Добавляем в список галсов. */
@@ -1720,6 +1720,30 @@ one_window (GtkToggleButton *togglebutton,
 
 /* Функция включает/выключает излучение. */
 static gboolean
+sounding (GtkWidget *widget,
+          gboolean   state,
+          Global    *global)
+{
+
+  global->dry = state;
+  power = !state;
+  
+  if (global->GFL.sonar.gen_ctl != NULL)
+    hyscan_generator_control_set_enable (global->GFL.sonar.gen_ctl, FORWARDLOOK, power);
+  if (global->GSS.sonar.gen_ctl != NULL)
+    hyscan_generator_control_set_enable (global->GSS.sonar.gen_ctl, STARBOARD, power);
+  if (global->GSS.sonar.gen_ctl != NULL)
+    hyscan_generator_control_set_enable (global->GSS.sonar.gen_ctl, PORTSIDE, power);
+  if (global->GPF.sonar.gen_ctl != NULL)
+    hyscan_generator_control_set_enable (global->GPF.sonar.gen_ctl, PROFILER, power);
+  
+  gtk_switch_set_state (GTK_SWITCH (widget), state);
+
+  return TRUE;
+}
+
+/* Функция включает/выключает излучение. */
+static gboolean
 start_stop (GtkWidget *widget,
             gboolean   state,
             Global    *global)
@@ -1805,7 +1829,7 @@ start_stop (GtkWidget *widget,
         }
 
       /* Включаем запись нового галса. */
-      global->track_name = g_strdup_printf ("%s%d", global->track_prefix, ++n_tracks);
+      global->track_name = g_strdup_printf ("%s%d%s", global->track_prefix, ++n_tracks, global->dry ? DRY_TRACK_SUFFIX : "");
 
       status = hyscan_sonar_control_start (global->GSS.sonar.sonar_ctl, global->track_name, HYSCAN_TRACK_SURVEY);
 
@@ -2142,8 +2166,7 @@ main (int argc, char **argv)
         { "sound-velocity",  'v',   0, G_OPTION_ARG_DOUBLE,  &sound_velocity,  "Sound velocity, m/s", NULL },
         { "ship-speed",      'e',   0, G_OPTION_ARG_DOUBLE,  &ship_speed,      "Ship speed, m/s", NULL },
         { "full-screen",     'f',   0, G_OPTION_ARG_NONE,    &full_screen,     "Full screen mode", NULL },
-        { "no-power",          0,   G_OPTION_FLAG_REVERSE,
-                                       G_OPTION_ARG_NONE,    &power,        "Disable generator", NULL },
+        //{ "no-power",          0,      G_OPTION_ARG_NONE,    &power,        "Enable generator", NULL },
         { NULL }
       };
 
@@ -2278,7 +2301,7 @@ main (int argc, char **argv)
           status = hyscan_generator_control_set_enable (global.GSS.sonar.gen_ctl, PORTSIDE, TRUE);
           hyscan_exit_if (!status, "portside: can't enable generator");
       
-      if (!power)
+      /* Отключаем излучение сразу. */
         {
           status = hyscan_generator_control_set_enable (global.GFL.sonar.gen_ctl, FORWARDLOOK, FALSE);
           hyscan_exit_if (!status, "forward-look: can't disable generator");
@@ -2398,7 +2421,8 @@ main (int argc, char **argv)
           status = hyscan_generator_control_set_enable (global.GPF.sonar.gen_ctl, PROFILER, TRUE);
           hyscan_exit_if (!status, "profiler: can't enable generator");
         }
-      if (!power)
+      
+      /* Излучение сразу на ноль. */
         {
           status = hyscan_generator_control_set_enable (global.GPF.sonar.gen_ctl, PROFILER, FALSE);
           hyscan_exit_if (!status, "profiler: can't disable generator");
@@ -2552,6 +2576,7 @@ main (int argc, char **argv)
   gtk_builder_add_callback_symbol (common_builder, "track_changed", G_CALLBACK (track_changed));
   gtk_builder_add_callback_symbol (common_builder, "position_changed", G_CALLBACK (position_changed));
 
+    gtk_builder_add_callback_symbol (common_builder, "sounding", G_CALLBACK (sounding));
   if (global.GFL.sonar.sonar_ctl != NULL && global.GPF.sonar.sonar_ctl != NULL)
     gtk_builder_add_callback_symbol (common_builder, "start_stop", G_CALLBACK (start_stop));
   else /* if (global.GFL.sonar.sonar_ctl == NULL || global.GPF.sonar.sonar_ctl == NULL) */
@@ -2859,6 +2884,8 @@ main (int argc, char **argv)
       tvg_set (&global, &global.GFL.sonar.cur_gain0, global.GPF.sonar.cur_gain_step);
       signal_set (&global, 1);
     }
+
+  gtk_switch_set_active (GTK_SWITCH (get_from_builder (common_builder, "dry_switch")), TRUE);
 
   global.sonar_selector = W_SIDESCAN;
 
