@@ -32,12 +32,12 @@
       </packing>
     </child>
     <child>
-      <object class="GtkSwitch" id="dry_switch">
+      <object class="GtkSwitch" id="start_stop_dry">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="halign">center</property>
         <property name="valign">center</property>
-        <signal name="state-set" handler="sounding" swapped="no"/>
+        <signal name="state-set" handler="start_stop_dry" swapped="no"/>
       </object>
       <packing>
         <property name="expand">False</property>

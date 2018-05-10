@@ -499,52 +499,6 @@ position_changed (GtkAdjustment *range,
 {
 }
 
-/* Функция устанавливает яркость отображения.
-static gboolean
-levels_set (Global  *global,
-            gdouble  cur_brightness,
-            gdouble  cur_black)
-{
-  gchar *text;
-  gdouble black;
-  gdouble gamma;
-  gdouble white;
-
-  if (cur_brightness < 0.0)
-    return FALSE;
-  if (cur_brightness > 100.0)
-    return FALSE;
-  if (cur_black < 0.0)
-    return FALSE;
-  if (cur_black > 100.0)
-    return FALSE;
-
-  black = cur_black * 0.00000025;
-  gamma = 1.0;
-  white = 1.0 - (cur_brightness / 100.0) * 0.99;
-  white *= white;
-
-  if (black >= white)
-    {
-      g_message ("Black can't be bigger than white. This is not dicks. ");
-      return FALSE;
-    }
-
-  g_message ("SET LVL %f %f %f", black, gamma, white);
-
-  hyscan_gtk_waterfall_set_levels (HYSCAN_GTK_WATERFALL (global->wf),
-                                   HYSCAN_SOURCE_PROFILER, black, gamma, white);
-
-  text = g_strdup_printf ("<small><b>%.0f%%</b></small>", cur_brightness);
-  gtk_label_set_markup (global->brightness_value, text);
-  g_free (text);
-  text = g_strdup_printf ("<small><b>%.0f%%</b></small>", cur_black);
-  gtk_label_set_markup (global->black_value, text);
-  g_free (text);
-
-  return TRUE;
-}
-
 /* Функция устанавливает яркость отображения. */
 static gboolean
 brightness_set (Global  *global,
@@ -695,11 +649,11 @@ hyscan_tile_color_compose_colormap_pf (guint *length)
   guchar r = 0, g = 0, b = 255;
   out = g_malloc0 (len * sizeof (guint32));
 
-  // out[0] = hyscan_tile_color_converter_c2i (127, 127, 127, 0);
+  out[0] = hyscan_tile_color_converter_c2i (127, 127, 127, 0);
 
   for (i = 1; i < 1022; ++i)
     {
-      // out[i] = hyscan_tile_color_converter_c2i (r, g, b, 0);
+      out[i] = hyscan_tile_color_converter_c2i (r, g, b, 0);
       INCR (g, decr_b);
       DECR (b, incr_r);
       INCR (r, decr_g);
@@ -3029,6 +2983,7 @@ main (int argc, char **argv)
    * Создаем виджеты просмотра.
    */
   global.GSS.wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new ());
+  hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (global.GSS.wf), ship_speed);
 
   GtkWidget *ss_ol = make_overlay (global.GSS.wf,
                                  &global.GSS.wf_grid,
@@ -3039,11 +2994,13 @@ main (int argc, char **argv)
   global.gui.disp_widgets[W_SIDESCAN] = g_object_ref (ss_ol);
 
   global.GPF.wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new ());
+  hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (global.GPF.wf), ship_speed / 10);
   GtkWidget *pf_ol = make_overlay (global.GPF.wf,
                                  &global.GPF.wf_grid,
                                  &global.GPF.wf_ctrl,
                                  &global.GPF.wf_mark,
                                  &global.GPF.wf_metr);
+  hyscan_gtk_waterfall_grid_set_condence (global.GPF.wf_grid, 10.0);
   hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (global.GPF.wf), PROFILER);
   global.gui.disp_widgets[W_PROFILER] = g_object_ref (pf_ol);
 
