@@ -531,7 +531,7 @@ brightness_set (Global  *global,
       gtk_label_set_markup (global->GSS.gui.brightness_value, text_bright);
       break;
     case W_PROFILER:
-      b = cur_black * 0.00000025;
+      b = cur_black * 0.0000025;
       w = 1.0 - (cur_brightness / 100.0) * 0.99;
       w *= w;
       g = 1;
@@ -540,6 +540,7 @@ brightness_set (Global  *global,
           g_message ("BBC error");
           return FALSE;
         }
+
       hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (global->GPF.wf), b, g, w);
       gtk_label_set_markup (global->GPF.gui.brightness_value, text_bright);
       gtk_label_set_markup (global->GPF.gui.third_value, text_black);
@@ -649,11 +650,11 @@ hyscan_tile_color_compose_colormap_pf (guint *length)
   guchar r = 0, g = 0, b = 255;
   out = g_malloc0 (len * sizeof (guint32));
 
-  out[0] = hyscan_tile_color_converter_c2i (127, 127, 127, 0);
+  out[0] = hyscan_tile_color_converter_c2i (255, 255, 255, 255);
 
   for (i = 1; i < 1022; ++i)
     {
-      out[i] = hyscan_tile_color_converter_c2i (r, g, b, 0);
+      out[i] = hyscan_tile_color_converter_c2i (r, g, b, 255);
       INCR (g, decr_b);
       DECR (b, incr_r);
       INCR (r, decr_g);
