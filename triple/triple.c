@@ -38,6 +38,7 @@
 
 #define MAX_COLOR_MAPS                 3
 #define BLACK_BG                       0xff000000
+#define WHITE_BG                       0xffdddddd
 
 #define PF_TRACK_PREFIX                ".pf"
 #define DRY_TRACK_SUFFIX                "-dry"
@@ -676,6 +677,7 @@ color_map_set (Global *global,
   guint32 **cmap = NULL;
   guint   *len = NULL;
   gchar   *text;
+  guint32 bg;
   const gchar *color_map_name;
 
   if (cur_color_map >= MAX_COLOR_MAPS)
@@ -688,12 +690,14 @@ color_map_set (Global *global,
       cmap = global->GSS.color_maps;
       len = global->GSS.color_map_len;
       label = global->GSS.gui.third_value;
+      bg = BLACK_BG;
       break;
     case W_PROFILER:
       g_message ("Trying to set PF colormap!");
       wfd = HYSCAN_GTK_WATERFALL (global->GPF.wf);
       cmap = global->GPF.color_maps;
       len = global->GPF.color_map_len;
+      bg = WHITE_BG;
       // label = global->GPF.gui.third_value;
       break;
 
@@ -717,8 +721,8 @@ color_map_set (Global *global,
       return FALSE;
     }
 
-  hyscan_gtk_waterfall_set_colormap_for_all (wfd, cmap[cur_color_map], len[cur_color_map], BLACK_BG);
-  hyscan_gtk_waterfall_set_substrate (wfd, BLACK_BG);
+  hyscan_gtk_waterfall_set_colormap_for_all (wfd, cmap[cur_color_map], len[cur_color_map], bg);
+  hyscan_gtk_waterfall_set_substrate (wfd, bg);
 
   text = g_strdup_printf ("<small><b>%s</b></small>", color_map_name);
   gtk_label_set_markup (label, text);
@@ -1012,7 +1016,8 @@ distance_set (Global  *global,
 static void
 void_callback (gpointer data)
 {
-  g_message ("This callback does nothing and indicates, that you failed at connecting signals");
+  g_message ("This callback does nothing. ");
+  g_message ("You failed at connecting signals. ");
 }
 
 static void
@@ -1336,44 +1341,6 @@ sensitivity_down (GtkWidget *widget,
 
   gtk_widget_queue_draw (GTK_WIDGET (global->GFL.fl));
 }
-
-/*
-//
-
-static void
-black_up (GtkWidget *widget,
-          Global    *global)
-{
-  gdouble cur_black;
-
-  if (global->cur_black < 50.0)
-    cur_black = global->cur_black + 10.0;
-  else if (global->cur_black < 90.0)
-    cur_black = global->cur_black + 5.0;
-  else
-    cur_black = global->cur_black + 1.0;
-
-  if (levels_set (global, global->cur_brightness, cur_black))
-    global->cur_black = cur_black;
-}
-
-static void
-black_down (GtkWidget *widget,
-            Global    *global)
-{
-  gdouble cur_black;
-
-  if (global->cur_black > 90.0)
-    cur_black = global->cur_black - 1.0;
-  else if (global->cur_black > 50.0)
-    cur_black = global->cur_black - 5.0;
-  else
-    cur_black = global->cur_black - 10.0;
-
-  if (levels_set (global, global->cur_brightness, cur_black))
-    global->cur_black = cur_black;
-}
-*/
 
 static void
 color_map_up (GtkWidget *widget,
@@ -2399,6 +2366,7 @@ main (int argc, char **argv)
 
   GtkWidget         *fl_play_control = NULL;
 
+  gboolean ms_invert = FALSE;
   gboolean status;
 
 
@@ -2427,7 +2395,7 @@ main (int argc, char **argv)
         { "sound-velocity",  'v',   0, G_OPTION_ARG_DOUBLE,  &sound_velocity,  "Sound velocity, m/s", NULL },
         { "ship-speed",      'e',   0, G_OPTION_ARG_DOUBLE,  &ship_speed,      "Ship speed, m/s", NULL },
         { "full-screen",     'f',   0, G_OPTION_ARG_NONE,    &full_screen,     "Full screen mode", NULL },
-        //{ "no-power",          0,      G_OPTION_ARG_NONE,    &power,        "Enable generator", NULL },
+        { "ms-invert",       'i',    0, G_OPTION_ARG_NONE,    &ms_invert,        "Invert master/slave: makes PROFILER master, flss SLAVE", NULL },
         { NULL }
       };
 
@@ -2546,9 +2514,6 @@ main (int argc, char **argv)
       global.GSS.sonar.gen_ctl = HYSCAN_GENERATOR_CONTROL (global.GSS.sonar.sonar_ctl);
       global.GSS.sonar.tvg_ctl = HYSCAN_TVG_CONTROL (global.GSS.sonar.sonar_ctl);
 
-      /* Задаем синхронизацию. */
-      hyscan_param_set_enum (HYSCAN_PARAM (flss_sonar), "/parameters/sync-type", 1 /*HYSCAN_SONAR_HYDRA_SYNC_INTERNAL_OUT*/);
-
       /* Параметры генераторов. */
       gen_cap = hyscan_generator_control_get_capabilities (global.GFL.sonar.gen_ctl, FORWARDLOOK);
       hyscan_exit_if (!(gen_cap | HYSCAN_GENERATOR_MODE_PRESET), "forward-look: unsupported generator mode");
@@ -2666,9 +2631,6 @@ main (int argc, char **argv)
       global.GPF.sonar.gen_ctl = HYSCAN_GENERATOR_CONTROL (global.GPF.sonar.sonar_ctl);
       global.GPF.sonar.tvg_ctl = HYSCAN_TVG_CONTROL (global.GPF.sonar.sonar_ctl);
 
-      /* Задаем синхронизацию. */
-      hyscan_param_set_enum (HYSCAN_PARAM (prof_sonar), "/parameters/sync-type", 2 /*HYSCAN_SONAR_HYDRA_SYNC_EXTERNAL*/ );
-
       /* Параметры генераторов. */
       gen_cap = hyscan_generator_control_get_capabilities (global.GPF.sonar.gen_ctl, PROFILER);
       hyscan_exit_if (!(gen_cap | HYSCAN_GENERATOR_MODE_PRESET), "profiler: unsupported generator mode");
@@ -2708,6 +2670,20 @@ main (int argc, char **argv)
       /* Рабочий проект. */
       status = hyscan_data_writer_set_project (HYSCAN_DATA_WRITER (global.GPF.sonar.sonar_ctl), project_name);
       hyscan_exit_if (!status, "profiler: can't set working project");
+    }
+
+    /* Задаем синхронизацию. */
+  if (ms_invert)
+    {
+      g_message ("Master: profiler, slave: flss");
+      hyscan_param_set_enum (HYSCAN_PARAM (flss_sonar), "/parameters/sync-type", 2 /*HYSCAN_SONAR_HYDRA_SYNC_INTERNAL_OUT*/);
+      hyscan_param_set_enum (HYSCAN_PARAM (prof_sonar), "/parameters/sync-type", 1 /*HYSCAN_SONAR_HYDRA_SYNC_EXTERNAL*/ );
+    }
+  else
+    {
+      g_message ("Master: flss, slave: profiler");
+      hyscan_param_set_enum (HYSCAN_PARAM (flss_sonar), "/parameters/sync-type", 1 /*HYSCAN_SONAR_HYDRA_SYNC_INTERNAL_OUT*/);
+      hyscan_param_set_enum (HYSCAN_PARAM (prof_sonar), "/parameters/sync-type", 2 /*HYSCAN_SONAR_HYDRA_SYNC_EXTERNAL*/ );
     }
   /* Закончили подключение к гидролокатору. */
   // no_sonar:
@@ -3024,7 +3000,7 @@ main (int argc, char **argv)
   gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (global.GFL.fl), TRUE);
 
   global.GSS.live_view = GTK_SWITCH (get_from_builder (ss_builder, "ss_live_view"));
-  global.GPF.live_view = GTK_SWITCH (get_from_builder (pf_builder, "ss_live_view"));
+  global.GPF.live_view = GTK_SWITCH (get_from_builder (pf_builder, "pf_live_view"));
   g_signal_connect (G_OBJECT (global.GSS.wf), "automove-state", G_CALLBACK (live_view_off), &global);
   g_signal_connect_swapped (G_OBJECT (global.GSS.wf), "waterfall-zoom", G_CALLBACK (scale_set), &global);
   g_signal_connect (G_OBJECT (global.GPF.wf), "automove-state", G_CALLBACK (live_view_off), &global);
