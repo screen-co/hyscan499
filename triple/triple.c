@@ -124,6 +124,8 @@ typedef struct
   uRpcServer                          *urpc_server;
   gint                                 urpc_keycode;
 
+  gboolean ms_invert;
+
 
 
   struct
@@ -324,21 +326,23 @@ active_mark_changed (HyScanGtkProjectViewer *marks_viewer,
 {
   const gchar *mark_id;
   GHashTable *marks;
-  HyScanWaterfallMark *mark;
+  HyScanMarkManagerMarkLoc *mark;
 
   mark_id = hyscan_gtk_project_viewer_get_selected_item (marks_viewer);
   // hyscan_db_model_set_mark (priv->db_model, mark_id);
 
-  if ((marks = hyscan_mark_manager_get (global->mman)) == NULL)
+  if ((marks = hyscan_mark_manager_get_w_coords (global->mman)) == NULL)
     return;
 
   if ((mark = g_hash_table_lookup (marks, mark_id)) != NULL)
     {
       hyscan_gtk_mark_editor_set_mark (HYSCAN_GTK_MARK_EDITOR (global->gui.meditor),
                                        mark_id,
-                                       mark->name,
-                                       mark->operator_name,
-                                       mark->description);
+                                       mark->mark->name,
+                                       mark->mark->operator_name,
+                                       mark->mark->description,
+                                       mark->lat,
+                                       mark->lon);
     }
 
   g_hash_table_unref (marks);
@@ -357,7 +361,7 @@ mark_manager_changed (HyScanMarkManager *mark_manager,
 
   hyscan_gtk_project_viewer_clear (HYSCAN_GTK_PROJECT_VIEWER (global->gui.mlist));
 
-  if ((marks = hyscan_mark_manager_get (mark_manager)) == NULL)
+  if ((marks = hyscan_mark_manager_get_w_coords (mark_manager)) == NULL)
     return;
 
   ls = hyscan_gtk_project_viewer_get_liststore (HYSCAN_GTK_PROJECT_VIEWER (global->gui.mlist));
@@ -366,19 +370,19 @@ mark_manager_changed (HyScanMarkManager *mark_manager,
   while (g_hash_table_iter_next (&marks_iter, &key, &value))
     {
       mark_id = key;
-      HyScanWaterfallMark *mark = value;
+      HyScanMarkManagerMarkLoc *mark = value;
       GDateTime *mtime;
       gchar *mtime_str;
 
-      mtime = g_date_time_new_from_unix_local (mark->modification_time / 1e6);
+      mtime = g_date_time_new_from_unix_local (mark->mark->modification_time / 1e6);
       mtime_str =  g_date_time_format (mtime, "%d.%m %H:%M");
 
       gtk_list_store_append (ls, &tree_iter);
       gtk_list_store_set (ls, &tree_iter,
                           0, mark_id,
-                          1, mark->name,
+                          1, mark->mark->name,
                           2, mtime_str,
-                          3, mark->modification_time,
+                          3, mark->mark->modification_time,
                           -1);
 
       g_free (mtime_str);
@@ -960,55 +964,81 @@ auto_tvg_set (Global  *global,
   return TRUE;
 }
 
+static void
+distance_printer (GtkLabel *label,
+                  gdouble   value)
+{
+  gchar *text;
+  text = g_strdup_printf ("<small><b>%.0f м</b></small>", value);
+  gtk_label_set_markup (label, text);
+  g_free (text);
+}
+
+
 /* Функция устанавливает рабочую дистанцию. */
 static gboolean
 distance_set (Global  *global,
-              gdouble  cur_distance)
+              gdouble  wanted_distance,
+              gint     sonar_selector)
 {
-  gchar *text;
-  gdouble real_distance;
-  gboolean status;
-  GtkLabel *distance_value;
+  gdouble fl_distance = global->GFL.sonar.cur_distance;
+  gdouble pf_distance = global->GPF.sonar.cur_distance;
+  gdouble ss_distance = global->GSS.sonar.cur_distance;
 
-  if (cur_distance < 1.0)
+  gdouble real_distance;
+
+  gboolean status;
+
+  if (wanted_distance < 1.0)
     return FALSE;
 
-  real_distance = cur_distance / (global->sound_velocity / 2.0);
+  real_distance = wanted_distance / (global->sound_velocity / 2.0);
 
-  switch (global->sonar_selector)
+  /* У ПФ больше чем у ВС/БО */
+  if (global->ms_invert)
     {
-      case W_SIDESCAN:
-        hyscan_return_val_if_fail (cur_distance <= SIDE_SCAN_MAX_DISTANCE, FALSE);
-        status = hyscan_sonar_control_set_receive_time (global->GSS.sonar.sonar_ctl, STARBOARD, real_distance);
-        hyscan_return_val_if_fail (status, FALSE);
-
-        status = hyscan_sonar_control_set_receive_time (global->GSS.sonar.sonar_ctl, PORTSIDE, real_distance);
-        hyscan_return_val_if_fail (status, FALSE);
-        distance_value = global->GSS.gui.distance_value;
-        break;
-
-      case W_PROFILER:
-        hyscan_return_val_if_fail (cur_distance <= PROFILER_MAX_DISTANCE, FALSE);
-        status = hyscan_sonar_control_set_receive_time (global->GPF.sonar.sonar_ctl, PROFILER, real_distance);
-        hyscan_return_val_if_fail (status, FALSE);
-        distance_value = global->GPF.gui.distance_value;
-        break;
-
-      case W_FORWARDL:
-        hyscan_return_val_if_fail (cur_distance <= FORWARD_LOOK_MAX_DISTANCE, FALSE);
-        status = hyscan_sonar_control_set_receive_time (global->GFL.sonar.sonar_ctl, FORWARDLOOK, real_distance);
-        hyscan_return_val_if_fail (status, FALSE);
-        distance_value = global->GFL.gui.distance_value;
-        break;
-      default:
-        g_warning ("distance_set: wrong sonar_ctl selector (%i@%i)!", global->sonar_selector, __LINE__);
-        return TRUE;
-
+      if (sonar_selector == W_PROFILER && real_distance >= fl_distance + 10.0 && real_distance >= ss_distance + 10.0)
+          {
+            status = hyscan_sonar_control_set_receive_time (global->GPF.sonar.sonar_ctl, PROFILER, real_distance);
+            hyscan_return_val_if_fail (status, FALSE);
+            distance_printer (global->GPF.gui.distance_value, wanted_distance);
+          }
+      else if ((sonar_selector == W_SIDESCAN || sonar_selector == W_FORWARDL) && (real_distance <= pf_distance - 10.0))
+          {
+            status = hyscan_sonar_control_set_receive_time (global->GFL.sonar.sonar_ctl, FORWARDLOOK, real_distance);
+            status &= hyscan_sonar_control_set_receive_time (global->GSS.sonar.sonar_ctl, STARBOARD, real_distance);
+            status &= hyscan_sonar_control_set_receive_time (global->GSS.sonar.sonar_ctl, PORTSIDE, real_distance);
+            hyscan_return_val_if_fail (status, FALSE);
+            distance_printer (global->GFL.gui.distance_value, wanted_distance);
+            distance_printer (global->GSS.gui.distance_value, wanted_distance);
+          }
+      else
+          {
+            return FALSE;
+          }
     }
-
-  text = g_strdup_printf ("<small><b>%.0f м</b></small>", cur_distance);
-  gtk_label_set_markup (distance_value, text);
-  g_free (text);
+  else
+    {
+      if (sonar_selector == W_PROFILER && real_distance <= fl_distance - 10.0 && real_distance <= ss_distance - 10.0)
+          {
+            status = hyscan_sonar_control_set_receive_time (global->GPF.sonar.sonar_ctl, PROFILER, real_distance);
+            hyscan_return_val_if_fail (status, FALSE);
+            distance_printer (global->GPF.gui.distance_value, wanted_distance);
+          }
+      else if ((sonar_selector == W_SIDESCAN || sonar_selector == W_FORWARDL) && (real_distance >= pf_distance + 10.0))
+          {
+            status = hyscan_sonar_control_set_receive_time (global->GFL.sonar.sonar_ctl, FORWARDLOOK, real_distance);
+            status &= hyscan_sonar_control_set_receive_time (global->GSS.sonar.sonar_ctl, STARBOARD, real_distance);
+            status &= hyscan_sonar_control_set_receive_time (global->GSS.sonar.sonar_ctl, PORTSIDE, real_distance);
+            hyscan_return_val_if_fail (status, FALSE);
+            distance_printer (global->GFL.gui.distance_value, wanted_distance);
+            distance_printer (global->GSS.gui.distance_value, wanted_distance);
+          }
+      else
+          {
+            return FALSE;
+          }
+    }
 
   return TRUE;
 }
@@ -1474,17 +1504,17 @@ distance_up (GtkWidget *widget,
     {
       case W_FORWARDL:
         cur_distance = global->GFL.sonar.cur_distance + 5.0;
-        if (distance_set (global, cur_distance))
+        if (distance_set (global, cur_distance, global->sonar_selector))
           global->GFL.sonar.cur_distance = cur_distance;
         break;
       case W_SIDESCAN:
         cur_distance = global->GSS.sonar.cur_distance + 5.0;
-        if (distance_set (global, cur_distance))
+        if (distance_set (global, cur_distance, global->sonar_selector))
           global->GSS.sonar.cur_distance = cur_distance;
         break;
       case W_PROFILER:
         cur_distance = global->GPF.sonar.cur_distance + 5.0;
-        if (distance_set (global, cur_distance))
+        if (distance_set (global, cur_distance, global->sonar_selector))
           global->GPF.sonar.cur_distance = cur_distance;
         break;
       default:
@@ -1502,17 +1532,17 @@ distance_down (GtkWidget *widget,
     {
       case W_FORWARDL:
         cur_distance = global->GFL.sonar.cur_distance - 5.0;
-        if (distance_set (global, cur_distance))
+        if (distance_set (global, cur_distance, global->sonar_selector))
           global->GFL.sonar.cur_distance = cur_distance;
         break;
       case W_SIDESCAN:
         cur_distance = global->GSS.sonar.cur_distance - 5.0;
-        if (distance_set (global, cur_distance))
+        if (distance_set (global, cur_distance, global->sonar_selector))
           global->GSS.sonar.cur_distance = cur_distance;
         break;
       case W_PROFILER:
         cur_distance = global->GPF.sonar.cur_distance - 5.0;
-        if (distance_set (global, cur_distance))
+        if (distance_set (global, cur_distance, global->sonar_selector))
           global->GPF.sonar.cur_distance = cur_distance;
         break;
       default:
@@ -1914,7 +1944,7 @@ start_stop (GtkWidget *widget,
           return TRUE;
         }
       if (!auto_tvg_set (global, global->GSS.sonar.cur_level, global->GSS.sonar.cur_sensitivity) ||
-          !distance_set (global, global->GSS.sonar.cur_distance))
+          !distance_set (global, global->GSS.sonar.cur_distance, global->sonar_selector))
         {
           gtk_switch_set_active (GTK_SWITCH (widget), FALSE);
           global->sonar_selector = old_selector;
@@ -1930,7 +1960,7 @@ start_stop (GtkWidget *widget,
          }
 
       if (!tvg_set      (global, &global->GPF.sonar.cur_gain0, global->GPF.sonar.cur_gain_step) ||
-          !distance_set (global, global->GPF.sonar.cur_distance))
+          !distance_set (global, global->GPF.sonar.cur_distance, global->sonar_selector))
         {
           gtk_switch_set_active (GTK_SWITCH (widget), FALSE);
           global->sonar_selector = old_selector;
@@ -1944,7 +1974,7 @@ start_stop (GtkWidget *widget,
             return TRUE;
           }
       if (!tvg_set      (global, &global->GFL.sonar.cur_gain0, global->GFL.sonar.cur_gain_step) ||
-          !distance_set (global, global->GFL.sonar.cur_distance))
+          !distance_set (global, global->GFL.sonar.cur_distance, global->sonar_selector))
         {
           gtk_switch_set_active (GTK_SWITCH (widget), FALSE);
           global->sonar_selector = old_selector;
@@ -2441,6 +2471,7 @@ main (int argc, char **argv)
   global.full_screen = full_screen;
   global.project_name = project_name;
   global.track_prefix = track_prefix;
+  global.ms_invert = ms_invert;
 
   /* Кэш. */
   cache_size = (cache_size <= 64) ? 256 : cache_size;
@@ -2464,7 +2495,9 @@ main (int argc, char **argv)
    *
    * Подключение к гидролокатору.
    */
-  // goto no_sonar;
+  if (flss_uri == NULL && prof_uri == NULL)
+    goto no_sonar;
+
   if (flss_uri != NULL)
     {
       HyScanGeneratorModeType gen_cap;
@@ -2686,7 +2719,7 @@ main (int argc, char **argv)
       hyscan_param_set_enum (HYSCAN_PARAM (prof_sonar), "/parameters/sync-type", 2 /*HYSCAN_SONAR_HYDRA_SYNC_EXTERNAL*/ );
     }
   /* Закончили подключение к гидролокатору. */
-  // no_sonar:
+  no_sonar:
 
   /***
    *           ___   ___   ___         ___         ___   ___   ___   ___   ___   ___   ___
@@ -3077,7 +3110,6 @@ main (int argc, char **argv)
   global.GSS.sonar.cur_gain_step = 10.0;
   global.GSS.sonar.cur_level = 0.5;
   global.GSS.sonar.cur_sensitivity = 0.6;
-  global.GSS.sonar.cur_distance = SIDE_SCAN_MAX_DISTANCE;
 
   global.GPF.cur_brightness = 80.0;
   global.GPF.cur_color_map = 0;
@@ -3085,14 +3117,26 @@ main (int argc, char **argv)
   global.GPF.sonar.cur_signal = 1;
   global.GPF.sonar.cur_gain0 = 0.0;
   global.GPF.sonar.cur_gain_step = 10.0;
-  global.GPF.sonar.cur_distance = PROFILER_MAX_DISTANCE;
 
   global.GFL.cur_brightness = 80.0;
   global.GFL.cur_sensitivity = 8.0;
   global.GFL.sonar.cur_signal = 1;
   global.GFL.sonar.cur_gain0 = 0.0;
   global.GFL.sonar.cur_gain_step = 20.0;
-  global.GFL.sonar.cur_distance = PROFILER_MAX_DISTANCE;
+
+
+  if (ms_invert)
+    {
+      global.GPF.sonar.cur_distance = PROFILER_MAX_DISTANCE;
+      global.GSS.sonar.cur_distance = PROFILER_MAX_DISTANCE - 10.0;
+      global.GFL.sonar.cur_distance = PROFILER_MAX_DISTANCE - 10.0;
+    }
+  else
+    {
+      global.GSS.sonar.cur_distance = MAX (FORWARD_LOOK_MAX_DISTANCE, SIDE_SCAN_MAX_DISTANCE);
+      global.GFL.sonar.cur_distance = MAX (FORWARD_LOOK_MAX_DISTANCE, SIDE_SCAN_MAX_DISTANCE);
+      global.GPF.sonar.cur_distance = global.GFL.sonar.cur_distance - 10.0;
+    }
 
   global.sonar_selector = W_SIDESCAN;
   color_map_set (&global, global.GSS.cur_color_map);
@@ -3100,7 +3144,7 @@ main (int argc, char **argv)
   scale_set (&global, FALSE, NULL);
   if (global.GSS.sonar.sonar_ctl != NULL)
     {
-      distance_set (&global, global.GSS.sonar.cur_distance);
+      distance_set (&global, global.GSS.sonar.cur_distance, global.sonar_selector);
       auto_tvg_set (&global, global.GSS.sonar.cur_level, global.GSS.sonar.cur_sensitivity);
       signal_set (&global, 1);
     }
@@ -3111,7 +3155,7 @@ main (int argc, char **argv)
   scale_set (&global, FALSE, NULL);
   if (global.GPF.sonar.sonar_ctl != NULL)
     {
-      distance_set (&global, global.GPF.sonar.cur_distance);
+      distance_set (&global, global.GPF.sonar.cur_distance, global.sonar_selector);
       tvg_set (&global, &global.GPF.sonar.cur_gain0, global.GPF.sonar.cur_gain_step);
       signal_set (&global, 1);
     }
@@ -3122,7 +3166,7 @@ main (int argc, char **argv)
   scale_set (&global, FALSE, NULL);
   if (global.GFL.sonar.sonar_ctl != NULL)
     {
-      distance_set (&global, global.GFL.sonar.cur_distance);
+      distance_set (&global, global.GFL.sonar.cur_distance, global.sonar_selector);
       tvg_set (&global, &global.GFL.sonar.cur_gain0, global.GPF.sonar.cur_gain_step);
       signal_set (&global, 1);
     }
