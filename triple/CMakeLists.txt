@@ -20,6 +20,7 @@ add_definitions (-DSONAR_DRIVERS_PATH="${SONAR_DRIVERS_PATH}")
 
 add_executable (triple
                 hyscan-gtk-forward-look.c
+                hyscan-fl-coords.c
                 sonar-configure.c
                 triple.c
                 ${CMAKE_BINARY_DIR}/resources/triple-resources.c)

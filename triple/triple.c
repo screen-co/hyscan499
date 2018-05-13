@@ -20,6 +20,7 @@
 
 #include "sonar-configure.h"
 #include "hyscan-gtk-forward-look.h"
+#include "hyscan-fl-coords.h"
 
 #define hyscan_return_val_if_fail(expr,val) do {if (!(expr)) {return (val);}} while (FALSE)
 #define hyscan_exit_if(expr,msg) do {if (!(expr)) break; g_message ((msg)); goto exit;} while (FALSE)
@@ -175,6 +176,7 @@ typedef struct
     SonarSpecificGui                     gui;
 
     HyScanGtkForwardLook                *fl;
+    HyScanFlCoords                      *fl_coords;
     HyScanForwardLookPlayer             *fl_player;
     // TODO: fl with player widget!
     GtkAdjustment                       *position_range;
@@ -3015,6 +3017,7 @@ main (int argc, char **argv)
   global.gui.disp_widgets[W_PROFILER] = g_object_ref (pf_ol);
 
   global.GFL.fl = HYSCAN_GTK_FORWARD_LOOK (hyscan_gtk_forward_look_new ());
+  global.GFL.fl_coords = hyscan_fl_coords_new (global.GFL.fl);
   global.gui.disp_widgets[W_FORWARDL] = g_object_ref (global.GFL.fl);
   global.GFL.fl_player = hyscan_gtk_forward_look_get_player (global.GFL.fl);
 
