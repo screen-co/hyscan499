@@ -206,14 +206,9 @@ hyscan_fl_coords_button (GtkWidget      *widget,
                                y_val,
                                &geo);
 
-  if (!status)
-    {
-      priv->coords_status = FALSE;
-      return FALSE;
-    }
-
-  priv->coords_status = TRUE;
   priv->coords = geo;
+  priv->coords_status = status;
+
   g_signal_emit (self, hyscan_fl_coords_signals[SIGNAL_COORDS], 0);
 
   return FALSE;

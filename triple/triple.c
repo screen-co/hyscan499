@@ -181,6 +181,7 @@ typedef struct
     // TODO: fl with player widget!
     GtkAdjustment                       *position_range;
     GtkScale                            *position;
+    GtkLabel                            *coords_label;
     GtkSwitch                           *mode_target;
   } GFL;
 
@@ -2318,6 +2319,23 @@ make_layer_btn (HyScanGtkWaterfallLayer *layer,
   return button;
 }
 
+static void
+fl_coords_callback (HyScanFlCoords *coords,
+                    GtkLabel       *label)
+{
+  gboolean status;
+  gdouble lat;
+  gdouble lon;
+  gchar *text;
+
+  status = hyscan_fl_coords_get_coords (coords, &lat, &lon);
+
+  text = g_strdup_printf ("Широта: %f; Долгота: %f", lat, lon);
+  gtk_widget_set_visible (label, status);
+  gtk_label_set_text (label, text);
+
+}
+
 GtkWidget *
 make_overlay (HyScanGtkWaterfall          *wf,
               HyScanGtkWaterfallGrid     **_grid,
@@ -3021,10 +3039,13 @@ main (int argc, char **argv)
   global.gui.disp_widgets[W_FORWARDL] = g_object_ref (global.GFL.fl);
   global.GFL.fl_player = hyscan_gtk_forward_look_get_player (global.GFL.fl);
 
+  g_signal_connect (global.GFL.fl_coords, "coords", G_CALLBACK (fl_coords_callback), &global.GFL.coords_label);
+
   /* Управление воспроизведением FL. */
   fl_play_control = GTK_WIDGET (get_from_builder (fl_builder, "fl_play_control"));
   hyscan_exit_if (fl_play_control == NULL, "can't load play control ui");
   global.GFL.position = GTK_SCALE (get_from_builder (fl_builder, "position"));
+  global.GFL.coords_label = GTK_LABEL (get_from_builder (fl_builder, "fl_latlong"));
   hyscan_exit_if (global.GFL.position == NULL, "incorrect play control ui");
   global.GFL.position_range = hyscan_gtk_forward_look_get_adjustment (global.GFL.fl);
   gtk_range_set_adjustment (GTK_RANGE (global.GFL.position), global.GFL.position_range);

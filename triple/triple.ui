@@ -33,6 +33,7 @@
     <property name="stock">gtk-zoom-in</property>
   </object>
   <object class="GtkBox" id="fl_play_control">
+    <property name="orientation">vertical</property>
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="valign">center</property>
@@ -56,7 +57,16 @@
         <property name="fill">True</property>
         <property name="position">0</property>
       </packing>
-    </child>
+      </child>
+      <child>
+        <object class="GtkLabel" id="fl_latlong">
+          <property name="visible">True</property>
+          <property name="can_focus">False</property>
+          <property name="halign">center</property>
+          <property name="valign">center</property>
+          <property name="label" translatable="yes"></property>
+        </object>
+      </child>
   </object>
   <object class="GtkImage" id="fl_scale_image_down">
     <property name="visible">True</property>
