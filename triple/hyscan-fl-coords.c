@@ -53,8 +53,6 @@ static void     hyscan_fl_coords_object_finalize        (GObject               *
 static gboolean hyscan_fl_coords_button                 (GtkWidget             *widget,
                                                          GdkEventButton        *event,
                                                         HyScanFlCoords *self);
-static void     adjustment_changed                      (GtkAdjustment  *adj,
-                                                         gpointer        udata);
 
 static guint    hyscan_fl_coords_signals[SIGNAL_LAST] = {0};
 G_DEFINE_TYPE_WITH_CODE (HyScanFlCoords, hyscan_fl_coords, G_TYPE_OBJECT,
@@ -139,8 +137,8 @@ hyscan_fl_coords_new (HyScanGtkForwardLook *fl)
 void
 hyscan_fl_coords_set_project (HyScanFlCoords *self,
                               HyScanDB       *db,
-                              gchar          *project,
-                              gchar          *track)
+                              const gchar    *project,
+                              const gchar    *track)
 {
   HyScanFlCoordsPrivate *priv;
 
@@ -214,8 +212,10 @@ hyscan_fl_coords_button (GtkWidget      *widget,
   return FALSE;
 }
 
-
-gboolean hyscan_fl_coords_get_coords (HyScanFlCoords *self, gdouble *lat, gdouble *lon)
+gboolean
+hyscan_fl_coords_get_coords (HyScanFlCoords *self,
+                             gdouble        *lat,
+                             gdouble        *lon)
 {
   HyScanFlCoordsPrivate *priv;
 

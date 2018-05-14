@@ -57,24 +57,21 @@ struct _HyScanFlCoordsClass
 };
 
 HYSCAN_API
-GType                   hyscan_fl_coords_get_type         (void);
+GType           hyscan_fl_coords_get_type              (void);
 
-/**
- *
- * Функция создает новый виджет \link HyScanFlCoords \endlink
- *
- * \param waterfall указатель на виджет \link HyScanGtkWaterfall \endlink
- *
- * \return новый виджет \link HyScanFlCoords \endlink
- */
 HYSCAN_API
 HyScanFlCoords *hyscan_fl_coords_new                   (HyScanGtkForwardLook *fl);
 
 HYSCAN_API
-void hyscan_fl_coords_set_project (HyScanFlCoords *self, HyScanDB *db, gchar *project, gchar *track);
+void            hyscan_fl_coords_set_project           (HyScanFlCoords       *self,
+                                                        HyScanDB             *db,
+                                                        const gchar          *project,
+                                                        const gchar          *track);
 
 HYSCAN_API
-gboolean hyscan_fl_coords_get_coords (HyScanFlCoords *self, gdouble *lat, gdouble *lon);
+gboolean        hyscan_fl_coords_get_coords            (HyScanFlCoords       *self,
+                                                        gdouble              *lat,
+                                                        gdouble              *lon);
 
 G_END_DECLS
 

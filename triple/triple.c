@@ -475,6 +475,7 @@ track_changed (GtkTreeView *list,
   track_name = g_value_get_string (&value);
 
   hyscan_forward_look_player_open (global->GFL.fl_player, global->db, global->project_name, track_name, TRUE);
+  hyscan_fl_coords_set_project (global->GFL.fl_coords, global->db, global->project_name, track_name);
   hyscan_gtk_waterfall_state_set_track (HYSCAN_GTK_WATERFALL_STATE (global->GSS.wf),
                                         global->db, global->project_name, track_name, TRUE);
 
@@ -2331,9 +2332,8 @@ fl_coords_callback (HyScanFlCoords *coords,
   status = hyscan_fl_coords_get_coords (coords, &lat, &lon);
 
   text = g_strdup_printf ("Широта: %f; Долгота: %f", lat, lon);
-  gtk_widget_set_visible (label, status);
+  gtk_widget_set_visible (GTK_WIDGET (label), status);
   gtk_label_set_text (label, text);
-
 }
 
 GtkWidget *
