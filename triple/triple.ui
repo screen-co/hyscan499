@@ -5,32 +5,32 @@
   <object class="GtkImage" id="color_map_image_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-out</property>
+    <property name="icon_name">list-remove-symbolic</property>
   </object>
   <object class="GtkImage" id="color_map_image_up">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-in</property>
+    <property name="icon_name">list-add-symbolic</property>
   </object>
   <object class="GtkImage" id="distance_image_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-out</property>
+    <property name="icon_name">list-remove-symbolic</property>
   </object>
   <object class="GtkImage" id="distance_image_up">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-in</property>
+    <property name="icon_name">list-add-symbolic</property>
   </object>
   <object class="GtkImage" id="fl_brightness_image_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-out</property>
+    <property name="icon_name">list-remove-symbolic</property>
   </object>
   <object class="GtkImage" id="fl_brightness_image_up">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-in</property>
+    <property name="icon_name">list-add-symbolic</property>
   </object>
   <object class="GtkBox" id="fl_play_control">
     <property name="orientation">vertical</property>
@@ -71,12 +71,12 @@
   <object class="GtkImage" id="fl_scale_image_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-out</property>
+    <property name="icon_name">list-remove-symbolic</property>
   </object>
   <object class="GtkImage" id="fl_scale_image_up">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-in</property>
+    <property name="icon_name">list-add-symbolic</property>
   </object>
   <object class="GtkImage" id="pf_black_image_down">
     <property name="visible">True</property>
@@ -374,12 +374,12 @@
   <object class="GtkImage" id="sensitivity_image_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-out</property>
+    <property name="icon_name">list-remove-symbolic</property>
   </object>
   <object class="GtkImage" id="sensitivity_image_up">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-in</property>
+    <property name="icon_name">list-add-symbolic</property>
   </object>
   <object class="GtkGrid" id="fl_view_control">
     <property name="visible">True</property>
@@ -647,12 +647,12 @@
   <object class="GtkImage" id="signal_image_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-out</property>
+    <property name="icon_name">list-remove-symbolic</property>
   </object>
   <object class="GtkImage" id="signal_image_up">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-in</property>
+    <property name="icon_name">list-add-symbolic</property>
   </object>
   <object class="GtkGrid" id="sonar_control">
     <property name="visible">True</property>
@@ -802,22 +802,22 @@
   <object class="GtkImage" id="ss_brightness_image_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-out</property>
+    <property name="icon_name">list-remove-symbolic</property>
   </object>
   <object class="GtkImage" id="ss_brightness_image_up">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-in</property>
+    <property name="icon_name">list-add-symbolic</property>
   </object>
   <object class="GtkImage" id="ss_scale_image_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-out</property>
+    <property name="icon_name">list-remove-symbolic</property>
   </object>
   <object class="GtkImage" id="ss_scale_image_up">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-in</property>
+    <property name="icon_name">list-add-symbolic</property>
   </object>
   <object class="GtkGrid" id="sonar_view_control">
     <property name="visible">True</property>
@@ -1096,22 +1096,22 @@
   <object class="GtkImage" id="tvg0_image_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-out</property>
+    <property name="icon_name">list-remove-symbolic</property>
   </object>
   <object class="GtkImage" id="tvg0_image_up">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-in</property>
+    <property name="icon_name">list-add-symbolic</property>
   </object>
   <object class="GtkImage" id="tvg_image_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-out</property>
+    <property name="icon_name">list-remove-symbolic</property>
   </object>
   <object class="GtkImage" id="tvg_image_up">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-in</property>
+    <property name="icon_name">list-add-symbolic</property>
   </object>
   <object class="GtkGrid" id="lin_tvg_control">
     <property name="visible">True</property>
@@ -1255,22 +1255,22 @@
   <object class="GtkImage" id="tvg_level_down_image">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-out</property>
+    <property name="icon_name">list-remove-symbolic</property>
   </object>
   <object class="GtkImage" id="tvg_level_up_image">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-in</property>
+    <property name="icon_name">list-add-symbolic</property>
   </object>
   <object class="GtkImage" id="tvg_sensitivity_down_image">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-out</property>
+    <property name="icon_name">list-remove-symbolic</property>
   </object>
   <object class="GtkImage" id="tvg_sensitivity_up_image">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="stock">gtk-zoom-in</property>
+    <property name="icon_name">list-add-symbolic</property>
   </object>
   <object class="GtkGrid" id="auto_tvg_control">
     <property name="visible">True</property>
