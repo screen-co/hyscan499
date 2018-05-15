@@ -34,6 +34,7 @@ struct _HyScanFlCoordsPrivate
   HyScanDB              *db;
   gchar                 *project;
   gchar                 *track;
+  HyScanCache           *cache;
 
   HyScanForwardLookData *fl_data;
   HyScanAntennaPosition  apos;
@@ -135,6 +136,19 @@ hyscan_fl_coords_new (HyScanGtkForwardLook *fl)
 }
 
 void
+hyscan_fl_coords_set_cache (HyScanFlCoords *self,
+                            HyScanCache    *cache)
+{
+  HyScanFlCoordsPrivate *priv;
+
+  g_return_if_fail (HYSCAN_IS_FL_COORDS (self));
+  priv = self->priv;
+
+  g_clear_object (&priv->cache);
+  priv->cache = g_object_ref (cache);
+}
+
+void
 hyscan_fl_coords_set_project (HyScanFlCoords *self,
                               HyScanDB       *db,
                               const gchar    *project,
@@ -158,9 +172,12 @@ hyscan_fl_coords_set_project (HyScanFlCoords *self,
   priv->loc = hyscan_mloc_new (db, project, track);
   priv->fl_data = hyscan_forward_look_data_new (db, project, track, TRUE);
 
+
   if (priv->loc == NULL || priv->fl_data == NULL)
     return;
 
+  hyscan_mloc_set_cache (priv->loc, priv->cache);
+  hyscan_forward_look_data_set_cache (priv->fl_data, priv->cache, NULL);
   priv->apos = hyscan_forward_look_data_get_position (priv->fl_data);
 }
 

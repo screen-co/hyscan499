@@ -22,7 +22,7 @@
 #include "hyscan-gtk-forward-look.h"
 #include "hyscan-fl-coords.h"
 
-#define hyscan_return_val_if_fail(expr,val) do {if (!(expr)) {return (val);}} while (FALSE)
+#define hyscan_return_val_if_fail(expr,val) do {if (!(expr)) {g_message("fail @ %i", __LINE__); return (val);}} while (FALSE)
 #define hyscan_exit_if(expr,msg) do {if (!(expr)) break; g_message ((msg)); goto exit;} while (FALSE)
 #define hyscan_exit_if_w_param(expr,msg,param) do {if (!(expr)) break; g_message ((msg),(param)); goto exit;} while (FALSE)
 
@@ -35,13 +35,13 @@
 
 #define FORWARD_LOOK_MAX_DISTANCE      75.0
 #define SIDE_SCAN_MAX_DISTANCE         150.0
-#define PROFILER_MAX_DISTANCE          50.0
+#define PROFILER_MAX_DISTANCE          150.0
 
 #define MAX_COLOR_MAPS                 3
 #define BLACK_BG                       0xff000000
 #define WHITE_BG                       0xffdddddd
 
-#define PF_TRACK_PREFIX                ".pf"
+#define PF_TRACK_PREFIX                "pf"
 #define DRY_TRACK_SUFFIX                "-dry"
 
 #define AME_KEY_RIGHT 39
@@ -487,7 +487,8 @@ track_changed (GtkTreeView *list,
   g_value_unset (&value);
 
   /* Режим отображения. */
-  if (global->gui.start_stop_switch != NULL && gtk_switch_get_state (global->gui.start_stop_switch))
+  if ((global->gui.start_stop_switch != NULL && gtk_switch_get_state (global->gui.start_stop_switch)) ||
+      (global->gui.start_stop_dry_switch != NULL && gtk_switch_get_state (global->gui.start_stop_dry_switch)))
     {
       hyscan_forward_look_player_real_time (global->GFL.fl_player);
       hyscan_gtk_waterfall_automove (HYSCAN_GTK_WATERFALL (global->GSS.wf), TRUE);
@@ -706,7 +707,7 @@ color_map_set (Global *global,
       cmap = global->GPF.color_maps;
       len = global->GPF.color_map_len;
       bg = WHITE_BG;
-      // label = global->GPF.gui.third_value;
+      label = NULL;
       break;
 
     default:
@@ -733,7 +734,8 @@ color_map_set (Global *global,
   hyscan_gtk_waterfall_set_substrate (wfd, bg);
 
   text = g_strdup_printf ("<small><b>%s</b></small>", color_map_name);
-  gtk_label_set_markup (label, text);
+  if (label != NULL)
+    gtk_label_set_markup (label, text);
   g_free (text);
 
   return TRUE;
@@ -972,6 +974,7 @@ static void
 distance_printer (GtkLabel *label,
                   gdouble   value)
 {
+g_message ("print %f distance @%p", value, label);
   gchar *text;
   text = g_strdup_printf ("<small><b>%.0f м</b></small>", value);
   gtk_label_set_markup (label, text);
@@ -993,6 +996,7 @@ distance_set (Global  *global,
 
   gboolean status;
 
+g_message ("dset: sel %i, want %f, in %i", sonar_selector, wanted_distance, global->ms_invert);
   if (wanted_distance < 1.0)
     return FALSE;
 
@@ -1001,13 +1005,14 @@ distance_set (Global  *global,
   /* У ПФ больше чем у ВС/БО */
   if (global->ms_invert)
     {
-      if (sonar_selector == W_PROFILER && real_distance >= fl_distance + 10.0 && real_distance >= ss_distance + 10.0)
+      if (sonar_selector == W_PROFILER && wanted_distance >= fl_distance + 10.0 && wanted_distance >= ss_distance + 10.0)
           {
             status = hyscan_sonar_control_set_receive_time (global->GPF.sonar.sonar_ctl, PROFILER, real_distance);
             hyscan_return_val_if_fail (status, FALSE);
             distance_printer (global->GPF.gui.distance_value, wanted_distance);
+	    global->GPF.sonar.cur_distance = wanted_distance;
           }
-      else if ((sonar_selector == W_SIDESCAN || sonar_selector == W_FORWARDL) && (real_distance <= pf_distance - 10.0))
+      else if ((sonar_selector == W_SIDESCAN || sonar_selector == W_FORWARDL) && (wanted_distance <= pf_distance - 10.0))
           {
             status = hyscan_sonar_control_set_receive_time (global->GFL.sonar.sonar_ctl, FORWARDLOOK, real_distance);
             status &= hyscan_sonar_control_set_receive_time (global->GSS.sonar.sonar_ctl, STARBOARD, real_distance);
@@ -1015,6 +1020,7 @@ distance_set (Global  *global,
             hyscan_return_val_if_fail (status, FALSE);
             distance_printer (global->GFL.gui.distance_value, wanted_distance);
             distance_printer (global->GSS.gui.distance_value, wanted_distance);
+            global->GFL.sonar.cur_distance = global->GSS.sonar.cur_distance = wanted_distance;
           }
       else
           {
@@ -1023,13 +1029,14 @@ distance_set (Global  *global,
     }
   else
     {
-      if (sonar_selector == W_PROFILER && real_distance <= fl_distance - 10.0 && real_distance <= ss_distance - 10.0)
+      if (sonar_selector == W_PROFILER && wanted_distance <= fl_distance - 10.0 && wanted_distance <= ss_distance - 10.0)
           {
             status = hyscan_sonar_control_set_receive_time (global->GPF.sonar.sonar_ctl, PROFILER, real_distance);
             hyscan_return_val_if_fail (status, FALSE);
             distance_printer (global->GPF.gui.distance_value, wanted_distance);
+	    global->GPF.sonar.cur_distance = wanted_distance;
           }
-      else if ((sonar_selector == W_SIDESCAN || sonar_selector == W_FORWARDL) && (real_distance >= pf_distance + 10.0))
+      else if ((sonar_selector == W_SIDESCAN || sonar_selector == W_FORWARDL) && (wanted_distance >= pf_distance + 10.0))
           {
             status = hyscan_sonar_control_set_receive_time (global->GFL.sonar.sonar_ctl, FORWARDLOOK, real_distance);
             status &= hyscan_sonar_control_set_receive_time (global->GSS.sonar.sonar_ctl, STARBOARD, real_distance);
@@ -1037,6 +1044,7 @@ distance_set (Global  *global,
             hyscan_return_val_if_fail (status, FALSE);
             distance_printer (global->GFL.gui.distance_value, wanted_distance);
             distance_printer (global->GSS.gui.distance_value, wanted_distance);
+            global->GFL.sonar.cur_distance = global->GSS.sonar.cur_distance = wanted_distance;
           }
       else
           {
@@ -3035,17 +3043,17 @@ main (int argc, char **argv)
   global.gui.disp_widgets[W_PROFILER] = g_object_ref (pf_ol);
 
   global.GFL.fl = HYSCAN_GTK_FORWARD_LOOK (hyscan_gtk_forward_look_new ());
-  global.GFL.fl_coords = hyscan_fl_coords_new (global.GFL.fl);
   global.gui.disp_widgets[W_FORWARDL] = g_object_ref (global.GFL.fl);
   global.GFL.fl_player = hyscan_gtk_forward_look_get_player (global.GFL.fl);
+  global.GFL.fl_coords = hyscan_fl_coords_new (global.GFL.fl);
 
-  g_signal_connect (global.GFL.fl_coords, "coords", G_CALLBACK (fl_coords_callback), &global.GFL.coords_label);
 
   /* Управление воспроизведением FL. */
   fl_play_control = GTK_WIDGET (get_from_builder (fl_builder, "fl_play_control"));
   hyscan_exit_if (fl_play_control == NULL, "can't load play control ui");
   global.GFL.position = GTK_SCALE (get_from_builder (fl_builder, "position"));
   global.GFL.coords_label = GTK_LABEL (get_from_builder (fl_builder, "fl_latlong"));
+  g_signal_connect (global.GFL.fl_coords, "coords", G_CALLBACK (fl_coords_callback), g_object_ref (global.GFL.coords_label));
   hyscan_exit_if (global.GFL.position == NULL, "incorrect play control ui");
   global.GFL.position_range = hyscan_gtk_forward_look_get_adjustment (global.GFL.fl);
   gtk_range_set_adjustment (GTK_RANGE (global.GFL.position), global.GFL.position_range);
@@ -3069,6 +3077,7 @@ main (int argc, char **argv)
 
   /* Cache */
   hyscan_forward_look_player_set_cache (global.GFL.fl_player, global.cache, NULL);
+  hyscan_fl_coords_set_cache (global.GFL.fl_coords, global.cache);
   hyscan_gtk_waterfall_state_set_cache (HYSCAN_GTK_WATERFALL_STATE (global.GSS.wf),
                                         global.cache, global.cache, NULL);
   hyscan_gtk_waterfall_state_set_cache (HYSCAN_GTK_WATERFALL_STATE (global.GPF.wf),
