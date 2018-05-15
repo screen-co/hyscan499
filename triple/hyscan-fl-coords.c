@@ -29,6 +29,9 @@ struct _HyScanFlCoordsPrivate
   HyScanGtkForwardLook *fl;
   GtkAdjustment        *adjustment;
   gdouble               val;
+  gdouble               cur_val;
+  gdouble               mouse_x;
+  gdouble               mouse_y;
   gint64                time_for_val;
 
   HyScanDB              *db;
@@ -51,9 +54,14 @@ static void     hyscan_fl_coords_set_property           (GObject               *
 static void     hyscan_fl_coords_object_constructed     (GObject               *object);
 static void     hyscan_fl_coords_object_finalize        (GObject               *object);
 
+static void     hyscan_fl_coords_adj_changed            (GtkAdjustment         *adjustment,
+                                                         gpointer               udata);
 static gboolean hyscan_fl_coords_button                 (GtkWidget             *widget,
                                                          GdkEventButton        *event,
-                                                        HyScanFlCoords *self);
+                                                         HyScanFlCoords        *self);
+static gboolean hyscan_fl_coords_visible_draw           (GtkWidget             *widget,
+                                                         cairo_t               *surface,
+                                                         HyScanFlCoords        *self);
 
 static guint    hyscan_fl_coords_signals[SIGNAL_LAST] = {0};
 G_DEFINE_TYPE_WITH_CODE (HyScanFlCoords, hyscan_fl_coords, G_TYPE_OBJECT,
@@ -112,6 +120,9 @@ hyscan_fl_coords_object_constructed (GObject *object)
 
   priv->adjustment = hyscan_gtk_forward_look_get_adjustment (priv->fl);
   g_signal_connect (priv->fl, "button-press-event", G_CALLBACK (hyscan_fl_coords_button), self);
+  g_signal_connect (priv->fl, "visible-draw", G_CALLBACK (hyscan_fl_coords_visible_draw), self);
+  g_signal_connect (priv->adjustment, "value-changed", G_CALLBACK (hyscan_fl_coords_adj_changed), self);
+  priv->cur_val = -1;
 }
 
 static void
@@ -126,6 +137,13 @@ hyscan_fl_coords_object_finalize (GObject *object)
   G_OBJECT_CLASS (hyscan_fl_coords_parent_class)->finalize (object);
 }
 
+static void
+hyscan_fl_coords_adj_changed (GtkAdjustment *adjustment,
+                              gpointer       udata)
+{
+  HyScanFlCoords *self = udata;
+  self->priv->cur_val = gtk_adjustment_get_value (adjustment);
+}
 /* Функция создает новый виджет HyScanFlCoords. */
 HyScanFlCoords*
 hyscan_fl_coords_new (HyScanGtkForwardLook *fl)
@@ -190,7 +208,6 @@ hyscan_fl_coords_button (GtkWidget      *widget,
   gdouble x_val;
   gdouble y_val;
   gboolean status;
-  gdouble cur_val;
   guint32 index;
   guint32 n_points;
   HyScanGeoGeodetic geo;
@@ -200,17 +217,20 @@ hyscan_fl_coords_button (GtkWidget      *widget,
 
   gtk_cifro_area_visible_point_to_value (carea, event->x, event->y, &y_val, &x_val); /* SIC!*/
 
+  priv->mouse_x = y_val;
+  priv->mouse_y = x_val;
+
   if (priv->fl_data == NULL || priv->loc == NULL)
     {
       g_message ("No navigation data!");
+      priv->coords_status = FALSE;
       return FALSE;
     }
 
-  cur_val = gtk_adjustment_get_value (priv->adjustment);
-  if (cur_val != priv->val)
+  if (priv->cur_val != priv->val)
     {
-      index = cur_val;
-      priv->val = cur_val;
+      index = priv->cur_val;
+      priv->val = priv->cur_val;
       hyscan_forward_look_data_get_doa_values (priv->fl_data, index, &n_points, &priv->time_for_val);
     }
 
@@ -225,6 +245,50 @@ hyscan_fl_coords_button (GtkWidget      *widget,
   priv->coords_status = status;
 
   g_signal_emit (self, hyscan_fl_coords_signals[SIGNAL_COORDS], 0);
+
+  gtk_widget_queue_draw (widget);
+  return FALSE;
+}
+
+static void
+hyscan_fl_coords_cross (cairo_t *cairo,
+                        gdouble  x,
+                        gdouble  y)
+{
+  cairo_move_to (cairo, x - 10, y - 10);
+  cairo_line_to (cairo, x + 10, y + 10);
+  cairo_move_to (cairo, x + 10, y - 10);
+  cairo_line_to (cairo, x - 10, y + 10);
+
+}
+
+static gboolean
+hyscan_fl_coords_visible_draw (GtkWidget       *widget,
+                               cairo_t         *cairo,
+                               HyScanFlCoords  *self)
+{
+  gdouble x, y;
+  HyScanFlCoordsPrivate *priv = self->priv;
+  GdkRGBA color;
+
+  if (priv->cur_val != priv->val)
+    return FALSE;
+
+  /* draw cross in mouse click place */
+  gtk_cifro_area_value_to_point (GTK_CIFRO_AREA (widget),
+                                 &x, &y,
+                                 priv->mouse_x,
+                                 priv->mouse_y);
+
+  gdk_rgba_parse (&color, priv->coords_status ? "cyan" : "red");
+  cairo_save (cairo);
+
+  gdk_cairo_set_source_rgba (cairo, &color);
+
+  hyscan_fl_coords_cross (cairo, x, y);
+
+  cairo_stroke (cairo);
+  cairo_restore (cairo);
 
   return FALSE;
 }
