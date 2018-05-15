@@ -3039,6 +3039,7 @@ main (int argc, char **argv)
                                  &global.GPF.wf_mark,
                                  &global.GPF.wf_metr);
   hyscan_gtk_waterfall_grid_set_condence (global.GPF.wf_grid, 10.0);
+  hyscan_gtk_waterfall_grid_set_grid_color (global.GPF.wf_grid, hyscan_tile_color_converter_c2i (32, 32, 32, 255));
   hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (global.GPF.wf), PROFILER);
   global.gui.disp_widgets[W_PROFILER] = g_object_ref (pf_ol);
 
