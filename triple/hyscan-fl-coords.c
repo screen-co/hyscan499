@@ -27,7 +27,7 @@ enum
 struct _HyScanFlCoordsPrivate
 {
   HyScanGtkForwardLook *fl;
-  GtkAdjustment        *adjustment;
+
   gdouble               val;
   gdouble               cur_val;
   gdouble               mouse_x;
@@ -45,6 +45,10 @@ struct _HyScanFlCoordsPrivate
 
   HyScanGeoGeodetic     coords;
   gboolean              coords_status;
+
+  GdkRGBA               cyan;
+  GdkRGBA               red;
+
 };
 
 static void     hyscan_fl_coords_set_property           (GObject               *object,
@@ -113,16 +117,20 @@ hyscan_fl_coords_set_property (GObject      *object,
 static void
 hyscan_fl_coords_object_constructed (GObject *object)
 {
+  GtkAdjustment *adjustment;
   HyScanFlCoords *self = HYSCAN_FL_COORDS (object);
   HyScanFlCoordsPrivate *priv = self->priv;
 
   G_OBJECT_CLASS (hyscan_fl_coords_parent_class)->constructed (object);
 
-  priv->adjustment = hyscan_gtk_forward_look_get_adjustment (priv->fl);
+  adjustment = hyscan_gtk_forward_look_get_adjustment (priv->fl);
   g_signal_connect (priv->fl, "button-press-event", G_CALLBACK (hyscan_fl_coords_button), self);
   g_signal_connect (priv->fl, "visible-draw", G_CALLBACK (hyscan_fl_coords_visible_draw), self);
-  g_signal_connect (priv->adjustment, "value-changed", G_CALLBACK (hyscan_fl_coords_adj_changed), self);
-  priv->cur_val = -1;
+  g_signal_connect (adjustment, "value-changed", G_CALLBACK (hyscan_fl_coords_adj_changed), self);
+  priv->cur_val = priv->val = gtk_adjustment_get_value (adjustment);
+
+  gdk_rgba_parse (&priv->cyan, "cyan");
+  gdk_rgba_parse (&priv->red, "red");
 }
 
 static void
@@ -133,6 +141,15 @@ hyscan_fl_coords_object_finalize (GObject *object)
 
   /* Отключаемся от всех сигналов. */
   g_signal_handlers_disconnect_by_data (priv->fl, self);
+
+  g_object_unref (priv->fl);
+  g_object_unref (priv->db);
+  g_object_unref (priv->cache);
+  g_object_unref (priv->fl_data);
+  g_object_unref (priv->loc);
+
+  g_free (priv->project);
+  g_free (priv->track);
 
   G_OBJECT_CLASS (hyscan_fl_coords_parent_class)->finalize (object);
 }
@@ -224,7 +241,7 @@ hyscan_fl_coords_button (GtkWidget      *widget,
     {
       g_message ("No navigation data!");
       priv->coords_status = FALSE;
-      return FALSE;
+      goto exit;
     }
 
   if (priv->cur_val != priv->val)
@@ -246,6 +263,7 @@ hyscan_fl_coords_button (GtkWidget      *widget,
 
   g_signal_emit (self, hyscan_fl_coords_signals[SIGNAL_COORDS], 0);
 
+exit:
   gtk_widget_queue_draw (widget);
   return FALSE;
 }
@@ -269,7 +287,6 @@ hyscan_fl_coords_visible_draw (GtkWidget       *widget,
 {
   gdouble x, y;
   HyScanFlCoordsPrivate *priv = self->priv;
-  GdkRGBA color;
 
   if (priv->cur_val != priv->val)
     return FALSE;
@@ -280,10 +297,10 @@ hyscan_fl_coords_visible_draw (GtkWidget       *widget,
                                  priv->mouse_x,
                                  priv->mouse_y);
 
-  gdk_rgba_parse (&color, priv->coords_status ? "cyan" : "red");
   cairo_save (cairo);
 
-  gdk_cairo_set_source_rgba (cairo, &color);
+  gdk_cairo_set_source_rgba (cairo, priv->coords_status ? &priv->cyan :
+                                                          &priv->red);
 
   hyscan_fl_coords_cross (cairo, x, y);
 

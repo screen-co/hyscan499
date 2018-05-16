@@ -2183,8 +2183,8 @@ create_sonar_box (GtkBuilder         *builder,
 
   gtk_box_pack_start (GTK_BOX (box), view_wdgt, FALSE, FALSE, 0);
 
-  if (sonar_control == NULL)
-    return box;
+  // if (sonar_control == NULL)
+    // return box;
 
   sonar_wdgt = GTK_WIDGET (get_from_builder (builder, sonr_ctl_name));
   tvg_wdgt = GTK_WIDGET (get_from_builder (builder, tvg_ctl_name));
@@ -2259,7 +2259,6 @@ ame_key_func (gpointer user_data)
   Global *global = user_data;
   gint keycode;
   gboolean st;
-
 
   keycode = g_atomic_int_get (&global->urpc_keycode);
 
@@ -2827,7 +2826,8 @@ main (int argc, char **argv)
   global.gui.selector       = GTK_WIDGET (get_from_builder (common_builder, "sonar_selector"));
   global.gui.stack          = GTK_WIDGET (gtk_stack_new ());
 
-  if (global.GFL.sonar.sonar_ctl != NULL && global.GPF.sonar.sonar_ctl != NULL)
+  // if (global.GFL.sonar.sonar_ctl != NULL && global.GPF.sonar.sonar_ctl != NULL)
+  if (1)
     {
       global.gui.record_control = GTK_WIDGET (get_from_builder (common_builder, "record_control"));
       global.gui.start_stop_switch = GTK_SWITCH (get_from_builder (common_builder, "start_stop"));
