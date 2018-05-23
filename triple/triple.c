@@ -31,6 +31,7 @@
 #define STARBOARD HYSCAN_SOURCE_SIDE_SCAN_STARBOARD
 #define PORTSIDE HYSCAN_SOURCE_SIDE_SCAN_PORT
 #define PROFILER HYSCAN_SOURCE_PROFILER
+#define ECHOSOUNDER HYSCAN_SOURCE_ECHOSOUNDER
 #define FORWARDLOOK HYSCAN_SOURCE_FORWARD_LOOK
 
 #define FORWARD_LOOK_MAX_DISTANCE      75.0
@@ -197,6 +198,9 @@ typedef struct
     HyScanDataSchemaEnumValue          **pf_signals;
     guint                                pf_n_signals;
 
+    gboolean                             have_es;
+    HyScanDataSchemaEnumValue          **es_signals;
+
     SonarSpecificGui                     gui;
 
     HyScanGtkWaterfall                  *wf;
@@ -232,11 +236,36 @@ typedef struct
 
 } Global;
 
-Global global = { 0 };
+Global global = { 0, };
 
-void no_processing_needed (void)
+
+
+//typedef struct
+//{
+//  gint64                               value;          /**< Численное значение параметра. */
+//  gchar                               *name;           /**< Название значения параметра. */
+//  gchar                               *description;    /**< Описание значения параметра. */
+//} HyScanDataSchemaEnumValue;
+
+HyScanDataSchemaEnumValue *
+find_signal_by_name (HyScanDataSchemaEnumValue ** where,
+                     HyScanDataSchemaEnumValue  * what)
 {
-  return;
+  const gchar * name = what->name;
+  HyScanDataSchemaEnumValue * current;
+
+  if (where == NULL)
+    return NULL;
+
+  for (; *where != NULL; ++where)
+    {
+      current = *where;
+
+      if (g_strcmp0 (current->name, name) == 0)
+        return current;
+    }
+
+  return NULL;
 }
 
 /* Функция изменяет режим окна full screen. */
@@ -332,7 +361,6 @@ active_mark_changed (HyScanGtkProjectViewer *marks_viewer,
   HyScanMarkManagerMarkLoc *mark;
 
   mark_id = hyscan_gtk_project_viewer_get_selected_item (marks_viewer);
-  // hyscan_db_model_set_mark (priv->db_model, mark_id);
 
   if ((marks = hyscan_mark_manager_get_w_coords (global->mman)) == NULL)
     return;
@@ -393,9 +421,6 @@ mark_manager_changed (HyScanMarkManager *mark_manager,
     }
 
   g_hash_table_unref (marks);
-
-  // if ((mark_id = hyscan_db_model_get_mark (priv->db_model)) != NULL)
-    // hyscan_gtk_project_viewer_set_selected_item (HYSCAN_GTK_PROJECT_VIEWER (global->gui.mlist), mark_id);
 }
 
 static void
@@ -774,7 +799,8 @@ signal_set (Global *global,
   GtkLabel *label;
   HyScanGeneratorControl *gen;
   HyScanSourceType src0, src1;
-  HyScanDataSchemaEnumValue **signals0, **signals1;
+  // HyScanDataSchemaEnumValue **signals0, **signals1;
+  HyScanDataSchemaEnumValue *sig0, *sig1;
   gboolean is_equal;
 
   if (cur_signal == 0)
@@ -788,16 +814,21 @@ signal_set (Global *global,
       src0 = STARBOARD;
       src1 = PORTSIDE;
       gen = global->GSS.sonar.gen_ctl;
-      signals0 = global->GSS.sb_signals;
-      signals1 = global->GSS.ps_signals;
+      sig0 = global->GSS.sb_signals[cur_signal];
+      sig1 = global->GSS.ps_signals[cur_signal];
       label = global->GSS.gui.signal_value;
       break;
     case W_PROFILER:
       if (cur_signal >= global->GPF.pf_n_signals)
         return FALSE;
-      src0 = src1 = PROFILER;
+      src1 = src0 = PROFILER;
       gen = global->GPF.sonar.gen_ctl;
-      signals0 = signals1 = global->GPF.pf_signals;
+      sig0 = global->GPF.pf_signals[cur_signal];
+      if (global->GPF.have_es)
+        {
+          src1 = ECHOSOUNDER;
+          sig1 = find_signal_by_name (global->GPF.es_signals, sig0);
+        }
       label = global->GPF.gui.signal_value;
       break;
     case W_FORWARDL:
@@ -805,7 +836,7 @@ signal_set (Global *global,
         return FALSE;
       src0 = src1 = FORWARDLOOK;
       gen = global->GFL.sonar.gen_ctl;
-      signals0 = signals1 = global->GFL.fl_signals;
+      sig0 = sig1 = global->GFL.fl_signals[cur_signal];
       label = global->GFL.gui.signal_value;
       break;
     default:
@@ -813,34 +844,28 @@ signal_set (Global *global,
       return FALSE;
     }
 
-  status = hyscan_generator_control_set_preset (gen, src0, signals0[cur_signal]->value);
+  status = hyscan_generator_control_set_preset (gen, src0, sig0->value);
   if (!status)
     return FALSE;
 
   if (src1 != src0)
     {
-      status = hyscan_generator_control_set_preset (gen, src1, signals1[cur_signal]->value);
+      status = hyscan_generator_control_set_preset (gen, src1, sig1->value);
       if (!status)
         return FALSE;
     }
 
   if (src0 == src1)
     {
-      text = g_strdup_printf ("<small><b>%s</b></small>", signals0[cur_signal]->name);
+      text = g_strdup_printf ("<small><b>%s</b></small>", sig0->name);
     }
   else
     {
-      is_equal = g_strcmp0 (signals0[cur_signal]->name, signals1[cur_signal]->name);
+      is_equal = g_strcmp0 (sig0->name, sig1->name);
       if (is_equal == 0)
-        {
-          text = g_strdup_printf ("<small><b>%s</b></small>", signals0[cur_signal]->name);
-        }
+        text = g_strdup_printf ("<small><b>%s</b></small>", sig0->name);
       else
-        {
-          text = g_strdup_printf ("<small><b>%s, %s</b></small>",
-                                  signals0[cur_signal]->name,
-                                  signals1[cur_signal]->name);
-        }
+        text = g_strdup_printf ("<small><b>%s, %s</b></small>", sig0->name, sig1->name);
     }
 
   gtk_label_set_markup (label, text);
@@ -884,7 +909,12 @@ tvg_set (Global  *global,
         hyscan_tvg_control_get_gain_range (global->GPF.sonar.tvg_ctl, PROFILER, &min_gain, &max_gain);
         *gain0 = CLAMP (*gain0, min_gain, max_gain);
         status = hyscan_tvg_control_set_linear_db (global->GPF.sonar.tvg_ctl, PROFILER, *gain0, step);
-        hyscan_return_val_if_fail (status, FALSE);
+        if (global->GPF.have_es)
+          {
+            hyscan_tvg_control_get_gain_range (global->GPF.sonar.tvg_ctl, ECHOSOUNDER, &min_gain, &max_gain);
+            status = hyscan_tvg_control_set_constant (global->GPF.sonar.tvg_ctl, ECHOSOUNDER, min_gain);
+            hyscan_return_val_if_fail (status, FALSE);
+          }
 
         tvg_value = global->GPF.gui.tvg_value;
         tvg0_value = global->GPF.gui.tvg0_value;
@@ -939,6 +969,7 @@ auto_tvg_set (Global  *global,
         break;
 
       case W_PROFILER:
+        g_warning ("Trying to set auto tvg for PROFILER!");
         status = hyscan_tvg_control_set_auto (global->GPF.sonar.tvg_ctl,
                                               PROFILER, level, sensitivity);
         hyscan_return_val_if_fail (status, FALSE);
@@ -948,6 +979,7 @@ auto_tvg_set (Global  *global,
         break;
 
       case W_FORWARDL:
+        g_warning ("Trying to set auto tvg for FORWARDL!");
         status = hyscan_tvg_control_set_auto (global->GFL.sonar.tvg_ctl,
                                               FORWARDLOOK, level, sensitivity);
         hyscan_return_val_if_fail (status, FALSE);
@@ -1009,8 +1041,13 @@ g_message ("dset: sel %i, want %f, in %i", sonar_selector, wanted_distance, glob
           {
             status = hyscan_sonar_control_set_receive_time (global->GPF.sonar.sonar_ctl, PROFILER, real_distance);
             hyscan_return_val_if_fail (status, FALSE);
+            if (global->GPF.have_es)
+              {
+                status = hyscan_sonar_control_set_receive_time (global->GPF.sonar.sonar_ctl, ECHOSOUNDER, real_distance);
+                hyscan_return_val_if_fail (status, FALSE);
+              }
             distance_printer (global->GPF.gui.distance_value, wanted_distance);
-	    global->GPF.sonar.cur_distance = wanted_distance;
+      	    global->GPF.sonar.cur_distance = wanted_distance;
           }
       else if ((sonar_selector == W_SIDESCAN || sonar_selector == W_FORWARDL) && (wanted_distance <= pf_distance - 10.0))
           {
@@ -1033,8 +1070,13 @@ g_message ("dset: sel %i, want %f, in %i", sonar_selector, wanted_distance, glob
           {
             status = hyscan_sonar_control_set_receive_time (global->GPF.sonar.sonar_ctl, PROFILER, real_distance);
             hyscan_return_val_if_fail (status, FALSE);
+            if (global->GPF.have_es)
+              {
+                status = hyscan_sonar_control_set_receive_time (global->GPF.sonar.sonar_ctl, ECHOSOUNDER, real_distance);
+                hyscan_return_val_if_fail (status, FALSE);
+              }
             distance_printer (global->GPF.gui.distance_value, wanted_distance);
-	    global->GPF.sonar.cur_distance = wanted_distance;
+	          global->GPF.sonar.cur_distance = wanted_distance;
           }
       else if ((sonar_selector == W_SIDESCAN || sonar_selector == W_FORWARDL) && (wanted_distance >= pf_distance + 10.0))
           {
@@ -2071,7 +2113,7 @@ sensor_cb (HyScanSensorControl      *src,
            HyScanDataWriterData     *data,
            Global                   *global)
 {
-  HyScanDataWriter *dst = HYSCAN_DATA_WRITER  (global->GPF.sonar.sonar_ctl);
+  HyScanDataWriter *dst = HYSCAN_DATA_WRITER (global->GPF.sonar.sonar_ctl);
   gchar **nmea;
   guint i;
 
@@ -2130,6 +2172,7 @@ start_stop_dry (GtkWidget *widget,
   if (global->GPF.sonar.gen_ctl != NULL && global->GSS.sonar.gen_ctl != NULL)
     {
       hyscan_generator_control_set_enable (global->GPF.sonar.gen_ctl, PROFILER, !global->dry);
+      hyscan_generator_control_set_enable (global->GPF.sonar.gen_ctl, ECHOSOUNDER, !global->dry);
       hyscan_generator_control_set_enable (global->GSS.sonar.gen_ctl, PORTSIDE, !global->dry);
       hyscan_generator_control_set_enable (global->GSS.sonar.gen_ctl, STARBOARD, !global->dry);
       hyscan_generator_control_set_enable (global->GFL.sonar.gen_ctl, FORWARDLOOK, !global->dry);
@@ -2183,8 +2226,10 @@ create_sonar_box (GtkBuilder         *builder,
 
   gtk_box_pack_start (GTK_BOX (box), view_wdgt, FALSE, FALSE, 0);
 
-  // if (sonar_control == NULL)
-    // return box;
+#ifndef GUI_TEST
+  if (sonar_control == NULL)
+    return box;
+#endif
 
   sonar_wdgt = GTK_WIDGET (get_from_builder (builder, sonr_ctl_name));
   tvg_wdgt = GTK_WIDGET (get_from_builder (builder, tvg_ctl_name));
@@ -2479,7 +2524,7 @@ main (int argc, char **argv)
       }
 
     if (args[1] != NULL)
-      config_file = g_strdup (args[1]); //// TODO: what?!
+      config_file = g_strdup (args[1]);
 
     g_option_context_free (context);
     g_strfreev (args);
@@ -2541,7 +2586,10 @@ main (int argc, char **argv)
           if (client == NULL)
             {
               g_message ("can't connect to flss_sonar '%s'", flss_uri);
-              goto exit;
+              g_message ("continue in sonarless mode");
+              g_clear_pointer (&flss_uri, g_free);
+              g_clear_pointer (&prof_uri, g_free);
+              goto no_sonar;
             }
 
           if (!hyscan_sonar_client_set_master (client))
@@ -2561,7 +2609,15 @@ main (int argc, char **argv)
           hyscan_exit_if_w_param (flss_driver == NULL, "can't load flss_sonar driver '%s'", driver_name);
 
           flss_sonar = hyscan_sonar_discover_connect (HYSCAN_SONAR_DISCOVER (flss_driver), flss_uri, NULL);
-          hyscan_exit_if_w_param (flss_sonar == NULL, "can't connect to flss_sonar '%s'", flss_uri);
+          if (flss_sonar == NULL)
+            {
+              g_message ("can't connect to flss_sonar '%s', continue in sonarless mode", flss_uri);
+              g_clear_pointer (&flss_uri, g_free);
+              g_clear_pointer (&prof_uri, g_free);
+              g_clear_object (&flss_sonar);
+              g_clear_object (&prof_sonar);
+              goto no_sonar;
+            }
         }
 
       /* Управление локатором. */
@@ -2681,7 +2737,15 @@ main (int argc, char **argv)
           hyscan_exit_if_w_param (prof_driver == NULL, "can't load prof_sonar driver '%s'", driver_name);
 
           prof_sonar = hyscan_sonar_discover_connect (HYSCAN_SONAR_DISCOVER (prof_driver), prof_uri, NULL);
-          hyscan_exit_if_w_param (prof_sonar == NULL, "can't connect to prof_sonar '%s'", prof_uri);
+          if (prof_sonar == NULL)
+            {
+              g_message ("can't connect to prof_sonar '%s', continue in sonarless mode", prof_uri);
+              g_clear_pointer (&flss_uri, g_free);
+              g_clear_pointer (&prof_uri, g_free);
+              g_clear_object (&flss_sonar);
+              g_clear_object (&prof_sonar);
+              goto no_sonar;
+            }
         }
 
       /* Управление локатором. */
@@ -2690,6 +2754,33 @@ main (int argc, char **argv)
 
       global.GPF.sonar.gen_ctl = HYSCAN_GENERATOR_CONTROL (global.GPF.sonar.sonar_ctl);
       global.GPF.sonar.tvg_ctl = HYSCAN_TVG_CONTROL (global.GPF.sonar.sonar_ctl);
+
+      HyScanSourceType *pf_sources, *src_iter;
+      pf_sources = hyscan_sonar_control_source_list (global.GPF.sonar.sonar_ctl);
+      for (src_iter = pf_sources; *src_iter != HYSCAN_SOURCE_INVALID; ++src_iter)
+        {
+          /* Не-эхолоты нам не интересны. Увы. */
+          if (*src_iter != ECHOSOUNDER)
+            continue;
+
+          global.GPF.have_es = TRUE;
+          g_message ("This profiler has echosounder channel");
+
+          gen_cap = hyscan_generator_control_get_capabilities (global.GPF.sonar.gen_ctl, ECHOSOUNDER);
+          hyscan_exit_if (!(gen_cap | HYSCAN_GENERATOR_MODE_PRESET), "profiler-echo: unsupported generator mode");
+
+          status = hyscan_generator_control_set_enable (global.GPF.sonar.gen_ctl, ECHOSOUNDER, TRUE);
+          hyscan_exit_if (!status, "profiler-echo: can't enable generator");
+
+          tvg_cap = hyscan_tvg_control_get_capabilities (global.GPF.sonar.tvg_ctl, ECHOSOUNDER);
+          hyscan_exit_if (!(tvg_cap | HYSCAN_TVG_MODE_LINEAR_DB), "profiler-echo: unsupported tvg_ctl mode");
+
+          global.GPF.es_signals = hyscan_generator_control_list_presets (global.GPF.sonar.gen_ctl, ECHOSOUNDER);
+          hyscan_exit_if (global.GPF.pf_signals == NULL, "profiler-echo: can't load signal presets");
+
+          status = hyscan_tvg_control_set_enable (global.GPF.sonar.tvg_ctl, ECHOSOUNDER, TRUE);
+          hyscan_exit_if (!status, "profiler-echo: can't enable tvg_ctl");
+        }
 
       /* Параметры генераторов. */
       gen_cap = hyscan_generator_control_get_capabilities (global.GPF.sonar.gen_ctl, PROFILER);
@@ -2706,11 +2797,8 @@ main (int argc, char **argv)
       hyscan_exit_if (!status, "profiler: can't enable tvg_ctl");
 
       /* Сигналы зондирования. */
-      global.GPF.pf_signals = hyscan_generator_control_list_presets (global.GPF.sonar.gen_ctl, PROFILER);
-      hyscan_exit_if (global.GPF.pf_signals == NULL, "profiler: can't load signal presets");
-
       for (i = 0; global.GPF.pf_signals[i] != NULL; i++);
-      global.GPF.pf_n_signals = i;
+        global.GPF.pf_n_signals = i;
 
       /* Настройка датчиков и антенн. */
       if (config_file != NULL)
@@ -2719,6 +2807,7 @@ main (int argc, char **argv)
           g_key_file_load_from_file (config, config_file, G_KEY_FILE_NONE, NULL);
 
           status = setup_sonar_antenna (global.GPF.sonar.sonar_ctl, PROFILER, config);
+          status &= setup_sonar_antenna (global.GPF.sonar.sonar_ctl, ECHOSOUNDER, config);
           g_key_file_unref (config);
 
           hyscan_exit_if (!status, "Failed to parse configuration file. ");
@@ -2826,8 +2915,11 @@ main (int argc, char **argv)
   global.gui.selector       = GTK_WIDGET (get_from_builder (common_builder, "sonar_selector"));
   global.gui.stack          = GTK_WIDGET (gtk_stack_new ());
 
-  // if (global.GFL.sonar.sonar_ctl != NULL && global.GPF.sonar.sonar_ctl != NULL)
+#ifdef GUI_TEST
   if (1)
+#else
+  if (global.GFL.sonar.sonar_ctl != NULL && global.GPF.sonar.sonar_ctl != NULL)
+#endif
     {
       global.gui.record_control = GTK_WIDGET (get_from_builder (common_builder, "record_control"));
       global.gui.start_stop_switch = GTK_SWITCH (get_from_builder (common_builder, "start_stop"));
