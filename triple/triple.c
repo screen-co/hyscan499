@@ -28,6 +28,8 @@
 
 #define WRONG_SELECTOR { g_message ("Wrong sonar selector @%i", __LINE__); }
 
+#define GUI_TEST 0
+
 #define STARBOARD HYSCAN_SOURCE_SIDE_SCAN_STARBOARD
 #define PORTSIDE HYSCAN_SOURCE_SIDE_SCAN_PORT
 #define PROFILER HYSCAN_SOURCE_PROFILER
@@ -1494,6 +1496,28 @@ mode_changed (GtkWidget *widget,
                                                     HYSCAN_GTK_FORWARD_LOOK_VIEW_SURFACE);
   gtk_widget_queue_draw (GTK_WIDGET (global->GFL.fl));
 
+  return TRUE;
+}
+
+static gboolean
+pf_special (GtkWidget  *widget,
+            gboolean    state,
+            Global     *global)
+{
+  HyScanTileFlags flags = 0;
+  HyScanTileFlags pf_flag = HYSCAN_TILE_PROFILER;
+  HyScanGtkWaterfallState *wf = HYSCAN_GTK_WATERFALL_STATE (global->GPF.wf);
+
+  hyscan_gtk_waterfall_state_get_tile_flags (wf, &flags);
+
+  if (state)
+    flags |= pf_flag;
+  else
+    flags &= ~pf_flag;
+
+  hyscan_gtk_waterfall_state_set_tile_flags (wf, flags);
+
+  gtk_switch_set_state (GTK_SWITCH (widget), state);
   return TRUE;
 }
 
@@ -3039,6 +3063,7 @@ main (int argc, char **argv)
     gtk_builder_add_callback_symbol (fl_builder, "color_map_up", G_CALLBACK (void_callback));
     gtk_builder_add_callback_symbol (fl_builder, "color_map_down", G_CALLBACK (void_callback));
     gtk_builder_add_callback_symbol (fl_builder, "live_view", G_CALLBACK (void_callback));
+    gtk_builder_add_callback_symbol (fl_builder, "pf_special", G_CALLBACK (void_callback));
     gtk_builder_connect_signals (fl_builder, &global);
 
     gtk_builder_add_callback_symbol (ss_builder, "brightness_up", G_CALLBACK (brightness_up));
@@ -3067,6 +3092,7 @@ main (int argc, char **argv)
     gtk_builder_add_callback_symbol (ss_builder, "sensitivity_up", G_CALLBACK (void_callback));
     gtk_builder_add_callback_symbol (ss_builder, "sensitivity_down", G_CALLBACK (void_callback));
     gtk_builder_add_callback_symbol (ss_builder, "mode_changed", G_CALLBACK (void_callback));
+    gtk_builder_add_callback_symbol (ss_builder, "pf_special", G_CALLBACK (void_callback));
     gtk_builder_connect_signals (ss_builder, &global);
 
     gtk_builder_add_callback_symbol (pf_builder, "brightness_up", G_CALLBACK (brightness_up));
@@ -3078,6 +3104,8 @@ main (int argc, char **argv)
     gtk_builder_add_callback_symbol (pf_builder, "black_up", G_CALLBACK (black_up));
     gtk_builder_add_callback_symbol (pf_builder, "color_map_down", G_CALLBACK (color_map_down));
     gtk_builder_add_callback_symbol (pf_builder, "live_view", G_CALLBACK (live_view));
+    gtk_builder_add_callback_symbol (pf_builder, "pf_special", G_CALLBACK (pf_special));
+
 
     gtk_builder_add_callback_symbol (pf_builder, "distance_up", G_CALLBACK (distance_up));
     gtk_builder_add_callback_symbol (pf_builder, "distance_down", G_CALLBACK (distance_down));
