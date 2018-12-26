@@ -43,7 +43,6 @@ static void    set_property      (GObject          *object,
                                   GParamSpec       *pspec);
 static void    constructed       (GObject          *object);
 static void    finalize          (GObject          *object);
-static void    create_project    (HyScanAmeProject *self);
 static void    delete_project    (HyScanAmeProject *self);
 static void    delete_track      (HyScanAmeProject *self);
 static void    fill_grid         (HyScanAmeProject *self,
@@ -112,7 +111,6 @@ fill_grid (HyScanAmeProject *self,
 {
   GtkWidget *projects, *tracks, *del_project, *del_track, *abar;
   GtkTreeView *project_tree, *track_tree;
-  GtkListStore *project_ls, *track_ls;
 
   HyScanAmeProjectPrivate *priv = self->priv;
 
@@ -142,24 +140,24 @@ fill_grid (HyScanAmeProject *self,
   gtk_style_context_add_class (gtk_widget_get_style_context (del_track),
                                GTK_STYLE_CLASS_DESTRUCTIVE_ACTION);
 
-  set_button_text (del_project, "Удалить проект", NULL);
-  set_button_text (del_track, "Удалить галс", NULL);
+  set_button_text (GTK_BUTTON (del_project), "Удалить проект", NULL);
+  set_button_text (GTK_BUTTON (del_track), "Удалить галс", NULL);
 
   g_signal_connect_swapped (del_project, "clicked",
                             G_CALLBACK (delete_project), self);
   g_signal_connect_swapped (del_track, "clicked",
                             G_CALLBACK (delete_track), self);
 
-  priv->projects_pw = projects;
-  priv->tracks_pw = tracks;
+  priv->projects_pw = HYSCAN_GTK_PROJECT_VIEWER (projects);
+  priv->tracks_pw = HYSCAN_GTK_PROJECT_VIEWER (tracks);
   priv->projects_tw = project_tree;
   priv->tracks_tw = track_tree;
-  priv->del_project = del_project;
-  priv->del_track = del_track;
+  priv->del_project = GTK_BUTTON (del_project);
+  priv->del_track = GTK_BUTTON (del_track);
 
   abar = gtk_action_bar_new ();
-  gtk_action_bar_pack_end (abar, del_track);
-  gtk_action_bar_pack_end (abar, del_project);
+  gtk_action_bar_pack_end (GTK_ACTION_BAR (abar), del_track);
+  gtk_action_bar_pack_end (GTK_ACTION_BAR (abar), del_project);
 
   gtk_grid_attach (grid, gtk_label_new ("Проекты"),    0, -1, 1, 1);
   gtk_grid_attach (grid, projects,    0, 0, 1, 1);
@@ -239,7 +237,8 @@ projects_changed (HyScanDBInfo     *db_info,
       if (g_strcmp0 (priv->project_name, pinfo->name) == 0)
         {
           GtkTreePath *tree_path;
-          tree_path = gtk_tree_model_get_path (priv->project_ls, &tree_iter);
+          tree_path = gtk_tree_model_get_path (GTK_TREE_MODEL (priv->project_ls),
+                                               &tree_iter);
           gtk_tree_view_set_cursor (priv->projects_tw, tree_path, NULL, FALSE);
           gtk_tree_path_free (tree_path);
         }
@@ -281,7 +280,7 @@ tracks_changed (HyScanDBInfo     *db_info,
       if (g_strcmp0 (priv->track_name, tinfo->name) == 0)
         {
           GtkTreePath *tree_path;
-          tree_path = gtk_tree_model_get_path (priv->track_ls, &tree_iter);
+          tree_path = gtk_tree_model_get_path (GTK_TREE_MODEL (priv->track_ls), &tree_iter);
           gtk_tree_view_set_cursor (priv->tracks_tw, tree_path, NULL, FALSE);
           gtk_tree_path_free (tree_path);
         }
@@ -382,6 +381,7 @@ project_selected (GtkTreeView      *tree,
                   HyScanAmeProject *self)
 {
   HyScanAmeProjectPrivate *priv = self->priv;
+  GtkWidget *resp_widget;
   gchar *project;
 
   project = get_selected (tree);
@@ -398,9 +398,11 @@ project_selected (GtkTreeView      *tree,
 
   hyscan_gtk_project_viewer_clear (priv->tracks_pw);
   hyscan_db_info_set_project (priv->info, project);
+
   set_button_text (priv->del_project, "Удалить проект", priv->project_name);
-  set_button_text (gtk_dialog_get_widget_for_response (self, HYSCAN_AME_PROJECT_OPEN),
-                   "Открыть проект", priv->project_name);
+
+  resp_widget = gtk_dialog_get_widget_for_response (GTK_DIALOG (self), HYSCAN_AME_PROJECT_OPEN);
+  set_button_text (GTK_BUTTON (resp_widget), "Открыть проект", priv->project_name);
   g_free (project);
 }
 

@@ -78,11 +78,11 @@ hyscan_ame_splash_object_constructed (GObject *object)
   gtk_box_pack_start (GTK_BOX (box), progress, FALSE, FALSE, 0);
   gtk_box_pack_end (GTK_BOX (box), wait, TRUE, TRUE, 0);
 
-  gtk_widget_show_all (self);
+  gtk_widget_show_all (GTK_WIDGET (self));
 
   priv->pulse = g_timeout_add (100, hyscan_ame_splash_pulse, progress);
   g_timeout_add (100, hyscan_ame_splash_response, self);
-  gtk_dialog_run (self);
+  gtk_dialog_run (GTK_DIALOG (self));
 }
 
 static void
@@ -109,6 +109,8 @@ hyscan_ame_splash_response (gpointer data)
 {
   GtkDialog *dialog = data;
   gtk_dialog_response (dialog, 0);
+  return G_SOURCE_CONTINUE;
+
 }
 
 HyScanAmeSplash*

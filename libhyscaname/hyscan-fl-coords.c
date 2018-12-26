@@ -21,23 +21,20 @@ enum
 
 enum
 {
-  PROP_FL = 1
+  PROP_FL = 1,
+  PROP_CACHE
 };
 
 struct _HyScanFlCoordsPrivate
 {
   HyScanGtkForwardLook *fl;
+  HyScanCache          *cache;
 
   gdouble               val;
   gdouble               cur_val;
   gdouble               mouse_x;
   gdouble               mouse_y;
   gint64                time_for_val;
-
-  HyScanDB              *db;
-  gchar                 *project;
-  gchar                 *track;
-  HyScanCache           *cache;
 
   HyScanForwardLookData *fl_data;
   HyScanAntennaPosition  apos;
@@ -85,6 +82,11 @@ hyscan_fl_coords_class_init (HyScanFlCoordsClass *klass)
                          HYSCAN_TYPE_GTK_FORWARD_LOOK,
                          G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 
+  g_object_class_install_property (object_class, PROP_CACHE,
+    g_param_spec_object ("cache", "cache", "HyScanCache object",
+                         HYSCAN_TYPE_CACHE,
+                         G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+
   hyscan_fl_coords_signals[SIGNAL_COORDS] =
     g_signal_new ("coords", HYSCAN_TYPE_FL_COORDS, G_SIGNAL_RUN_LAST, 0,
                   NULL, NULL,
@@ -110,6 +112,8 @@ hyscan_fl_coords_set_property (GObject      *object,
 
   if (prop_id == PROP_FL)
     self->priv->fl = g_value_dup_object (value);
+  if (prop_id == PROP_CACHE)
+    self->priv->cache = g_value_dup_object (value);
   else
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 }
@@ -143,13 +147,9 @@ hyscan_fl_coords_object_finalize (GObject *object)
   g_signal_handlers_disconnect_by_data (priv->fl, self);
 
   g_object_unref (priv->fl);
-  g_object_unref (priv->db);
   g_object_unref (priv->cache);
   g_object_unref (priv->fl_data);
   g_object_unref (priv->loc);
-
-  g_free (priv->project);
-  g_free (priv->track);
 
   G_OBJECT_CLASS (hyscan_fl_coords_parent_class)->finalize (object);
 }
@@ -163,24 +163,13 @@ hyscan_fl_coords_adj_changed (GtkAdjustment *adjustment,
 }
 /* Функция создает новый виджет HyScanFlCoords. */
 HyScanFlCoords*
-hyscan_fl_coords_new (HyScanGtkForwardLook *fl)
+hyscan_fl_coords_new (HyScanGtkForwardLook *fl,
+                      HyScanCache          *cache)
 {
   return g_object_new (HYSCAN_TYPE_FL_COORDS,
                        "fl", fl,
+                       "cache", cache,
                        NULL);
-}
-
-void
-hyscan_fl_coords_set_cache (HyScanFlCoords *self,
-                            HyScanCache    *cache)
-{
-  HyScanFlCoordsPrivate *priv;
-
-  g_return_if_fail (HYSCAN_IS_FL_COORDS (self));
-  priv = self->priv;
-
-  g_clear_object (&priv->cache);
-  priv->cache = g_object_ref (cache);
 }
 
 void
@@ -196,23 +185,13 @@ hyscan_fl_coords_set_project (HyScanFlCoords *self,
 
   g_clear_object (&priv->loc);
   g_clear_object (&priv->fl_data);
-  g_clear_object (&priv->db);
-  g_clear_pointer (&priv->project, g_free);
-  g_clear_pointer (&priv->track, g_free);
 
-  priv->db = g_object_ref (db);
-  priv->project = g_strdup (project);
-  priv->track = g_strdup (track);
-
-  priv->loc = hyscan_mloc_new (db, project, track);
-  priv->fl_data = hyscan_forward_look_data_new (db, project, track, TRUE);
-
+  priv->loc = hyscan_mloc_new (db, priv->cache, project, track);
+  priv->fl_data = hyscan_forward_look_data_new (db, priv->cache, project, track);
 
   if (priv->loc == NULL || priv->fl_data == NULL)
     return;
 
-  hyscan_mloc_set_cache (priv->loc, priv->cache);
-  hyscan_forward_look_data_set_cache (priv->fl_data, priv->cache, NULL);
   priv->apos = hyscan_forward_look_data_get_position (priv->fl_data);
 }
 
@@ -248,15 +227,11 @@ hyscan_fl_coords_button (GtkWidget      *widget,
     {
       index = priv->cur_val;
       priv->val = priv->cur_val;
-      hyscan_forward_look_data_get_doa_values (priv->fl_data, index, &n_points, &priv->time_for_val);
+      hyscan_forward_look_data_get_doa (priv->fl_data, index, &n_points, &priv->time_for_val);
     }
 
-  status = hyscan_mloc_get_fl (priv->loc,
-                               priv->time_for_val,
-                               &priv->apos,
-                               x_val,
-                               y_val,
-                               &geo);
+  status = hyscan_mloc_get (priv->loc, priv->time_for_val, &priv->apos,
+                            x_val, y_val, 0, &geo);
 
   priv->coords = geo;
   priv->coords_status = status;

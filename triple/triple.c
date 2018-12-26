@@ -23,11 +23,16 @@ depth_writer (GObject *emitter)
   GError *error = NULL;
 
   HyScanDB * db = global.db;
+  HyScanCache * cache = global.cache;
   gchar *project = global.project_name;
   gchar *track = global.track_name;
 
-  HyScanNavData * dpt = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, project, track,
-                                         1, HYSCAN_SOURCE_NMEA_DPT, HYSCAN_NMEA_FIELD_DEPTH));
+  HyScanNavData * dpt;
+  HyScanmLoc * mloc;
+
+  dpt = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track,
+                                                 1, HYSCAN_SOURCE_NMEA_DPT,
+                                                 HYSCAN_NMEA_FIELD_DEPTH));
 
   if (dpt == NULL)
     {
@@ -35,15 +40,13 @@ depth_writer (GObject *emitter)
       return;
     }
 
-  HyScanmLoc * mloc = hyscan_mloc_new (db, project, track);
+  mloc = hyscan_mloc_new (db, cache, project, track);
   if (mloc == NULL)
     {
-      g_warning ("Failed to mLocation.");
+      g_warning ("Failed to open mLocation.");
       g_clear_object (&dpt);
       return;
     }
-
-  hyscan_mloc_set_cache (mloc, global.cache);
 
   string = g_string_new (NULL);
   g_string_append_printf (string, "%s;%s\n", project, track);
@@ -80,8 +83,7 @@ depth_writer (GObject *emitter)
     return;
 
   g_file_set_contents ("/srv/hyscan/lat-lon-depth.txt",
-                       words, strlen (words),
-                       &error);
+                       words, strlen (words), &error);
 
   if (error != NULL)
     {

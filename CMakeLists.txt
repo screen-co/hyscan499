@@ -1,8 +1,11 @@
 
 cmake_minimum_required (VERSION 2.6)
 
-set (HYSCAN_MAJOR 5)
+set (HYSCAN_MAJOR_VERSION 5)
+set (HYSCAN_AME_VERSION 0)
 project (triple)
+
+set (HYSCAN_AME_LIBRARY "hyscaname-${HYSCAN_MAJOR_VERSION}")
 
 include (FindPkgConfig)
 
@@ -44,38 +47,34 @@ pkg_check_modules (GTK3 REQUIRED "gtk+-3.0")
 add_definitions (${GLIB2_CFLAGS} ${GTK3_CFLAGS})
 link_directories (${GLIB2_LIBRARY_DIRS} ${GTK3_LIBRARY_DIRS})
 
-include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/forwardlook")
+include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../urpc/urpc")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../gtkcifroarea/gtkcifroarea")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscantypes/hyscantypes")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscandb/hyscandb")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancache/hyscancache")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancore/hyscancore")
-include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancontrol/hyscancontrol")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscanmodel/hyscanmodel")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscangui/hyscangui")
-include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscangtk/hyscangtk")
-include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../urpc/urpc")
+include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/libhyscaname")
 
+link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../urpc/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../gtkcifroarea/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscantypes/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscandb/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancache/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancore/bin")
-link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancontrol/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscanmodel/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscangui/bin")
-link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscangtk/bin")
-link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../urpc/bin")
 set (HYSCAN_LIBRARIES gtkcifroarea-3.1
-                      hyscantypes-${HYSCAN_MAJOR}
-                      hyscandb-${HYSCAN_MAJOR}
-                      hyscancache-${HYSCAN_MAJOR}
-                      hyscancore-${HYSCAN_MAJOR}
-                      hyscancontrol-${HYSCAN_MAJOR}
-                      hyscanmodel-${HYSCAN_MAJOR}
-                      hyscangui-${HYSCAN_MAJOR}
-                      hyscangtk-${HYSCAN_MAJOR}
+                      hyscantypes-${HYSCAN_MAJOR_VERSION}
+                      hyscandb-${HYSCAN_MAJOR_VERSION}
+                      hyscancache-${HYSCAN_MAJOR_VERSION}
+                      hyscancore-${HYSCAN_MAJOR_VERSION}
+                      hyscanmodel-${HYSCAN_MAJOR_VERSION}
+                      hyscangui-${HYSCAN_MAJOR_VERSION}
                       urpc)
 
 add_definitions (-DG_LOG_DOMAIN="HyScan-triple")
-add_subdirectory ("triple")
+add_subdirectory (libhyscaname)
+add_subdirectory (test)
+add_subdirectory (triple)

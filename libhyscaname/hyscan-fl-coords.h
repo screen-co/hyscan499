@@ -60,9 +60,7 @@ HYSCAN_API
 GType           hyscan_fl_coords_get_type              (void);
 
 HYSCAN_API
-HyScanFlCoords *hyscan_fl_coords_new                   (HyScanGtkForwardLook *fl);
-
-void            hyscan_fl_coords_set_cache             (HyScanFlCoords       *flc,
+HyScanFlCoords *hyscan_fl_coords_new                   (HyScanGtkForwardLook *fl,
                                                         HyScanCache          *cache);
 HYSCAN_API
 void            hyscan_fl_coords_set_project           (HyScanFlCoords       *self,
