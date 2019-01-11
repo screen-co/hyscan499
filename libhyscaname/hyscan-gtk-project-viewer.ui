@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade -->
+<!-- Edited with love -->
+<interface>
+  <requires lib="gtk+" version="3.14"/>
+  <object class="GtkListStore" id="liststore">
+    <columns>
+      <!-- column-name id -->
+      <column type="gchararray"/>
+      <!-- column-name name -->
+      <column type="gchararray"/>
+      <!-- column-name date -->
+      <column type="gchararray"/>
+      <!-- column-name sort -->
+      <column type="gint64"/>
+      <!-- column-name active_color -->
+      <column type="gchararray"/>
+    </columns>
+  </object>
+  <object class="GtkAdjustment" id="range_adj">
+    <property name="upper">100</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+  </object>
+  <template class="HyScanGtkProjectViewer" parent="GtkGrid">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="hexpand">True</property>
+    <property name="vexpand">False</property>
+    <child>
+      <object class="GtkScrolledWindow" id="scroll_wnd">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="hexpand">True</property>
+        <property name="vexpand">True</property>
+        <property name="vadjustment">range_adj</property>
+        <property name="hscrollbar_policy">never</property>
+        <property name="vscrollbar_policy">always</property>
+        <property name="min_content_width">150</property>
+        <property name="min_content_height">120</property>
+        <child>
+          <object class="GtkTreeView" id="treeview">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="hexpand">True</property>
+            <property name="vexpand">True</property>
+            <property name="vadjustment">range_adj</property>
+            <property name="model">liststore</property>
+            <property name="headers_visible">False</property>
+            <property name="headers_clickable">False</property>
+            <property name="enable_search">False</property>
+            <property name="show_expanders">False</property>
+            <property name="enable_grid_lines">horizontal</property>
+            <signal name="cursor-changed" handler="item_changed" swapped="yes"/>
+            <child internal-child="selection">
+              <object class="GtkTreeSelection" id="items_selection"/>
+            </child>
+            <child>
+              <object class="GtkTreeViewColumn" id="name_column">
+                <property name="min_width">50</property>
+                <property name="title" translatable="yes">Name</property>
+                <child>
+                  <object class="GtkCellRendererText" id="name_cellrenderertext">
+                    <property name="weight">900</property>
+                    <property name="width_chars">20</property>
+                    <property name="max_width_chars">20</property>
+                  </object>
+                  <attributes>
+                    <attribute name="foreground">4</attribute>
+                    <attribute name="text">1</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+            <child>
+              <object class="GtkTreeViewColumn" id="date_column">
+                <property name="title" translatable="yes">Date</property>
+                <child>
+                  <object class="GtkCellRendererText" id="date_cellrendertext">
+                    <property name="alignment">right</property>
+                  </object>
+                  <attributes>
+                    <attribute name="text">2</attribute>
+                  </attributes>
+                </child>
+              </object>
+            </child>
+          </object>
+        </child>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">0</property>
+      </packing>
+    </child>
+  </template>
+</interface>

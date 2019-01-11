@@ -2,21 +2,21 @@
 #define __TRIPLE_H__
 
 #include <hyscan-gtk-area.h>
-#include <hyscan-sonar-driver.h>
-#include <hyscan-sonar-client.h>
-#include <hyscan-sonar-control.h>
+#include <hyscan-hw-profile.h>
+#include <hyscan-control.h>
 #include <hyscan-forward-look-data.h>
 #include <hyscan-gtk-waterfall.h>
 #include <hyscan-gtk-waterfall-grid.h>
 #include <hyscan-gtk-waterfall-control.h>
 #include <hyscan-gtk-waterfall-meter.h>
 #include <hyscan-gtk-waterfall-mark.h>
-#include <hyscan-mark-manager.h>
+#include <hyscan-mark-model.h>
 #include <hyscan-gtk-project-viewer.h>
 #include <hyscan-gtk-mark-editor.h>
 #include <hyscan-tile-color.h>
 #include <hyscan-nmea-parser.h>
 #include <hyscan-mloc.h>
+#include <hyscan-projector.h>
 #include <hyscan-db-info.h>
 #include <hyscan-cached.h>
 #include <urpc-server.h>
@@ -28,7 +28,7 @@
 #include "hyscan-fl-coords.h"
 #include "hyscan-mark-sync.h"
 
-#define hyscan_return_val_if_fail(expr,val) do {if (!(expr)) {g_message("fail @ %i", __LINE__); return (val);}} while (FALSE)
+#define hyscan_return_val_if_fail(expr,val) do {if (!(expr)) {g_warning("Failed at line %i", __LINE__); return (val);}} while (FALSE)
 #define hyscan_exit_if(expr,msg) do {if (!(expr)) break; g_message ((msg)); goto exit;} while (FALSE)
 #define hyscan_exit_if_w_param(expr,msg,param) do {if (!(expr)) break; g_message ((msg),(param)); goto exit;} while (FALSE)
 
@@ -83,6 +83,13 @@ enum
   W_LAST
 };
 
+enum
+{
+  X_SIDESCAN = 84351,
+  X_PROFILER = 21539,
+  X_FORWARDL = 56753,
+};
+
 /* Кнопки м.б. слева или справа. */
 typedef enum
 {
@@ -97,7 +104,6 @@ typedef enum
   TOGGLE_OFF,
   TOGGLE_ON
 } AmeToggle;
-
 
 typedef struct
 {
@@ -123,36 +129,125 @@ typedef struct
   AmePageItem  items[AME_N_BUTTONS + 1];
 } AmePage;
 
+/* структура: локейшн + прожекторы */
 typedef struct
 {
-  HyScanSonarControl      *sonar_ctl;
-  HyScanTVGControl        *tvg_ctl;
-  HyScanGeneratorControl  *gen_ctl;
+  gchar               *track;      /* Название галса. */
+  HyScanmLoc          *mloc;   /* Объект для определения местоположения. */
 
-  gdouble                  cur_distance;
-  guint                    cur_signal;
-  gdouble                  cur_gain0;
-  gdouble                  cur_gain_step;
-  gdouble                  cur_level;
-  gdouble                  cur_sensitivity;
-} SonarCommon;
+  HyScanAmplitudeFactory *factory; /* CСоздание новых каналов данных. */
+  GHashTable          *projectors; /* Проекторы (для каждого канала). */
+} LocStore;
+
+/* структура метка + координаты. */
+typedef struct
+{
+  HyScanWaterfallMark *mark;
+  gdouble              lat;
+  gdouble              lon;
+} MarkAndLocation;
+
+typedef struct 
+{
+  guint32 * colors;
+  guint     len;
+  gchar   * name;
+  guint32   bg;
+} AmeColormap;
+
+typedef enum 
+{
+  AME_PANEL_WATERFALL,
+  AME_PANEL_ECHO,
+  AME_PANEL_FORWARDLOOK,
+} AmePanelType;
 
 typedef struct
 {
-  GtkLabel                *distance_value;
-  GtkLabel                *tvg_value;
-  GtkLabel                *tvg0_value;
-  GtkLabel                *tvg_level_value;
-  GtkLabel                *tvg_sens_value;
+  gdouble   cur_distance;
+  guint     cur_signal;
+  gdouble   cur_gain0;
+  gdouble   cur_gain_step;
+  gdouble   cur_level;
+  gdouble   cur_sensitivity;
+} SonarCurrent;
 
-  GtkLabel                *signal_value;
+typedef struct
+{
+  GtkLabel *distance_value;
+  GtkLabel *tvg_value;
+  GtkLabel *tvg0_value;
+  GtkLabel *tvg_level_value;
+  GtkLabel *tvg_sens_value;
+  GtkLabel *signal_value;
+} SonarGUI;
 
-  GtkLabel                *brightness_value;
-  GtkLabel                *black_value;
-  GtkLabel                *scale_value;
-  GtkLabel                *colormap_value;
-  GtkLabel                *sensitivity_value; /* Sensitivity or colormap. */
-} SonarSpecificGui;
+typedef struct
+{
+  gdouble brightness;
+  gdouble black;
+  gdouble sensitivity;
+  gint    colormap;
+          // scale;
+} VisualCurrent;
+
+typedef struct
+{
+  GtkLabel  *brightness_value;
+  GtkLabel  *black_value;
+  GtkLabel  *scale_value;
+  GtkLabel  *colormap_value;
+  GtkLabel  *sensitivity_value;
+  GtkWidget *live_view;
+} VisualCommon;
+
+typedef struct
+{
+  VisualCommon                    common; /* Важно, чтобы было на 1 месте. */
+
+  GArray                        * colormaps; /* struct AmeColormap */
+
+  HyScanGtkWaterfall            * wf;
+  HyScanGtkWaterfallGrid        * wf_grid;
+  HyScanGtkWaterfallControl     * wf_ctrl;
+  HyScanGtkWaterfallMeter       * wf_metr;
+  HyScanGtkWaterfallMark        * wf_mark;
+} VisualWF;
+
+typedef struct
+{
+  VisualCommon                    common; /* Важно, чтобы было на 1 месте. */
+
+  // TODO: fl with player widget!
+  HyScanGtkForwardLook          * fl;
+  HyScanFlCoords                * fl_coords;
+  HyScanForwardLookPlayer       * fl_player;
+
+  GtkAdjustment                 * position_range;
+  GtkScale                      * position;
+  GtkLabel                      * coords_label;
+  GtkSwitch                     * mode_target;
+} VisualFL;
+
+typedef struct 
+{
+  gchar            *name;
+  AmePanelType      type;    /* тип панели: вф, фл, пф */
+  HyScanSourceType *sources; /* Источники для панели */
+
+  SonarCurrent      current;   /* Текущие значения параметров ГЛ. */
+  SonarGUI          gui;     /* Виджетики. */
+
+  VisualCurrent     vis_current; /* параметры отображения, wf_visual/fl_visual, * обязательно! */
+  VisualCommon     *vis_gui;    /* виджетосы параметров отображения */
+
+  /* union { подумать, может, сделать юнион?
+    VisualCommon common;
+    VisualWF     wf;
+    VisualFL     fl;
+  } vis_gui; */
+  
+} AmePanel;
 
 typedef struct
 {
@@ -165,21 +260,28 @@ typedef struct
   gboolean                             dry;
 
   HyScanCache                         *cache;
-  HyScanMarkManager                   *mman;
-
+  
   gboolean                             full_screen;
   gdouble                              sound_velocity;
 
   gint                                 view_selector;
 
-  uRpcServer                          *urpc_server;
-  gint                                 urpc_keycode;
+  HyScanControl                       *control;
+  HyScanSonar                         *control_s;
+
+  GHashTable                          *panels; /* AmePanel, panelx as key */
+  GHashTable                          *infos; /* HyScanSonarInfoSource */
 
   struct
     {
-      HyScanMarkSync *msync;
-      GHashTable     *previous;
-    } marksync;
+      HyScanMarkModel *model; /* модель */
+      HyScanMarkSync  *sync;  /* синхронизация */
+      
+      GHashTable      *loc_storage;  /* хранилище локейшенов и проекторов */
+
+      GHashTable      *current;  /* старый список*/
+      GHashTable      *previous; /* новый список */
+    } marks;
 
   struct
     {
@@ -241,428 +343,386 @@ typedef struct
 
   } gui;
 
-  struct
-  {
-    gdouble                              cur_brightness;
-    gdouble                              cur_sensitivity;
-    gdouble                              cur_black;
-
-    SonarCommon                          sonar;
-    HyScanDataSchemaEnumValue          **fl_signals;
-    guint                                fl_n_signals;
-
-    SonarSpecificGui                     gui;
-
-    HyScanGtkForwardLook                *fl;
-    HyScanFlCoords                      *fl_coords;
-    HyScanForwardLookPlayer             *fl_player;
-    // TODO: fl with player widget!
-    GtkAdjustment                       *position_range;
-    GtkScale                            *position;
-    GtkLabel                            *coords_label;
-    GtkSwitch                           *mode_target;
-
-    GtkWidget                           *live_view;
-  } GFL;
-
-  struct
-  {
-    guint32                             *color_maps[MAX_COLOR_MAPS];
-    guint                                color_map_len[MAX_COLOR_MAPS];
-    guint                                cur_color_map;
-    gdouble                              cur_brightness;
-    gdouble                              cur_black;
-
-    SonarCommon                          sonar;
-    HyScanDataSchemaEnumValue          **pf_signals;
-    guint                                pf_n_signals;
-
-    gboolean                             have_es;
-    HyScanDataSchemaEnumValue          **es_signals;
-
-    SonarSpecificGui                     gui;
-
-    HyScanGtkWaterfall                  *wf;
-    HyScanGtkWaterfallGrid              *wf_grid;
-    HyScanGtkWaterfallControl           *wf_ctrl;
-    HyScanGtkWaterfallMeter             *wf_metr;
-    HyScanGtkWaterfallMark              *wf_mark;
-    GtkWidget                           *live_view;
-  } GPF;
-
-  struct
-  {
-    guint32                             *color_maps[MAX_COLOR_MAPS];
-    guint                                color_map_len[MAX_COLOR_MAPS];
-    guint                                cur_color_map;
-    gdouble                              cur_brightness;
-    gdouble                              cur_black;
-
-    SonarCommon                          sonar;
-    HyScanDataSchemaEnumValue          **sb_signals;
-    guint                                sb_n_signals;
-    HyScanDataSchemaEnumValue          **ps_signals;
-    guint                                ps_n_signals;
-
-    SonarSpecificGui                     gui;
-    HyScanGtkWaterfall                  *wf;
-    HyScanGtkWaterfallGrid              *wf_grid;
-    HyScanGtkWaterfallControl           *wf_ctrl;
-    HyScanGtkWaterfallMeter             *wf_metr;
-    HyScanGtkWaterfallMark              *wf_mark;
-    GtkWidget                           *live_view;
-  } GSS;
-
 } Global;
 
 Global global = { 0, };
 
-static void
+void
 depth_writer (GObject *emitter);
 
-static void
+void
 switch_page (GObject     *emitter,
              const gchar *page);
 
-static void
+void
 turn_meter (GObject     *emitter,
             gboolean     state,
             gint         selector);
-static void
+void
 turn_marks (GObject     *emitter,
             gint         selector);
-static void
+void
 hide_marks (GObject     *emitter,
             gboolean     state,
             gint         selector);
 
-static HyScanDataSchemaEnumValue *
+HyScanDataSchemaEnumValue *
 find_signal_by_name (HyScanDataSchemaEnumValue ** where,
                      HyScanDataSchemaEnumValue  * what);
 
-static gboolean
+gboolean
 key_press (GtkWidget   *widget,
            GdkEventKey *event,
            Global      *global);
 
-static void nav_del      (GObject *emitter, gpointer udata);
-static void nav_pg_up    (GObject *emitter, gpointer udata);
-static void nav_pg_down  (GObject *emitter, gpointer udata);
-static void nav_up    (GObject *emitter, gpointer udata);
-static void nav_down  (GObject *emitter, gpointer udata);
-static void nav_left  (GObject *emitter, gpointer udata);
-static void nav_right (GObject *emitter, gpointer udata);
+void nav_del      (GObject *emitter, gpointer udata);
+void nav_pg_up    (GObject *emitter, gpointer udata);
+void nav_pg_down  (GObject *emitter, gpointer udata);
+void nav_up    (GObject *emitter, gpointer udata);
+void nav_down  (GObject *emitter, gpointer udata);
+void nav_left  (GObject *emitter, gpointer udata);
+void nav_right (GObject *emitter, gpointer udata);
 
-static void fl_prev (GObject *emitter, gpointer udata);
-static void fl_next (GObject *emitter, gpointer udata);
+void fl_prev (GObject *emitter, gint panelx);
+void fl_next (GObject *emitter, gint panelx);
 
-static void 
+void 
 run_manager    (GObject     *emitter);
 
-static void
+void
 projects_changed (HyScanDBInfo *db_info,
                   Global       *global);
 
-static GtkTreePath *
+GtkTreePath *
 ame_gtk_tree_model_get_last_path (GtkTreeView *tree);
-static GtkTreePath *
+GtkTreePath *
 ame_gtk_tree_path_prev (GtkTreePath *path);
-static GtkTreePath *
+GtkTreePath *
 ame_gtk_tree_path_next (GtkTreePath *path);
 
-static void
+void
 track_scroller (GtkTreeView *tree,
                 gboolean     to_top,
                 gboolean     to_end);
 
-static void
+void
 list_scroll_up (GObject *emitter,
                 gpointer udata);
-static void
+void
 list_scroll_down (GObject *emitter,
                   gpointer udata);
 
-static void
+void
 list_scroll_start (GObject *emitter,
                    gpointer udata);
-static void
+void
 list_scroll_end (GObject *emitter,
                  gpointer udata);
 
 
-static void
+void
 tracks_changed (HyScanDBInfo *db_info,
                 Global       *global);
 
-static void
+void
 active_mark_changed (HyScanGtkProjectViewer *marks_viewer,
                      Global                 *global);
 
-static inline gboolean
+inline gboolean
 ame_float_equal (gdouble a,
                  gdouble b);
 
-static gboolean
-marks_equal (HyScanMarkManagerMarkLoc *a,
-             HyScanMarkManagerMarkLoc *b);
+gboolean
+marks_equal (MarkAndLocation *a,
+             MarkAndLocation *b);
 
-static void
+void
 mark_processor (gpointer        key,
                 gpointer        value,
                 GHashTable     *source,
                 HyScanMarkSync *sync,
                 gboolean        this_is_an_old_list);
-static void
+void
 mark_sync_func (GHashTable *marks,
                 Global     *global);
 
-static void
-mark_manager_changed (HyScanMarkManager *mark_manager,
+
+LocStore *
+loc_store_new (HyScanDB    *db,
+               HyScanCache *cache,
+               const gchar *project,
+               const gchar *track);
+
+HyScanProjector *
+get_projector (GHashTable       *locstores,
+               gchar            *track,
+               HyScanSourceType  source,
+               HyScanmLoc       **mloc,
+               HyScanAmplitude  **_amp);
+
+void
+loc_store_free (gpointer data);
+
+MarkAndLocation *
+mark_and_location_new (HyScanWaterfallMark *mark,
+                       gdouble              lat,
+                       gdouble              lon);
+
+MarkAndLocation *
+mark_and_location_copy (gpointer data);
+
+void
+mark_and_location_free (gpointer data);
+
+MarkAndLocation *
+get_mark_coords (GHashTable             * locstores,
+                 HyScanWaterfallMark    * mark,
+                 Global                 * global);
+
+void
+mark_model_changed (HyScanMarkModel   *mark_model,
                       Global            *global);
 
-static void
+void
 mark_modified (HyScanGtkMarkEditor *med,
                Global              *global);
 
-static gboolean
+gboolean
 track_scroll (GtkWidget *widget,
               GdkEvent  *event,
                Global              *global);
 
-static gchar * 
+gchar * 
 get_active_track (HyScanDBInfo *db_info);
 
-static gboolean 
+gboolean 
 track_is_active (HyScanDBInfo *db_info,
                  const gchar  *name);
 
-static void
+void
 track_changed (GtkTreeView *list,
                Global      *global);
 
-static void
+void
 position_changed (GtkAdjustment *range,
                   Global        *global);
 
-static gboolean
+gboolean
 brightness_set (Global  *global,
                 gdouble  cur_brightness,
                 gdouble  cur_black,
                 gint     selector);
 
-static gboolean
+gboolean
 scale_set (Global   *global,
            gboolean  scale_up,
            gpointer  user_data,
            gint      selector);
 
-static guint32*
+guint32*
 hyscan_tile_color_compose_colormap_pf (guint *length);
 
-static gboolean
+gboolean
 color_map_set (Global *global,
                guint   cur_color_map,
                gint    selector);
 
-static gboolean
+gboolean
 sensitivity_set (Global  *global,
-                 gdouble  cur_sensitivity);
+                 gdouble  cur_sensitivity,
+                 guint    panelx);
 
-static gboolean
+gboolean
 signal_set (Global *global,
             guint   cur_signal,
             gint    selector);
 
-static gboolean
+gboolean
 tvg_set (Global  *global,
          gdouble *gain0,
          gdouble  step,
          gint     selector);
 
-static gboolean
+gboolean
 auto_tvg_set (Global  *global,
               gdouble  level,
               gdouble  sensitivity,
               gint     selector);
 
-static void
+void
 distance_printer (GtkLabel *label,
                   gdouble   value);
 
-static gboolean
+gboolean
 distance_set (Global  *global,
               gdouble  wanted_distance,
               gint sonar_selector);
 
-static void
+void
 void_callback (gpointer data);
 
-static void
+void
 brightness_up (GtkWidget *widget,
                gint        selector);
 
-static void
+void
 brightness_down (GtkWidget *widget,
                  gint       selector);
 
-static void
+void
 black_up (GtkWidget *widget,
           gint       selector);
 
-static void
+void
 black_down (GtkWidget *widget,
             gint       selector);
 
-static void
+void
 scale_up (GtkWidget *widget,
           gint       selector);
 
-static void
+void
 scale_down (GtkWidget *widget,
             gint       selector);
 
-static void
+void
 sens_up (GtkWidget *widget,
           gint       selector);
 
-static void
+void
 sens_down (GtkWidget *widget,
             gint       selector);
 
-static void
+void
 color_map_up (GtkWidget *widget,
               gint       selector);
 
-static void
+void
 color_map_down (GtkWidget *widget,
                 gint       selector);
 
-static void
+void
 mode_changed (GtkWidget *widget,
               gboolean   state,
               gint       selector);
 
-static gboolean
+gboolean
 pf_special (GtkWidget  *widget,
             gboolean    state,
             gint        selector);
 
-static gboolean
+gboolean
 live_view (GtkWidget  *widget,
            gboolean    state,
            gint        selector);
 
-static void
+void
 live_view_off (GtkWidget  *widget,
                gboolean    state,
                Global     *global);
 
-static void
+void
 distance_up (GtkWidget *widget,
              gint       sonar_selector);
 
-static void
+void
 distance_down (GtkWidget *widget,
                gint       sonar_selector);
 
-static void
+void
 tvg0_up (GtkWidget *widget,
          gint       selector);
 
-static void
+void
 tvg0_down (GtkWidget *widget,
            gint       selector);
 
-static void
+void
 tvg_up (GtkWidget *widget,
         gint       selector);
 
-static void
+void
 tvg_down (GtkWidget *widget,
           gint       selector);
 
-static void
+void
 tvg_level_up (GtkWidget *widget,
               gint       selector);
 
-static void
+void
 tvg_level_down (GtkWidget *widget,
                 gint       selector);
 
-static void
+void
 tvg_sens_up (GtkWidget *widget,
              gint       selector);
 
-static void
+void
 tvg_sens_down (GtkWidget *widget,
                gint       selector);
 
-static void
+void
 signal_up (GtkWidget *widget,
            gint       selector);
 
-static void
+void
 signal_down (GtkWidget *widget,
              gint       selector);
 
-static void
+void
 widget_swap (GObject  *emitter,
              gpointer  user_data);
 
-static void
+void
 start_stop (GtkWidget *widget,
             gboolean   state);
 
-static gboolean
+gboolean
 sensor_label_writer (Global *global);
 
-static void
+void
 nav_printer (gchar        **target,
-             GMutex        *lock,
              const gchar   *format,
              ...);
 
-static void
-sensor_cb (HyScanSensorControl      *src,
+void
+sensor_cb (HyScanSensor             *sensor,
            const gchar              *name,
-           HyScanSensorProtocolType  protocol,
-           HyScanDataType            type,
-           HyScanDataWriterData     *data,
+           HyScanSourceType          source,
+           gint64                    time,
+           HyScanBuffer             *data,
            Global                   *global);
 
-static gboolean
+gboolean
 start_stop_disabler (GtkWidget *sw,
                      gboolean   state);
 
-static gboolean
+gboolean
 start_stop_dry (GtkWidget *widget,
                 gboolean   state);
 
 
-static gint
+gint
 urpc_cb (uint32_t  session,
          uRpcData *urpc_data,
          void     *proc_data,
          void     *key_data);
 
-static gboolean
+gboolean
 ame_key_func (gpointer user_data);
 
-static void
+void
 fl_coords_callback (HyScanFlCoords *coords,
                     GtkLabel       *label);
 
-static GtkWidget *
+GtkWidget *
 make_overlay (HyScanGtkWaterfall          *wf,
               HyScanGtkWaterfallGrid     **_grid,
               HyScanGtkWaterfallControl  **_ctrl,
               HyScanGtkWaterfallMark     **_mark,
-              HyScanGtkWaterfallMeter    **_meter);
+              HyScanGtkWaterfallMeter    **_meter,
+              HyScanMarkModel             *mark_model);
 
-static HyScanParam *
-connect_to_sonar (const gchar *driver_path,
-                  const gchar *driver_name,
-                  const gchar *uri);
 
 
 #endif /* __TRIPLE_H__ */

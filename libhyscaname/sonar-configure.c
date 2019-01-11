@@ -228,6 +228,25 @@
 //   return TRUE;
 // }
 
+gchar **
+keyfile_strv_read_helper (GKeyFile    *config,
+                          const gchar *group,
+                          const gchar *key)
+{
+  GError *error = NULL;
+  gchar ** keys;
+
+  /* Список ключей. */
+  keys = g_key_file_get_string_list(config, group, key, NULL, &error);
+
+  if (error == NULL)
+    return keys;
+
+  g_error_free (error);
+
+  return NULL;
+}
+
 gchar *
 keyfile_string_read_helper (GKeyFile    *config,
                             const gchar *group,

@@ -1,13 +1,3 @@
-/**
- * \file hyscan-gtk-mark-editor.c
- *
- * \brief Исходный файл виджета редактора меток.
- * \author Vladimir Maximov (vmakxs@gmail.com)
- * \date 2018
- * \license Проприетарная лицензия ООО "Экран"
- *
- */
-
 #include "hyscan-gtk-mark-editor.h"
 
 enum
@@ -25,9 +15,11 @@ struct _HyScanGtkMarkEditorPrivate
   gchar           *operator_name;
   gchar           *description;
 
+  GtkLabel        *latitude;
+  GtkLabel        *longitude;
+  GtkLabel        *descr_label ;
+
   GtkEntryBuffer  *title_entrybuf;
-  GtkEntryBuffer  *operator_entrybuf;
-  GtkTextBuffer   *descr_textbuf;
 };
 
 static void  hyscan_gtk_mark_editor_finalize          (GObject              *object);
@@ -35,10 +27,6 @@ static void  hyscan_gtk_mark_editor_clear             (HyScanGtkMarkEditor  *me)
 
 static void  hyscan_gtk_mark_editor_title_changed     (HyScanGtkMarkEditor  *me,
                                                        GtkEntryBuffer       *buf);
-static void  hyscan_gtk_mark_editor_operator_changed  (HyScanGtkMarkEditor  *me,
-                                                       GtkEntryBuffer       *buf);
-static void  hyscan_gtk_mark_editor_descr_changed     (HyScanGtkMarkEditor  *me,
-                                                       GtkTextBuffer        *buf);
 
 G_DEFINE_TYPE_WITH_PRIVATE (HyScanGtkMarkEditor, hyscan_gtk_mark_editor, GTK_TYPE_GRID)
 
@@ -55,14 +43,10 @@ hyscan_gtk_mark_editor_class_init (HyScanGtkMarkEditorClass *klass)
                   g_cclosure_marshal_VOID__VOID,
                   G_TYPE_NONE, 0);
 
-  gtk_widget_class_set_template_from_resource (widget_class, "/org/hyscan/gtk/hyscan-gtk-mark-editor.ui");
+  gtk_widget_class_set_template_from_resource (widget_class, "/org/ame/gtk/hyscan-gtk-mark-editor.ui");
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkMarkEditor, title_entrybuf);
-  gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkMarkEditor, operator_entrybuf);
-  gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkMarkEditor, descr_textbuf);
-  gtk_widget_class_bind_template_callback_full (widget_class, "descr_changed",
-                                                G_CALLBACK (hyscan_gtk_mark_editor_descr_changed));
-  gtk_widget_class_bind_template_callback_full (widget_class, "operator_changed",
-                                                G_CALLBACK (hyscan_gtk_mark_editor_operator_changed));
+  gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkMarkEditor, latitude);
+  gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkMarkEditor, longitude);
   gtk_widget_class_bind_template_callback_full (widget_class, "title_changed",
                                                 G_CALLBACK (hyscan_gtk_mark_editor_title_changed));
 }
@@ -108,42 +92,6 @@ hyscan_gtk_mark_editor_title_changed (HyScanGtkMarkEditor *me,
     }
 }
 
-static void
-hyscan_gtk_mark_editor_operator_changed (HyScanGtkMarkEditor *me,
-                                         GtkEntryBuffer      *buf)
-{
-  HyScanGtkMarkEditorPrivate *priv = me->priv;
-  const gchar *text = gtk_entry_buffer_get_text (priv->operator_entrybuf);
-
-  if (priv->id != NULL && g_strcmp0 (text, priv->operator_name))
-    {
-      g_free (priv->operator_name);
-      priv->operator_name = g_strdup (text);
-      g_signal_emit (me, hyscan_gtk_mark_editor_signals[SIGNAL_MARK_MODIFIED], 0, NULL);
-    }
-}
-
-static void
-hyscan_gtk_mark_editor_descr_changed (HyScanGtkMarkEditor *me,
-                                      GtkTextBuffer       *buf)
-{
-  HyScanGtkMarkEditorPrivate *priv = me->priv;
-  gchar *text = NULL;
-
-  g_object_get (buf, "text", &text, NULL);
-
-  if (priv->id != NULL && g_strcmp0 (text, priv->description))
-    {
-      g_free (priv->description);
-      priv->description = text;
-      g_signal_emit (me, hyscan_gtk_mark_editor_signals[SIGNAL_MARK_MODIFIED], 0, NULL);
-    }
-  else
-    {
-      g_free (text);
-    }
-}
-
 GtkWidget *
 hyscan_gtk_mark_editor_new (void)
 {
@@ -155,9 +103,12 @@ hyscan_gtk_mark_editor_set_mark (HyScanGtkMarkEditor *mark_editor,
                                  const gchar         *id,
                                  const gchar         *title,
                                  const gchar         *operator_name,
-                                 const gchar         *description)
+                                 const gchar         *description,
+                                 gdouble lat,
+                                 gdouble lon)
 {
   HyScanGtkMarkEditorPrivate *priv;
+  gchar *lat_text, *lon_text;
 
   g_return_if_fail (HYSCAN_IS_GTK_MARK_EDITOR (mark_editor));
 
@@ -170,8 +121,15 @@ hyscan_gtk_mark_editor_set_mark (HyScanGtkMarkEditor *mark_editor,
   priv->description = g_strdup (description);
 
   gtk_entry_buffer_set_text (priv->title_entrybuf, title, -1);
-  gtk_entry_buffer_set_text (priv->operator_entrybuf, operator_name, -1);
-  gtk_text_buffer_set_text (priv->descr_textbuf, description, -1);
+
+  lat_text = g_strdup_printf ("%f", lat);
+  lon_text = g_strdup_printf ("%f", lon);
+
+  gtk_label_set_text (priv->latitude, lat_text);
+  gtk_label_set_text (priv->longitude, lon_text);
+
+  g_free (lat_text);
+  g_free (lon_text);
 }
 
 void

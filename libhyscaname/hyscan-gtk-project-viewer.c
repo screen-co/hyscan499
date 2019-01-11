@@ -59,7 +59,7 @@ hyscan_gtk_project_viewer_class_init (HyScanGtkProjectViewerClass *klass)
                   G_SIGNAL_RUN_LAST, 0, NULL, NULL,
                   g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 
-  gtk_widget_class_set_template_from_resource (widget_class, "/org/hyscan/gtk/hyscan-gtk-project-viewer.ui");
+  gtk_widget_class_set_template_from_resource (widget_class, "/org/ame/gtk/hyscan-gtk-project-viewer.ui");
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkProjectViewer, liststore);
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkProjectViewer, treeview);
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkProjectViewer, scroll_wnd);

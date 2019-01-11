@@ -50,6 +50,7 @@ link_directories (${GLIB2_LIBRARY_DIRS} ${GTK3_LIBRARY_DIRS})
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../urpc/urpc")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../gtkcifroarea/gtkcifroarea")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscantypes/hyscantypes")
+include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscandriver/hyscandriver")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscandb/hyscandb")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancache/hyscancache")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancore/hyscancore")
@@ -57,9 +58,11 @@ include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscanmodel/hyscanmodel"
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscangui/hyscangui")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/libhyscaname")
 
+
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../urpc/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../gtkcifroarea/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscantypes/bin")
+link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscandriver/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscandb/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancache/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancore/bin")
@@ -67,6 +70,7 @@ link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscanmodel/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscangui/bin")
 set (HYSCAN_LIBRARIES gtkcifroarea-3.1
                       hyscantypes-${HYSCAN_MAJOR_VERSION}
+                      hyscandriver-${HYSCAN_MAJOR_VERSION}
                       hyscandb-${HYSCAN_MAJOR_VERSION}
                       hyscancache-${HYSCAN_MAJOR_VERSION}
                       hyscancore-${HYSCAN_MAJOR_VERSION}

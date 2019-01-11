@@ -16,6 +16,7 @@ struct _HyScanMarkSyncPrivate
   GSocket             *socket;
 };
 
+
 static void    hyscan_mark_sync_set_property           (GObject               *object,
                                                         guint                  prop_id,
                                                         const GValue          *value,

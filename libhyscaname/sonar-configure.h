@@ -12,6 +12,10 @@
 //                                         HyScanSourceType               source,
 //                                         GKeyFile                      *config);
 
+gchar **       keyfile_strv_read_helper   (GKeyFile    *config,
+                                           const gchar *group,
+                                           const gchar *key);
+
 gchar *        keyfile_string_read_helper (GKeyFile    *config,
                                            const gchar *group,
                                            const gchar *key);
