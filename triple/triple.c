@@ -1044,8 +1044,11 @@ track_changed (GtkTreeView *list,
   GValue value = G_VALUE_INIT;
   GtkTreePath *path = NULL;
   GtkTreeIter iter;
+  GHashTableIter htiter;
   const gchar *track_name;
-  gchar *pftrack;
+  gpointer k, v;
+  gboolean on_air;
+
 
   /* Определяем название нового галса. */
   gtk_tree_view_get_cursor (list, &path, NULL);
@@ -1056,38 +1059,47 @@ track_changed (GtkTreeView *list,
     return;
 
   g_clear_pointer (&global->track_name, g_free);
-  /* Открываем новый галс. */
 
+  /* Открываем новый галс. */
   gtk_tree_model_get_value (global->gui.track_list, &iter, TRACK_COLUMN, &value);
   track_name = g_value_get_string (&value);
   global->track_name = g_strdup (track_name);
 
-  hyscan_forward_look_player_open (global->GFL.fl_player, global->db, global->cache,
-                                   global->project_name, track_name);
-  hyscan_fl_coords_set_project (global->GFL.fl_coords, global->db, global->project_name, track_name);
-  hyscan_gtk_waterfall_state_set_track (HYSCAN_GTK_WATERFALL_STATE (global->GSS.wf),
-                                        global->db, global->project_name, track_name);
+  /* Выясняем, ведется ли в него запись. */
+  on_air = track_is_active (global->db_info, track_name);
 
-  pftrack = g_strdup_printf (PF_TRACK_PREFIX "%s", track_name);
-  hyscan_gtk_waterfall_state_set_track (HYSCAN_GTK_WATERFALL_STATE (global->GPF.wf),
-                                        global->db, global->project_name, pftrack);
-  g_free (pftrack);
+  g_hash_table_iter_init (&htiter, global->panels);
+  while (g_hash_table_iter_next (&htiter, &k, &v))
+    {
+      VisualWF *wf;
+      VisualFL *fl;
+      AmePanel *panel = v;
+
+      switch (panel->type)
+        {
+        case AME_PANEL_WATERFALL:
+        case AME_PANEL_ECHO:
+          wf = (VisualWF*) (panel->vis_gui);
+          hyscan_gtk_waterfall_state_set_track (HYSCAN_GTK_WATERFALL_STATE (wf->wf),
+                                                global->db, global->project_name, track_name);
+
+          /* Записываемый галс включаем в режиме автопрокрутки. */
+          hyscan_gtk_waterfall_automove (HYSCAN_GTK_WATERFALL (wf->wf), on_air);
+
+        case AME_PANEL_FORWARDLOOK:
+          fl = (VisualFL*) (panel->vis_gui);
+          hyscan_forward_look_player_open (fl->fl_player, global->db, global->cache,
+                                           global->project_name, track_name);
+          hyscan_fl_coords_set_project (fl->fl_coords, global->db, global->project_name, track_name);
+
+          if (on_air)
+            hyscan_forward_look_player_real_time (fl->fl_player);
+          else
+            hyscan_forward_look_player_pause (fl->fl_player);
+        }
+    }
 
   g_value_unset (&value);
-
-    /* Режим отображения. */
-  if (track_is_active (global->db_info, track_name))
-    {
-      hyscan_forward_look_player_real_time (global->GFL.fl_player);
-      hyscan_gtk_waterfall_automove (HYSCAN_GTK_WATERFALL (global->GSS.wf), TRUE);
-      hyscan_gtk_waterfall_automove (HYSCAN_GTK_WATERFALL (global->GPF.wf), TRUE);
-    }
-  else
-    {
-      hyscan_forward_look_player_pause (global->GFL.fl_player);
-      hyscan_gtk_waterfall_automove (HYSCAN_GTK_WATERFALL (global->GSS.wf), FALSE);
-      hyscan_gtk_waterfall_automove (HYSCAN_GTK_WATERFALL (global->GPF.wf), FALSE);
-    }
 }
 
 /* Функция обрабатывает данные для текущего индекса. */
@@ -1997,12 +2009,10 @@ mode_changed (GtkWidget *widget,
 gboolean
 pf_special (GtkWidget  *widget,
             gboolean    state,
-            gint        selector)
+            gint        panelx)
 {
   VisualWF *wf;
   HyScanTileFlags flags = 0;
-  HyScanGtkForwardLookViewType type;
-
   AmePanel *panel = get_panel (&global, panelx);
 
   if (panel->type != AME_PANEL_ECHO)
@@ -2246,13 +2256,6 @@ start_stop (GtkWidget *widget,
 
       /* Если локатор включён, переходим в режим онлайн. */
       gtk_widget_set_sensitive (GTK_WIDGET (global.gui.track_view), FALSE);
-
-      /* Включаем live_view для всех локаторов. */
-      g_hash_table_iter_init (&iter, global.panels);
-      while (g_hash_table_iter_next (&iter, &k, &v))
-        {
-          live_view (NULL, TRUE, GPOINTER_TO_INT (k));
-        }
     }
 
   /* Выключаем излучение и блокируем режим онлайн. */
@@ -2260,53 +2263,20 @@ start_stop (GtkWidget *widget,
     {
       g_message ("Stop sonars");
       hyscan_sonar_stop (global.control_s);
-      hyscan_forward_look_player_pause (global.GFL.fl_player);
       hyscan_ame_button_set_state (button, FALSE);
       gtk_widget_set_sensitive (GTK_WIDGET (global.gui.track_view), TRUE);
     }
+
+  /* Устанавливаем live_view для всех виджетов. */
+  g_hash_table_iter_init (&iter, global.panels);
+  while (g_hash_table_iter_next (&iter, &k, &v))
+    live_view (NULL, state, GPOINTER_TO_INT (k));
 
   start_stop_disabler (widget, state);
 
   return;
 }
 
-gboolean
-sensor_label_writer (Global *global)
-{
-  g_mutex_lock (&global->nmea.lock);
-
-  if (global->nmea.tmd_value != NULL)
-    gtk_label_set_text (global->nmea.l_tmd, global->nmea.tmd_value);
-  if (global->nmea.lat_value != NULL)
-    gtk_label_set_text (global->nmea.l_lat, global->nmea.lat_value);
-  if (global->nmea.lon_value != NULL)
-    gtk_label_set_text (global->nmea.l_lon, global->nmea.lon_value);
-  if (global->nmea.trk_value != NULL)
-    gtk_label_set_text (global->nmea.l_trk, global->nmea.trk_value);
-  if (global->nmea.spd_value != NULL)
-    gtk_label_set_text (global->nmea.l_spd, global->nmea.spd_value);
-  if (global->nmea.dpt_value != NULL)
-    gtk_label_set_text (global->nmea.l_dpt, global->nmea.dpt_value);
-
-  g_mutex_unlock (&global->nmea.lock);
-
-  return G_SOURCE_CONTINUE;
-}
-
-void
-nav_printer (gchar       **target,
-             const gchar  *format,
-             ...)
-{
-  va_list args;
-
-  if (*target != NULL)
-    g_clear_pointer (target, g_free);
-
-  va_start (args, format);
-  *target = g_strdup_vprintf (format, args);
-  va_end (args);
-}
 
 void
 sensor_cb (HyScanSensor             *sensor,
@@ -2316,64 +2286,12 @@ sensor_cb (HyScanSensor             *sensor,
            HyScanBuffer             *buffer,
            Global                   *global)
 {
-  gchar **nmea;
-  const gchar * rmc = NULL, *dpt = NULL, *raw_data;
-  guint32 size;
-  guint i;
-  gdouble time = 0, date, lat, lon, trk, spd, dpt_;
-
   /* Ищем строки RMC и DPT. */
   if (source != HYSCAN_SOURCE_NMEA_RMC && source != HYSCAN_SOURCE_NMEA_DPT)
     return;
 
-  raw_data = hyscan_buffer_get_data (buffer, &size);
-
-  nmea = g_strsplit_set (raw_data, "\r\n", -1);
-  for (i = 0; (nmea != NULL) && (nmea[i] != NULL); i++)
-    {
-      if (g_str_has_prefix (nmea[i]+3, "RMC"))
-        rmc = nmea[i];
-      else if (g_str_has_prefix (nmea[i]+3, "DPT"))
-        dpt = nmea[i];
-    }
-
-  /* Обновляем данные виджета навигации. */
-  g_mutex_lock (&global->nmea.lock);
-
-  if (hyscan_nmea_parser_parse_string (global->nmea.time, rmc, &time) &&
-      hyscan_nmea_parser_parse_string (global->nmea.date, rmc, &date))
-    {
-      GTimeZone *tz;
-      GDateTime *local, *utc;
-      gchar *dtstr;
-
-      tz = g_time_zone_new ("+03:00");
-      utc = g_date_time_new_from_unix_utc (date + time);
-      local = g_date_time_to_timezone (utc, tz);
-
-      dtstr = g_date_time_format (local, "%d.%m.%y %H:%M:%S");
-
-      nav_printer (&global->nmea.tmd_value, "%s", dtstr);
-
-      g_free (dtstr);
-      g_date_time_unref (local);
-      g_date_time_unref (utc);
-      g_time_zone_unref (tz);
-    }
-
-  if (hyscan_nmea_parser_parse_string (global->nmea.lat, rmc, &lat))
-    nav_printer (&global->nmea.lat_value, "%f °%s", lat, lat > 0 ? "С.Ш." : "Ю.Ш.");
-  if (hyscan_nmea_parser_parse_string (global->nmea.lon, rmc, &lon))
-    nav_printer (&global->nmea.lon_value, "%f °%s", lon, lon > 0 ? "В.Д." : "З.Д.");
-  if (hyscan_nmea_parser_parse_string (global->nmea.trk, rmc, &trk))
-    nav_printer (&global->nmea.trk_value, "%f °", trk);
-  if (hyscan_nmea_parser_parse_string (global->nmea.spd, rmc, &spd))
-    nav_printer (&global->nmea.spd_value, "%f м/с", spd * 0.514);
-  if (hyscan_nmea_parser_parse_string (global->nmea.dpt, dpt, &dpt_))
-    nav_printer (&global->nmea.dpt_value, "%f м", dpt_);
-
-  g_mutex_unlock (&global->nmea.lock);
-  g_strfreev (nmea);
+  /* Напрямую загоняем их в виджет. */
+  hyscan_gtk_nav_indicator_push (HYSCAN_GTK_NAV_INDICATOR (global->gui.nav), buffer);
 }
 
 gboolean
@@ -2533,8 +2451,8 @@ ame_colormap_free (gpointer data)
   if (cmap == NULL)
     return;
 
-  g_clear_pointer (cmap->colors, g_free);
-  g_clear_pointer (cmap->name, g_free);
+  g_clear_pointer (&cmap->colors, g_free);
+  g_clear_pointer (&cmap->name, g_free);
 
   g_free (cmap);
 }
@@ -2793,6 +2711,122 @@ main (int argc, char **argv)
 
   /* Закончили подключение к гидролокатору. */
   no_sonar:
+  /***
+   *  ___   ___         ___         ___
+   * |   | |   | |\  | |     |     |
+   * |-+-  |-+-| | + | |-+-  |      -+-
+   * |     |   | |  \| |___  |___   ___|
+   *
+   * Создаем панели.
+   */
+  { /* ГБО */
+    AmePanel *panel = g_new0 (AmePanel, 1);
+    VisualWF *vwf = g_new0 (VisualWF, 1);
+
+    panel->name = g_strdup ("SideScan");
+    panel->type = AME_PANEL_WATERFALL;
+
+    panel->sources = g_new0 (HyScanSourceType, 3);
+    panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD;
+    panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_PORT;
+    panel->sources[2] = HYSCAN_SOURCE_INVALID;
+
+    panel->vis_gui = (VisualCommon*)vwf;
+
+    vwf->colormaps = make_color_maps (FALSE);
+
+    vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global.cache));
+    gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
+
+    GtkWidget *ss_ol = make_overlay (vwf->wf,
+                                     &vwf->wf_grid, &vwf->wf_ctrl,
+                                     &vwf->wf_mark, &vwf->wf_metr,
+                                     global.marks.model);
+
+    g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (live_view_off), &global);
+    g_signal_connect_swapped (vwf->wf, "waterfall-zoom", G_CALLBACK (scale_set), &global);
+
+    hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed);
+    hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
+    hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
+    hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
+
+    g_hash_table_insert (global.panels, panel, GINT_TO_POINTER (X_SIDESCAN));
+  }
+
+  { /* ПФ */
+    AmePanel *panel = g_new0 (AmePanel, 1);
+    VisualWF *vwf = g_new0 (VisualWF, 1);
+
+    panel->name = g_strdup ("Profiler");
+    panel->type = AME_PANEL_ECHO;
+
+    panel->sources = g_new0 (HyScanSourceType, 2);
+    panel->sources[0] = HYSCAN_SOURCE_PROFILER;
+    // TODO echosounder?
+    panel->sources[1] = HYSCAN_SOURCE_INVALID;
+
+    panel->vis_gui = (VisualCommon*)vwf;
+
+    vwf->colormaps = make_color_maps (TRUE);
+
+    vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global.cache));
+    gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
+
+    GtkWidget *ss_ol = make_overlay (vwf->wf,
+                                     &vwf->wf_grid, &vwf->wf_ctrl,
+                                     &vwf->wf_mark, &vwf->wf_metr,
+                                     global.marks.model);
+
+    hyscan_gtk_waterfall_grid_set_condence (vwf->wf_grid, 10.0);
+    hyscan_gtk_waterfall_grid_set_grid_color (vwf->wf_grid, hyscan_tile_color_converter_c2i (32, 32, 32, 255));
+
+    g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (live_view_off), &global);
+    g_signal_connect_swapped (vwf->wf, "waterfall-zoom", G_CALLBACK (scale_set), &global);
+
+    hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), PROFILER);
+    hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed / 10);
+    hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
+    hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
+    hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
+
+    g_hash_table_insert (global.panels, panel, GINT_TO_POINTER (X_PROFILER));
+  }
+
+  { /* ВСЛ */
+    AmePanel *panel = g_new0 (AmePanel, 1);
+    VisualFL *vfl = g_new0 (VisualFL, 1);
+
+    panel->name = g_strdup ("ForwardLook");
+    panel->type = AME_PANEL_FORWARDLOOK;
+
+    panel->sources = g_new0 (HyScanSourceType, 2);
+    panel->sources[0] = HYSCAN_SOURCE_FORWARD_LOOK;
+    panel->sources[1] = HYSCAN_SOURCE_INVALID;
+
+    panel->vis_gui = (VisualCommon*)vfl;
+
+    vfl->fl = HYSCAN_GTK_FORWARD_LOOK (hyscan_gtk_forward_look_new ());
+    gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vfl->fl), TRUE);
+
+    vfl->fl_player = hyscan_gtk_forward_look_get_player (vfl->fl);
+    vfl->fl_coords = hyscan_fl_coords_new (vfl->fl, global.cache);
+
+    /* Управление воспроизведением FL. */
+    fl_play_control = GTK_WIDGET (gtk_builder_get_object (common_builder, "fl_play_control"));
+    hyscan_exit_if (fl_play_control == NULL, "can't load play control ui");
+
+    vfl->position = GTK_SCALE (gtk_builder_get_object (common_builder, "position"));
+    vfl->coords_label = GTK_LABEL (gtk_builder_get_object (common_builder, "fl_latlong"));
+    g_signal_connect (vfl->fl_coords, "coords", G_CALLBACK (fl_coords_callback), vfl->coords_label);
+    hyscan_exit_if (vfl->position == NULL, "incorrect play control ui");
+    vfl->position_range = hyscan_gtk_forward_look_get_adjustment (vfl->fl);
+    gtk_range_set_adjustment (GTK_RANGE (vfl->position), vfl->position_range);
+
+    hyscan_forward_look_player_set_sv (vfl->fl_player, global.sound_velocity);
+
+    g_hash_table_insert (global.panels, panel, GINT_TO_POINTER (X_FORWARDL));
+  }
 
   /***
    *           ___   ___   ___         ___         ___   ___   ___   ___   ___   ___   ___
@@ -2815,24 +2849,10 @@ main (int argc, char **argv)
   /* Основная раскладка окна. */
   global.gui.grid = gtk_grid_new ();
 
-  /* Создадим парсеры. */
+  /* Навигационные данные. */
   {
-    global.nmea.l_tmd = GTK_LABEL (gtk_builder_get_object (common_builder, "tmd"));
-    global.nmea.l_lat = GTK_LABEL (gtk_builder_get_object (common_builder, "lat"));
-    global.nmea.l_lon = GTK_LABEL (gtk_builder_get_object (common_builder, "lon"));
-    global.nmea.l_trk = GTK_LABEL (gtk_builder_get_object (common_builder, "trk"));
-    global.nmea.l_spd = GTK_LABEL (gtk_builder_get_object (common_builder, "spd"));
-    global.nmea.l_dpt = GTK_LABEL (gtk_builder_get_object (common_builder, "dpt"));
-
-    global.nmea.time = hyscan_nmea_parser_new_empty (HYSCAN_SOURCE_NMEA_RMC, HYSCAN_NMEA_FIELD_TIME);
-    global.nmea.date = hyscan_nmea_parser_new_empty (HYSCAN_SOURCE_NMEA_RMC, HYSCAN_NMEA_FIELD_DATE);
-    global.nmea.lat = hyscan_nmea_parser_new_empty (HYSCAN_SOURCE_NMEA_RMC, HYSCAN_NMEA_FIELD_LAT);
-    global.nmea.lon = hyscan_nmea_parser_new_empty (HYSCAN_SOURCE_NMEA_RMC, HYSCAN_NMEA_FIELD_LON);
-    global.nmea.trk = hyscan_nmea_parser_new_empty (HYSCAN_SOURCE_NMEA_RMC, HYSCAN_NMEA_FIELD_TRACK);
-    global.nmea.spd = hyscan_nmea_parser_new_empty (HYSCAN_SOURCE_NMEA_RMC, HYSCAN_NMEA_FIELD_SPEED);
-    global.nmea.dpt = hyscan_nmea_parser_new_empty (HYSCAN_SOURCE_NMEA_DPT, HYSCAN_NMEA_FIELD_DEPTH);
-
-    g_mutex_init (&global.nmea.lock);
+    global.gui.nav = hyscan_gtk_nav_indicator_new ();
+    gtk_orientable_set_orientation (GTK_ORIENTABLE (global.gui.nav), GTK_ORIENTATION_HORIZONTAL);
   }
 
   /* Слева у нас список галсов и меток. */
@@ -2888,123 +2908,7 @@ main (int argc, char **argv)
 
   // hyscan_ame_splash_stop (splash);
 
-  /***
-   *  ___   ___         ___         ___
-   * |   | |   | |\  | |     |     |
-   * |-+-  |-+-| | + | |-+-  |      -+-
-   * |     |   | |  \| |___  |___   ___|
-   *
-   * Создаем панели.
-   */
-  { /* ГБО */
-    AmePanel *panel = g_new0 (AmePanel, 1);
-    VisualWF *vwf = g_new0 (VisualWF, 1);
 
-    panel->name = g_strdup ("SideScan");
-    panel->type = AME_PANEL_WATERFALL;
-
-    panel->sources = g_new0 (HyScanSourceType, 3);
-    panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD;
-    panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_PORT;
-    panel->sources[2] = HYSCAN_SOURCE_INVALID;
-
-    panel->vis_gui = (VisualCommon*)vwf;
-
-    vwf->colormaps = make_color_maps (FALSE);
-
-    vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global.cache));
-    gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
-
-    GtkWidget *ss_ol = make_overlay (vwf->wf,
-                                     &vwf->wf_grid, &vwf->wf_ctrl,
-                                     &vwf->wf_mark, &vwf->wf_metr,
-                                     global.marks.model);
-
-    g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (live_view_off), &global);
-    g_signal_connect_swapped (vwf->wf, "waterfall-zoom", G_CALLBACK (scale_set), &global);
-
-    hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed);
-    hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
-    hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
-    hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
-
-    g_hash_table_insert (global.panels, panel, GINT_TO_POINTER (X_SIDESCAN));
-  }
-
-  { /* ПФ */
-    AmePanel *panel = g_new0 (AmePanel, 1);
-    VisualWF *vwf = g_new0 (VisualWF, 1);
-
-    panel->name = g_strdup ("Profiler");
-    panel->type = AME_PANEL_ECHO;
-
-    panel->sources = g_new0 (HyScanSourceType, 2);
-    panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_PROFILER;
-    // TODO echosounder?
-    panel->sources[1] = HYSCAN_SOURCE_INVALID;
-
-    panel->vis_gui = (VisualCommon*)vwf;
-
-    vwf->colormaps = make_color_maps (TRUE);
-
-    vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global.cache));
-    gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
-
-    GtkWidget *ss_ol = make_overlay (vwf->wf,
-                                     &vwf->wf_grid, &vwf->wf_ctrl,
-                                     &vwf->wf_mark, &vwf->wf_metr,
-                                     global.marks.model);
-
-    hyscan_gtk_waterfall_grid_set_condence (vwf->wf_grid, 10.0);
-    hyscan_gtk_waterfall_grid_set_grid_color (vwf->wf_grid, hyscan_tile_color_converter_c2i (32, 32, 32, 255));
-
-    g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (live_view_off), &global);
-    g_signal_connect_swapped (vwf->wf, "waterfall-zoom", G_CALLBACK (scale_set), &global);
-
-    hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), PROFILER);
-    hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed / 10);
-    hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
-    hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
-    hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
-
-    g_hash_table_insert (global.panels, panel, GINT_TO_POINTER (X_PROFILER));
-  }
-
-  { /* ВСЛ */
-    AmePanel *panel = g_new0 (AmePanel, 1);
-    VisualFL *vfl = g_new0 (VisualFL, 1);
-
-    panel->name = g_strdup ("ForwardLook");
-    panel->type = AME_PANEL_FORWARDLOOK;
-
-    panel->sources = g_new0 (HyScanSourceType, 2);
-    panel->sources[0] = HYSCAN_SOURCE_FORWARD_LOOK;
-    panel->sources[1] = HYSCAN_SOURCE_INVALID;
-
-    panel->vis_gui = (VisualCommon*)vfl;
-
-    vfl->fl = HYSCAN_GTK_FORWARD_LOOK (hyscan_gtk_forward_look_new ());
-    gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vfl->fl), TRUE);
-
-    vfl->fl_player = hyscan_gtk_forward_look_get_player (vfl->fl);
-    vfl->fl_coords = hyscan_fl_coords_new (vfl->fl, global.cache);
-    hyscan_forward_look_player_set_cache (vfl->fl_player, global.cache, NULL);
-
-    /* Управление воспроизведением FL. */
-    fl_play_control = GTK_WIDGET (gtk_builder_get_object (common_builder, "fl_play_control"));
-    hyscan_exit_if (fl_play_control == NULL, "can't load play control ui");
-
-    vfl->position = GTK_SCALE (gtk_builder_get_object (common_builder, "position"));
-    vfl->coords_label = GTK_LABEL (gtk_builder_get_object (common_builder, "fl_latlong"));
-    g_signal_connect (vfl->fl_coords, "coords", G_CALLBACK (fl_coords_callback), vfl->coords_label);
-    hyscan_exit_if (vfl->position == NULL, "incorrect play control ui");
-    vfl->position_range = hyscan_gtk_forward_look_get_adjustment (vfl->fl);
-    gtk_range_set_adjustment (GTK_RANGE (vfl->position), vfl->position_range);
-
-    hyscan_forward_look_player_set_sv (wfl->fl_player, global.sound_velocity);
-
-    g_hash_table_insert (global.panels, panel, GINT_TO_POINTER (X_FORWARDL));
-  }
 
   /*  */
   global.gui.widget_names[W_SIDESCAN] = "ГБО";
@@ -3033,14 +2937,6 @@ main (int argc, char **argv)
   gtk_box_pack_start (GTK_BOX (global.gui.sub_center_box), global.gui.disp_widgets[W_PROFILER], TRUE, TRUE, 1);
   gtk_box_pack_end (GTK_BOX (global.gui.sub_center_box), global.gui.disp_widgets[W_FORWARDL], TRUE, TRUE, 1);
 
-  // gtk_cifro_area_control_set_scroll_mode (GTK_CIFRO_AREA_CONTROL (global.fl), GTK_CIFRO_AREA_SCROLL_MODE_COMBINED);
-  //
-  // /* Управление отображением. */
-  // global.fl_player = hyscan_gtk_forward_look_get_player (global.fl);
-  //
-  // /* Полоска прокрутки. */
-  // global.position_range = hyscan_gtk_forward_look_get_adjustment (global.fl);
-  // gtk_range_set_adjustment (GTK_RANGE (global.position), global.position_range);
   global.gui.side_revealer = g_object_new (GTK_TYPE_REVEALER, "transition-type", GTK_REVEALER_TRANSITION_TYPE_SLIDE_RIGHT, "transition-duration", 100, NULL);
   gtk_container_add (GTK_CONTAINER (global.gui.side_revealer), global.gui.left_box);
 
@@ -3050,9 +2946,6 @@ main (int argc, char **argv)
   gtk_revealer_set_reveal_child (GTK_REVEALER (global.gui.bott_revealer), FALSE);
 
   {
-    GtkWidget *nav_indicators;
-    nav_indicators = GTK_WIDGET (gtk_builder_get_object (common_builder, "nav_indicators"));
-
     GtkGrid *grid = GTK_GRID (global.gui.grid);
     global.gui.lstack = gtk_stack_new ();
     global.gui.rstack = gtk_stack_new ();
@@ -3065,7 +2958,7 @@ main (int argc, char **argv)
     gtk_grid_attach (GTK_GRID (grid), global.gui.side_revealer,   2, 0, 1, 3);
     gtk_grid_attach (GTK_GRID (grid), global.gui.center_box,      4, 0, 1, 1);
     gtk_grid_attach (GTK_GRID (grid), global.gui.bott_revealer,   4, 1, 1, 1);
-    gtk_grid_attach (GTK_GRID (grid), nav_indicators,             4, 2, 1, 1);
+    gtk_grid_attach (GTK_GRID (grid), global.gui.nav,             4, 2, 1, 1);
   }
 
   gtk_container_add (GTK_CONTAINER (global.gui.window), global.gui.grid);

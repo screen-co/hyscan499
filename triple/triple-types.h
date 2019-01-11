@@ -13,6 +13,7 @@
 #include <hyscan-mark-model.h>
 #include <hyscan-gtk-project-viewer.h>
 #include <hyscan-gtk-mark-editor.h>
+#include <hyscan-gtk-nav-indicator.h>
 #include <hyscan-tile-color.h>
 #include <hyscan-nmea-parser.h>
 #include <hyscan-mloc.h>
@@ -285,33 +286,6 @@ typedef struct
 
   struct
     {
-      GMutex                               lock;
-
-      HyScanNMEAParser                    *time;
-      HyScanNMEAParser                    *date;
-      HyScanNMEAParser                    *lat;
-      HyScanNMEAParser                    *lon;
-      HyScanNMEAParser                    *trk;
-      HyScanNMEAParser                    *spd;
-      HyScanNMEAParser                    *dpt;
-
-      GtkLabel                            *l_tmd;
-      GtkLabel                            *l_lat;
-      GtkLabel                            *l_lon;
-      GtkLabel                            *l_trk;
-      GtkLabel                            *l_spd;
-      GtkLabel                            *l_dpt;
-
-      gchar                               *tmd_value;
-      gchar                               *lat_value;
-      gchar                               *lon_value;
-      gchar                               *trk_value;
-      gchar                               *spd_value;
-      gchar                               *dpt_value;
-    } nmea;
-
-  struct
-    {
       GtkWidget                           *window; // окно
 
       GtkWidget                           *grid;
@@ -332,6 +306,8 @@ typedef struct
 
       GtkWidget                           *disp_widgets[W_LAST];
       gchar                               *widget_names[W_LAST];
+
+      GtkWidget                           *nav;
 
       GtkWidget                           *mark_view;
       GtkWidget                           *meditor;
