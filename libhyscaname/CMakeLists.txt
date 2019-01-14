@@ -21,6 +21,8 @@ add_library (${HYSCAN_AME_LIBRARY} SHARED
              hyscan-gtk-forward-look.c
              hyscan-gtk-mark-editor.c
              hyscan-gtk-project-viewer.c
+             hyscan-gtk-nav-indicator.c
+             hyscan-gtk-ame-box.c
              hyscan-mark-sync.c
              sonar-configure.c
              ${CMAKE_BINARY_DIR}/resources/hyscan-ame-resources.c)

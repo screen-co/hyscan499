@@ -108,5 +108,5 @@ hyscan_ame_fixed_set_state (HyScanAmeFixed *self,
 
   g_return_if_fail (button != NULL);
 
-  hyscan_ame_button_set_state (button, state);
+  hyscan_ame_button_set_active (button, state);
 }

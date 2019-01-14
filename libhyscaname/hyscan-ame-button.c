@@ -8,7 +8,8 @@ enum
   PROP_ICON,
   PROP_LABEL,
   PROP_TOGGLE,
-  PROP_STATE
+  PROP_STATE,
+  PROP_ACTIVE,
 };
 
 enum
@@ -64,6 +65,8 @@ hyscan_ame_button_class_init (HyScanAmeButtonClass *klass)
     g_param_spec_boolean ("is_toggle", "is_toggle", "is_toggle", FALSE, flags));
    g_object_class_install_property (object_class, PROP_STATE,
     g_param_spec_boolean ("state", "state", "state", FALSE, flags));
+   g_object_class_install_property (object_class, PROP_ACTIVE,
+    g_param_spec_boolean ("active", "active", "active", FALSE, G_PARAM_WRITABLE));
 
   /* Инициализируем сигналы. */
   hyscan_ame_button_signals[SIG_ACTIVATED] =
@@ -103,6 +106,8 @@ hyscan_ame_button_set_property (GObject      *object,
     priv->is_toggle = g_value_get_boolean (value);
   else if (prop_id == PROP_STATE)
     priv->state = g_value_get_boolean (value);
+  else if (prop_id == PROP_ACTIVE)
+    hyscan_ame_button_set_active (self, g_value_get_boolean (value));
   else
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 }
@@ -299,8 +304,8 @@ hyscan_ame_button_activate (HyScanAmeButton *self)
 }
 
 void
-hyscan_ame_button_set_state (HyScanAmeButton *self,
-                             gboolean         state)
+hyscan_ame_button_set_active (HyScanAmeButton *self,
+                              gboolean         state)
 {
   HyScanAmeButtonPrivate *priv;
 

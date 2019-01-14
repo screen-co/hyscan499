@@ -26,13 +26,13 @@ toggled (HyScanAmeButton *button,
          gpointer         data)
 {
   int val = GPOINTER_TO_INT (data);
-  g_print ("Received: Toggled. %i. %s\n", val, state ? "ON" : "OFF");
+  g_print ("  Received: Toggled. %i. %s\n", val, state ? "ON" : "OFF");
 }
 
 static void
 direct_pusher (HyScanAmeButton *button)
 {
-  g_print ("Action: Activate.\n");
+  g_print ("Act: Activate.\n");
   hyscan_ame_button_activate (button);
 }
 
@@ -42,7 +42,7 @@ fixed_pusher (GtkButton      *button,
 {
   int i = GPOINTER_TO_INT (value);
 
-  g_print ("Action: Push. %i.\n", i);
+  g_print ("Act: Push. %i.\n", i);
   hyscan_ame_fixed_activate (HYSCAN_AME_FIXED (ame_fixed), i);
 }
 
@@ -52,7 +52,7 @@ on_setter (GtkButton      *button,
 {
   int i = GPOINTER_TO_INT (value);
 
-  g_print ("Action: turn on. %i.\n", i);
+  g_print ("Act: turn on. %i.\n", i);
   hyscan_ame_fixed_set_state (HYSCAN_AME_FIXED (ame_fixed), i, TRUE);
 }
 
@@ -62,7 +62,7 @@ off_setter (GtkButton      *button,
 {
   int i = GPOINTER_TO_INT (value);
 
-  g_print ("Action: turn off. %i.\n", i);
+  g_print ("Act: turn off. %i.\n", i);
   hyscan_ame_fixed_set_state (HYSCAN_AME_FIXED (ame_fixed), i, FALSE);
 }
 
@@ -70,6 +70,7 @@ static gboolean
 sensitive_setter (HyScanAmeButton *button,
                   gboolean         state)
 {
+  g_print ("Act: change sensitivity.\n");
   hyscan_ame_button_set_sensitive (button, state);
   return FALSE;
 }
@@ -78,7 +79,21 @@ static gboolean
 state_setter (HyScanAmeButton *button,
               gboolean         state)
 {
-  hyscan_ame_button_set_state (button, state);
+  g_print ("Act: set active.\n");
+  hyscan_ame_button_set_active (button, state);
+  return FALSE;
+}
+
+static gboolean
+prop_setter (HyScanAmeButton *button,
+             gboolean         unused,
+             GtkSwitch       *source)
+{
+  gboolean active;
+  g_print ("Act: set active property.\n");
+  g_object_get (source, "active", &active, NULL);
+  g_object_set (button, "active", active, NULL);
+
   return FALSE;
 }
 
@@ -97,16 +112,18 @@ main (int argc, char **argv)
   ame_fixed = hyscan_ame_fixed_new ();
 
   gtk_grid_attach(GTK_GRID (grid), ame_fixed, 0, 0, 1, 5);
-  // gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("dir"), 1, 0, 1, 1);
-  // gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("fix"), 2, 0, 1, 1);
-  // gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("off"), 3, 0, 1, 1);
-  // gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("on"), 4, 0, 1, 1);
-  // gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("sens"), 5, 0, 1, 1);
+  gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("dir"), 1, -1, 1, 1);
+  gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("fix"), 2, -1, 1, 1);
+  gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("off"), 3, -1, 1, 1);
+  gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("on"), 4, -1, 1, 1);
+  gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("sens"), 5, -1, 1, 1);
+  gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("active"), 6, -1, 1, 1);
+  gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("act. prop"), 7, -1, 1, 1);
 
   for (i = 0; i < N_BUTTONS; ++i)
     {
       GtkWidget *ame_button;
-      GtkWidget *b1, *b2, *b3, *b4, *b5, *b6;
+      GtkWidget *b1, *b2, *b3, *b4, *b5, *b6, *b7;
 
       ame_button = hyscan_ame_button_new (ICON_NAME, texts[i], !!(i % 2), !!(i & 2));
       g_signal_connect (ame_button, "ame-activated", G_CALLBACK (clicked), GINT_TO_POINTER(i));
@@ -118,6 +135,7 @@ main (int argc, char **argv)
       b4 = gtk_button_new_with_label (texts3[i]);
       b5 = gtk_switch_new ();
       b6 = gtk_switch_new ();
+      b7 = gtk_switch_new ();
 
       g_signal_connect_swapped (b1, "clicked", G_CALLBACK (direct_pusher), ame_button);
       g_signal_connect (b2, "clicked", G_CALLBACK (fixed_pusher), GINT_TO_POINTER (i));
@@ -125,6 +143,7 @@ main (int argc, char **argv)
       g_signal_connect (b4, "clicked", G_CALLBACK (on_setter), GINT_TO_POINTER (i));
       g_signal_connect_swapped (b5, "state-set", G_CALLBACK (sensitive_setter), ame_button);
       g_signal_connect_swapped (b6, "state-set", G_CALLBACK (state_setter), ame_button);
+      g_signal_connect_swapped (b7, "state-set", G_CALLBACK (prop_setter), ame_button);
 
       hyscan_ame_button_create_value (HYSCAN_AME_BUTTON (ame_button), "value");
 
@@ -135,6 +154,7 @@ main (int argc, char **argv)
       gtk_grid_attach(GTK_GRID (grid), b4, 4, i, 1, 1);
       gtk_grid_attach(GTK_GRID (grid), b5, 5, i, 1, 1);
       gtk_grid_attach(GTK_GRID (grid), b6, 6, i, 1, 1);
+      gtk_grid_attach(GTK_GRID (grid), b7, 7, i, 1, 1);
 
       gtk_switch_set_state (GTK_SWITCH (b5), TRUE);
       gtk_switch_set_state (GTK_SWITCH (b6), TRUE);

@@ -1,8 +1,9 @@
 #include "triple-types.h"
 #include "hyscan-ame-splash.h"
-#include "ui-builder.h"
-#include "ui.h"
 #include "hyscan-ame-project.h"
+
+/* Вот он, наш жирненький красавчик. */
+Global global = { 0, };
 
 enum
 {
@@ -102,123 +103,106 @@ depth_writer (GObject *emitter)
 }
 
 void
-switch_page (GObject     *emitter,
-             const gchar *page)
+button_active_setter (GObject *object,
+                      gboolean active)
 {
-  GtkStack * lstack = GTK_STACK (global.gui.lstack);
-  GtkStack * rstack = GTK_STACK (global.gui.rstack);
-  GtkRevealer * sidebar = GTK_REVEALER (global.gui.side_revealer);
-  GtkRevealer * bottbar = GTK_REVEALER (global.gui.bott_revealer);
+  g_object_set (object, "active", active, NULL);
+}
 
-  const gchar * old = gtk_stack_get_visible_child_name (lstack);
-  // HyScanAmeFixed * lold = HYSCAN_AME_FIXED (gtk_stack_get_visible_child (lstack));
-  HyScanAmeFixed * rold = HYSCAN_AME_FIXED (gtk_stack_get_visible_child (rstack));
+void
+turn_meter_helper (AmePanel  *panel,
+                   gboolean   state)
+{
+  void * layer = NULL;
+  VisualWF *wf;
 
-  if (g_str_equal (old, "И_ПФд"))
-    hyscan_ame_fixed_set_state (rold, 4, FALSE);
-  if (g_str_equal (old, "И_ГБОд"))
-    hyscan_ame_fixed_set_state (rold, 4, FALSE);
+  /* Только вотерфольные панели. */
+  if (panel->type != AME_PANEL_WATERFALL && panel->type != AME_PANEL_ECHO)
+    return;
 
-  g_message ("Opening page <%s>", page);
+  wf = (VisualWF*)panel->vis_gui;
 
-  gtk_stack_set_visible_child_name (lstack, page);
-  gtk_stack_set_visible_child_name (rstack, page);
-
-  if (g_str_equal(page, "ГАЛС"))
-    gtk_revealer_set_reveal_child (sidebar, TRUE);
-  else if (g_str_equal(page, "И_ГБОм"))
-    {
-      gtk_revealer_set_reveal_child (sidebar, TRUE);
-      turn_marks (NULL, W_SIDESCAN);
-    }
-  else if (g_str_equal(page, "И_ПФм"))
-    {
-      gtk_revealer_set_reveal_child (sidebar, TRUE);
-      turn_marks (NULL, W_PROFILER);
-    }
-  else
-    {
-      gtk_revealer_set_reveal_child (sidebar, FALSE);
-      turn_marks (NULL, W_LAST);
-      turn_meter (NULL, FALSE, W_LAST);
-    }
-
-
-  if (g_str_equal (page, "И_ГК") ||
-      g_str_equal (page, "И_ГКд"))
-    gtk_revealer_set_reveal_child (bottbar, TRUE);
-  else
-    gtk_revealer_set_reveal_child (bottbar, FALSE);
-
+  layer = state ? (void*)wf->wf_metr : (void*)wf->wf_ctrl;
+  hyscan_gtk_waterfall_layer_grab_input (HYSCAN_GTK_WATERFALL_LAYER (layer));
 }
 
 void
 turn_meter (GObject     *emitter,
             gboolean     state,
-            gint         selector)
+            gint         panelx)
 {
-  void * layer0 = NULL;
-  void * layer1 = NULL;
 
-  if (!state)
-    {
-      layer0 = global.GPF.wf_ctrl;
-      layer1 = global.GSS.wf_ctrl;
-    }
-  else if (selector == W_SIDESCAN)
-    {
-      layer0 = global.GSS.wf_metr;
-      layer1 = global.GPF.wf_ctrl;
-    }
-  else if (selector == W_PROFILER)
-    {
-      layer0 = global.GPF.wf_metr;
-      layer1 = global.GSS.wf_ctrl;
-    }
+  GHashTableIter iter;
+  gpointer k, v;
 
-  hyscan_gtk_waterfall_layer_grab_input (HYSCAN_GTK_WATERFALL_LAYER (layer0));
-  hyscan_gtk_waterfall_layer_grab_input (HYSCAN_GTK_WATERFALL_LAYER (layer1));
+  /* Если передан конкретный селектор, пробуем найти страницу для него. */
+  v = g_hash_table_lookup (global.panels, GINT_TO_POINTER (panelx));
+  if (v != NULL)
+    {
+      turn_meter_helper ((AmePanel*)v, state);
+    }
+  else
+    {
+      g_hash_table_iter_init (&iter, global.panels);
+      while (g_hash_table_iter_next (&iter, &k, &v))
+        turn_meter_helper ((AmePanel*)v, state);
+    }
+}
+
+void
+turn_mark_helper (AmePanel  *panel,
+                  gboolean   state)
+{
+  void * layer = NULL;
+  VisualWF *wf;
+
+  /* Только вотерфольные панели. */
+  if (panel->type != AME_PANEL_WATERFALL && panel->type != AME_PANEL_ECHO)
+    return;
+
+  wf = (VisualWF*)panel->vis_gui;
+
+  layer = state ? (void*)wf->wf_mark : (void*)wf->wf_ctrl;
+  hyscan_gtk_waterfall_layer_grab_input (HYSCAN_GTK_WATERFALL_LAYER (layer));
 }
 
 void
 turn_marks (GObject     *emitter,
-            gint         selector)
+            gint         panelx)
 {
-  void * layer0 = NULL;
-  void * layer1 = NULL;
+  GHashTableIter iter;
+  gpointer k, v;
 
-  if (selector == W_SIDESCAN)
-    {
-      layer0 = global.GSS.wf_mark;
-      layer1 = global.GPF.wf_ctrl;
-    }
-  else if (selector == W_PROFILER)
-    {
-      layer0 = global.GPF.wf_mark;
-      layer1 = global.GSS.wf_ctrl;
-    }
-  else
-    {
-      layer0 = global.GPF.wf_ctrl;
-      layer1 = global.GSS.wf_ctrl;
-    }
+  /* Сначала везде включаем вфконтрол, а потом в требуемом включаем метки. */
+  g_hash_table_iter_init (&iter, global.panels);
+  while (g_hash_table_iter_next (&iter, &k, &v))
+    turn_mark_helper ((AmePanel*)v, FALSE);
 
-  hyscan_gtk_waterfall_layer_grab_input (HYSCAN_GTK_WATERFALL_LAYER (layer0));
-  hyscan_gtk_waterfall_layer_grab_input (HYSCAN_GTK_WATERFALL_LAYER (layer1));
+  v = g_hash_table_lookup (global.panels, GINT_TO_POINTER (panelx));
+  if (v != NULL)
+    turn_mark_helper ((AmePanel*)v, TRUE);
 }
+
 void
 hide_marks (GObject     *emitter,
             gboolean     state,
             gint         selector)
 {
-  HyScanGtkWaterfallLayer *layer = NULL;
+  gpointer v;
 
-  if (selector == W_SIDESCAN)
-    layer = HYSCAN_GTK_WATERFALL_LAYER (global.GSS.wf_mark);
-  else if (selector == W_PROFILER)
-    layer = HYSCAN_GTK_WATERFALL_LAYER (global.GPF.wf_mark);
+  v = g_hash_table_lookup (global.panels, GINT_TO_POINTER (selector));
+  if (v != NULL)
+    {
+      AmePanel *panel = v;
+      VisualWF *wf;
 
-  hyscan_gtk_waterfall_layer_set_visible (layer, state);
+      if (panel->type != AME_PANEL_WATERFALL && panel->type != AME_PANEL_ECHO)
+        return;
+      wf = (VisualWF*)panel->vis_gui;
+
+      hyscan_gtk_waterfall_layer_set_visible (HYSCAN_GTK_WATERFALL_LAYER (wf->wf_mark), state);
+    }
+
 }
 
 HyScanDataSchemaEnumValue *
@@ -271,37 +255,6 @@ idle_key (GdkEvent *event)
 }
 
 void
-nav_common (GtkWidget *target,
-            guint      keyval,
-            guint      state)
-{
-  GdkEvent *event;
-
-  event = gdk_event_new (GDK_KEY_PRESS);
-  event->key.keyval = keyval;
-  event->key.state = state;
-
-  gtk_window_set_focus (GTK_WINDOW (global.gui.window), target);
-  event->key.window = g_object_ref (gtk_widget_get_window (target));
-  g_idle_add ((GSourceFunc)idle_key, (gpointer)event);
-}
-
-#define NAV_FN(fname, button) void \
-                              fname (GObject * emitter, \
-                                     gpointer udata) \
-                              {gint sel = GPOINTER_TO_INT (udata); \
-                               nav_common (global.gui.disp_widgets[sel], \
-                                           button, GDK_CONTROL_MASK);}
-
-NAV_FN (nav_del, GDK_KEY_Delete)
-NAV_FN (nav_pg_up, GDK_KEY_Page_Up)
-NAV_FN (nav_pg_down, GDK_KEY_Page_Down)
-NAV_FN (nav_up, GDK_KEY_Up)
-NAV_FN (nav_down, GDK_KEY_Down)
-NAV_FN (nav_left, GDK_KEY_Left)
-NAV_FN (nav_right, GDK_KEY_Right)
-
-void
 fl_prev (GObject *emitter,
          gint     panelx)
 {
@@ -332,52 +285,6 @@ fl_next (GObject *emitter,
   value = gtk_adjustment_get_value (adj);
   gtk_adjustment_set_value (adj, value + 1);
 }
-
-
-void
-run_manager (GObject *emitter)
-{
-  HyScanDBInfo *info;
-  GtkWidget *dialog;
-  gint res;
-
-  info = hyscan_db_info_new (global.db);
-  dialog = hyscan_ame_project_new (global.db, info, GTK_WINDOW (global.gui.window));
-  res = gtk_dialog_run (GTK_DIALOG (dialog));
-
-  // TODO: start/stop?
-  if (res == HYSCAN_AME_PROJECT_OPEN || res == HYSCAN_AME_PROJECT_CREATE)
-    {
-      gchar *project;
-      hyscan_ame_project_get (HYSCAN_AME_PROJECT (dialog), &project, NULL);
-
-      start_stop (NULL, FALSE);
-      hyscan_ame_button_set_state (HYSCAN_AME_BUTTON (global.gui.start_stop_all_switch), FALSE);
-      hyscan_ame_button_set_state (HYSCAN_AME_BUTTON (global.gui.start_stop_dry_switch), FALSE);
-      hyscan_ame_button_set_state (HYSCAN_AME_BUTTON (global.gui.start_stop_one_switch[W_SIDESCAN]), FALSE);
-      hyscan_ame_button_set_state (HYSCAN_AME_BUTTON (global.gui.start_stop_one_switch[W_PROFILER]), FALSE);
-      hyscan_ame_button_set_state (HYSCAN_AME_BUTTON (global.gui.start_stop_one_switch[W_FORWARDL]), FALSE);
-
-      g_clear_pointer (&global.project_name, g_free);
-      global.project_name = g_strdup (project);
-      g_message ("global.project_name set to <<%s>>", global.project_name);
-      hyscan_db_info_set_project (global.db_info, project);
-      // hyscan_data_writer_set_project (HYSCAN_DATA_WRITER (global.control), project);
-      // hyscan_data_writer_set_project (HYSCAN_DATA_WRITER (global.control), project);
-
-      g_clear_pointer (&global.marks.loc_storage, g_hash_table_unref);
-      global.marks.loc_storage = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
-                                                        (GDestroyNotify) loc_store_free);
-
-
-      hyscan_mark_model_set_project (global.marks.model, global.db, project);
-      g_free (project);
-    }
-
-  g_object_unref (info);
-  gtk_widget_destroy (dialog);
-}
-
 
 /* Функция вызывается при изменении списка проектов. */
 void
@@ -466,52 +373,6 @@ track_scroller (GtkTreeView *tree,
   gtk_tree_path_free (first);
 }
 
-GtkTreeView *
-list_scroll_tree_view_resolver (gint list)
-{
-  GtkTreeView * view = NULL;
-
-  if (list == L_MARKS)
-    view = hyscan_gtk_project_viewer_get_tree_view (HYSCAN_GTK_PROJECT_VIEWER (global.gui.mark_view));
-  else if (list == L_TRACKS)
-    view = global.gui.track_view;
-  else
-    g_message ("Wrong list selector passed (%i)", list);
-
-  return view;
-}
-
-void
-list_scroll_up (GObject *emitter,
-                gpointer udata)
-{
-  GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT(udata));
-  track_scroller (view, TRUE, FALSE);
-}
-
-void
-list_scroll_down (GObject *emitter,
-                  gpointer udata)
-{
-  GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT(udata));
-  track_scroller (view, FALSE, FALSE);
-}
-
-void
-list_scroll_start (GObject *emitter,
-                   gpointer udata)
-{
-  GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT(udata));
-  track_scroller (view, TRUE, TRUE);
-}
-void
-list_scroll_end (GObject *emitter,
-                 gpointer udata)
-{
-  GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT(udata));
-  track_scroller (view, FALSE, TRUE);
-}
-
 /* Функция вызывается при изменении списка галсов. */
 void
 tracks_changed (HyScanDBInfo *db_info,
@@ -538,9 +399,6 @@ tracks_changed (HyScanDBInfo *db_info,
   while (g_hash_table_iter_next (&hash_iter, &key, &value))
     {
       HyScanTrackInfo *track_info = value;
-
-      if (g_str_has_prefix (track_info->name, PF_TRACK_PREFIX))
-        continue;
 
       /* Добавляем в список галсов. */
       gtk_list_store_append (GTK_LIST_STORE (global->gui.track_list), &tree_iter);
@@ -2066,7 +1924,7 @@ live_view (GtkWidget  *widget,
     }
 
   // TODO: live_view for ALL?
-  hyscan_ame_button_set_state (HYSCAN_AME_BUTTON (panel->vis_gui->live_view), state);
+  button_active_setter (panel->vis_gui->live_view, state);
 
   return TRUE;
 }
@@ -2080,102 +1938,13 @@ live_view_off (GtkWidget  *widget,
   live_view (NULL, state, -1);
 }
 
-void
-widget_swap (GObject  *emitter,
-             gpointer  user_data)
-{
-  /* В userdata лежит option.
-   * -2 ROTATE циклическая прокрутка
-   * -1 ALL - все три,
-   * 0 - гбо, 1 - пф, 2 - гк.
-   */
-
-  gint option = GPOINTER_TO_INT (user_data);
-  gint selector;
-  GtkWidget *will_go_right = NULL; /* Виджет, который сейчас слева. */
-  GtkWidget *will_go_left = NULL; /* Требуемый виджет. */
-  GList *v_kids, *h_kids;
-  void (*pack_func) (GtkBox*, GtkWidget*, gboolean, gboolean, guint) = NULL; /* Функция упаковки виджета в бокс справа. */
-  gchar *text;
-
-  if (option == ROTATE)
-    {
-      gint new_selector;
-      selector = global.view_selector;
-
-      /* Magic time! -1 -> 0 -> 1 -> 2 -> -1... */
-      new_selector = (selector + 2) % 4 - 1;
-      g_message ("Changing selector from %i to %i", selector, new_selector);
-      selector = new_selector;
-    }
-  else
-    {
-      selector = option;
-    }
-
-  /* Если 0 - показываем все три и готово. */
-  if (selector == ALL)
-    {
-      widget_swap (emitter, GINT_TO_POINTER (W_SIDESCAN));
-      gtk_widget_set_visible (global.gui.sub_center_box, TRUE);
-      text = g_strdup_printf ("<small><b>%s</b></small>", "Всё");
-      goto curr_print;
-    }
-  else
-    {
-      gtk_widget_set_visible (global.gui.sub_center_box, FALSE);
-    }
-
-  will_go_left = GTK_WIDGET (global.gui.disp_widgets[selector]);
-
-  v_kids = gtk_container_get_children (GTK_CONTAINER (global.gui.sub_center_box));
-  h_kids = gtk_container_get_children (GTK_CONTAINER (global.gui.center_box));
-
-  will_go_right = GTK_WIDGET (h_kids->data);
-
-  if (v_kids == NULL || v_kids->next == NULL || v_kids->next->next != NULL)
-    {
-      g_warning ("sub_center_box children error: ");
-      if (v_kids == NULL)
-        g_message ("  no children");
-      else if (v_kids->next == NULL)
-        g_message ("  only one child");
-      else if (v_kids->next->next != NULL)
-        g_message ("  too many children");
-      return;
-    }
-
-  if (will_go_left == v_kids->data)
-    pack_func = gtk_box_pack_start;
-  else if (will_go_left == v_kids->next->data)
-    pack_func = gtk_box_pack_end;
-  else
-    goto no_swap_needed;
-
-  gtk_container_remove (GTK_CONTAINER (global.gui.center_box), will_go_right);
-  gtk_container_remove (GTK_CONTAINER (global.gui.sub_center_box), will_go_left);
-
-  gtk_box_pack_start (GTK_BOX (global.gui.center_box), will_go_left, TRUE, TRUE, 0);
-  pack_func (GTK_BOX (global.gui.sub_center_box), will_go_right, TRUE, TRUE, 0);
-
-no_swap_needed:
-  text = g_strdup_printf ("<small><b>%s</b></small>", global.gui.widget_names[selector]);
-
-curr_print:
-  gtk_label_set_markup (GTK_LABEL (global.gui.current_view), text);
-  g_free (text);
-
-  gtk_revealer_set_reveal_child (GTK_REVEALER (global.gui.bott_revealer), selector == W_FORWARDL);
-
-  global.view_selector = selector;
-}
 
 /* Функция включает/выключает излучение. */
 void
 start_stop (GtkWidget *widget,
             gboolean   state)
 {
-  HyScanAmeButton * button = HYSCAN_AME_BUTTON (widget);
+  GObject * button = G_OBJECT (widget);
   GHashTableIter iter;
   gpointer k, v;
 
@@ -2206,18 +1975,26 @@ start_stop (GtkWidget *widget,
           /* TVG */
           switch (panel->type)
             {
-            case W_SIDESCAN:
+              /* TODO: механизм определения, где автотвг, где просто твг.
+                 Сейчас пригодно только для АМЭ.
+               */
+            case AME_PANEL_WATERFALL:
               status &= auto_tvg_set (&global, panel->current.cur_level, panel->current.cur_sensitivity, panelx);
+              break;
             case W_PROFILER:
             case W_FORWARDL:
-            default:
               status &= tvg_set (&global, &panel->current.cur_gain0, panel->current.cur_gain_step, panelx);
+              break;
+
+            default:
+              g_warning ("start_stop: wrong panel type");
+
             }
 
           /* Если не удалось запустить какую-либо подсистему. */
           if (!status)
             {
-              hyscan_ame_button_set_state (button, FALSE);
+              button_active_setter (button, FALSE);
               return;
             }
         }
@@ -2250,7 +2027,7 @@ start_stop (GtkWidget *widget,
       if (!status)
         {
           g_message ("Sonar startup failed @ %i",__LINE__);
-          hyscan_ame_button_set_state (button, FALSE);
+          button_active_setter (button, FALSE);
           return;
         }
 
@@ -2263,7 +2040,7 @@ start_stop (GtkWidget *widget,
     {
       g_message ("Stop sonars");
       hyscan_sonar_stop (global.control_s);
-      hyscan_ame_button_set_state (button, FALSE);
+      button_active_setter (button, FALSE);
       gtk_widget_set_sensitive (GTK_WIDGET (global.gui.track_view), TRUE);
     }
 
@@ -2272,7 +2049,7 @@ start_stop (GtkWidget *widget,
   while (g_hash_table_iter_next (&iter, &k, &v))
     live_view (NULL, state, GPOINTER_TO_INT (k));
 
-  start_stop_disabler (widget, state);
+  //todo: start_stop_disabler (widget, state);
 
   return;
 }
@@ -2294,29 +2071,6 @@ sensor_cb (HyScanSensor             *sensor,
   hyscan_gtk_nav_indicator_push (HYSCAN_GTK_NAV_INDICATOR (global->gui.nav), buffer);
 }
 
-gboolean
-start_stop_disabler (GtkWidget *sw,
-                     gboolean   state)
-{
-  if (sw == global.gui.start_stop_dry_switch)
-    {
-      hyscan_ame_button_set_sensitive (HYSCAN_AME_BUTTON (global.gui.start_stop_all_switch), !state);
-      hyscan_ame_button_set_sensitive (HYSCAN_AME_BUTTON (global.gui.start_stop_one_switch[W_SIDESCAN]), !state);
-      hyscan_ame_button_set_sensitive (HYSCAN_AME_BUTTON (global.gui.start_stop_one_switch[W_FORWARDL]), !state);
-      hyscan_ame_button_set_sensitive (HYSCAN_AME_BUTTON (global.gui.start_stop_one_switch[W_PROFILER]), !state);
-    }
-  else
-    {
-      hyscan_ame_button_set_sensitive (HYSCAN_AME_BUTTON (global.gui.start_stop_dry_switch), !state);
-
-      hyscan_ame_button_set_state (HYSCAN_AME_BUTTON (global.gui.start_stop_all_switch), state);
-      hyscan_ame_button_set_state (HYSCAN_AME_BUTTON (global.gui.start_stop_one_switch[W_SIDESCAN]), state);
-      hyscan_ame_button_set_state (HYSCAN_AME_BUTTON (global.gui.start_stop_one_switch[W_PROFILER]), state);
-      hyscan_ame_button_set_state (HYSCAN_AME_BUTTON (global.gui.start_stop_one_switch[W_FORWARDL]), state);
-    }
-
-  return FALSE;
-}
 
 /* Функция включает/выключает сухую поверку. */
 gboolean
@@ -2719,7 +2473,11 @@ main (int argc, char **argv)
    *
    * Создаем панели.
    */
+
+  common_builder = gtk_builder_new_from_resource ("/org/triple/gtk/common.ui");
+
   { /* ГБО */
+    GtkWidget *main_widget;
     AmePanel *panel = g_new0 (AmePanel, 1);
     VisualWF *vwf = g_new0 (VisualWF, 1);
 
@@ -2738,10 +2496,10 @@ main (int argc, char **argv)
     vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global.cache));
     gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
 
-    GtkWidget *ss_ol = make_overlay (vwf->wf,
-                                     &vwf->wf_grid, &vwf->wf_ctrl,
-                                     &vwf->wf_mark, &vwf->wf_metr,
-                                     global.marks.model);
+    main_widget = make_overlay (vwf->wf,
+                                &vwf->wf_grid, &vwf->wf_ctrl,
+                                &vwf->wf_mark, &vwf->wf_metr,
+                                global.marks.model);
 
     g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (live_view_off), &global);
     g_signal_connect_swapped (vwf->wf, "waterfall-zoom", G_CALLBACK (scale_set), &global);
@@ -2751,10 +2509,12 @@ main (int argc, char **argv)
     hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
     hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
 
+    vwf->common.main = main_widget;
     g_hash_table_insert (global.panels, panel, GINT_TO_POINTER (X_SIDESCAN));
   }
 
   { /* ПФ */
+    GtkWidget *main_widget;
     AmePanel *panel = g_new0 (AmePanel, 1);
     VisualWF *vwf = g_new0 (VisualWF, 1);
 
@@ -2773,10 +2533,10 @@ main (int argc, char **argv)
     vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global.cache));
     gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
 
-    GtkWidget *ss_ol = make_overlay (vwf->wf,
-                                     &vwf->wf_grid, &vwf->wf_ctrl,
-                                     &vwf->wf_mark, &vwf->wf_metr,
-                                     global.marks.model);
+    main_widget = make_overlay (vwf->wf,
+                                &vwf->wf_grid, &vwf->wf_ctrl,
+                                &vwf->wf_mark, &vwf->wf_metr,
+                                global.marks.model);
 
     hyscan_gtk_waterfall_grid_set_condence (vwf->wf_grid, 10.0);
     hyscan_gtk_waterfall_grid_set_grid_color (vwf->wf_grid, hyscan_tile_color_converter_c2i (32, 32, 32, 255));
@@ -2790,6 +2550,7 @@ main (int argc, char **argv)
     hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
     hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
 
+    vwf->common.main = main_widget;
     g_hash_table_insert (global.panels, panel, GINT_TO_POINTER (X_PROFILER));
   }
 
@@ -2825,6 +2586,7 @@ main (int argc, char **argv)
 
     hyscan_forward_look_player_set_sv (vfl->fl_player, global.sound_velocity);
 
+    vfl->common.main = GTK_WIDGET (vfl->fl);
     g_hash_table_insert (global.panels, panel, GINT_TO_POINTER (X_FORWARDL));
   }
 
@@ -2837,7 +2599,7 @@ main (int argc, char **argv)
    *
    */
   /* Билдеры. */
-  common_builder = gtk_builder_new_from_resource ("/org/triple/gtk/common.ui");
+  // #include "ame-ui.h"
 
   /* Основное окно программы. */
   global.gui.window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -2850,118 +2612,45 @@ main (int argc, char **argv)
   global.gui.grid = gtk_grid_new ();
 
   /* Навигационные данные. */
-  {
-    global.gui.nav = hyscan_gtk_nav_indicator_new ();
-    gtk_orientable_set_orientation (GTK_ORIENTABLE (global.gui.nav), GTK_ORIENTATION_HORIZONTAL);
-  }
+  global.gui.nav = hyscan_gtk_nav_indicator_new ();
+  gtk_orientable_set_orientation (GTK_ORIENTABLE (global.gui.nav), GTK_ORIENTATION_HORIZONTAL);
 
-  /* Слева у нас список галсов и меток. */
-  {
-    GtkWidget *track_control, *mark_list, *mark_editor;
-    global.gui.left_box = gtk_grid_new ();
-    track_control = GTK_WIDGET (gtk_builder_get_object (common_builder, "track_control"));
-    hyscan_exit_if (track_control == NULL, "can't load track control ui");
-
-    global.gui.track_view = GTK_TREE_VIEW (gtk_builder_get_object (common_builder, "track_view"));
-    global.gui.track_list = GTK_TREE_MODEL (gtk_builder_get_object (common_builder, "track_list"));
-    global.gui.track_range = GTK_ADJUSTMENT (gtk_builder_get_object (common_builder, "track_range"));
-    hyscan_exit_if ((global.gui.track_view == NULL) ||
-                    (global.gui.track_list == NULL) ||
-                    (global.gui.track_range == NULL),
-                    "incorrect track control ui");
-    /* Сортировка списка галсов. */
-    gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (global.gui.track_list), 0, GTK_SORT_DESCENDING);
-
-    /* Список меток. */
-    global.marks.model = hyscan_mark_model_new ();
-    global.gui.mark_view = mark_list = hyscan_gtk_project_viewer_new ();
-    global.gui.meditor = mark_editor = hyscan_gtk_mark_editor_new ();
-
-    g_object_set (track_control, "vexpand", TRUE, "valign", GTK_ALIGN_FILL,
-                                 "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
-    g_object_set (mark_list, "vexpand", TRUE, "valign", GTK_ALIGN_FILL,
-                             "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
-    g_object_set (mark_editor, "vexpand", FALSE, "valign", GTK_ALIGN_END,
-                                "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
-
-    gtk_grid_attach (GTK_GRID (global.gui.left_box), track_control, 0, 0, 1, 1);
-    gtk_grid_attach (GTK_GRID (global.gui.left_box), mark_list, 0, 1, 1, 1);
-    gtk_grid_attach (GTK_GRID (global.gui.left_box), mark_editor, 0, 2, 1, 1);
-
-
-    /* Список галсов кладем слева. */
-    global.marks.loc_storage = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
-                                                      (GDestroyNotify) loc_store_free);
-
-    g_signal_connect (global.marks.model, "changed", G_CALLBACK (mark_manager_changed), &global);
-    g_signal_connect (mark_editor, "mark-modified", G_CALLBACK (mark_modified), &global);
-    g_signal_connect (mark_list, "item-changed", G_CALLBACK (active_mark_changed), &global);
-
-    hyscan_mark_model_set_project (global.marks.model, global.db, global.project_name);
-  }
-
-  /* Ништяк: скелет гуя сделан. Теперь подцепим тут нужные сигналы. */
+  /* Галсы. */
+  global.gui.track_view = GTK_TREE_VIEW (gtk_builder_get_object (common_builder, "track_view"));
+  global.gui.track_list = GTK_TREE_MODEL (gtk_builder_get_object (common_builder, "track_list"));
+  global.gui.track_range = GTK_ADJUSTMENT (gtk_builder_get_object (common_builder, "track_range"));
+  hyscan_exit_if ((global.gui.track_view == NULL) ||
+                  (global.gui.track_list == NULL) ||
+                  (global.gui.track_range == NULL),
+                  "incorrect track control ui");
   gtk_builder_add_callback_symbol (common_builder, "track_scroll", G_CALLBACK (track_scroll));
   gtk_builder_add_callback_symbol (common_builder, "track_changed", G_CALLBACK (track_changed));
   gtk_builder_add_callback_symbol (common_builder, "position_changed", G_CALLBACK (position_changed));
+
+  /* Сортировка списка галсов. */
+  gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (global.gui.track_list), 0, GTK_SORT_DESCENDING);
+
+  /* Список меток. */
+  global.marks.sync = hyscan_mark_sync_new ("127.0.0.1", 10010);
+  global.marks.model = hyscan_mark_model_new ();
+  // TODO: перепроверить, что в ран-менеджере, что в трек-чейнджед, что здесь
+  global.marks.loc_storage = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
+                                                    (GDestroyNotify) loc_store_free);
+  global.gui.mark_view = hyscan_gtk_project_viewer_new ();
+  global.gui.meditor = hyscan_gtk_mark_editor_new ();
+
+  hyscan_mark_model_set_project (global.marks.model, global.db, global.project_name);
+  g_signal_connect (global.marks.model, "changed", G_CALLBACK (mark_manager_changed), &global);
+  g_signal_connect (global.gui.mark_view, "mark-modified", G_CALLBACK (mark_modified), &global);
+  g_signal_connect (global.gui.meditor, "item-changed", G_CALLBACK (active_mark_changed), &global);
+
   gtk_builder_connect_signals (common_builder, &global);
 
-  // hyscan_ame_splash_stop (splash);
-
-
-
-  /*  */
-  global.gui.widget_names[W_SIDESCAN] = "ГБО";
-  global.gui.widget_names[W_PROFILER] = "Профилограф";
-  global.gui.widget_names[W_FORWARDL] = "Курсовой";
-
-  /* Центральная зона: два box'a (наполним позже). */
-  global.gui.sub_center_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 1);
-  global.gui.center_box     = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 1);
-
-  global.gui.disp_widgets[W_SIDESCAN] = g_object_ref (ss_ol);
-  global.gui.disp_widgets[W_PROFILER] = g_object_ref (pf_ol);
-  global.gui.disp_widgets[W_FORWARDL] = g_object_ref (global.GFL.fl);
-
-  gint i;
-  for (i = W_SIDESCAN; i < W_LAST; ++i)
-    {
-      GObject *obj = G_OBJECT (global.gui.disp_widgets[i]);
-
-      g_object_set (obj, "vexpand", TRUE, "valign", GTK_ALIGN_FILL, "hexpand", TRUE, "halign", GTK_ALIGN_FILL, NULL);
-    }
-
-  gtk_box_pack_end (GTK_BOX (global.gui.center_box), global.gui.sub_center_box, TRUE, TRUE, 0);
-  gtk_box_pack_start (GTK_BOX (global.gui.center_box), global.gui.disp_widgets[W_SIDESCAN], TRUE, TRUE, 1);
-
-  gtk_box_pack_start (GTK_BOX (global.gui.sub_center_box), global.gui.disp_widgets[W_PROFILER], TRUE, TRUE, 1);
-  gtk_box_pack_end (GTK_BOX (global.gui.sub_center_box), global.gui.disp_widgets[W_FORWARDL], TRUE, TRUE, 1);
-
-  global.gui.side_revealer = g_object_new (GTK_TYPE_REVEALER, "transition-type", GTK_REVEALER_TRANSITION_TYPE_SLIDE_RIGHT, "transition-duration", 100, NULL);
-  gtk_container_add (GTK_CONTAINER (global.gui.side_revealer), global.gui.left_box);
-
-  global.gui.bott_revealer = g_object_new (GTK_TYPE_REVEALER, "transition-type", GTK_REVEALER_TRANSITION_TYPE_SLIDE_UP, "transition-duration", 100, NULL);
-  gtk_container_add (GTK_CONTAINER (global.gui.bott_revealer), fl_play_control);
-
-  gtk_revealer_set_reveal_child (GTK_REVEALER (global.gui.bott_revealer), FALSE);
-
-  {
-    GtkGrid *grid = GTK_GRID (global.gui.grid);
-    global.gui.lstack = gtk_stack_new ();
-    global.gui.rstack = gtk_stack_new ();
-
-    build_all (common_pages, GTK_STACK (global.gui.lstack), GTK_STACK (global.gui.rstack));
-    build_all (sonar_pages, GTK_STACK (global.gui.lstack), GTK_STACK (global.gui.rstack));
-
-    gtk_grid_attach (GTK_GRID (grid), global.gui.lstack,          0, 0, 1, 3);
-    gtk_grid_attach (GTK_GRID (grid), global.gui.rstack,          1, 0, 1, 3);
-    gtk_grid_attach (GTK_GRID (grid), global.gui.side_revealer,   2, 0, 1, 3);
-    gtk_grid_attach (GTK_GRID (grid), global.gui.center_box,      4, 0, 1, 1);
-    gtk_grid_attach (GTK_GRID (grid), global.gui.bott_revealer,   4, 1, 1, 1);
-    gtk_grid_attach (GTK_GRID (grid), global.gui.nav,             4, 2, 1, 1);
-  }
-
+  /* Кладем сетку в виндоу. */
   gtk_container_add (GTK_CONTAINER (global.gui.window), global.gui.grid);
+
+  // TODO: вызываем постройку билдера!
+
 /***
  *     ___   ___   ___   ___               ___               ___               ___   ___
  *      | | |     |     |   | |   | |       |         |  /  |   | |     |   | |     |
@@ -3004,17 +2693,12 @@ main (int argc, char **argv)
       }
   }
 
-  widget_swap (NULL, GINT_TO_POINTER (ALL));
-
   if (full_screen)
     gtk_window_fullscreen (GTK_WINDOW (global.gui.window));
 
   gtk_widget_show_all (global.gui.window);
-
-  global.marks.sync = hyscan_mark_sync_new ("127.0.0.1", 10010);
-
-
   gtk_main ();
+
   if (sensor_label_writer_tag > 0)
     g_source_remove (sensor_label_writer_tag);
   // hyscan_ame_splash_start (splash, "Отключение");

@@ -24,10 +24,10 @@
 #include <math.h>
 #include <string.h>
 
-#include "sonar-configure.h"
-#include "hyscan-gtk-forward-look.h"
-#include "hyscan-fl-coords.h"
-#include "hyscan-mark-sync.h"
+#include <sonar-configure.h>
+#include <hyscan-gtk-forward-look.h>
+#include <hyscan-fl-coords.h>
+#include <hyscan-mark-sync.h>
 
 #define hyscan_return_val_if_fail(expr,val) do {if (!(expr)) {g_warning("Failed at line %i", __LINE__); return (val);}} while (FALSE)
 #define hyscan_exit_if(expr,msg) do {if (!(expr)) break; g_message ((msg)); goto exit;} while (FALSE)
@@ -51,30 +51,9 @@
 #define BLACK_BG                       0xff000000
 #define WHITE_BG                       0xffdddddd
 
-#define PF_TRACK_PREFIX                "pf"
 #define DRY_TRACK_SUFFIX                "-dry"
 
-#define AME_N_BUTTONS 10
-#define AME_KEY_RIGHT 39
-#define AME_KEY_LEFT 37
-#define AME_KEY_ENTER 10
-#define AME_KEY_UP 38
-#define AME_KEY_ESCAPE 27
-#define AME_KEY_EXIT 1
 
-#define URPC_KEYCODE_NO_ACTION -1
-
-enum
-{
-  L_MARKS,
-  L_TRACKS
-};
-
-enum
-{
-  ROTATE = -2,
-  ALL = -1
-};
 
 enum
 {
@@ -90,45 +69,6 @@ enum
   X_PROFILER = 21539,
   X_FORWARDL = 56753,
 };
-
-/* Кнопки м.б. слева или справа. */
-typedef enum
-{
-  END,
-  L,
-  R
-} AmeSide;
-
-typedef enum
-{
-  TOGGLE_NONE,
-  TOGGLE_OFF,
-  TOGGLE_ON
-} AmeToggle;
-
-typedef struct
-{
-  AmeSide      side;
-  gint         position;
-
-  const gchar *icon_name;
-  const gchar *title;
-  AmeToggle    toggle;
-
-  gpointer     callback;
-  gpointer     user_data;
-
-  gpointer    *value;
-  gchar       *value_default;
-  
-  gpointer    *place;
-} AmePageItem;
-
-typedef struct
-{
-  gchar       *path;
-  AmePageItem  items[AME_N_BUTTONS + 1];
-} AmePage;
 
 /* структура: локейшн + прожекторы */
 typedef struct
@@ -192,8 +132,14 @@ typedef struct
           // scale;
 } VisualCurrent;
 
+/* !!! 
+ * Вот эти структуры ниже не трогать, а то руки оторву нахуй. 
+ * !!! */
 typedef struct
 {
+  GtkWidget *main; /* Должно быть на 1 месте, чтобы у остальных эл-тов
+                    * оффсет был больше нуля. Исп-ся в амешной проге. */
+
   GtkLabel  *brightness_value;
   GtkLabel  *black_value;
   GtkLabel  *scale_value;
@@ -287,44 +233,30 @@ typedef struct
   struct
     {
       GtkWidget                           *window; // окно
-
       GtkWidget                           *grid;
-      GtkWidget                           *center_box;
-      GtkWidget                           *sub_center_box;
-
-      GtkWidget                           *left_box;
-      GtkWidget                           *side_revealer;
-      GtkWidget                           *bott_revealer;
-
-      GtkWidget                           *start_stop_dry_switch;
-      GtkWidget                           *start_stop_all_switch;
-      GtkWidget                           *start_stop_one_switch[W_LAST];
-
+      
       GtkTreeView                         *track_view;
       GtkTreeModel                        *track_list;
       GtkAdjustment                       *track_range;
-
-      GtkWidget                           *disp_widgets[W_LAST];
-      gchar                               *widget_names[W_LAST];
 
       GtkWidget                           *nav;
 
       GtkWidget                           *mark_view;
       GtkWidget                           *meditor;
-
-      GtkWidget                           *lstack;
-      GtkWidget                           *rstack;
-
-      GtkWidget                           *current_view;
-
-  } gui;
+    } gui;
 
 } Global;
 
-Global global = { 0, };
+AmePanel *
+get_panel (Global *global,
+           gint    panelx);
 
 void
 depth_writer (GObject *emitter);
+
+void
+button_active_setter (GObject *object,
+                      gboolean active);
 
 void
 switch_page (GObject     *emitter,
@@ -645,9 +577,6 @@ void
 signal_down (GtkWidget *widget,
              gint       selector);
 
-void
-widget_swap (GObject  *emitter,
-             gpointer  user_data);
 
 void
 start_stop (GtkWidget *widget,
@@ -670,22 +599,9 @@ sensor_cb (HyScanSensor             *sensor,
            Global                   *global);
 
 gboolean
-start_stop_disabler (GtkWidget *sw,
-                     gboolean   state);
-
-gboolean
 start_stop_dry (GtkWidget *widget,
                 gboolean   state);
 
-
-gint
-urpc_cb (uint32_t  session,
-         uRpcData *urpc_data,
-         void     *proc_data,
-         void     *key_data);
-
-gboolean
-ame_key_func (gpointer user_data);
 
 void
 fl_coords_callback (HyScanFlCoords *coords,

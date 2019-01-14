@@ -19,6 +19,7 @@ set (TRIPLE_LIBS ${GLIB_LIBRARIES}
                  ${MATH_LIBRARIES})
 
 add_executable (triple
+                ame-ui.c
                 triple.c
                 ${CMAKE_BINARY_DIR}/resources/triple-resources.c)
 
