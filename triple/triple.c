@@ -13,6 +13,35 @@ enum
   N_COLUMNS
 };
 
+void
+ame_panel_destroy (gpointer data)
+{
+  AmePanel *panel = data;
+  VisualWF *wf;
+  VisualFL *fl;
+
+  g_free (panel->name);
+  g_free (panel->sources);
+
+  switch (panel->type)
+    {
+    case AME_PANEL_WATERFALL:
+    case AME_PANEL_ECHO:
+      wf = (VisualWF*)panel->vis_gui;
+
+      g_array_unref (wf->colormaps);
+      break;
+
+    case AME_PANEL_FORWARDLOOK:
+      fl = (VisualFL*)panel->vis_gui;
+
+      g_object_unref (fl->coords);
+      break;
+    }
+
+  g_free (panel);
+}
+
 AmePanel *
 get_panel (Global *global,
            gint    panelx)
@@ -103,10 +132,47 @@ depth_writer (GObject *emitter)
 }
 
 void
-button_active_setter (GObject *object,
+button_set_active (GObject *object,
                       gboolean active)
 {
   g_object_set (object, "active", active, NULL);
+}
+
+gint
+run_manager (GObject *emitter)
+{
+  HyScanDBInfo *info;
+  GtkWidget *dialog;
+  gint res;
+
+  info = hyscan_db_info_new (global.db);
+  dialog = hyscan_ame_project_new (global.db, info, GTK_WINDOW (global.gui.window));
+  res = gtk_dialog_run (GTK_DIALOG (dialog));
+
+  if (res == HYSCAN_AME_PROJECT_OPEN || res == HYSCAN_AME_PROJECT_CREATE)
+    {
+      gchar *project;
+
+      start_stop (&global, FALSE);
+
+      g_clear_pointer (&global.project_name, g_free);
+      hyscan_ame_project_get (HYSCAN_AME_PROJECT (dialog), &project, NULL);
+
+      global.project_name = g_strdup (project);
+      hyscan_db_info_set_project (global.db_info, project);
+
+      g_clear_pointer (&global.marks.loc_storage, g_hash_table_unref);
+      global.marks.loc_storage = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
+                                                        (GDestroyNotify) loc_store_free);
+
+      hyscan_mark_model_set_project (global.marks.model, global.db, project);
+      g_free (project);
+    }
+
+  g_object_unref (info);
+  gtk_widget_destroy (dialog);
+
+  return res;
 }
 
 void
@@ -253,6 +319,40 @@ idle_key (GdkEvent *event)
   g_message ("Event! %i %i", event->key.keyval, event->key.state);
   return G_SOURCE_REMOVE;
 }
+
+void
+nav_common (GtkWidget *target,
+            guint      keyval,
+            guint      state)
+{
+  GdkEvent *event;
+
+  event = gdk_event_new (GDK_KEY_PRESS);
+  event->key.keyval = keyval;
+  event->key.state = state;
+
+  gtk_window_set_focus (GTK_WINDOW (global.gui.window), target);
+  event->key.window = g_object_ref (gtk_widget_get_window (target));
+  g_idle_add ((GSourceFunc)idle_key, (gpointer)event);
+}
+
+/* Макроселло для нав. ф-ий, чтобы их не плодить без надобности. */
+#define NAV_FN(fname, button) void \
+fname (GObject * emitter, \
+       gpointer  udata) \
+{ \
+  AmePanel *panel = get_panel (&global, GPOINTER_TO_INT (udata)); \
+  nav_common (panel->vis_gui->main, \
+             button, GDK_CONTROL_MASK); \
+}
+
+NAV_FN (nav_del, GDK_KEY_Delete)
+NAV_FN (nav_pg_up, GDK_KEY_Page_Up)
+NAV_FN (nav_pg_down, GDK_KEY_Page_Down)
+NAV_FN (nav_up, GDK_KEY_Up)
+NAV_FN (nav_down, GDK_KEY_Down)
+NAV_FN (nav_left, GDK_KEY_Left)
+NAV_FN (nav_right, GDK_KEY_Right)
 
 void
 fl_prev (GObject *emitter,
@@ -946,14 +1046,14 @@ track_changed (GtkTreeView *list,
 
         case AME_PANEL_FORWARDLOOK:
           fl = (VisualFL*) (panel->vis_gui);
-          hyscan_forward_look_player_open (fl->fl_player, global->db, global->cache,
+          hyscan_forward_look_player_open (fl->player, global->db, global->cache,
                                            global->project_name, track_name);
-          hyscan_fl_coords_set_project (fl->fl_coords, global->db, global->project_name, track_name);
+          hyscan_fl_coords_set_project (fl->coords, global->db, global->project_name, track_name);
 
           if (on_air)
-            hyscan_forward_look_player_real_time (fl->fl_player);
+            hyscan_forward_look_player_real_time (fl->player);
           else
-            hyscan_forward_look_player_pause (fl->fl_player);
+            hyscan_forward_look_player_pause (fl->player);
         }
     }
 
@@ -1880,14 +1980,14 @@ pf_special (GtkWidget  *widget,
     }
 
   wf = (VisualWF*)panel->vis_gui;
-  flags = hyscan_gtk_waterfall_state_get_tile_flags (wf->wf);
+  flags = hyscan_gtk_waterfall_state_get_tile_flags (HYSCAN_GTK_WATERFALL_STATE (wf->wf));
 
   if (state)
     flags |= HYSCAN_TILE_PROFILER;
   else
     flags &= ~HYSCAN_TILE_PROFILER;
 
-  hyscan_gtk_waterfall_state_set_tile_flags (wf->wf, flags);
+  hyscan_gtk_waterfall_state_set_tile_flags (HYSCAN_GTK_WATERFALL_STATE (wf->wf), flags);
   return TRUE;
 }
 
@@ -1913,9 +2013,9 @@ live_view (GtkWidget  *widget,
 
       fl = (VisualFL*)panel->vis_gui;
       if (state)
-        hyscan_forward_look_player_real_time (fl->fl_player);
+        hyscan_forward_look_player_real_time (fl->player);
       else
-        hyscan_forward_look_player_pause (fl->fl_player);
+        hyscan_forward_look_player_pause (fl->player);
       break;
 
     default:
@@ -1924,7 +2024,7 @@ live_view (GtkWidget  *widget,
     }
 
   // TODO: live_view for ALL?
-  button_active_setter (panel->vis_gui->live_view, state);
+  button_set_active (G_OBJECT (panel->vis_gui->live_view), state);
 
   return TRUE;
 }
@@ -1940,37 +2040,42 @@ live_view_off (GtkWidget  *widget,
 
 
 /* Функция включает/выключает излучение. */
-void
-start_stop (GtkWidget *widget,
+gboolean
+start_stop (Global    *global,
             gboolean   state)
 {
-  GObject * button = G_OBJECT (widget);
   GHashTableIter iter;
   gpointer k, v;
+
+  if (global->control_s == NULL)
+    {
+      g_message ("I ain't got no sonar.");
+      return FALSE;
+    }
 
   /* Включаем излучение. */
   if (state)
     {
-      g_message ("Start sonars. Dry is %s", global.dry ? "ON" : "OFF");
+      g_message ("Start sonars. Dry is %s", global->dry ? "ON" : "OFF");
       gint n_tracks = -1;
       gboolean status = TRUE;
 
       /* Закрываем текущий открытый галс. */
-      g_clear_pointer (&global.track_name, g_free);
+      g_clear_pointer (&global->track_name, g_free);
 
       /* Проходим по всем страницам и включаем системы локаторов. */
-      g_hash_table_iter_init (&iter, global.panels);
+      g_hash_table_iter_init (&iter, global->panels);
       while (g_hash_table_iter_next (&iter, &k, &v))
         {
           AmePanel *panel = v;
           gint panelx = GPOINTER_TO_INT (k);
 
           /* Излучение НЕ в режиме сух. пов. */
-          if (!global.dry)
-            status &= signal_set (&global, panel->current.cur_signal, panelx);
+          if (!global->dry)
+            status &= signal_set (global, panel->current.cur_signal, panelx);
 
           /* Приемник. */
-          status &= distance_set (&global, panel->current.cur_distance, panelx);
+          status &= distance_set (global, panel->current.cur_distance, panelx);
 
           /* TVG */
           switch (panel->type)
@@ -1979,11 +2084,11 @@ start_stop (GtkWidget *widget,
                  Сейчас пригодно только для АМЭ.
                */
             case AME_PANEL_WATERFALL:
-              status &= auto_tvg_set (&global, panel->current.cur_level, panel->current.cur_sensitivity, panelx);
+              status &= auto_tvg_set (global, panel->current.cur_level, panel->current.cur_sensitivity, panelx);
               break;
             case W_PROFILER:
             case W_FORWARDL:
-              status &= tvg_set (&global, &panel->current.cur_gain0, panel->current.cur_gain_step, panelx);
+              status &= tvg_set (global, &panel->current.cur_gain0, panel->current.cur_gain_step, panelx);
               break;
 
             default:
@@ -1993,10 +2098,7 @@ start_stop (GtkWidget *widget,
 
           /* Если не удалось запустить какую-либо подсистему. */
           if (!status)
-            {
-              button_active_setter (button, FALSE);
-              return;
-            }
+            return FALSE;
         }
 
       /* Число галсов в проекте. */
@@ -2006,62 +2108,67 @@ start_stop (GtkWidget *widget,
           gchar **tracks;
           gchar **strs;
 
-          project_id = hyscan_db_project_open (global.db, global.project_name);
-          tracks = hyscan_db_track_list (global.db, project_id);
+          project_id = hyscan_db_project_open (global->db, global->project_name);
+          tracks = hyscan_db_track_list (global->db, project_id);
 
           for (strs = tracks; strs != NULL && *strs != NULL; strs++)
             {
               n_tracks++;
             }
 
-          hyscan_db_close (global.db, project_id);
+          hyscan_db_close (global->db, project_id);
           g_free (tracks);
         }
 
       /* Включаем запись нового галса. */
-      global.track_name = g_strdup_printf ("%d%s", ++n_tracks, global.dry ? DRY_TRACK_SUFFIX : "");
+      global->track_name = g_strdup_printf ("%d%s", ++n_tracks, global->dry ? DRY_TRACK_SUFFIX : "");
 
-      status = hyscan_sonar_start (global.control_s, global.project_name,
-                                   global.track_name, HYSCAN_TRACK_SURVEY);
+      status = hyscan_sonar_start (global->control_s, global->project_name,
+                                   global->track_name, HYSCAN_TRACK_SURVEY);
 
       if (!status)
         {
           g_message ("Sonar startup failed @ %i",__LINE__);
-          button_active_setter (button, FALSE);
-          return;
+          return FALSE;
         }
 
       /* Если локатор включён, переходим в режим онлайн. */
-      gtk_widget_set_sensitive (GTK_WIDGET (global.gui.track_view), FALSE);
+      gtk_widget_set_sensitive (GTK_WIDGET (global->gui.track_view), FALSE);
     }
 
   /* Выключаем излучение и блокируем режим онлайн. */
   else
     {
       g_message ("Stop sonars");
-      hyscan_sonar_stop (global.control_s);
-      button_active_setter (button, FALSE);
-      gtk_widget_set_sensitive (GTK_WIDGET (global.gui.track_view), TRUE);
+      hyscan_sonar_stop (global->control_s);
+      gtk_widget_set_sensitive (GTK_WIDGET (global->gui.track_view), TRUE);
     }
 
   /* Устанавливаем live_view для всех виджетов. */
-  g_hash_table_iter_init (&iter, global.panels);
+  g_hash_table_iter_init (&iter, global->panels);
   while (g_hash_table_iter_next (&iter, &k, &v))
     live_view (NULL, state, GPOINTER_TO_INT (k));
 
-  //todo: start_stop_disabler (widget, state);
-
-  return;
+  return TRUE;
 }
 
+/* Функция включает/выключает сухую поверку. */
+gboolean
+set_dry (Global    *global,
+         gboolean   state)
+{
+  global->dry = state;
+
+  return TRUE;
+}
 
 void
-sensor_cb (HyScanSensor             *sensor,
-           const gchar              *name,
-           HyScanSourceType          source,
-           gint64                    recv_time,
-           HyScanBuffer             *buffer,
-           Global                   *global)
+sensor_cb (HyScanSensor     *sensor,
+           const gchar      *name,
+           HyScanSourceType  source,
+           gint64            recv_time,
+           HyScanBuffer     *buffer,
+           Global           *global)
 {
   /* Ищем строки RMC и DPT. */
   if (source != HYSCAN_SOURCE_NMEA_RMC && source != HYSCAN_SOURCE_NMEA_DPT)
@@ -2072,17 +2179,7 @@ sensor_cb (HyScanSensor             *sensor,
 }
 
 
-/* Функция включает/выключает сухую поверку. */
-gboolean
-start_stop_dry (GtkWidget *widget,
-                gboolean   state)
-{
-  global.dry = state;
 
-  start_stop (widget, state);
-
-  return TRUE;
-}
 
 // gboolean
 // ame_key_func (gpointer user_data)
@@ -2201,7 +2298,7 @@ make_svp_from_velocity (gdouble velocity)
 void
 ame_colormap_free (gpointer data)
 {
-  AmeColormap *cmap = data;
+  AmeColormap *cmap = *(AmeColormap**)data;
   if (cmap == NULL)
     return;
 
@@ -2229,24 +2326,25 @@ make_color_maps (gboolean profiler)
       new_map->colors = hyscan_tile_color_compose_colormap_pf (&new_map->len);
       new_map->len = 256;
       new_map->bg = WHITE_BG;
-      g_array_append_val (colormaps, new_map);
+      g_array_append_vals (colormaps, &new_map, 1);
 
       return colormaps;
     }
+
 
   new_map = g_new (AmeColormap, 1);
   new_map->name = g_strdup ("Вонючий Калькулятор");
   new_map->colors = g_memdup (orange, 256 * sizeof (guint32));
   new_map->len = 256;
   new_map->bg = BLACK_BG;
-  g_array_append_val (colormaps, new_map);
+  g_array_append_vals (colormaps, &new_map, 1);
 
   new_map = g_new (AmeColormap, 1);
   new_map->name = g_strdup ("Максимум Ретро");
   new_map->colors = g_memdup (sepia, 256 * sizeof (guint32));
   new_map->len = 256;
   new_map->bg = BLACK_BG;
-  g_array_append_val (colormaps, new_map);
+  g_array_append_vals (colormaps, &new_map, 1);
 
   new_map = g_new (AmeColormap, 1);
   new_map->name = g_strdup ("Белоснежный");
@@ -2254,7 +2352,7 @@ make_color_maps (gboolean profiler)
   kolors[1] = hyscan_tile_color_converter_d2i (1.0, 1.0, 1.0, 1.0);
   new_map->colors = hyscan_tile_color_compose_colormap (kolors, 2, &new_map->len);
   new_map->bg = BLACK_BG;
-  g_array_append_val (colormaps, new_map);
+  g_array_append_vals (colormaps, &new_map, 1);
 
   new_map = g_new (AmeColormap, 1);
   new_map->name = g_strdup ("Киберпанк");
@@ -2262,7 +2360,7 @@ make_color_maps (gboolean profiler)
   kolors[1] = hyscan_tile_color_converter_d2i (0.83, 0.0, 1.0, 1.0);
   new_map->colors = hyscan_tile_color_compose_colormap (kolors, 2, &new_map->len);
   new_map->bg = BLACK_BG;
-  g_array_append_val (colormaps, new_map);
+  g_array_append_vals (colormaps, &new_map, 1);
 
   return colormaps;
 }
@@ -2283,7 +2381,6 @@ main (int argc, char **argv)
   GKeyFile          *config = NULL;
 
   GtkBuilder        *common_builder = NULL;
-  GtkWidget         *fl_play_control = NULL;
 
   // HyScanAmeSplash   *splash = NULL;
   guint              sensor_label_writer_tag = 0;
@@ -2373,15 +2470,12 @@ main (int argc, char **argv)
       dialog = hyscan_ame_project_new (global.db, info, NULL);
       res = gtk_dialog_run (GTK_DIALOG (dialog));
       hyscan_ame_project_get (HYSCAN_AME_PROJECT (dialog), &project_name, NULL);
+      gtk_widget_destroy (dialog);
 
       /* Если был нажат крестик - сорян, сваливаем отсюда. */
       if (res != HYSCAN_AME_PROJECT_OPEN && res != HYSCAN_AME_PROJECT_CREATE)
-        {
-          gtk_widget_destroy (dialog);
-          goto exit;
-        }
+        goto exit;
 
-      gtk_widget_destroy (dialog);
       g_object_unref (info);
     }
 
@@ -2465,130 +2559,6 @@ main (int argc, char **argv)
 
   /* Закончили подключение к гидролокатору. */
   no_sonar:
-  /***
-   *  ___   ___         ___         ___
-   * |   | |   | |\  | |     |     |
-   * |-+-  |-+-| | + | |-+-  |      -+-
-   * |     |   | |  \| |___  |___   ___|
-   *
-   * Создаем панели.
-   */
-
-  common_builder = gtk_builder_new_from_resource ("/org/triple/gtk/common.ui");
-
-  { /* ГБО */
-    GtkWidget *main_widget;
-    AmePanel *panel = g_new0 (AmePanel, 1);
-    VisualWF *vwf = g_new0 (VisualWF, 1);
-
-    panel->name = g_strdup ("SideScan");
-    panel->type = AME_PANEL_WATERFALL;
-
-    panel->sources = g_new0 (HyScanSourceType, 3);
-    panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD;
-    panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_PORT;
-    panel->sources[2] = HYSCAN_SOURCE_INVALID;
-
-    panel->vis_gui = (VisualCommon*)vwf;
-
-    vwf->colormaps = make_color_maps (FALSE);
-
-    vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global.cache));
-    gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
-
-    main_widget = make_overlay (vwf->wf,
-                                &vwf->wf_grid, &vwf->wf_ctrl,
-                                &vwf->wf_mark, &vwf->wf_metr,
-                                global.marks.model);
-
-    g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (live_view_off), &global);
-    g_signal_connect_swapped (vwf->wf, "waterfall-zoom", G_CALLBACK (scale_set), &global);
-
-    hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed);
-    hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
-    hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
-    hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
-
-    vwf->common.main = main_widget;
-    g_hash_table_insert (global.panels, panel, GINT_TO_POINTER (X_SIDESCAN));
-  }
-
-  { /* ПФ */
-    GtkWidget *main_widget;
-    AmePanel *panel = g_new0 (AmePanel, 1);
-    VisualWF *vwf = g_new0 (VisualWF, 1);
-
-    panel->name = g_strdup ("Profiler");
-    panel->type = AME_PANEL_ECHO;
-
-    panel->sources = g_new0 (HyScanSourceType, 2);
-    panel->sources[0] = HYSCAN_SOURCE_PROFILER;
-    // TODO echosounder?
-    panel->sources[1] = HYSCAN_SOURCE_INVALID;
-
-    panel->vis_gui = (VisualCommon*)vwf;
-
-    vwf->colormaps = make_color_maps (TRUE);
-
-    vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global.cache));
-    gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
-
-    main_widget = make_overlay (vwf->wf,
-                                &vwf->wf_grid, &vwf->wf_ctrl,
-                                &vwf->wf_mark, &vwf->wf_metr,
-                                global.marks.model);
-
-    hyscan_gtk_waterfall_grid_set_condence (vwf->wf_grid, 10.0);
-    hyscan_gtk_waterfall_grid_set_grid_color (vwf->wf_grid, hyscan_tile_color_converter_c2i (32, 32, 32, 255));
-
-    g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (live_view_off), &global);
-    g_signal_connect_swapped (vwf->wf, "waterfall-zoom", G_CALLBACK (scale_set), &global);
-
-    hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), PROFILER);
-    hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed / 10);
-    hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
-    hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
-    hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
-
-    vwf->common.main = main_widget;
-    g_hash_table_insert (global.panels, panel, GINT_TO_POINTER (X_PROFILER));
-  }
-
-  { /* ВСЛ */
-    AmePanel *panel = g_new0 (AmePanel, 1);
-    VisualFL *vfl = g_new0 (VisualFL, 1);
-
-    panel->name = g_strdup ("ForwardLook");
-    panel->type = AME_PANEL_FORWARDLOOK;
-
-    panel->sources = g_new0 (HyScanSourceType, 2);
-    panel->sources[0] = HYSCAN_SOURCE_FORWARD_LOOK;
-    panel->sources[1] = HYSCAN_SOURCE_INVALID;
-
-    panel->vis_gui = (VisualCommon*)vfl;
-
-    vfl->fl = HYSCAN_GTK_FORWARD_LOOK (hyscan_gtk_forward_look_new ());
-    gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vfl->fl), TRUE);
-
-    vfl->fl_player = hyscan_gtk_forward_look_get_player (vfl->fl);
-    vfl->fl_coords = hyscan_fl_coords_new (vfl->fl, global.cache);
-
-    /* Управление воспроизведением FL. */
-    fl_play_control = GTK_WIDGET (gtk_builder_get_object (common_builder, "fl_play_control"));
-    hyscan_exit_if (fl_play_control == NULL, "can't load play control ui");
-
-    vfl->position = GTK_SCALE (gtk_builder_get_object (common_builder, "position"));
-    vfl->coords_label = GTK_LABEL (gtk_builder_get_object (common_builder, "fl_latlong"));
-    g_signal_connect (vfl->fl_coords, "coords", G_CALLBACK (fl_coords_callback), vfl->coords_label);
-    hyscan_exit_if (vfl->position == NULL, "incorrect play control ui");
-    vfl->position_range = hyscan_gtk_forward_look_get_adjustment (vfl->fl);
-    gtk_range_set_adjustment (GTK_RANGE (vfl->position), vfl->position_range);
-
-    hyscan_forward_look_player_set_sv (vfl->fl_player, global.sound_velocity);
-
-    vfl->common.main = GTK_WIDGET (vfl->fl);
-    g_hash_table_insert (global.panels, panel, GINT_TO_POINTER (X_FORWARDL));
-  }
 
   /***
    *           ___   ___   ___         ___         ___   ___   ___   ___   ___   ___   ___
@@ -2598,8 +2568,8 @@ main (int argc, char **argv)
    *     ---   ---   ---               ---               ---                     ---   ---
    *
    */
-  /* Билдеры. */
-  // #include "ame-ui.h"
+
+  common_builder = gtk_builder_new_from_resource ("/org/triple/gtk/common.ui");
 
   /* Основное окно программы. */
   global.gui.window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -2641,14 +2611,137 @@ main (int argc, char **argv)
 
   hyscan_mark_model_set_project (global.marks.model, global.db, global.project_name);
   g_signal_connect (global.marks.model, "changed", G_CALLBACK (mark_manager_changed), &global);
-  g_signal_connect (global.gui.mark_view, "mark-modified", G_CALLBACK (mark_modified), &global);
-  g_signal_connect (global.gui.meditor, "item-changed", G_CALLBACK (active_mark_changed), &global);
+  g_signal_connect (global.gui.meditor, "mark-modified", G_CALLBACK (mark_modified), &global);
+  g_signal_connect (global.gui.mark_view, "item-changed", G_CALLBACK (active_mark_changed), &global);
 
   gtk_builder_connect_signals (common_builder, &global);
 
   /* Кладем сетку в виндоу. */
   gtk_container_add (GTK_CONTAINER (global.gui.window), global.gui.grid);
 
+  /***
+   *  ___   ___         ___         ___
+   * |   | |   | |\  | |     |     |
+   * |-+-  |-+-| | + | |-+-  |      -+-
+   * |     |   | |  \| |___  |___   ___|
+   *
+   * Создаем панели.
+   */
+  global.panels = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, ame_panel_destroy);
+
+  { /* ГБО */
+    GtkWidget *main_widget;
+    AmePanel *panel = g_new0 (AmePanel, 1);
+    VisualWF *vwf = g_new0 (VisualWF, 1);
+
+    panel->name = g_strdup ("SideScan");
+    panel->type = AME_PANEL_WATERFALL;
+
+    panel->sources = g_new0 (HyScanSourceType, 3);
+    panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD;
+    panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_PORT;
+    panel->sources[2] = HYSCAN_SOURCE_INVALID;
+
+    panel->vis_gui = (VisualCommon*)vwf;
+
+    vwf->colormaps = make_color_maps (FALSE);
+
+    vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global.cache));
+    gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
+
+    main_widget = make_overlay (vwf->wf,
+                                &vwf->wf_grid, &vwf->wf_ctrl,
+                                &vwf->wf_mark, &vwf->wf_metr,
+                                global.marks.model);
+
+    g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (live_view_off), &global);
+    g_signal_connect_swapped (vwf->wf, "waterfall-zoom", G_CALLBACK (scale_set), &global);
+
+    hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed);
+    hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
+    hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
+    hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
+
+    vwf->common.main = main_widget;
+    g_hash_table_insert (global.panels, GINT_TO_POINTER (X_SIDESCAN), panel);
+  }
+
+  { /* ПФ */
+    GtkWidget *main_widget;
+    AmePanel *panel = g_new0 (AmePanel, 1);
+    VisualWF *vwf = g_new0 (VisualWF, 1);
+
+    panel->name = g_strdup ("Profiler");
+    panel->type = AME_PANEL_ECHO;
+
+    panel->sources = g_new0 (HyScanSourceType, 2);
+    panel->sources[0] = HYSCAN_SOURCE_PROFILER;
+    // TODO echosounder?
+    panel->sources[1] = HYSCAN_SOURCE_INVALID;
+
+    panel->vis_gui = (VisualCommon*)vwf;
+
+    vwf->colormaps = make_color_maps (TRUE);
+
+    vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global.cache));
+    gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
+
+    main_widget = make_overlay (vwf->wf,
+                                &vwf->wf_grid, &vwf->wf_ctrl,
+                                &vwf->wf_mark, &vwf->wf_metr,
+                                global.marks.model);
+
+    hyscan_gtk_waterfall_grid_set_condence (vwf->wf_grid, 10.0);
+    hyscan_gtk_waterfall_grid_set_grid_color (vwf->wf_grid, hyscan_tile_color_converter_c2i (32, 32, 32, 255));
+
+    g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (live_view_off), &global);
+    g_signal_connect_swapped (vwf->wf, "waterfall-zoom", G_CALLBACK (scale_set), &global);
+
+    hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), PROFILER);
+    hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed / 10);
+    hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
+    hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
+    hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
+
+    vwf->common.main = main_widget;
+    g_hash_table_insert (global.panels, GINT_TO_POINTER (X_PROFILER), panel);
+  }
+
+  { /* ВСЛ */
+    AmePanel *panel = g_new0 (AmePanel, 1);
+    VisualFL *vfl = g_new0 (VisualFL, 1);
+
+    panel->name = g_strdup ("ForwardLook");
+    panel->type = AME_PANEL_FORWARDLOOK;
+
+    panel->sources = g_new0 (HyScanSourceType, 2);
+    panel->sources[0] = HYSCAN_SOURCE_FORWARD_LOOK;
+    panel->sources[1] = HYSCAN_SOURCE_INVALID;
+
+    panel->vis_gui = (VisualCommon*)vfl;
+
+    vfl->fl = HYSCAN_GTK_FORWARD_LOOK (hyscan_gtk_forward_look_new ());
+    gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vfl->fl), TRUE);
+
+    vfl->player = hyscan_gtk_forward_look_get_player (vfl->fl);
+    vfl->coords = hyscan_fl_coords_new (vfl->fl, global.cache);
+
+    /* Управление воспроизведением FL. */
+    vfl->play_control = GTK_WIDGET (gtk_builder_get_object (common_builder, "fl_play_control"));
+    hyscan_exit_if (vfl->play_control == NULL, "can't load play control ui");
+
+    vfl->position = GTK_SCALE (gtk_builder_get_object (common_builder, "position"));
+    vfl->coords_label = GTK_LABEL (gtk_builder_get_object (common_builder, "fl_latlong"));
+    g_signal_connect (vfl->coords, "coords", G_CALLBACK (fl_coords_callback), vfl->coords_label);
+    hyscan_exit_if (vfl->position == NULL, "incorrect play control ui");
+    vfl->position_range = hyscan_gtk_forward_look_get_adjustment (vfl->fl);
+    gtk_range_set_adjustment (GTK_RANGE (vfl->position), vfl->position_range);
+
+    hyscan_forward_look_player_set_sv (vfl->player, global.sound_velocity);
+
+    vfl->common.main = GTK_WIDGET (vfl->fl);
+    g_hash_table_insert (global.panels, GINT_TO_POINTER (X_FORWARDL), panel);
+  }
   // TODO: вызываем постройку билдера!
 
 /***
@@ -2748,6 +2841,8 @@ exit:
   g_clear_object (&global.cache);
   g_clear_object (&global.db_info);
   g_clear_object (&global.db);
+
+  g_hash_table_unref (global.panels);
 
   g_free (global.track_name);
   g_free (db_uri);

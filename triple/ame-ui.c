@@ -1,90 +1,85 @@
 #include "ame-ui.h"
+#include "ame-ui-definitions.h"
 
 AmeUI global_ui = {0,};
 Global *_global = NULL;
-// void
-// nav_common (GtkWidget *target,
-//             guint      keyval,
-//             guint      state)
-// {
-//   GdkEvent *event;
 
-//   event = gdk_event_new (GDK_KEY_PRESS);
-//   event->key.keyval = keyval;
-//   event->key.state = state;
+/***
+ *     #     # ######     #    ######  ######  ####### ######   #####
+ *     #  #  # #     #   # #   #     # #     # #       #     # #     #
+ *     #  #  # #     #  #   #  #     # #     # #       #     # #
+ *     #  #  # ######  #     # ######  ######  #####   ######   #####
+ *     #  #  # #   #   ####### #       #       #       #   #         #
+ *     #  #  # #    #  #     # #       #       #       #    #  #     #
+ *      ## ##  #     # #     # #       #       ####### #     #  #####
+ *
+ */
 
-//   gtk_window_set_focus (GTK_WINDOW (global.gui.window), target);
-//   event->key.window = g_object_ref (gtk_widget_get_window (target));
-//   g_idle_add ((GSourceFunc)idle_key, (gpointer)event);
-// }
+void
+start_stop_wrapper (HyScanAmeButton *button,
+                    gboolean         state,
+                    gpointer         user_data)
+{
+  AmeUI *ui = &global_ui;
+  gboolean status;
+  gint i;
 
-// #define NAV_FN(fname, button) void \
-//                               fname (GObject * emitter, \
-//                                      gpointer udata) \
-//                               {gint sel = GPOINTER_TO_INT (udata); \
-//                                nav_common (global_ui.disp_widgets[sel], \
-//                                            button, GDK_CONTROL_MASK);}
+  status = start_stop (_global, state);
 
-// NAV_FN (nav_del, GDK_KEY_Delete)
-// NAV_FN (nav_pg_up, GDK_KEY_Page_Up)
-// NAV_FN (nav_pg_down, GDK_KEY_Page_Down)
-// NAV_FN (nav_up, GDK_KEY_Up)
-// NAV_FN (nav_down, GDK_KEY_Down)
-// NAV_FN (nav_left, GDK_KEY_Left)
-// NAV_FN (nav_right, GDK_KEY_Right)
+  if (!status)
+    {
+      hyscan_ame_button_set_active (button, !state);
+      return;
+    }
 
-// void
-// run_manager (GObject *emitter)
-// {
-//   HyScanDBInfo *info;
-//   GtkWidget *dialog;
-//   gint res;
+  /*  Вкл: сухая дизейбл, остальные актив
+   *  Выкл: сухая энейбл, остальные неактив
+   */
+  gtk_widget_set_sensitive (ui->starter.dry, !state);
+  hyscan_ame_button_set_active ((HyScanAmeButton*)ui->starter.all, state);
 
-//   info = hyscan_db_info_new (global.db);
-//   dialog = hyscan_ame_project_new (global.db, info, GTK_WINDOW (global.gui.window));
-//   res = gtk_dialog_run (GTK_DIALOG (dialog));
+  for (i = 0; i < W_LAST; ++i)
+    hyscan_ame_button_set_active ((HyScanAmeButton*)ui->starter.panel[i], state);
+}
 
-//   // TODO: start/stop?
-//   if (res == HYSCAN_AME_PROJECT_OPEN || res == HYSCAN_AME_PROJECT_CREATE)
-//     {
-//       gchar *project;
-//       hyscan_ame_project_get (HYSCAN_AME_PROJECT (dialog), &project, NULL);
+void
+start_stop_dry_wrapper (HyScanAmeButton *button,
+                        gboolean         state,
+                        gpointer         user_data)
+{
+  AmeUI *ui = &global_ui;
+  gboolean status;
+  gint i;
 
-//       start_stop (NULL, FALSE);
-//       hyscan_ame_button_set_active (HYSCAN_AME_BUTTON (global.gui.start_stop_all_switch), FALSE);
-//       hyscan_ame_button_set_active (HYSCAN_AME_BUTTON (global.gui.start_stop_dry_switch), FALSE);
-//       hyscan_ame_button_set_active (HYSCAN_AME_BUTTON (global.gui.start_stop_one_switch[W_SIDESCAN]), FALSE);
-//       hyscan_ame_button_set_active (HYSCAN_AME_BUTTON (global.gui.start_stop_one_switch[W_PROFILER]), FALSE);
-//       hyscan_ame_button_set_active (HYSCAN_AME_BUTTON (global.gui.start_stop_one_switch[W_FORWARDL]), FALSE);
+  set_dry (_global, state);
+  status = start_stop (_global, state);
 
-//       g_clear_pointer (&global.project_name, g_free);
-//       global.project_name = g_strdup (project);
-//       g_message ("global.project_name set to <<%s>>", global.project_name);
-//       hyscan_db_info_set_project (global.db_info, project);
-//       // hyscan_data_writer_set_project (HYSCAN_DATA_WRITER (global.control), project);
-//       // hyscan_data_writer_set_project (HYSCAN_DATA_WRITER (global.control), project);
+  if (!status)
+    {
+      hyscan_ame_button_set_active (button, !state);
+      return;
+    }
 
-//       g_clear_pointer (&global.marks.loc_storage, g_hash_table_unref);
-//       global.marks.loc_storage = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
-//                                                         (GDestroyNotify) loc_store_free);
+  /*  Вкл: сухая актив, остальные дизейбл
+   *  Выкл: сухая неактив, остальные энейблед
+   */
+  hyscan_ame_button_set_active ((HyScanAmeButton*)ui->starter.dry, state);
+  gtk_widget_set_sensitive (ui->starter.all, state);
 
+  for (i = 0; i < W_LAST; ++i)
+    gtk_widget_set_sensitive (ui->starter.panel[i], state);
+}
 
-//       hyscan_mark_model_set_project (global.marks.model, global.db, project);
-//       g_free (project);
-//     }
-
-//   g_object_unref (info);
-//   gtk_widget_destroy (dialog);
-// }
-
-// #     # ###          ######  #     # ### #       ######  ####### ######
-// #     #  #           #     # #     #  #  #       #     # #       #     #
-// #     #  #           #     # #     #  #  #       #     # #       #     #
-// #     #  #           ######  #     #  #  #       #     # #####   ######
-// #     #  #           #     # #     #  #  #       #     # #       #   #
-// #     #  #           #     # #     #  #  #       #     # #       #    #
-//  #####  ###          ######   #####  ### ####### ######  ####### #     #
-
+/***
+ *     ######     #     #####  #######    ######  #     # ### #       ######  ####### ######
+ *     #     #   # #   #     # #          #     # #     #  #  #       #     # #       #     #
+ *     #     #  #   #  #       #          #     # #     #  #  #       #     # #       #     #
+ *     ######  #     # #  #### #####      ######  #     #  #  #       #     # #####   ######
+ *     #       ####### #     # #          #     # #     #  #  #       #     # #       #   #
+ *     #       #     # #     # #          #     # #     #  #  #       #     # #       #    #
+ *     #       #     #  #####  #######    ######   #####  ### ####### ######  ####### #     #
+ *
+ */
 /* ф-ия делает 1 элемент. */
 GtkWidget *
 make_item (AmePageItem  *item,
@@ -230,31 +225,6 @@ build_all (AmeUI   *ui,
     build_page (ui, global, page);
 }
 
-gboolean
-start_stop_disabler (GtkWidget *sw,
-                     gboolean   state)
-{
-  AmeUI *ui = &global_ui;
-
-  if (sw == ui->start_stop_dry_switch)
-    {
-      hyscan_ame_button_set_sensitive (HYSCAN_AME_BUTTON (ui->start_stop_all_switch), !state);
-      hyscan_ame_button_set_sensitive (HYSCAN_AME_BUTTON (ui->start_stop_one_switch[W_SIDESCAN]), !state);
-      hyscan_ame_button_set_sensitive (HYSCAN_AME_BUTTON (ui->start_stop_one_switch[W_FORWARDL]), !state);
-      hyscan_ame_button_set_sensitive (HYSCAN_AME_BUTTON (ui->start_stop_one_switch[W_PROFILER]), !state);
-    }
-  else
-    {
-      hyscan_ame_button_set_sensitive (HYSCAN_AME_BUTTON (ui->start_stop_dry_switch), !state);
-
-      hyscan_ame_button_set_active (HYSCAN_AME_BUTTON (ui->start_stop_all_switch), state);
-      hyscan_ame_button_set_active (HYSCAN_AME_BUTTON (ui->start_stop_one_switch[W_SIDESCAN]), state);
-      hyscan_ame_button_set_active (HYSCAN_AME_BUTTON (ui->start_stop_one_switch[W_PROFILER]), state);
-      hyscan_ame_button_set_active (HYSCAN_AME_BUTTON (ui->start_stop_one_switch[W_FORWARDL]), state);
-    }
-
-  return FALSE;
-}
 
 //  #####  ####### #     # ####### ######  ####### #
 // #     # #     # ##    #    #    #     # #     # #
@@ -313,8 +283,8 @@ switch_page (GObject     *emitter,
   AmeUI *ui = &global_ui;
   GtkStack * lstack = GTK_STACK (ui->lstack);
   GtkStack * rstack = GTK_STACK (ui->rstack);
-  // GtkRevealer * sidebar = GTK_REVEALER (ui->left_revealer);
-  // GtkRevealer * bottbar = GTK_REVEALER (ui->bott_revealer);
+  GtkRevealer * left = GTK_REVEALER (ui->left_revealer);
+  GtkRevealer * bottom = GTK_REVEALER (ui->bott_revealer);
 
   // HyScanAmeFixed * rold = HYSCAN_AME_FIXED (gtk_stack_get_visible_child (rstack));
   // const gchar * old = gtk_stack_get_visible_child_name (lstack);
@@ -329,87 +299,93 @@ switch_page (GObject     *emitter,
   gtk_stack_set_visible_child_name (lstack, page);
   gtk_stack_set_visible_child_name (rstack, page);
 
-  /*
   if (g_str_equal (page, "ГАЛС"))
-    gtk_revealer_set_reveal_child (sidebar, TRUE);
+    gtk_revealer_set_reveal_child (left, TRUE);
   else if (g_str_equal (page, "И_ГБОм"))
     {
-      gtk_revealer_set_reveal_child (sidebar, TRUE);
+      gtk_revealer_set_reveal_child (left, TRUE);
       turn_marks (NULL, W_SIDESCAN);
     }
   else if (g_str_equal (page, "И_ПФм"))
     {
-      gtk_revealer_set_reveal_child (sidebar, TRUE);
+      gtk_revealer_set_reveal_child (left, TRUE);
       turn_marks (NULL, W_PROFILER);
     }
   else
     {
-      gtk_revealer_set_reveal_child (sidebar, FALSE);
+      gtk_revealer_set_reveal_child (left, FALSE);
       turn_marks (NULL, W_LAST);
       turn_meter (NULL, FALSE, W_LAST);
     }
 
 
-  if (g_str_equal (page, "И_ГК") ||
-      g_str_equal (page, "И_ГКд"))
-    gtk_revealer_set_reveal_child (bottbar, TRUE);
+  if (g_str_equal (page, "И_ГК") || g_str_equal (page, "И_ГКд"))
+    gtk_revealer_set_reveal_child (bottom, TRUE);
   else
-    gtk_revealer_set_reveal_child (bottbar, FALSE);
-  */
+    gtk_revealer_set_reveal_child (bottom, FALSE);
 }
 
-// GtkTreeView *
-// list_scroll_tree_view_resolver (gint list)
-// {
-//   GtkTreeView * view = NULL;
 
-//   if (list == L_MARKS)
-//     view = hyscan_gtk_project_viewer_get_tree_view (HYSCAN_GTK_PROJECT_VIEWER (global.gui.mark_view));
-//   else if (list == L_TRACKS)
-//     view = global.gui.track_view;
-//   else
-//     g_message ("Wrong list selector passed (%i)", list);
+GtkTreeView *
+list_scroll_tree_view_resolver (gint list)
+{
+  GtkTreeView * view = NULL;
 
-//   return view;
-// }
+  if (list == L_MARKS)
+    view = hyscan_gtk_project_viewer_get_tree_view (HYSCAN_GTK_PROJECT_VIEWER (_global->gui.mark_view));
+  else if (list == L_TRACKS)
+    view = _global->gui.track_view;
+  else
+    g_message ("Wrong list selector passed (%i)", list);
 
-// void
-// list_scroll_up (GObject *emitter,
-//                 gpointer udata)
-// {
-//   GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT(udata));
-//   track_scroller (view, TRUE, FALSE);
-// }
+  return view;
+}
 
-// void
-// list_scroll_down (GObject *emitter,
-//                   gpointer udata)
-// {
-//   GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT(udata));
-//   track_scroller (view, FALSE, FALSE);
-// }
+void
+list_scroll_up (GObject *emitter,
+                gpointer udata)
+{
+  GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT(udata));
+  track_scroller (view, TRUE, FALSE);
+}
 
-// void
-// list_scroll_start (GObject *emitter,
-//                    gpointer udata)
-// {
-//   GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT(udata));
-//   track_scroller (view, TRUE, TRUE);
-// }
-// void
-// list_scroll_end (GObject *emitter,
-//                  gpointer udata)
-// {
-//   GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT(udata));
-//   track_scroller (view, FALSE, TRUE);
-// }
+void
+list_scroll_down (GObject *emitter,
+                  gpointer udata)
+{
+  GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT(udata));
+  track_scroller (view, FALSE, FALSE);
+}
 
+void
+list_scroll_start (GObject *emitter,
+                   gpointer udata)
+{
+  GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT(udata));
+  track_scroller (view, TRUE, TRUE);
+}
+void
+list_scroll_end (GObject *emitter,
+                 gpointer udata)
+{
+  GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT(udata));
+  track_scroller (view, FALSE, TRUE);
+}
+
+//   #     #    #    ### #     #
+//   ##   ##   # #    #  ##    #
+//   # # # #  #   #   #  # #   #
+//   #  #  # #     #  #  #  #  #
+//   #     # #######  #  #   # #
+//   #     # #     #  #  #    ##
+//   #     # #     # ### #     #
 /* Самая крутая функция, строит весь уй. */
 gboolean
 build_interface (Global *global)
 {
   AmeUI *ui = &global_ui;
   _global = global;
+
   /* Кнопошный гуй представляет собой центральную область из 3 виджетов,
    * две боковых области с кнопками. Внизу выезжает управление ВСЛ,
    * слева выезжает контроль над галсами и метками. */
@@ -478,8 +454,23 @@ build_interface (Global *global)
     gtk_container_add (GTK_CONTAINER (ui->left_revealer), ui->left_box);
   }
 
-  /* Собираем воедино. */
-                                                                  /* L  T  W  H */
+  /* Нижняя панель содержит виджет управления впередсмотрящим. */
+  {
+    AmePanel *panel = get_panel (global, X_FORWARDL);
+    VisualFL *fl = (VisualFL*)panel->vis_gui;
+
+    gtk_container_add (GTK_CONTAINER (ui->bott_revealer), fl->play_control);
+    gtk_revealer_set_reveal_child (GTK_REVEALER (ui->bott_revealer), FALSE);
+  }
+
+  /* Строим интерфейсос. */
+  build_all (ui, global, common_pages);
+
+  if (global->control_s != NULL)
+    build_all (ui, global, sonar_pages);
+
+
+  /* Собираем воедино.                                               L  T  W  H */
   gtk_grid_attach (GTK_GRID (global->gui.grid), ui->lstack,          0, 0, 1, 3);
   gtk_grid_attach (GTK_GRID (global->gui.grid), ui->rstack,          1, 0, 1, 3);
   gtk_grid_attach (GTK_GRID (global->gui.grid), ui->left_revealer,   2, 0, 1, 3);
@@ -487,15 +478,7 @@ build_interface (Global *global)
   gtk_grid_attach (GTK_GRID (global->gui.grid), ui->bott_revealer,   4, 1, 1, 1);
   gtk_grid_attach (GTK_GRID (global->gui.grid), global->gui.nav,     4, 2, 1, 1);
 
-   // gtk_container_add (GTK_CONTAINER (global.gui.bott_revealer), fl_play_control);
-
-   // gtk_revealer_set_reveal_child (GTK_REVEALER (global.gui.bott_revealer), FALSE);
-
-   // build_all (common_pages, GTK_STACK (global.gui.lstack), GTK_STACK (global.gui.rstack));
-   // build_all (sonar_pages, GTK_STACK (global.gui.lstack), GTK_STACK (global.gui.rstack));
-
-
-
-   return TRUE;
+  return TRUE;
 }
+
 

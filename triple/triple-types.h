@@ -53,8 +53,6 @@
 
 #define DRY_TRACK_SUFFIX                "-dry"
 
-
-
 enum
 {
   W_SIDESCAN,
@@ -167,8 +165,9 @@ typedef struct
 
   // TODO: fl with player widget!
   HyScanGtkForwardLook          * fl;
-  HyScanFlCoords                * fl_coords;
-  HyScanForwardLookPlayer       * fl_player;
+  HyScanFlCoords                * coords;
+  HyScanForwardLookPlayer       * player;
+  GtkWidget                     * play_control;
 
   GtkAdjustment                 * position_range;
   GtkScale                      * position;
@@ -247,6 +246,8 @@ typedef struct
 
 } Global;
 
+void ame_panel_destroy (gpointer data);
+
 AmePanel *
 get_panel (Global *global,
            gint    panelx);
@@ -255,8 +256,8 @@ void
 depth_writer (GObject *emitter);
 
 void
-button_active_setter (GObject *object,
-                      gboolean active);
+button_set_active (GObject *object,
+                   gboolean active);
 
 void
 switch_page (GObject     *emitter,
@@ -283,6 +284,10 @@ key_press (GtkWidget   *widget,
            GdkEventKey *event,
            Global      *global);
 
+gboolean idle_key (GdkEvent *event);
+void     nav_common (GtkWidget *target,
+                     guint      keyval,
+                     guint      state);
 void nav_del      (GObject *emitter, gpointer udata);
 void nav_pg_up    (GObject *emitter, gpointer udata);
 void nav_pg_down  (GObject *emitter, gpointer udata);
@@ -294,7 +299,7 @@ void nav_right (GObject *emitter, gpointer udata);
 void fl_prev (GObject *emitter, gint panelx);
 void fl_next (GObject *emitter, gint panelx);
 
-void 
+gint
 run_manager    (GObject     *emitter);
 
 void
@@ -312,21 +317,6 @@ void
 track_scroller (GtkTreeView *tree,
                 gboolean     to_top,
                 gboolean     to_end);
-
-void
-list_scroll_up (GObject *emitter,
-                gpointer udata);
-void
-list_scroll_down (GObject *emitter,
-                  gpointer udata);
-
-void
-list_scroll_start (GObject *emitter,
-                   gpointer udata);
-void
-list_scroll_end (GObject *emitter,
-                 gpointer udata);
-
 
 void
 tracks_changed (HyScanDBInfo *db_info,
@@ -578,9 +568,13 @@ signal_down (GtkWidget *widget,
              gint       selector);
 
 
-void
-start_stop (GtkWidget *widget,
+gboolean
+start_stop (Global    *global,
             gboolean   state);
+
+gboolean
+set_dry (Global    *global,
+         gboolean   state);
 
 gboolean
 sensor_label_writer (Global *global);
@@ -598,9 +592,6 @@ sensor_cb (HyScanSensor             *sensor,
            HyScanBuffer             *data,
            Global                   *global);
 
-gboolean
-start_stop_dry (GtkWidget *widget,
-                gboolean   state);
 
 
 void

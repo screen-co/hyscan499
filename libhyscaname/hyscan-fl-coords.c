@@ -78,7 +78,7 @@ hyscan_fl_coords_class_init (HyScanFlCoordsClass *klass)
   object_class->finalize = hyscan_fl_coords_object_finalize;
 
   g_object_class_install_property (object_class, PROP_FL,
-    g_param_spec_object ("fl", "Waterfall", "GtkWaterfall object",
+    g_param_spec_object ("fl", "HyScanGtkForwardLook", "HyScanGtkForwardLook object",
                          HYSCAN_TYPE_GTK_FORWARD_LOOK,
                          G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 
@@ -112,7 +112,7 @@ hyscan_fl_coords_set_property (GObject      *object,
 
   if (prop_id == PROP_FL)
     self->priv->fl = g_value_dup_object (value);
-  if (prop_id == PROP_CACHE)
+  else if (prop_id == PROP_CACHE)
     self->priv->cache = g_value_dup_object (value);
   else
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
