@@ -428,6 +428,7 @@ constructed (GObject *object)
 {
   GtkWidget *content, *grid, *button;
 
+
   HyScanAmeProject *self = HYSCAN_AME_PROJECT (object);
   HyScanAmeProjectPrivate *priv = self->priv;
 
@@ -476,16 +477,13 @@ hyscan_ame_project_new (HyScanDB     *db,
                         HyScanDBInfo *info,
                         GtkWindow    *parent)
 {
-  GtkWidget *widget;
-
-  widget = g_object_new (HYSCAN_TYPE_AME_PROJECT,
-                         "db", db, "info", info,
-                         "use-header-bar", TRUE, NULL);
-
-  if (parent)
-    gtk_window_set_transient_for (GTK_WINDOW (widget), parent);
-
-  return widget;
+  return g_object_new (HYSCAN_TYPE_AME_PROJECT,
+                       "db", db, "info", info,
+                       "use-header-bar", TRUE,
+                       "type", GTK_WINDOW_POPUP,
+                       "type-hint", GDK_WINDOW_TYPE_HINT_DIALOG,
+                       "transient-for", parent,
+                       NULL);
 }
 
 void
@@ -493,7 +491,7 @@ hyscan_ame_project_get (HyScanAmeProject *self,
                         gchar           **project,
                         gchar           **track)
 {
-  g_return_val_if_fail (HYSCAN_IS_AME_PROJECT (self), FALSE);
+  g_return_if_fail (HYSCAN_IS_AME_PROJECT (self));
 
   if (project != NULL)
     *project = g_strdup (self->priv->project_name);

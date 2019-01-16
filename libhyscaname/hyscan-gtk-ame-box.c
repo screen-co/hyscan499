@@ -39,6 +39,7 @@ hyscan_gtk_ame_box_object_constructed (GObject *object)
   G_OBJECT_CLASS (hyscan_gtk_ame_box_parent_class)->constructed (object);
 
   priv->ht = g_hash_table_new (g_direct_hash, g_direct_equal);
+  priv->current = -1;
 }
 
 static void
@@ -112,17 +113,31 @@ hyscan_gtk_ame_box_next_visible (HyScanGtkAmeBox *box)
   link = g_list_nth (priv->list, priv->current + 1);
 
   if (link == NULL)
-    link = priv->list;
-
-  if (link == NULL)
-    {
-      g_warning ("iterating over empty grid");
-      return -1;
-    }
+    return -1;
 
   hyscan_gtk_ame_box_set_visible (box, GPOINTER_TO_INT (link->data));
 
-  return priv->current;
+  return GPOINTER_TO_INT (link->data);
+}
+
+gint
+hyscan_gtk_ame_box_nth_visible (HyScanGtkAmeBox *box,
+                                gint             n)
+{
+  GList *link;
+  HyScanGtkAmeBoxPrivate *priv;
+
+  g_return_val_if_fail (HYSCAN_IS_GTK_AME_BOX (box), -1);
+  priv = box->priv;
+
+  link = g_list_nth (priv->list, n);
+
+  if (link == NULL)
+    return -1;
+
+  hyscan_gtk_ame_box_set_visible (box, GPOINTER_TO_INT (link->data));
+
+  return GPOINTER_TO_INT (link->data);
 }
 
 void

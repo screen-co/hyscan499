@@ -37,8 +37,8 @@ static AmePage common_pages[] =
     PATH("Меню"), DESTINATION_SELECTOR(DEST_AME_UI),
     .items =
       {
-        {L, 3, VMOR, "Общее",           TOGGLE_NONE, CBK(switch_page), UD("Общее")},
-        {L, 4, VMOR, "Галс",            TOGGLE_NONE, CBK(switch_page), UD("ГАЛС")},
+        {L, 3, VMOR, "Галс",            TOGGLE_NONE, CBK(switch_page), UD("ГАЛС")},
+        {L, 4, VMOR, "Общее",           TOGGLE_NONE, CBK(switch_page), UD("Общее")},
         {R, 0, VMOR, "ГБО Изображение", TOGGLE_NONE, CBK(switch_page), UD("И_ГБО")},
         {R, 1, VMOR, "ГК Изображение",  TOGGLE_NONE, CBK(switch_page), UD("И_ГК")},
         {R, 2, VMOR, "ПФ Изображение",  TOGGLE_NONE, CBK(switch_page), UD("И_ПФ")},
@@ -48,7 +48,7 @@ static AmePage common_pages[] =
       }
   },
   {
-    PATH("И_ГБО"), DESTINATION_SELECTOR(DEST_SPEC),
+    PATH("И_ГБО"), DESTINATION_SELECTOR(DEST_PANEL_SPEC),
     .items =
       {
         {L, 0, MENU, "Меню",        TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
@@ -68,23 +68,23 @@ static AmePage common_pages[] =
       }
   },
   {
-    PATH("И_ГБОд"), DESTINATION_SELECTOR(DEST_SPEC),
+    PATH("И_ГБОд"), DESTINATION_SELECTOR(DEST_PANEL_SPEC),
     .items =
       {
-        {L, 0, MENU,"Меню",         TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
-        {L, 1, BACK,"Назад",        TOGGLE_NONE, CBK(switch_page),    UD("И_ГБО")},
-        {L, 4, REPT,"Цвет",         TOGGLE_NONE, CBK(color_map_up),   UD(XSS),
+        {L, 0, MENU,"Меню",         TOGGLE_NONE, CBK(switch_page),     UD("Меню")},
+        {L, 1, BACK,"Назад",        TOGGLE_NONE, CBK(switch_page),     UD("И_ГБО")},
+        {L, 4, REPT,"Цвет",         TOGGLE_NONE, CBK(color_map_cyclic),UD(XSS),
             VALUE_OFFSET(VisualCommon, colormap_value)},
 
-        {R, 2, MORE, "Контр",       TOGGLE_NONE, CBK(brightness_up),  UD(XSS),
+        {R, 2, MORE, "Контр",       TOGGLE_NONE, CBK(brightness_up),   UD(XSS),
             VALUE_OFFSET(VisualCommon, brightness_value)},
-        {R, 3, LESS, NULL,          TOGGLE_NONE, CBK(brightness_down),UD(XSS)},
-        {R, 4, DOT, "Измерения",    TOGGLE_OFF,  CBK(turn_meter),     UD(XSS)},
+        {R, 3, LESS, NULL,          TOGGLE_NONE, CBK(brightness_down), UD(XSS)},
+        {R, 4, DOT, "Измерения",    TOGGLE_OFF,  CBK(turn_meter),      UD(XSS)},
         {END}
       }
   },
   {
-    PATH("И_ГБОм"), DESTINATION_SELECTOR(DEST_SPEC),
+    PATH("И_ГБОм"), DESTINATION_SELECTOR(DEST_PANEL_SPEC),
     .items =
       {
         {L, 0, MENU, "Меню",        TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
@@ -98,7 +98,7 @@ static AmePage common_pages[] =
       }
   },
   {
-    PATH("И_ПФ"), DESTINATION_SELECTOR(DEST_SPEC),
+    PATH("И_ПФ"), DESTINATION_SELECTOR(DEST_PANEL_SPEC),
     .items =
       {
         {L, 0, MENU, "Меню",        TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
@@ -118,7 +118,7 @@ static AmePage common_pages[] =
       }
   },
   {
-    PATH("И_ПФд"), DESTINATION_SELECTOR(DEST_SPEC),
+    PATH("И_ПФд"), DESTINATION_SELECTOR(DEST_PANEL_SPEC),
     .items =
       {
         {L, 0, MENU,"Меню",         TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
@@ -136,7 +136,7 @@ static AmePage common_pages[] =
       }
   },
   {
-    PATH("И_ПФм"), DESTINATION_SELECTOR(DEST_SPEC),
+    PATH("И_ПФм"), DESTINATION_SELECTOR(DEST_PANEL_SPEC),
     .items =
       {
         {L, 0, MENU, "Меню",        TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
@@ -151,7 +151,7 @@ static AmePage common_pages[] =
       }
   },
   {
-    PATH("И_ГК"), DESTINATION_SELECTOR(DEST_SPEC),
+    PATH("И_ГК"), DESTINATION_SELECTOR(DEST_PANEL_SPEC),
     .items =
       {
         {L, 0, MENU, "Меню",        TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
@@ -170,7 +170,7 @@ static AmePage common_pages[] =
       }
   },
   {
-    PATH("И_ГКд"), DESTINATION_SELECTOR(DEST_SPEC),
+    PATH("И_ГКд"), DESTINATION_SELECTOR(DEST_PANEL_SPEC),
     .items =
       {
         {L, 0, MENU, "Меню",        TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
@@ -221,9 +221,9 @@ static AmePage sonar_pages[] =
     PATH("Меню"), DESTINATION_SELECTOR(DEST_UNSET),
     .items =
       {
-        {L, 0, VMOR, "ГБО Локатор",        TOGGLE_NONE, CBK(switch_page), UD("У_ГБО")},
-        {L, 1, VMOR, "ГК Локатор",         TOGGLE_NONE, CBK(switch_page), UD("У_ГК")},
-        {L, 2, VMOR, "ПФ Локатор",         TOGGLE_NONE, CBK(switch_page), UD("У_ПФ")},
+        {L, 0, VMOR, "ГБО Локатор",  TOGGLE_NONE, CBK(switch_page), UD("У_ГБО")},
+        {L, 1, VMOR, "ГК Локатор",   TOGGLE_NONE, CBK(switch_page), UD("У_ГК")},
+        {L, 2, VMOR, "ПФ Локатор",   TOGGLE_NONE, CBK(switch_page), UD("У_ПФ")},
         {END}
       }
   },
@@ -241,7 +241,7 @@ static AmePage sonar_pages[] =
       }
   },
   {
-    PATH("У_ГБО"), DESTINATION_SELECTOR(DEST_SONAR),
+    PATH("У_ГБО"), DESTINATION_SELECTOR(DEST_PANEL),
     .items =
       {
         {L, 0, MENU, "Меню",        TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
@@ -265,15 +265,15 @@ static AmePage sonar_pages[] =
     .items =
       {
         {R, 0, DOT,  "Работа",      TOGGLE_OFF,  CBK(start_stop_wrapper),
-            BUTTON_OFFSET(AmeUI, starter.panel[W_SIDESCAN])},
+            BUTTON_OFFSET(AmeUI, starter.panel[START_STOP_SIDESCAN])},
         {END}
       }
   },
   {
-    PATH("У_ГК"), DESTINATION_SELECTOR(DEST_SONAR),
+    PATH("У_ГК"), DESTINATION_SELECTOR(DEST_PANEL),
     .items =
       {
-        {L, 0, MENU, "Меню",        TOGGLE_NONE, CBK(switch_page),    "Меню"},
+        {L, 0, MENU, "Меню",        TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
         {L, 1, MORE, "Сигнал",      TOGGLE_NONE, CBK(signal_up),      UD(XFL),
             VALUE_OFFSET(AmePanel, gui.signal_value), VALUE_DEFAULT("--")},
         {L, 2, LESS, NULL,          TOGGLE_NONE, CBK(signal_down),    UD(XFL)},
@@ -294,12 +294,12 @@ static AmePage sonar_pages[] =
     .items =
       {
         {R, 0, DOT,  "Работа",      TOGGLE_OFF,  CBK(start_stop_wrapper),
-            BUTTON_OFFSET(AmeUI, starter.panel[W_FORWARDL])},
+            BUTTON_OFFSET(AmeUI, starter.panel[START_STOP_FORWARDL])},
         {END}
       }
   },
   {
-    PATH("У_ПФ"), DESTINATION_SELECTOR(DEST_SONAR),
+    PATH("У_ПФ"), DESTINATION_SELECTOR(DEST_PANEL),
     .items =
       {
         {L, 0, MENU, "Меню",        TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
@@ -323,7 +323,7 @@ static AmePage sonar_pages[] =
     .items =
       {
         {R, 0, DOT,  "Работа",      TOGGLE_OFF,  CBK(start_stop_wrapper),
-            BUTTON_OFFSET(AmeUI, starter.panel[W_PROFILER])},
+            BUTTON_OFFSET(AmeUI, starter.panel[START_STOP_PROFILER])},
         {END}
       }
   },

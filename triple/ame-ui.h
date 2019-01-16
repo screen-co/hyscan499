@@ -8,27 +8,6 @@
 
 #define AME_N_BUTTONS 5
 
-typedef struct
-{
-  GtkWidget  *acoustic;
-  GtkWidget  *sub_center_box;
-
-  GtkWidget  *left_box;
-  GtkWidget  *left_revealer;
-  GtkWidget  *bott_revealer;
-
-  GtkWidget  *lstack;
-  GtkWidget  *rstack;
-
-  struct
-    {
-      GtkWidget  *dry;
-      GtkWidget  *all;
-      GtkWidget  *panel[W_LAST];
-    } starter;
-
-  GtkWidget  *current_view;
-} AmeUI;
 
 /* Кнопки м.б. слева или справа. */
 typedef enum
@@ -45,18 +24,18 @@ typedef enum
   TOGGLE_ON
 } AmeToggle;
 
-enum
+/*
+ * Ща сложно будет. В странице есть destination_selector.
+ * Он определяет, куда кладется виджет. 
+ * Поэтому нельзя в трипл-тайпсах ничего трогать.
+ */
+typedef enum
 {
-  L_MARKS,
-  L_TRACKS
-};
-
-/* Важно, чтобы эти парни не совпадали ни с одним из ид панелей. */
-enum
-{
-  ROTATE = -2,
-  ALL = -1
-};
+  DEST_UNSET,
+  DEST_PANEL, // AmePanel.gui + offt
+  DEST_PANEL_SPEC,  // AmePanel.vis_gui + offt
+  DEST_AME_UI // AmeUI + offt
+} AmePageDestination;
 
 typedef struct
 {
@@ -76,19 +55,6 @@ typedef struct
   gchar       *value_default; 
 } AmePageItem;
 
-/*
- * Ща сложно будет. В странице есть destination_selector.
- * Он определяет, куда кладется виджет. 
- * Поэтому нельзя в трипл-тайпсах ничего трогать.
- */
-typedef enum
-{
-  DEST_UNSET,
-  DEST_SONAR, // AmePanel.gui + offt
-  DEST_SPEC,  // AmePanel.vis_gui + offt
-  DEST_AME_UI // AmeUI + offt
-} AmePageDestination;
-
 typedef struct
 {
   gchar              *path;
@@ -96,6 +62,50 @@ typedef struct
   AmePageItem         items[2 * AME_N_BUTTONS + 1];
 } AmePage;
 
+enum
+{
+  START_STOP_SIDESCAN,
+  START_STOP_PROFILER,
+  START_STOP_FORWARDL,
+  START_STOP_LAST
+};
+
+typedef struct
+{
+  // gpointer    padding;
+  
+  GtkWidget  *acoustic;
+  GtkWidget  *sub_center_box;
+
+  GtkWidget  *left_box;
+  GtkWidget  *left_revealer;
+  GtkWidget  *bott_revealer;
+
+  GtkWidget  *lstack;
+  GtkWidget  *rstack;
+
+  struct
+    {
+      GtkWidget  *dry;
+      GtkWidget  *all;
+      GtkWidget  *panel[START_STOP_LAST];
+    } starter;
+
+  GtkWidget  *current_view;
+} AmeUI;
+
+enum
+{
+  L_MARKS,
+  L_TRACKS
+};
+
+/* Важно, чтобы эти парни не совпадали ни с одним из ид панелей. */
+enum
+{
+  ROTATE = -2,
+  ALL = -1
+};
 
 /* Врапперы. */
 void start_stop_wrapper (HyScanAmeButton *button,

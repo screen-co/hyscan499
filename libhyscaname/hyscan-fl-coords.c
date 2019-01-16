@@ -146,10 +146,10 @@ hyscan_fl_coords_object_finalize (GObject *object)
   /* Отключаемся от всех сигналов. */
   g_signal_handlers_disconnect_by_data (priv->fl, self);
 
-  g_object_unref (priv->fl);
-  g_object_unref (priv->cache);
-  g_object_unref (priv->fl_data);
-  g_object_unref (priv->loc);
+  g_clear_object (&priv->fl);
+  g_clear_object (&priv->cache);
+  g_clear_object (&priv->fl_data);
+  g_clear_object (&priv->loc);
 
   G_OBJECT_CLASS (hyscan_fl_coords_parent_class)->finalize (object);
 }

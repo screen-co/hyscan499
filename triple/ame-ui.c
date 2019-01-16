@@ -38,8 +38,11 @@ start_stop_wrapper (HyScanAmeButton *button,
   gtk_widget_set_sensitive (ui->starter.dry, !state);
   hyscan_ame_button_set_active ((HyScanAmeButton*)ui->starter.all, state);
 
-  for (i = 0; i < W_LAST; ++i)
-    hyscan_ame_button_set_active ((HyScanAmeButton*)ui->starter.panel[i], state);
+  for (i = 0; i < START_STOP_LAST; ++i)
+    {
+      if (ui->starter.panel[i] != NULL)
+        hyscan_ame_button_set_active ((HyScanAmeButton*)ui->starter.panel[i], state);
+    }
 }
 
 void
@@ -64,10 +67,13 @@ start_stop_dry_wrapper (HyScanAmeButton *button,
    *  Выкл: сухая неактив, остальные энейблед
    */
   hyscan_ame_button_set_active ((HyScanAmeButton*)ui->starter.dry, state);
-  gtk_widget_set_sensitive (ui->starter.all, state);
+  gtk_widget_set_sensitive (ui->starter.all, !state);
 
-  for (i = 0; i < W_LAST; ++i)
-    gtk_widget_set_sensitive (ui->starter.panel[i], state);
+  for (i = 0; i < START_STOP_LAST; ++i)
+    {
+      if (ui->starter.panel[i] != NULL)
+        gtk_widget_set_sensitive (ui->starter.panel[i], !state);
+    }
 }
 
 /***
@@ -95,7 +101,6 @@ make_item (AmePageItem  *item,
 
   g_signal_connect (button, is_toggle ? "ame-toggled" : "ame-activated",
                     G_CALLBACK (item->callback), item->user_data);
-
   /* Если указано, куда сохранять виджет значения, создадим его. */
   if (item->value_offset > 0)
     {
@@ -110,6 +115,7 @@ make_item (AmePageItem  *item,
       *value_widget = NULL;
     }
 
+  gtk_widget_set_name (button, item->title);
   /* Возвращаем кнопку целиком. */
   return button;
 }
@@ -123,6 +129,7 @@ build_page (AmeUI   *ui,
   gint i;
   GtkWidget *left, *right;
   GtkStack *lstack, *rstack;
+  gchar *wname;
 
   lstack = GTK_STACK (ui->lstack);
   rstack = GTK_STACK (ui->rstack);
@@ -133,18 +140,23 @@ build_page (AmeUI   *ui,
   /* Если нет, то создаем и пихаем их в стеки. */
   if (left == NULL)
     {
+      wname = g_strdup_printf ("%s", page->path);
       left = hyscan_ame_fixed_new ();
+      gtk_widget_set_name (GTK_WIDGET (left), wname);
+      g_free (wname);
       gtk_stack_add_titled (lstack, left, page->path, page->path);
     }
   if (right == NULL)
     {
+      wname = g_strdup_printf ("%s", page->path);
       right = hyscan_ame_fixed_new ();
+      gtk_widget_set_name (GTK_WIDGET (right), wname);
+      g_free (wname);
       gtk_stack_add_titled (rstack, right, page->path, page->path);
     }
 
   // TODO: check, if this can help me avoid {END}
-  gint total = sizeof(page->items) / sizeof(page->items[0]);
-  for (i = 0; i <= total; ++i)
+  for (i = 0; ; ++i)
     {
       GtkWidget *button, *value;
       HyScanAmeFixed *fixed;
@@ -160,13 +172,12 @@ build_page (AmeUI   *ui,
         g_error ("AmeUI: wrong item->side");
 
       button = make_item (item, &value);
+      wname = g_strdup_printf ("%i: %s", item->position, item->title);
+      gtk_widget_set_name(button, wname);
 
       /* Ща сложно будет. В странице есть destination_selector. Он определяет,
-       * куда надо класть, если надо вообще.
-       * Надо или нет определяется оффсетом.
+       * _куда_ надо класть, если надо вообще. Надо или нет определяется оффсетом.
        * ----
-       * При этом если вернулся валью, то кладем валью. Если нет, то кладем баттон.
-       * ---
        * В конце баттон безусловно кладется в фиксед в заданное место,
        * ради этого всё и затевалось.
        */
@@ -174,22 +185,16 @@ build_page (AmeUI   *ui,
         {
           gchar * base;
           GtkWidget ** dest;
-          GtkWidget * storable;
           AmePanel *panel;
-
-          if (item->value_offset > 0)
-            storable = value;
-          if (item->button_offset > 0)
-            storable = button;
 
           switch (page->destination_selector)
             {
-            case DEST_SONAR:
+            case DEST_PANEL:
               panel = get_panel (global, GPOINTER_TO_INT (item->user_data));
               base = (gchar*)panel;
               break;
 
-            case DEST_SPEC:
+            case DEST_PANEL_SPEC:
               panel = get_panel (global, GPOINTER_TO_INT (item->user_data));
               base = (gchar*)(panel->vis_gui);
               break;
@@ -207,8 +212,16 @@ build_page (AmeUI   *ui,
            * составленный уй.х -- это ошибка. */
           /* Да, я чувствую себя очень важным, когда гоняю туда-сюда указатели
            * на указатели. Самоутверждаюсь за счёт указателей. */
-          dest = (GtkWidget**)(base + item->value_offset);
-          *dest = storable;
+          if (item->value_offset)
+            {
+              dest = (GtkWidget**)(base + item->value_offset);
+              *dest = value;
+            }
+          if (item->button_offset)
+            {
+              dest = (GtkWidget**)(base + item->button_offset);
+              *dest = button;
+            }
         }
 
       hyscan_ame_fixed_pack (fixed, item->position, button);
@@ -242,14 +255,19 @@ widget_swap (GObject  *emitter,
   /* В userdata лежит option.
    * -2 ROTATE циклическая прокрутка
    * -1 ALL - все три,
-   * 0 - гбо, 1 - пф, 2 - гк.
+   * айдишники панелей -- соотв. панель.
    */
   gint selector = GPOINTER_TO_INT (user_data);
   HyScanGtkAmeBox *abox = HYSCAN_GTK_AME_BOX (global_ui.acoustic);
   gchar *markup;
-  const gchar *text;
+  const gchar *text = (gchar*)0x1;
   gint id = 0;
 
+if (!HYSCAN_IS_GTK_AME_BOX (global_ui.acoustic))
+{
+  g_warning ("fuck");
+
+}
   if (selector == ALL)
     {
       hyscan_gtk_ame_box_show_all (abox);
@@ -258,22 +276,30 @@ widget_swap (GObject  *emitter,
   else
     {
       AmePanel *panel;
-      id = selector;
+
       if (selector == ROTATE)
         id = hyscan_gtk_ame_box_next_visible (abox);
       else
-        hyscan_gtk_ame_box_set_visible (abox, id);
+        id = selector;
 
-      panel = get_panel (_global, id);
-      text = panel->name;
+      /* Если не получилось прокрутить, то ид будет -1. В таком случае, показываем
+       * все панели. Иначе вернется юзердата с panelx. */
+      if (id == -1)
+        {
+          hyscan_gtk_ame_box_show_all (abox);
+          text = "Всё";
+        }
+      else
+        {
+          hyscan_gtk_ame_box_set_visible (abox, id);
+          panel = get_panel (_global, id);
+          text = panel->name;
+        }
     }
 
   markup = g_strdup_printf ("<small><b>%s</b></small>", text);
-
   gtk_label_set_markup (GTK_LABEL (global_ui.current_view), text);
   g_free (markup);
-
-  // gtk_revealer_set_reveal_child (GTK_REVEALER (global.gui.bott_revealer), selector == W_FORWARDL);
 }
 
 void
@@ -299,23 +325,24 @@ switch_page (GObject     *emitter,
   gtk_stack_set_visible_child_name (lstack, page);
   gtk_stack_set_visible_child_name (rstack, page);
 
+  /* Спецслучаи. */
   if (g_str_equal (page, "ГАЛС"))
     gtk_revealer_set_reveal_child (left, TRUE);
   else if (g_str_equal (page, "И_ГБОм"))
     {
       gtk_revealer_set_reveal_child (left, TRUE);
-      turn_marks (NULL, W_SIDESCAN);
+      turn_marks (NULL, X_SIDESCAN);
     }
   else if (g_str_equal (page, "И_ПФм"))
     {
       gtk_revealer_set_reveal_child (left, TRUE);
-      turn_marks (NULL, W_PROFILER);
+      turn_marks (NULL, X_PROFILER);
     }
   else
     {
       gtk_revealer_set_reveal_child (left, FALSE);
-      turn_marks (NULL, W_LAST);
-      turn_meter (NULL, FALSE, W_LAST);
+      turn_marks (NULL, -1);
+      turn_meter (NULL, FALSE, -1);
     }
 
 
@@ -334,7 +361,7 @@ list_scroll_tree_view_resolver (gint list)
   if (list == L_MARKS)
     view = hyscan_gtk_project_viewer_get_tree_view (HYSCAN_GTK_PROJECT_VIEWER (_global->gui.mark_view));
   else if (list == L_TRACKS)
-    view = _global->gui.track_view;
+    view = _global->gui.track.tree;
   else
     g_message ("Wrong list selector passed (%i)", list);
 
@@ -379,6 +406,7 @@ list_scroll_end (GObject *emitter,
 //   #     # #######  #  #   # #
 //   #     # #     #  #  #    ##
 //   #     # #     # ### #     #
+
 /* Самая крутая функция, строит весь уй. */
 gboolean
 build_interface (Global *global)
@@ -408,6 +436,8 @@ build_interface (Global *global)
   /* Стеки для кнопочек. */
   ui->lstack = gtk_stack_new ();
   ui->rstack = gtk_stack_new ();
+  gtk_widget_set_name (ui->lstack, "Left");
+  gtk_widget_set_name (ui->rstack, "Right");
 
   /* На данный момент все контейнеры готовы. Можно наполнять их. */
 
@@ -436,20 +466,20 @@ build_interface (Global *global)
 
   /* Левая панель содержит список галсов, меток и редактор меток. */
   {
-    GtkWidget * track_view = GTK_WIDGET (global->gui.track_view);
-    GtkWidget * mark_list = GTK_WIDGET (global->gui.mark_view);
-    GtkWidget * mark_editor = GTK_WIDGET (global->gui.meditor);
+    GtkWidget * tracks = GTK_WIDGET (global->gui.track.view);
+    GtkWidget * mlist = GTK_WIDGET (global->gui.mark_view);
+    GtkWidget * meditor = GTK_WIDGET (global->gui.meditor);
 
-    g_object_set (track_view, "vexpand", TRUE, "valign", GTK_ALIGN_FILL,
-                                "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
-    g_object_set (mark_list, "vexpand", TRUE, "valign", GTK_ALIGN_FILL,
-                            "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
-    g_object_set (mark_editor, "vexpand", FALSE, "valign", GTK_ALIGN_END,
-                               "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
+    g_object_set (tracks, "vexpand", TRUE,  "valign", GTK_ALIGN_FILL,
+                          "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
+    g_object_set (mlist, "vexpand", TRUE,  "valign", GTK_ALIGN_FILL,
+                         "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
+    g_object_set (meditor, "vexpand", FALSE, "valign", GTK_ALIGN_END,
+                           "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
 
-    gtk_box_pack_start (GTK_BOX (ui->left_box), track_view, TRUE, TRUE, 0);
-    gtk_box_pack_start (GTK_BOX (ui->left_box), mark_list, TRUE, TRUE, 0);
-    gtk_box_pack_start (GTK_BOX (ui->left_box), mark_editor, FALSE, FALSE, 0);
+    gtk_box_pack_start (GTK_BOX (ui->left_box), tracks, TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (ui->left_box), mlist, TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (ui->left_box), meditor, FALSE, FALSE, 0);
 
     gtk_container_add (GTK_CONTAINER (ui->left_revealer), ui->left_box);
   }
@@ -465,10 +495,11 @@ build_interface (Global *global)
 
   /* Строим интерфейсос. */
   build_all (ui, global, common_pages);
-
   if (global->control_s != NULL)
     build_all (ui, global, sonar_pages);
 
+  /* Инициализация значений. */
+  widget_swap (NULL, GINT_TO_POINTER (ALL));
 
   /* Собираем воедино.                                               L  T  W  H */
   gtk_grid_attach (GTK_GRID (global->gui.grid), ui->lstack,          0, 0, 1, 3);

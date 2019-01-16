@@ -488,10 +488,10 @@ tracks_changed (HyScanDBInfo *db_info,
   cur_track_name = g_strdup (global->track_name);
 
   null_path = gtk_tree_path_new ();
-  gtk_tree_view_set_cursor (global->gui.track_view, null_path, NULL, FALSE);
+  gtk_tree_view_set_cursor (global->gui.track.tree, null_path, NULL, FALSE);
   gtk_tree_path_free (null_path);
 
-  gtk_list_store_clear (GTK_LIST_STORE (global->gui.track_list));
+  gtk_list_store_clear (GTK_LIST_STORE (global->gui.track.list));
 
   tracks = hyscan_db_info_get_tracks (db_info);
   g_hash_table_iter_init (&hash_iter, tracks);
@@ -501,8 +501,8 @@ tracks_changed (HyScanDBInfo *db_info,
       HyScanTrackInfo *track_info = value;
 
       /* Добавляем в список галсов. */
-      gtk_list_store_append (GTK_LIST_STORE (global->gui.track_list), &tree_iter);
-      gtk_list_store_set (GTK_LIST_STORE (global->gui.track_list), &tree_iter,
+      gtk_list_store_append (GTK_LIST_STORE (global->gui.track.list), &tree_iter);
+      gtk_list_store_set (GTK_LIST_STORE (global->gui.track.list), &tree_iter,
                           DATE_SORT_COLUMN, g_date_time_to_unix (track_info->ctime),
                           TRACK_COLUMN, g_strdup (track_info->name),
                           DATE_COLUMN, g_date_time_format (track_info->ctime, "%d.%m %H:%M"),
@@ -511,8 +511,8 @@ tracks_changed (HyScanDBInfo *db_info,
       /* Подсвечиваем текущий галс. */
       if (g_strcmp0 (cur_track_name, track_info->name) == 0)
         {
-          GtkTreePath *tree_path = gtk_tree_model_get_path (global->gui.track_list, &tree_iter);
-          gtk_tree_view_set_cursor (global->gui.track_view, tree_path, NULL, FALSE);
+          GtkTreePath *tree_path = gtk_tree_model_get_path (global->gui.track.list, &tree_iter);
+          gtk_tree_view_set_cursor (global->gui.track.tree, tree_path, NULL, FALSE);
           gtk_tree_path_free (tree_path);
         }
     }
@@ -929,12 +929,12 @@ track_scroll (GtkWidget *widget,
   gdouble step_x, step_y;
   gint size_x, size_y;
 
-  position = gtk_adjustment_get_value (global->gui.track_range);
+  position = gtk_adjustment_get_value (global->gui.track.scroll);
   gdk_event_get_scroll_deltas (event, &step_x, &step_y);
-  gtk_tree_view_convert_bin_window_to_widget_coords (global->gui.track_view, 0, 0, &size_x, &size_y);
+  gtk_tree_view_convert_bin_window_to_widget_coords (global->gui.track.tree, 0, 0, &size_x, &size_y);
   position += step_y * size_y;
 
-  gtk_adjustment_set_value (global->gui.track_range, position);
+  gtk_adjustment_set_value (global->gui.track.scroll, position);
 
   return TRUE;
 }
@@ -1013,13 +1013,13 @@ track_changed (GtkTreeView *list,
   if (path == NULL)
     return;
 
-  if (!gtk_tree_model_get_iter (global->gui.track_list, &iter, path))
+  if (!gtk_tree_model_get_iter (global->gui.track.list, &iter, path))
     return;
 
   g_clear_pointer (&global->track_name, g_free);
 
   /* Открываем новый галс. */
-  gtk_tree_model_get_value (global->gui.track_list, &iter, TRACK_COLUMN, &value);
+  gtk_tree_model_get_value (global->gui.track.list, &iter, TRACK_COLUMN, &value);
   track_name = g_value_get_string (&value);
   global->track_name = g_strdup (track_name);
 
@@ -1084,10 +1084,37 @@ fl_current_scale (HyScanGtkForwardLook *fl)
 }
 
 /* Функция устанавливает масштаб отображения. */
+void
+zoom_changed (HyScanGtkWaterfall *wfall,
+              gint                index,
+              gdouble             gost,
+              gint                panelx)
+{
+  gchar *text = NULL;
+  AmePanel *panel = get_panel (&global, panelx);
+
+  switch (panel->type)
+    {
+    case AME_PANEL_WATERFALL:
+    case AME_PANEL_ECHO:
+      break;
+
+    case AME_PANEL_FORWARDLOOK:
+    default:
+      g_warning ("zoom_changed: wrong panel type!");
+      return;
+    }
+
+  text = g_strdup_printf ("<small><b>1:%.0f</b></small>", gost);
+  gtk_label_set_markup (panel->vis_gui->scale_value, text);
+  g_free (text);
+  return;
+}
+
+/* Функция устанавливает масштаб отображения. */
 gboolean
 scale_set (Global   *global,
            gboolean  scale_up,
-           gpointer  user_data,
            gint      panelx)
 {
   VisualWF *wf;
@@ -1108,6 +1135,7 @@ scale_set (Global   *global,
       i_scale = hyscan_gtk_waterfall_get_scale (HYSCAN_GTK_WATERFALL (wf->wf),
                                                 &scales, &n_scales);
       scale = scales[i_scale];
+      text = g_strdup_printf ("<small><b>1:%.0f</b></small>", scale);
       break;
 
     case AME_PANEL_FORWARDLOOK:
@@ -1130,6 +1158,7 @@ scale_set (Global   *global,
         gtk_cifro_area_zoom (carea, zoom_dir, zoom_dir, 0.0, 0.0);
 
         scale = fl_current_scale (fl->fl);
+        text = g_strdup_printf ("<small><b>%.0f%%</b></small>", scale);
       }
       break;
 
@@ -1137,7 +1166,6 @@ scale_set (Global   *global,
       g_warning ("scale_set: wrong panel type!");
     }
 
-  text = g_strdup_printf ("<small><b>%.0f%%</b></small>", scale);
   gtk_label_set_markup (panel->vis_gui->scale_value, text);
   g_free (text);
   return TRUE;
@@ -1225,9 +1253,14 @@ color_map_set (Global *global,
                                              colormap->len,
                                              colormap->bg);
   hyscan_gtk_waterfall_set_substrate (wf->wf, colormap->bg);
-  text = g_strdup_printf ("<small><b>%s</b></small>", colormap->name);
-  gtk_label_set_markup (wf->common.colormap_value, text);
-  g_free (text);
+
+  /* Проверяем, существует ли вообще виджет. */
+  if (wf->common.colormap_value != NULL)
+    {
+      text = g_strdup_printf ("<small><b>%s</b></small>", colormap->name);
+      gtk_label_set_markup (wf->common.colormap_value, text);
+      g_free (text);
+    }
 
   return TRUE;
 }
@@ -1258,6 +1291,31 @@ color_map_down (GtkWidget *widget,
     panel->vis_current.colormap = desired_cmap;
   else
     g_warning ("color_map_down failed");
+}
+
+void
+color_map_cyclic (GtkWidget *widget,
+                  gint       panelx)
+{
+  guint desired_cmap;
+  VisualWF *wf;
+  AmePanel *panel = get_panel (&global, panelx);
+
+  if (panel->type != AME_PANEL_WATERFALL && panel->type != AME_PANEL_ECHO)
+    {
+      g_warning ("color_map_cyclic: wrong panel type");
+      return;
+    }
+
+  wf = (VisualWF*)panel->vis_gui;
+  desired_cmap = panel->vis_current.colormap + 1;
+  if (desired_cmap >= wf->colormaps->len)
+    desired_cmap = 0;
+
+  if (color_map_set (&global, desired_cmap, panelx))
+    panel->vis_current.colormap = desired_cmap;
+  else
+    g_warning ("color_map_cyclic failed");
 }
 
 /* Функция устанавливает порог чувствительности. */
@@ -1931,14 +1989,14 @@ void
 scale_up (GtkWidget *widget,
           gint       panelx)
 {
-  scale_set (&global, TRUE, NULL, panelx);
+  scale_set (&global, TRUE, panelx);
 }
 
 void
 scale_down (GtkWidget *widget,
             gint       panelx)
 {
-  scale_set (&global, FALSE, NULL, panelx);
+  scale_set (&global, FALSE, panelx);
 }
 
 /* Функция переключает режим отображения виджета ВС. */
@@ -2034,8 +2092,14 @@ live_view_off (GtkWidget  *widget,
                gboolean    state,
                Global     *global)
 {
+  GHashTableIter iter;
+  gpointer k, v;
+
+  g_hash_table_iter_init (&iter, global->panels);
+  while (g_hash_table_iter_next (&iter, &k, &v))
+    live_view (NULL, state, GPOINTER_TO_INT (k));
+
   g_message ("live_view_off!");
-  live_view (NULL, state, -1);
 }
 
 
@@ -2086,8 +2150,8 @@ start_stop (Global    *global,
             case AME_PANEL_WATERFALL:
               status &= auto_tvg_set (global, panel->current.cur_level, panel->current.cur_sensitivity, panelx);
               break;
-            case W_PROFILER:
-            case W_FORWARDL:
+            case AME_PANEL_ECHO:
+            case AME_PANEL_FORWARDLOOK:
               status &= tvg_set (global, &panel->current.cur_gain0, panel->current.cur_gain_step, panelx);
               break;
 
@@ -2133,7 +2197,7 @@ start_stop (Global    *global,
         }
 
       /* Если локатор включён, переходим в режим онлайн. */
-      gtk_widget_set_sensitive (GTK_WIDGET (global->gui.track_view), FALSE);
+      gtk_widget_set_sensitive (GTK_WIDGET (global->gui.track.tree), FALSE);
     }
 
   /* Выключаем излучение и блокируем режим онлайн. */
@@ -2141,7 +2205,7 @@ start_stop (Global    *global,
     {
       g_message ("Stop sonars");
       hyscan_sonar_stop (global->control_s);
-      gtk_widget_set_sensitive (GTK_WIDGET (global->gui.track_view), TRUE);
+      gtk_widget_set_sensitive (GTK_WIDGET (global->gui.track.tree), TRUE);
     }
 
   /* Устанавливаем live_view для всех виджетов. */
@@ -2330,7 +2394,6 @@ make_color_maps (gboolean profiler)
 
       return colormaps;
     }
-
 
   new_map = g_new (AmeColormap, 1);
   new_map->name = g_strdup ("Вонючий Калькулятор");
@@ -2586,19 +2649,20 @@ main (int argc, char **argv)
   gtk_orientable_set_orientation (GTK_ORIENTABLE (global.gui.nav), GTK_ORIENTATION_HORIZONTAL);
 
   /* Галсы. */
-  global.gui.track_view = GTK_TREE_VIEW (gtk_builder_get_object (common_builder, "track_view"));
-  global.gui.track_list = GTK_TREE_MODEL (gtk_builder_get_object (common_builder, "track_list"));
-  global.gui.track_range = GTK_ADJUSTMENT (gtk_builder_get_object (common_builder, "track_range"));
-  hyscan_exit_if ((global.gui.track_view == NULL) ||
-                  (global.gui.track_list == NULL) ||
-                  (global.gui.track_range == NULL),
+  global.gui.track.view = GTK_WIDGET (gtk_builder_get_object (common_builder, "track.view"));
+  global.gui.track.tree = GTK_TREE_VIEW (gtk_builder_get_object (common_builder, "track.tree"));
+  global.gui.track.list = GTK_TREE_MODEL (gtk_builder_get_object (common_builder, "track.list"));
+  global.gui.track.scroll = GTK_ADJUSTMENT (gtk_builder_get_object (common_builder, "track.scroll"));
+  hyscan_exit_if ((global.gui.track.tree == NULL) ||
+                  (global.gui.track.list == NULL) ||
+                  (global.gui.track.scroll == NULL),
                   "incorrect track control ui");
   gtk_builder_add_callback_symbol (common_builder, "track_scroll", G_CALLBACK (track_scroll));
   gtk_builder_add_callback_symbol (common_builder, "track_changed", G_CALLBACK (track_changed));
   gtk_builder_add_callback_symbol (common_builder, "position_changed", G_CALLBACK (position_changed));
 
   /* Сортировка списка галсов. */
-  gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (global.gui.track_list), 0, GTK_SORT_DESCENDING);
+  gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (global.gui.track.list), 0, GTK_SORT_DESCENDING);
 
   /* Список меток. */
   global.marks.sync = hyscan_mark_sync_new ("127.0.0.1", 10010);
@@ -2655,7 +2719,7 @@ main (int argc, char **argv)
                                 global.marks.model);
 
     g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (live_view_off), &global);
-    g_signal_connect_swapped (vwf->wf, "waterfall-zoom", G_CALLBACK (scale_set), &global);
+    g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_SIDESCAN));
 
     hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed);
     hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
@@ -2695,7 +2759,7 @@ main (int argc, char **argv)
     hyscan_gtk_waterfall_grid_set_grid_color (vwf->wf_grid, hyscan_tile_color_converter_c2i (32, 32, 32, 255));
 
     g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (live_view_off), &global);
-    g_signal_connect_swapped (vwf->wf, "waterfall-zoom", G_CALLBACK (scale_set), &global);
+    g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_PROFILER));
 
     hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), PROFILER);
     hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed / 10);
@@ -2742,6 +2806,9 @@ main (int argc, char **argv)
     vfl->common.main = GTK_WIDGET (vfl->fl);
     g_hash_table_insert (global.panels, GINT_TO_POINTER (X_FORWARDL), panel);
   }
+
+  #include "ame-ui.h"
+  build_interface (&global);
   // TODO: вызываем постройку билдера!
 
 /***
@@ -2778,7 +2845,7 @@ main (int argc, char **argv)
         if (panel->type == AME_PANEL_WATERFALL || panel->type == AME_PANEL_ECHO)
           color_map_set (&global, panel->vis_current.colormap, panelx);
 
-        scale_set (&global, FALSE, NULL, panelx);
+        scale_set (&global, FALSE, panelx);
 
         /* Для локаторов мы ничего не задаем,
          * т.к. эти параметры будут

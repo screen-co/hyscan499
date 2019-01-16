@@ -3,7 +3,6 @@
 
 #include <gtk/gtk.h>
 
-
 G_BEGIN_DECLS
 
 #define HYSCAN_TYPE_AME_BUTTON             (hyscan_ame_button_get_type ())
@@ -18,7 +17,6 @@ G_BEGIN_DECLS
 typedef struct _HyScanAmeButton HyScanAmeButton;
 typedef struct _HyScanAmeButtonPrivate HyScanAmeButtonPrivate;
 typedef struct _HyScanAmeButtonClass HyScanAmeButtonClass;
-
 struct _HyScanAmeButton
 {
   GtkBox parent_instance;

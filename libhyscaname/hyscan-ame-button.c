@@ -116,9 +116,9 @@ GtkWidget *
 label_maker (const gchar * markup)
 {
   GtkWidget *label = gtk_label_new (NULL);
-  gtk_label_set_angle (GTK_LABEL (label), 90); ////!!
+  gtk_label_set_angle (GTK_LABEL (label), 90);
   gtk_label_set_markup (GTK_LABEL (label), markup);
-  gtk_label_set_ellipsize (GTK_LABEL (label), PANGO_ELLIPSIZE_END);////!!
+  gtk_label_set_ellipsize (GTK_LABEL (label), PANGO_ELLIPSIZE_END);
   return label;
 
 }

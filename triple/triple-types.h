@@ -55,14 +55,6 @@
 
 enum
 {
-  W_SIDESCAN,
-  W_PROFILER,
-  W_FORWARDL,
-  W_LAST
-};
-
-enum
-{
   X_SIDESCAN = 84351,
   X_PROFILER = 21539,
   X_FORWARDL = 56753,
@@ -234,9 +226,13 @@ typedef struct
       GtkWidget                           *window; // окно
       GtkWidget                           *grid;
       
-      GtkTreeView                         *track_view;
-      GtkTreeModel                        *track_list;
-      GtkAdjustment                       *track_range;
+      struct 
+        {
+          GtkWidget                           *view;   // виджет целиком
+          GtkTreeView                         *tree;   // tree view
+          GtkTreeModel                        *list;   // list store
+          GtkAdjustment                       *scroll; // прокрутка
+        } track;
 
       GtkWidget                           *nav;
 
@@ -414,7 +410,6 @@ brightness_set (Global  *global,
 gboolean
 scale_set (Global   *global,
            gboolean  scale_up,
-           gpointer  user_data,
            gint      selector);
 
 guint32*
@@ -498,6 +493,10 @@ color_map_up (GtkWidget *widget,
 void
 color_map_down (GtkWidget *widget,
                 gint       selector);
+
+void
+color_map_cyclic (GtkWidget *widget,
+                  gint       panelx);
 
 void
 mode_changed (GtkWidget *widget,
