@@ -1,9 +1,12 @@
 #include "ame-ui.h"
+#include "ame-ui.h"
 #include "ame-ui-definitions.h"
+
+#include <gmodule.h>
 
 AmeUI global_ui = {0,};
 Global *_global = NULL;
-
+ButtonReceive brec;
 /***
  *     #     # ######     #    ######  ######  ####### ######   #####
  *     #  #  # #     #   # #   #     # #     # #       #     # #     #
@@ -408,7 +411,7 @@ list_scroll_end (GObject *emitter,
 //   #     # #     # ### #     #
 
 /* Самая крутая функция, строит весь уй. */
-gboolean
+G_MODULE_EXPORT gboolean
 build_interface (Global *global)
 {
   AmeUI *ui = &global_ui;
@@ -512,4 +515,137 @@ build_interface (Global *global)
   return TRUE;
 }
 
+G_MODULE_EXPORT  void
+destroy_interface (void)
+{
+  g_atomic_int_set (&brec.stop, TRUE);
+  g_clear_pointer (&brec.thread, g_thread_join);
+  g_socket_close (brec.socket, NULL);
+  g_clear_object (&brec.socket);
+}
+
+gboolean
+ame_button_clicker (gpointer data)
+{
+  gint code = GPOINTER_TO_INT (data);
+  GtkWidget *stack, *fixed;
+
+  if (code / 1000 == 1)
+    stack = global_ui.lstack;
+  else if (code / 1000 == 2)
+    stack = global_ui.rstack;
+  else
+    {
+      g_warning ("wrong code");
+      return G_SOURCE_REMOVE;
+    }
+g_message ("push, %s, %i", gtk_stack_get_visible_child_name (GTK_STACK (stack)), code);
+  fixed = gtk_stack_get_visible_child (GTK_STACK (stack));
+  hyscan_ame_fixed_activate (HYSCAN_AME_FIXED (fixed), code % 1000);
+
+  return G_SOURCE_REMOVE;
+}
+
+gint
+ame_button_parse (const gchar * buf)
+{
+  gint code;
+
+  /* Если нет префикса, возвращаем 1. */
+  if (buf[0] != 'b')
+    return 1;
+  if (buf[1] != 't')
+    return 2;
+  if (buf[2] != '_')
+    return 3;
+
+  if (buf[3] == 'l')
+    code = 1000;
+  else if (buf[3] == 'r')
+    code = 2000;
+  else
+    return 4;
+
+  if (buf[4] >= '0' && buf[4] <= '6')
+    code += buf[4]-'0';
+
+  g_idle_add (ame_button_clicker, GINT_TO_POINTER (code));
+
+  return 5;
+};
+
+void *
+ame_button_thread (void * data)
+{
+  gboolean triggered;
+  GError *error = NULL;
+  gchar buf[128];
+  gchar *pbuf;
+  gssize bytes;
+  while (!g_atomic_int_get (&brec.stop))
+    {
+      if (error != NULL)
+        {
+          if (error->code != G_IO_ERROR_TIMED_OUT)
+            g_warning ("Button error: %s", error->message);
+          g_clear_pointer (&error, g_error_free);
+        }
+
+      triggered = g_socket_condition_timed_wait (brec.socket,
+                                                 G_IO_IN | G_IO_HUP | G_IO_ERR,
+                                                 G_TIME_SPAN_MILLISECOND * 100 ,
+                                                 NULL, &error);
+      if (!triggered)
+        continue;
+
+      if (error != NULL)
+        {
+          g_warning ("Button condition wait: %s", error->message);
+          g_clear_pointer (&error, g_error_free);
+        }
+
+      /* Я ожидаю "bt_xx", 5 символов. Но я не уверен в амешниках. */
+      bytes = g_socket_receive (brec.socket, buf, 5*10+1, NULL, &error);
+
+      /* нуль-терминируем. */
+      buf[bytes] = '\0';
+      g_message ("Received <%s>", buf);
+
+      for (pbuf = buf; bytes > 0 && pbuf < buf + 127; )
+        {
+          gint res = ame_button_parse (pbuf);
+
+          bytes -= res;
+          pbuf += res;
+        }
+
+    }
+
+  return NULL;
+}
+
+G_MODULE_EXPORT gboolean
+kf_config (GKeyFile *kf)
+{
+  gchar * mcast_addr;
+  GInetAddress *addr;
+  gboolean source_specific;
+  GSocketAddress *isocketadress;
+
+  source_specific = keyfile_bool_read_helper (kf, "ame", "source_specific");
+  mcast_addr =  keyfile_string_read_helper (kf, "ame", "buttons");
+  g_return_val_if_fail(mcast_addr != NULL, FALSE);
+
+  brec.socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, NULL);
+  addr = g_inet_address_new_from_string (mcast_addr);
+  isocketadress = g_inet_socket_address_new(addr, 9000);
+
+  g_socket_bind (brec.socket, isocketadress, TRUE, NULL);
+
+  brec.stop = FALSE;
+  brec.thread = g_thread_new ("buttons", ame_button_thread, NULL);
+  g_socket_join_multicast_group (brec.socket, addr, source_specific, NULL, NULL);
+
+  return TRUE;
+}
 

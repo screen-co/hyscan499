@@ -12,15 +12,16 @@ add_custom_command (OUTPUT ${CMAKE_BINARY_DIR}/resources/triple-resources.c
                     DEPENDS triple.ui common.ui
                     VERBATIM)
 
-set (TRIPLE_LIBS ${GLIB_LIBRARIES}
+set (TRIPLE_LIBS ${GLIB2_LIBRARIES}
                  ${GTK3_LIBRARIES}
                  ${HYSCAN_LIBRARIES}
                  ${HYSCAN_AME_LIBRARY}
                  ${MATH_LIBRARIES})
 
+
 add_executable (triple
-                ame-ui.c
                 triple.c
                 ${CMAKE_BINARY_DIR}/resources/triple-resources.c)
 
 target_link_libraries (triple ${TRIPLE_LIBS})
+

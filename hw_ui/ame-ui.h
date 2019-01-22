@@ -1,13 +1,21 @@
 #ifndef __AME_UI_H__
 #define __AME_UI_H__
 
-#include "triple-types.h"
+#include <../triple/triple-types.h>
 #include <hyscan-ame-fixed.h>
 #include <hyscan-ame-button.h>
 #include <hyscan-gtk-ame-box.h>
 
+#include <gio/gio.h>
+
 #define AME_N_BUTTONS 5
 
+typedef struct 
+{
+  GSocket *socket;
+  GThread *thread;
+  gint     stop;
+} ButtonReceive;
 
 /* Кнопки м.б. слева или справа. */
 typedef enum
@@ -128,6 +136,17 @@ void        build_all (AmeUI   *ui,
                        AmePage *page);
 
 gboolean    build_interface (Global *global);
+
+void        destroy_interface (void);
+
+/* Для кнопочек. */
+gboolean    kf_config    (GKeyFile *kf);
+
+/* Внутренние, для ожидания и получения кнопок. */
+gboolean    ame_button_clicker (gpointer data);
+gint        ame_button_parse   (const gchar * buf);
+void *      ame_button_thread  (void * data);
+
 
 /* Функции управления. */
 void        widget_swap (GObject  *emitter,

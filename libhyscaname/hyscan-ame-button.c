@@ -231,6 +231,8 @@ hyscan_ame_button_object_constructed (GObject *object)
 
   G_OBJECT_CLASS (hyscan_ame_button_parent_class)->constructed (object);
 
+  self->priv->sensitivity = TRUE;
+
   gtk_orientable_set_orientation (GTK_ORIENTABLE (self), GTK_ORIENTATION_VERTICAL);
   gtk_box_set_spacing (GTK_BOX (self), 2);
   gtk_widget_set_margin_start (GTK_WIDGET (self), 6);

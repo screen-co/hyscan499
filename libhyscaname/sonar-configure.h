@@ -7,6 +7,9 @@ gchar **       keyfile_strv_read_helper   (GKeyFile    *config,
                                            const gchar *group,
                                            const gchar *key);
 
+gboolean       keyfile_bool_read_helper (GKeyFile    *config,
+                                         const gchar *group,
+                                         const gchar *key);
 gchar *        keyfile_string_read_helper (GKeyFile    *config,
                                            const gchar *group,
                                            const gchar *key);

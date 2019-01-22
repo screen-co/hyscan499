@@ -42,7 +42,7 @@ if (NOT CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
   set (CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 endif ()
 
-pkg_check_modules (GLIB2 REQUIRED "glib-2.0 gobject-2.0 gthread-2.0 gio-2.0")
+pkg_check_modules (GLIB2 REQUIRED "glib-2.0 gobject-2.0 gthread-2.0 gio-2.0 gmodule-2.0")
 pkg_check_modules (GTK3 REQUIRED "gtk+-3.0")
 add_definitions (${GLIB2_CFLAGS} ${GTK3_CFLAGS})
 link_directories (${GLIB2_LIBRARY_DIRS} ${GTK3_LIBRARY_DIRS})
@@ -80,5 +80,7 @@ set (HYSCAN_LIBRARIES gtkcifroarea-3.1
 
 add_definitions (-DG_LOG_DOMAIN="HyScan-triple")
 add_subdirectory (libhyscaname)
+add_subdirectory (hw_ui)
+add_subdirectory (sw_ui)
 add_subdirectory (test)
 add_subdirectory (triple)

@@ -1,6 +1,7 @@
 #include "triple-types.h"
 #include "hyscan-ame-splash.h"
 #include "hyscan-ame-project.h"
+#include <gmodule.h>
 
 /* Вот он, наш жирненький красавчик. */
 Global global = { 0, };
@@ -1403,6 +1404,11 @@ signal_set (Global *global,
       GList *link;
 
       info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (source));
+
+      /* Если задан мастер, то сигнал не задается. */
+      if (info->master != HYSCAN_SOURCE_INVALID)
+        continue;
+
       hyscan_return_val_if_fail (info != NULL && info->generator != NULL, FALSE);
 
       /* Ищем нужный сигнал. */
@@ -2428,6 +2434,9 @@ make_color_maps (gboolean profiler)
   return colormaps;
 }
 
+typedef gboolean (*ame_build) (Global *);
+typedef gboolean (*ame_config) (GKeyFile *);
+
 int
 main (int argc, char **argv)
 {
@@ -2442,6 +2451,12 @@ main (int argc, char **argv)
 
   gchar             *config_file = NULL;       /* Название файла конфигурации. */
   GKeyFile          *config = NULL;
+
+  gchar             *um_path = NULL;       /* Модуль с интерфейсом. */
+  GModule           *ui_module = NULL;
+  ame_build          ui_build = NULL;
+  ame_build          ui_destroy = NULL;
+  ame_config         ui_config = NULL;
 
   GtkBuilder        *common_builder = NULL;
 
@@ -2466,6 +2481,7 @@ main (int argc, char **argv)
         { "sound-velocity",  'v',   0, G_OPTION_ARG_DOUBLE,  &sound_velocity,  "Sound velocity, m/s", NULL },
         { "ship-speed",      'e',   0, G_OPTION_ARG_DOUBLE,  &ship_speed,      "Ship speed, m/s", NULL },
         { "full-screen",     'f',   0, G_OPTION_ARG_NONE,    &full_screen,     "Full screen mode", NULL },
+        { "ui", 0,   G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &um_path,    "UI module", NULL },
         { NULL, }
       };
 
@@ -2496,6 +2512,29 @@ main (int argc, char **argv)
 
     g_option_context_free (context);
     g_strfreev (args);
+  }
+
+  /* Грузим модуль построения интерфейса. */
+  {
+    gchar *module_path;
+
+    module_path = g_build_filename (".", um_path, NULL);
+    ui_module = g_module_open (module_path, G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
+    g_free (module_path);
+
+    if (ui_module != NULL)
+      {
+        g_module_symbol (ui_module, "build_interface", (gpointer *) &ui_build);
+        g_module_symbol (ui_module, "destroy_interface", (gpointer *) &ui_destroy);
+        g_module_symbol (ui_module, "kf_config", (gpointer *) &ui_config);
+      }
+
+    /* Если нет этих двух функций, то всё, суши вёсла. */
+    if ((ui_build == NULL) || (ui_destroy == NULL))
+      {
+        g_warning ("failed to load UI builer");
+        goto exit;
+      }
   }
 
   /* Открываем конфиг файл. */
@@ -2807,9 +2846,10 @@ main (int argc, char **argv)
     g_hash_table_insert (global.panels, GINT_TO_POINTER (X_FORWARDL), panel);
   }
 
-  #include "ame-ui.h"
-  build_interface (&global);
-  // TODO: вызываем постройку билдера!
+
+  // Вызываем постройку билдера!
+  ui_build (&global);
+  ui_config (config);
 
 /***
  *     ___   ___   ___   ___               ___               ___               ___   ___
@@ -2874,6 +2914,8 @@ main (int argc, char **argv)
    *     ---   ---   ---               ---
    *
    */
+  ui_destroy (&global);
+
   if (config != NULL)
     {
       GHashTableIter iter;
@@ -2902,6 +2944,8 @@ main (int argc, char **argv)
     }
 
 exit:
+
+  g_clear_pointer (&ui_module, g_module_close);
 
   g_clear_object (&common_builder);
 

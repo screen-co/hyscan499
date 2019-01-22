@@ -465,6 +465,7 @@ finalize (GObject *object)
   g_clear_object (&priv->db);
   g_clear_object (&priv->info);
 
+
   g_clear_pointer (&priv->track_name, g_free);
   g_clear_pointer (&priv->project_name, g_free);
 

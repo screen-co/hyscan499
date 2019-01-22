@@ -19,6 +19,27 @@ keyfile_strv_read_helper (GKeyFile    *config,
   return NULL;
 }
 
+gboolean
+keyfile_bool_read_helper (GKeyFile    *config,
+                          const gchar *group,
+                          const gchar *key)
+{
+  GError *error = NULL;
+  gboolean read_val;
+
+  if (config == NULL)
+    return FALSE;
+
+  read_val = g_key_file_get_boolean (config, group, key, &error);
+
+  if (error == NULL)
+    return read_val;
+
+  g_error_free (error);
+
+  return FALSE;
+}
+
 gchar *
 keyfile_string_read_helper (GKeyFile    *config,
                             const gchar *group,
