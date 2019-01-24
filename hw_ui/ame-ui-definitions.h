@@ -56,7 +56,7 @@ static AmePage common_pages[] =
         {L, 2, MORE, "Масштаб",     TOGGLE_NONE, CBK(scale_up),       UD(XSS),
             VALUE_OFFSET(VisualCommon, scale_value), VALUE_DEFAULT ("--")},
         {L, 3, LESS, NULL,          TOGGLE_NONE, CBK(scale_down),     UD(XSS)},
-        {L, 4, DOT,  "Автопрок",    TOGGLE_ON,   CBK(live_view),      UD(XSS),
+        {L, 4, DOT,  "Автопрок",    TOGGLE_ON,   CBK(automove_switched),      UD(XSS),
            BUTTON_OFFSET(VisualCommon, live_view)},
 
         {R, 0, VMOR,  "Метки",      TOGGLE_NONE, CBK(switch_page),    UD("И_ГБОм")},
@@ -106,7 +106,7 @@ static AmePage common_pages[] =
         {L, 2, MORE, "Масштаб",     TOGGLE_NONE, CBK(scale_up),       UD(XPF),
             VALUE_OFFSET(VisualCommon, scale_value), VALUE_DEFAULT ("--")},
         {L, 3, LESS, NULL,          TOGGLE_NONE, CBK(scale_down),     UD(XPF)},
-        {L, 4, DOT,  "Автопрок",    TOGGLE_ON,   CBK(live_view),      UD(XPF),
+        {L, 4, DOT,  "Автопрок",    TOGGLE_ON,   CBK(automove_switched),      UD(XPF),
             BUTTON_OFFSET(VisualCommon, live_view)},
 
         {R, 0, VMOR,  "Метки",      TOGGLE_NONE, CBK(switch_page),    UD("И_ПФм")},
@@ -159,7 +159,7 @@ static AmePage common_pages[] =
         {L, 2, MORE, "Масштаб",     TOGGLE_NONE, CBK(scale_up),       UD(XFL),
             VALUE_OFFSET (VisualCommon, scale_value), VALUE_DEFAULT ("--")},
         {L, 3, LESS, NULL,          TOGGLE_NONE, CBK(scale_down),     UD(XFL)},
-        {L, 4, DOT,  "Автопрок",    TOGGLE_OFF,  CBK(live_view),      UD(XFL),
+        {L, 4, DOT,  "Автопрок",    TOGGLE_OFF,  CBK(automove_switched),      UD(XFL),
             BUTTON_OFFSET(VisualCommon, live_view)},
 
         {R, 1, UP,    "Вверх",      TOGGLE_NONE, CBK(nav_up),         UD(XFL)},
@@ -175,9 +175,9 @@ static AmePage common_pages[] =
       {
         {L, 0, MENU, "Меню",        TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
         {L, 1, BACK, "Назад",       TOGGLE_NONE, CBK(switch_page),    UD("И_ГК")},
-        {L, 2, MORE, "Порог",       TOGGLE_NONE, CBK(sens_up),        UD(XFL),
+        {L, 2, MORE, "Порог",       TOGGLE_NONE, CBK(sensitivity_up), UD(XFL),
             VALUE_OFFSET (VisualCommon, sensitivity_value), VALUE_DEFAULT ("--")},
-        {L, 3, LESS, NULL,          TOGGLE_NONE, CBK(sens_down),      UD(XFL)},
+        {L, 3, LESS, NULL,          TOGGLE_NONE, CBK(sensitivity_down), UD(XFL)},
         {L, 4, DOT,  "Цель",        TOGGLE_ON,   CBK(mode_changed),   UD(XFL)},
         {R, 2, MORE, "Яркость",     TOGGLE_NONE, CBK(brightness_up),  UD(XFL),
             VALUE_OFFSET (VisualCommon, brightness_value), VALUE_DEFAULT ("--")},

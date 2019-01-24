@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/org/sw/gtk">
+    <file compressed="true">sw.ui</file>
+    <file compressed="true">record.ui</file>
+  </gresource>
+</gresources>

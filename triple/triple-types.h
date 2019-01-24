@@ -55,9 +55,9 @@
 
 enum
 {
-  X_SIDESCAN = 84351,
-  X_PROFILER = 21539,
-  X_FORWARDL = 56753,
+  X_SIDESCAN = 155642,
+  X_PROFILER = 251539,
+  X_FORWARDL = 356753,
 };
 
 /* структура: локейшн + прожекторы */
@@ -95,12 +95,12 @@ typedef enum
 
 typedef struct
 {
-  gdouble   cur_distance;
-  guint     cur_signal;
-  gdouble   cur_gain0;
-  gdouble   cur_gain_step;
-  gdouble   cur_level;
-  gdouble   cur_sensitivity;
+  gdouble   distance;
+  guint     signal;
+  gdouble   gain0;
+  gdouble   gain_step;
+  gdouble   level;
+  gdouble   sensitivity;
 } SonarCurrent;
 
 typedef struct
@@ -170,6 +170,7 @@ typedef struct
 typedef struct 
 {
   gchar            *name;
+  gchar            *short_name;
   AmePanelType      type;    /* тип панели: вф, фл, пф */
   HyScanSourceType *sources; /* Источники для панели */
 
@@ -247,6 +248,10 @@ void ame_panel_destroy (gpointer data);
 AmePanel *
 get_panel (Global *global,
            gint    panelx);
+
+gint
+get_panel_id_by_name (Global      *global,
+                      const gchar *name);
 
 void
 depth_writer (GObject *emitter);
@@ -479,12 +484,12 @@ scale_down (GtkWidget *widget,
             gint       selector);
 
 void
-sens_up (GtkWidget *widget,
-          gint       selector);
+sensitivity_up (GtkWidget *widget,
+                gint       selector);
 
 void
-sens_down (GtkWidget *widget,
-            gint       selector);
+sensitivity_down (GtkWidget *widget,
+                  gint       selector);
 
 void
 color_map_up (GtkWidget *widget,
@@ -515,6 +520,15 @@ live_view (GtkWidget  *widget,
 
 void
 live_view_off (GtkWidget  *widget,
+               gboolean    state,
+               Global     *global);
+
+gboolean
+automove_switched (GtkWidget  *widget,
+                   gboolean    state);
+
+void
+automove_state_changed (GtkWidget  *widget,
                gboolean    state,
                Global     *global);
 

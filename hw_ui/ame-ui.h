@@ -83,7 +83,7 @@ typedef struct
   // gpointer    padding;
   
   GtkWidget  *acoustic;
-  GtkWidget  *sub_center_box;
+  // GtkWidget  *sub_center_box;
 
   GtkWidget  *left_box;
   GtkWidget  *left_revealer;

@@ -1,6 +1,7 @@
 #include "triple-types.h"
 #include "hyscan-ame-splash.h"
-#include "hyscan-ame-project.h"
+#include <hyscan-ame-project.h>
+#include <hyscan-ame-button.h>
 #include <gmodule.h>
 
 /* Вот он, наш жирненький красавчик. */
@@ -47,7 +48,35 @@ AmePanel *
 get_panel (Global *global,
            gint    panelx)
 {
-  return g_hash_table_lookup (global->panels, GINT_TO_POINTER (panelx));
+  AmePanel * panel;
+
+  panel = g_hash_table_lookup (global->panels, GINT_TO_POINTER (panelx));
+
+  if (panel == NULL)
+    g_warning ("Panel %i not found.", panelx);
+
+  return panel;
+}
+
+gint
+get_panel_id_by_name (Global      *global,
+                      const gchar *name)
+{
+  GHashTableIter iter;
+  gpointer k;
+  AmePanel *panel;
+
+  g_return_val_if_fail (name != NULL, -1);
+
+  g_hash_table_iter_init (&iter, global->panels);
+
+  while (g_hash_table_iter_next (&iter, &k, (gpointer*)&panel))
+    {
+      if (g_str_equal (panel->name, name))
+        return GPOINTER_TO_INT (k);
+    }
+
+  return -1;
 }
 
 void
@@ -134,9 +163,12 @@ depth_writer (GObject *emitter)
 
 void
 button_set_active (GObject *object,
-                      gboolean active)
+                   gboolean setting)
 {
-  g_object_set (object, "active", active, NULL);
+  if (object == NULL)
+    return;
+
+  g_object_set (object, "state", setting, NULL);
 }
 
 gint
@@ -154,7 +186,8 @@ run_manager (GObject *emitter)
     {
       gchar *project;
 
-      start_stop (&global, FALSE);
+      if (global.control_s != NULL)
+        start_stop (&global, FALSE);
 
       g_clear_pointer (&global.project_name, g_free);
       hyscan_ame_project_get (HYSCAN_AME_PROJECT (dialog), &project, NULL);
@@ -1079,7 +1112,13 @@ fl_current_scale (HyScanGtkForwardLook *fl)
   gtk_cifro_area_get_view (carea, NULL, NULL, &from_y, &to_y);
   gtk_cifro_area_get_limits (carea, NULL, NULL, &min_y, &max_y);
 
+  if (max_y == min_y)
+    return -1;
+
   scale = 100.0 * (fabs (to_y - from_y) / fabs (max_y - min_y));
+
+  if (isnan(scale) || isinf(scale))
+    return -1;
 
   return scale;
 }
@@ -1159,7 +1198,10 @@ scale_set (Global   *global,
         gtk_cifro_area_zoom (carea, zoom_dir, zoom_dir, 0.0, 0.0);
 
         scale = fl_current_scale (fl->fl);
-        text = g_strdup_printf ("<small><b>%.0f%%</b></small>", scale);
+        if (scale == -1)
+          text = g_strdup_printf ("<small><b>N/A</b></small>");
+        else
+          text = g_strdup_printf ("<small><b>%.0f%%</b></small>", scale);
       }
       break;
 
@@ -1353,8 +1395,8 @@ sensitivity_set (Global  *global,
 }
 
 void
-sens_up (GtkWidget *widget,
-         gint       panelx)
+sensitivity_up (GtkWidget *widget,
+                gint       panelx)
 {
   gdouble desired_sensitivity;
   AmePanel *panel = get_panel (&global, panelx);
@@ -1367,8 +1409,8 @@ sens_up (GtkWidget *widget,
 }
 
 void
-sens_down (GtkWidget *widget,
-           gint       panelx)
+sensitivity_down (GtkWidget *widget,
+                  gint       panelx)
 {
   gdouble desired_sensitivity;
   AmePanel *panel = get_panel (&global, panelx);
@@ -1442,9 +1484,9 @@ signal_up (GtkWidget *widget,
   guint desired_signal;
   AmePanel *panel = get_panel (&global, panelx);
 
-  desired_signal = panel->current.cur_signal + 1;
+  desired_signal = panel->current.signal + 1;
   if (signal_set (&global, desired_signal, panelx))
-    panel->current.cur_signal = desired_signal;
+    panel->current.signal = desired_signal;
   else
     g_warning ("signal_up failed");
 }
@@ -1456,9 +1498,9 @@ signal_down (GtkWidget *widget,
   guint desired_signal;
   AmePanel *panel = get_panel (&global, panelx);
 
-  desired_signal = panel->current.cur_signal - 1;
+  desired_signal = panel->current.signal - 1;
   if (signal_set (&global, desired_signal, panelx))
-    panel->current.cur_signal = desired_signal;
+    panel->current.signal = desired_signal;
   else
     g_warning ("signal_down failed");
 }
@@ -1510,10 +1552,10 @@ tvg0_up (GtkWidget *widget,
   gdouble desired;
   AmePanel *panel = get_panel (&global, panelx);
 
-  desired = panel->current.cur_gain0 + 0.5;
+  desired = panel->current.gain0 + 0.5;
 
-  if (tvg_set (&global, &desired, panel->current.cur_gain_step, panelx))
-    panel->current.cur_gain0 = desired;
+  if (tvg_set (&global, &desired, panel->current.gain_step, panelx))
+    panel->current.gain0 = desired;
   else
     g_warning ("tvg0_up failed");
 }
@@ -1525,10 +1567,10 @@ tvg0_down (GtkWidget *widget,
   gdouble desired;
   AmePanel *panel = get_panel (&global, panelx);
 
-  desired = panel->current.cur_gain0 - 0.5;
+  desired = panel->current.gain0 - 0.5;
 
-  if (tvg_set (&global, &desired, panel->current.cur_gain_step, panelx))
-    panel->current.cur_gain0 = desired;
+  if (tvg_set (&global, &desired, panel->current.gain_step, panelx))
+    panel->current.gain0 = desired;
   else
     g_warning ("tvg0_down failed");
 }
@@ -1540,10 +1582,10 @@ tvg_up (GtkWidget *widget,
   gdouble desired;
   AmePanel *panel = get_panel (&global, panelx);
 
-  desired = panel->current.cur_gain_step + 0.5;
+  desired = panel->current.gain_step + 0.5;
 
-  if (tvg_set (&global, &panel->current.cur_gain0, desired, panelx))
-    panel->current.cur_gain_step = desired;
+  if (tvg_set (&global, &panel->current.gain0, desired, panelx))
+    panel->current.gain_step = desired;
   else
     g_warning ("tvg_up failed");
 }
@@ -1555,10 +1597,10 @@ tvg_down (GtkWidget *widget,
   gdouble desired;
   AmePanel *panel = get_panel (&global, panelx);
 
-  desired = panel->current.cur_gain_step - 0.5;
+  desired = panel->current.gain_step - 0.5;
 
-  if (tvg_set (&global, &panel->current.cur_gain0, desired, panelx))
-    panel->current.cur_gain_step = desired;
+  if (tvg_set (&global, &panel->current.gain0, desired, panelx))
+    panel->current.gain_step = desired;
   else
     g_warning ("tvg_down failed");
 }
@@ -1601,11 +1643,11 @@ tvg_level_up (GtkWidget *widget,
   gdouble desired;
   AmePanel *panel = get_panel (&global, panelx);
 
-  desired = panel->current.cur_level + 0.1;
+  desired = panel->current.level + 0.1;
   desired = CLAMP (desired, 0.0, 1.0);
 
-  if (auto_tvg_set (&global, desired, panel->current.cur_sensitivity, panelx))
-    panel->current.cur_level = desired;
+  if (auto_tvg_set (&global, desired, panel->current.sensitivity, panelx))
+    panel->current.level = desired;
   else
     g_warning ("tvg_level_up failed");
 }
@@ -1617,11 +1659,11 @@ tvg_level_down (GtkWidget *widget,
   gdouble desired;
   AmePanel *panel = get_panel (&global, panelx);
 
-  desired = panel->current.cur_level - 0.1;
+  desired = panel->current.level - 0.1;
   desired = CLAMP (desired, 0.0, 1.0);
 
-  if (auto_tvg_set (&global, desired, panel->current.cur_sensitivity, panelx))
-    panel->current.cur_level = desired;
+  if (auto_tvg_set (&global, desired, panel->current.sensitivity, panelx))
+    panel->current.level = desired;
   else
     g_warning ("tvg_level_down failed");
 }
@@ -1633,11 +1675,11 @@ tvg_sens_up (GtkWidget *widget,
   gdouble desired;
   AmePanel *panel = get_panel (&global, panelx);
 
-  desired = panel->current.cur_sensitivity + 0.1;
+  desired = panel->current.sensitivity + 0.1;
   desired = CLAMP (desired, 0.0, 1.0);
 
-  if (auto_tvg_set (&global, panel->current.cur_level, desired, panelx))
-    panel->current.cur_sensitivity = desired;
+  if (auto_tvg_set (&global, panel->current.level, desired, panelx))
+    panel->current.sensitivity = desired;
   else
     g_warning ("tvg_sens_up failed");
 }
@@ -1649,11 +1691,11 @@ tvg_sens_down (GtkWidget *widget,
   gdouble desired;
   AmePanel *panel = get_panel (&global, panelx);
 
-  desired = panel->current.cur_sensitivity + 0.1;
+  desired = panel->current.sensitivity + 0.1;
   desired = CLAMP (desired, 0.0, 1.0);
 
-  if (auto_tvg_set (&global, panel->current.cur_level, desired, panelx))
-    panel->current.cur_sensitivity = desired;
+  if (auto_tvg_set (&global, panel->current.level, desired, panelx))
+    panel->current.sensitivity = desired;
   else
     g_warning ("tvg_sens_down failed");
 }
@@ -1695,9 +1737,9 @@ distance_up (GtkWidget *widget,
   gdouble desired;
   AmePanel *panel = get_panel (&global, panelx);
 
-  desired = panel->current.cur_distance + 5.0;
+  desired = panel->current.distance + 5.0;
   if (distance_set (&global, desired, panelx))
-    panel->current.cur_distance = desired;
+    panel->current.distance = desired;
   else
     g_warning ("distance_up failed");
 }
@@ -1709,9 +1751,9 @@ distance_down (GtkWidget *widget,
   gdouble desired;
   AmePanel *panel = get_panel (&global, panelx);
 
-  desired = panel->current.cur_distance - 5.0;
+  desired = panel->current.distance - 5.0;
   if (distance_set (&global, desired, panelx))
-    panel->current.cur_distance = desired;
+    panel->current.distance = desired;
   else
     g_warning ("distance_down failed");
 }
@@ -1934,7 +1976,7 @@ black_up (GtkWidget *widget,
         return;
     }
 
-  new_black = CLAMP (new_black, 1.0, 100.0);
+  new_black = CLAMP (new_black, 0.0, 100.0);
 
   if (brightness_set (&global, panel->vis_current.brightness, new_black, panelx))
     panel->vis_current.black = new_black;
@@ -1983,7 +2025,7 @@ black_down (GtkWidget *widget,
         return;
     }
 
-  new_black = CLAMP (new_black, 1.0, 100.0);
+  new_black = CLAMP (new_black, 0.0, 100.0);
 
   if (brightness_set (&global, panel->vis_current.brightness, new_black, panelx))
     panel->vis_current.black = new_black;
@@ -2063,6 +2105,7 @@ live_view (GtkWidget  *widget,
 {
   VisualWF *wf;
   VisualFL *fl;
+  gboolean current;
   AmePanel *panel = get_panel (&global, panelx);
 
   switch (panel->type)
@@ -2070,7 +2113,7 @@ live_view (GtkWidget  *widget,
     case AME_PANEL_WATERFALL:
     case AME_PANEL_ECHO:
       wf = (VisualWF*)panel->vis_gui;
-      hyscan_gtk_waterfall_automove (wf->wf, state);
+      current = hyscan_gtk_waterfall_automove (wf->wf, state);
       break;
 
     case AME_PANEL_FORWARDLOOK:
@@ -2080,23 +2123,38 @@ live_view (GtkWidget  *widget,
         hyscan_forward_look_player_real_time (fl->player);
       else
         hyscan_forward_look_player_pause (fl->player);
+      current = state;
       break;
 
     default:
       g_warning ("live_view: wrong panel type!");
-
     }
 
-  // TODO: live_view for ALL?
-  button_set_active (G_OBJECT (panel->vis_gui->live_view), state);
+  button_set_active (G_OBJECT (panel->vis_gui->live_view), current);
 
   return TRUE;
 }
 
+gboolean
+automove_switched (GtkWidget  *widget,
+                   gboolean    state)
+{
+  static gboolean now_switching = FALSE;
+
+  if (now_switching)
+    return TRUE;
+
+  now_switching = TRUE;
+  automove_state_changed (widget, state, &global);
+  now_switching = FALSE;
+
+  return FALSE;
+}
+
 void
-live_view_off (GtkWidget  *widget,
-               gboolean    state,
-               Global     *global)
+automove_state_changed (GtkWidget  *widget,
+                        gboolean    state,
+                        Global     *global)
 {
   GHashTableIter iter;
   gpointer k, v;
@@ -2105,7 +2163,7 @@ live_view_off (GtkWidget  *widget,
   while (g_hash_table_iter_next (&iter, &k, &v))
     live_view (NULL, state, GPOINTER_TO_INT (k));
 
-  g_message ("live_view_off!");
+  g_message ("automove_state_changed!");
 }
 
 
@@ -2142,10 +2200,10 @@ start_stop (Global    *global,
 
           /* Излучение НЕ в режиме сух. пов. */
           if (!global->dry)
-            status &= signal_set (global, panel->current.cur_signal, panelx);
+            status &= signal_set (global, panel->current.signal, panelx);
 
           /* Приемник. */
-          status &= distance_set (global, panel->current.cur_distance, panelx);
+          status &= distance_set (global, panel->current.distance, panelx);
 
           /* TVG */
           switch (panel->type)
@@ -2154,11 +2212,11 @@ start_stop (Global    *global,
                  Сейчас пригодно только для АМЭ.
                */
             case AME_PANEL_WATERFALL:
-              status &= auto_tvg_set (global, panel->current.cur_level, panel->current.cur_sensitivity, panelx);
+              status &= auto_tvg_set (global, panel->current.level, panel->current.sensitivity, panelx);
               break;
             case AME_PANEL_ECHO:
             case AME_PANEL_FORWARDLOOK:
-              status &= tvg_set (global, &panel->current.cur_gain0, panel->current.cur_gain_step, panelx);
+              status &= tvg_set (global, &panel->current.gain0, panel->current.gain_step, panelx);
               break;
 
             default:
@@ -2247,32 +2305,6 @@ sensor_cb (HyScanSensor     *sensor,
   /* Напрямую загоняем их в виджет. */
   hyscan_gtk_nav_indicator_push (HYSCAN_GTK_NAV_INDICATOR (global->gui.nav), buffer);
 }
-
-
-
-
-// gboolean
-// ame_key_func (gpointer user_data)
-// {
-//   Global *global = user_data;
-//   gint keycode;
-
-//   keycode = g_atomic_int_get (&global->urpc_keycode);
-
-//   if (keycode == URPC_KEYCODE_NO_ACTION)
-//     return G_SOURCE_CONTINUE;
-
-//   switch (keycode)
-//     {
-//     default:
-//       g_message ("This key is not supported yet. ");
-//     }
-
-//   /* Сбрасываем значение кнопки, если его больше никто не перетер. */
-//   g_atomic_int_compare_and_exchange (&global->urpc_keycode, keycode, URPC_KEYCODE_NO_ACTION);
-
-//   return G_SOURCE_CONTINUE;
-// }
 
 GtkWidget*
 make_layer_btn (HyScanGtkWaterfallLayer *layer,
@@ -2402,7 +2434,7 @@ make_color_maps (gboolean profiler)
     }
 
   new_map = g_new (AmeColormap, 1);
-  new_map->name = g_strdup ("Вонючий Калькулятор");
+  new_map->name = g_strdup ("Адидах");
   new_map->colors = g_memdup (orange, 256 * sizeof (guint32));
   new_map->len = 256;
   new_map->bg = BLACK_BG;
@@ -2675,13 +2707,10 @@ main (int argc, char **argv)
 
   /* Основное окно программы. */
   global.gui.window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  g_signal_connect (G_OBJECT (global.gui.window), "destroy", G_CALLBACK (gtk_main_quit), NULL);
+  g_signal_connect_after (G_OBJECT (global.gui.window), "destroy", G_CALLBACK (gtk_main_quit), NULL);
   g_signal_connect (G_OBJECT (global.gui.window), "key-press-event", G_CALLBACK (key_press), &global);
   gtk_window_set_title (GTK_WINDOW (global.gui.window), "ГБОГКПФ");
   gtk_window_set_default_size (GTK_WINDOW (global.gui.window), 1600, 900);
-
-  /* Основная раскладка окна. */
-  global.gui.grid = gtk_grid_new ();
 
   /* Навигационные данные. */
   global.gui.nav = hyscan_gtk_nav_indicator_new ();
@@ -2719,9 +2748,6 @@ main (int argc, char **argv)
 
   gtk_builder_connect_signals (common_builder, &global);
 
-  /* Кладем сетку в виндоу. */
-  gtk_container_add (GTK_CONTAINER (global.gui.window), global.gui.grid);
-
   /***
    *  ___   ___         ___         ___
    * |   | |   | |\  | |     |     |
@@ -2738,6 +2764,7 @@ main (int argc, char **argv)
     VisualWF *vwf = g_new0 (VisualWF, 1);
 
     panel->name = g_strdup ("SideScan");
+    panel->short_name = g_strdup ("SS");
     panel->type = AME_PANEL_WATERFALL;
 
     panel->sources = g_new0 (HyScanSourceType, 3);
@@ -2757,7 +2784,7 @@ main (int argc, char **argv)
                                 &vwf->wf_mark, &vwf->wf_metr,
                                 global.marks.model);
 
-    g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (live_view_off), &global);
+    g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_state_changed), &global);
     g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_SIDESCAN));
 
     hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed);
@@ -2775,6 +2802,7 @@ main (int argc, char **argv)
     VisualWF *vwf = g_new0 (VisualWF, 1);
 
     panel->name = g_strdup ("Profiler");
+    panel->short_name = g_strdup ("PF");
     panel->type = AME_PANEL_ECHO;
 
     panel->sources = g_new0 (HyScanSourceType, 2);
@@ -2797,7 +2825,7 @@ main (int argc, char **argv)
     hyscan_gtk_waterfall_grid_set_condence (vwf->wf_grid, 10.0);
     hyscan_gtk_waterfall_grid_set_grid_color (vwf->wf_grid, hyscan_tile_color_converter_c2i (32, 32, 32, 255));
 
-    g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (live_view_off), &global);
+    g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_state_changed), &global);
     g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_PROFILER));
 
     hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), PROFILER);
@@ -2815,6 +2843,7 @@ main (int argc, char **argv)
     VisualFL *vfl = g_new0 (VisualFL, 1);
 
     panel->name = g_strdup ("ForwardLook");
+    panel->short_name = g_strdup ("FL");
     panel->type = AME_PANEL_FORWARDLOOK;
 
     panel->sources = g_new0 (HyScanSourceType, 2);
@@ -2868,12 +2897,12 @@ main (int argc, char **argv)
       {
         gint panelx = GPOINTER_TO_INT (k);
         AmePanel *panel = v;
-        panel->current.cur_distance =    keyfile_double_read_helper (config, panel->name, "sonar.cur_distance", 50);
-        panel->current.cur_signal =      keyfile_double_read_helper (config, panel->name, "sonar.cur_signal", 1);
-        panel->current.cur_gain0 =       keyfile_double_read_helper (config, panel->name, "sonar.cur_gain0", 0);
-        panel->current.cur_gain_step =   keyfile_double_read_helper (config, panel->name, "sonar.cur_gain_step", 10);
-        panel->current.cur_level =       keyfile_double_read_helper (config, panel->name, "sonar.cur_level", 0.5);
-        panel->current.cur_sensitivity = keyfile_double_read_helper (config, panel->name, "sonar.cur_sensitivity", 0.6);
+        panel->current.distance =    keyfile_double_read_helper (config, panel->name, "sonar.cur_distance", 50);
+        panel->current.signal =      keyfile_double_read_helper (config, panel->name, "sonar.cur_signal", 1);
+        panel->current.gain0 =       keyfile_double_read_helper (config, panel->name, "sonar.cur_gain0", 0);
+        panel->current.gain_step =   keyfile_double_read_helper (config, panel->name, "sonar.cur_gain_step", 10);
+        panel->current.level =       keyfile_double_read_helper (config, panel->name, "sonar.cur_level", 0.5);
+        panel->current.sensitivity = keyfile_double_read_helper (config, panel->name, "sonar.cur_sensitivity", 0.6);
 
         panel->vis_current.brightness =  keyfile_double_read_helper (config, panel->name, "cur_brightness",   80.0);
         panel->vis_current.colormap =    keyfile_double_read_helper (config, panel->name, "cur_color_map",    0);
@@ -2881,10 +2910,15 @@ main (int argc, char **argv)
         panel->vis_current.sensitivity = keyfile_double_read_helper (config, panel->name, "cur_sensitivity",  8.0);
 
 
-        brightness_set (&global, panel->vis_current.brightness, panel->vis_current.black, panelx);
-        if (panel->type == AME_PANEL_WATERFALL || panel->type == AME_PANEL_ECHO)
-          color_map_set (&global, panel->vis_current.colormap, panelx);
 
+        if (panel->type == AME_PANEL_WATERFALL)
+          color_map_set (&global, panel->vis_current.colormap, panelx);
+        else if (panel->type == AME_PANEL_ECHO)
+          color_map_set (&global, panel->vis_current.colormap, panelx);
+        else if (panel->type == AME_PANEL_FORWARDLOOK)
+          sensitivity_set (&global, panel->vis_current.sensitivity, panelx);
+
+        brightness_set (&global, panel->vis_current.brightness, panel->vis_current.black, panelx);
         scale_set (&global, FALSE, panelx);
 
         /* Для локаторов мы ничего не задаем,
@@ -2924,12 +2958,12 @@ main (int argc, char **argv)
       while (g_hash_table_iter_next (&iter, &k, &v))
         {
           AmePanel *panel = v;
-          keyfile_double_write_helper (config, panel->name, "sonar.cur_distance", panel->current.cur_distance);
-          keyfile_double_write_helper (config, panel->name, "sonar.cur_signal", panel->current.cur_signal);
-          keyfile_double_write_helper (config, panel->name, "sonar.cur_gain0", panel->current.cur_gain0);
-          keyfile_double_write_helper (config, panel->name, "sonar.cur_gain_step", panel->current.cur_gain_step);
-          keyfile_double_write_helper (config, panel->name, "sonar.cur_level", panel->current.cur_level);
-          keyfile_double_write_helper (config, panel->name, "sonar.cur_sensitivity", panel->current.cur_sensitivity);
+          keyfile_double_write_helper (config, panel->name, "sonar.cur_distance", panel->current.distance);
+          keyfile_double_write_helper (config, panel->name, "sonar.cur_signal", panel->current.signal);
+          keyfile_double_write_helper (config, panel->name, "sonar.cur_gain0", panel->current.gain0);
+          keyfile_double_write_helper (config, panel->name, "sonar.cur_gain_step", panel->current.gain_step);
+          keyfile_double_write_helper (config, panel->name, "sonar.cur_level", panel->current.level);
+          keyfile_double_write_helper (config, panel->name, "sonar.cur_sensitivity", panel->current.sensitivity);
 
           keyfile_double_write_helper (config, panel->name, "cur_brightness",          panel->vis_current.brightness);
           keyfile_double_write_helper (config, panel->name, "cur_color_map",           panel->vis_current.colormap);

@@ -8,8 +8,8 @@ enum
   PROP_ICON,
   PROP_LABEL,
   PROP_TOGGLE,
+  PROP_INITIAL_STATE,
   PROP_STATE,
-  PROP_ACTIVE,
 };
 
 enum
@@ -39,6 +39,10 @@ static void    hyscan_ame_button_set_property             (GObject              
                                                            guint                  prop_id,
                                                            const GValue          *value,
                                                            GParamSpec            *pspec);
+static void    hyscan_ame_button_get_property             (GObject               *object,
+                                                           guint                  prop_id,
+                                                           GValue                *value,
+                                                           GParamSpec            *pspec);
 static void    hyscan_ame_button_object_constructed       (GObject               *object);
 static void    hyscan_ame_button_object_finalize          (GObject               *object);
 
@@ -53,6 +57,7 @@ hyscan_ame_button_class_init (HyScanAmeButtonClass *klass)
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
   object_class->set_property = hyscan_ame_button_set_property;
+  object_class->get_property = hyscan_ame_button_get_property;
 
   object_class->constructed = hyscan_ame_button_object_constructed;
   object_class->finalize = hyscan_ame_button_object_finalize;
@@ -63,10 +68,10 @@ hyscan_ame_button_class_init (HyScanAmeButtonClass *klass)
     g_param_spec_string ("label", "label", "label", NULL, flags));
    g_object_class_install_property (object_class, PROP_TOGGLE,
     g_param_spec_boolean ("is_toggle", "is_toggle", "is_toggle", FALSE, flags));
+   g_object_class_install_property (object_class, PROP_INITIAL_STATE,
+    g_param_spec_boolean ("initial_state", "initial_state", "initial_state", FALSE, flags));
    g_object_class_install_property (object_class, PROP_STATE,
-    g_param_spec_boolean ("state", "state", "state", FALSE, flags));
-   g_object_class_install_property (object_class, PROP_ACTIVE,
-    g_param_spec_boolean ("active", "active", "active", FALSE, G_PARAM_WRITABLE));
+    g_param_spec_boolean ("state", "state", "state", FALSE, G_PARAM_READWRITE));
 
   /* Инициализируем сигналы. */
   hyscan_ame_button_signals[SIG_ACTIVATED] =
@@ -104,10 +109,25 @@ hyscan_ame_button_set_property (GObject      *object,
     priv->label = g_value_dup_string (value);
   else if (prop_id == PROP_TOGGLE)
     priv->is_toggle = g_value_get_boolean (value);
-  else if (prop_id == PROP_STATE)
+  else if (prop_id == PROP_INITIAL_STATE)
     priv->state = g_value_get_boolean (value);
-  else if (prop_id == PROP_ACTIVE)
-    hyscan_ame_button_set_active (self, g_value_get_boolean (value));
+  else if (prop_id == PROP_STATE)
+    hyscan_ame_button_set_state (self, g_value_get_boolean (value));
+  else
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+}
+
+static void
+hyscan_ame_button_get_property (GObject      *object,
+                                guint         prop_id,
+                                GValue       *value,
+                                GParamSpec   *pspec)
+{
+  HyScanAmeButton *self = HYSCAN_AME_BUTTON (object);
+  HyScanAmeButtonPrivate *priv = self->priv;
+
+  if (prop_id == PROP_STATE)
+    hyscan_ame_button_set_state (self, g_value_get_boolean (value));
   else
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 }
@@ -272,7 +292,7 @@ hyscan_ame_button_new (const gchar     *icon_name,
                        "icon-name", icon_name,
                        "label", label,
                        "is_toggle", is_toggle,
-                       "state", state,
+                       "initial_state", state,
                        NULL);
 }
 
@@ -306,11 +326,10 @@ hyscan_ame_button_activate (HyScanAmeButton *self)
 }
 
 void
-hyscan_ame_button_set_active (HyScanAmeButton *self,
+hyscan_ame_button_set_state (HyScanAmeButton *self,
                               gboolean         state)
 {
   HyScanAmeButtonPrivate *priv;
-
   g_return_if_fail (HYSCAN_IS_AME_BUTTON (self));
   priv = self->priv;
 

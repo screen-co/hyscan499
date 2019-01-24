@@ -31,7 +31,7 @@ start_stop_wrapper (HyScanAmeButton *button,
 
   if (!status)
     {
-      hyscan_ame_button_set_active (button, !state);
+      hyscan_ame_button_set_state (button, !state);
       return;
     }
 
@@ -39,12 +39,12 @@ start_stop_wrapper (HyScanAmeButton *button,
    *  Выкл: сухая энейбл, остальные неактив
    */
   gtk_widget_set_sensitive (ui->starter.dry, !state);
-  hyscan_ame_button_set_active ((HyScanAmeButton*)ui->starter.all, state);
+  hyscan_ame_button_set_state ((HyScanAmeButton*)ui->starter.all, state);
 
   for (i = 0; i < START_STOP_LAST; ++i)
     {
       if (ui->starter.panel[i] != NULL)
-        hyscan_ame_button_set_active ((HyScanAmeButton*)ui->starter.panel[i], state);
+        hyscan_ame_button_set_state ((HyScanAmeButton*)ui->starter.panel[i], state);
     }
 }
 
@@ -62,14 +62,14 @@ start_stop_dry_wrapper (HyScanAmeButton *button,
 
   if (!status)
     {
-      hyscan_ame_button_set_active (button, !state);
+      hyscan_ame_button_set_state (button, !state);
       return;
     }
 
   /*  Вкл: сухая актив, остальные дизейбл
    *  Выкл: сухая неактив, остальные энейблед
    */
-  hyscan_ame_button_set_active ((HyScanAmeButton*)ui->starter.dry, state);
+  hyscan_ame_button_set_state ((HyScanAmeButton*)ui->starter.dry, state);
   gtk_widget_set_sensitive (ui->starter.all, !state);
 
   for (i = 0; i < START_STOP_LAST; ++i)
@@ -417,9 +417,14 @@ build_interface (Global *global)
   AmeUI *ui = &global_ui;
   _global = global;
 
+  GtkWidget *grid;
+
   /* Кнопошный гуй представляет собой центральную область из 3 виджетов,
    * две боковых области с кнопками. Внизу выезжает управление ВСЛ,
    * слева выезжает контроль над галсами и метками. */
+
+  /* Сетка для всего. */
+  grid = gtk_grid_new ();
 
   /* Центральная зона: виджет с виджетами. Да. */
   ui->acoustic = hyscan_gtk_ame_box_new ();
@@ -504,13 +509,15 @@ build_interface (Global *global)
   /* Инициализация значений. */
   widget_swap (NULL, GINT_TO_POINTER (ALL));
 
-  /* Собираем воедино.                                               L  T  W  H */
-  gtk_grid_attach (GTK_GRID (global->gui.grid), ui->lstack,          0, 0, 1, 3);
-  gtk_grid_attach (GTK_GRID (global->gui.grid), ui->rstack,          1, 0, 1, 3);
-  gtk_grid_attach (GTK_GRID (global->gui.grid), ui->left_revealer,   2, 0, 1, 3);
-  gtk_grid_attach (GTK_GRID (global->gui.grid), ui->acoustic,        4, 0, 1, 1);
-  gtk_grid_attach (GTK_GRID (global->gui.grid), ui->bott_revealer,   4, 1, 1, 1);
-  gtk_grid_attach (GTK_GRID (global->gui.grid), global->gui.nav,     4, 2, 1, 1);
+  /* Собираем воедино.                                   L  T  W  H */
+  gtk_grid_attach (GTK_GRID (grid), ui->lstack,          0, 0, 1, 3);
+  gtk_grid_attach (GTK_GRID (grid), ui->rstack,          1, 0, 1, 3);
+  gtk_grid_attach (GTK_GRID (grid), ui->left_revealer,   2, 0, 1, 3);
+  gtk_grid_attach (GTK_GRID (grid), ui->acoustic,        4, 0, 1, 1);
+  gtk_grid_attach (GTK_GRID (grid), ui->bott_revealer,   4, 1, 1, 1);
+  gtk_grid_attach (GTK_GRID (grid), global->gui.nav,     4, 2, 1, 1);
+
+  gtk_container_add (GTK_CONTAINER (global->gui.window), grid);
 
   return TRUE;
 }

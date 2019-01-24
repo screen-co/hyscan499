@@ -41,7 +41,7 @@ GtkLabel *               hyscan_ame_button_create_value     (HyScanAmeButton *ab
 
 void                     hyscan_ame_button_activate         (HyScanAmeButton *ab);
 
-void                     hyscan_ame_button_set_active       (HyScanAmeButton *ab,
+void                     hyscan_ame_button_set_state       (HyScanAmeButton *ab,
                                                              gboolean         state);
 
 void                     hyscan_ame_button_set_sensitive    (HyScanAmeButton *ab,

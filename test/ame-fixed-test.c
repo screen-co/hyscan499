@@ -80,7 +80,7 @@ state_setter (HyScanAmeButton *button,
               gboolean         state)
 {
   g_print ("Act: set active.\n");
-  hyscan_ame_button_set_active (button, state);
+  hyscan_ame_button_set_state (button, state);
   return FALSE;
 }
 

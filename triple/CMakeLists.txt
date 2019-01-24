@@ -9,7 +9,7 @@ add_custom_command (OUTPUT ${CMAKE_BINARY_DIR}/resources/triple-resources.c
                             --target ${CMAKE_BINARY_DIR}/resources/triple-resources.c
                             triple-resources.xml
                     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-                    DEPENDS triple.ui common.ui
+                    DEPENDS common.ui
                     VERBATIM)
 
 set (TRIPLE_LIBS ${GLIB2_LIBRARIES}

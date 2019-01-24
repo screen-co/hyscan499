@@ -141,6 +141,7 @@ hyscan_gtk_nav_indicator_update (HyScanGtkNavIndicator *self)
 
   return G_SOURCE_CONTINUE;
 }
+
 GtkWidget *
 hyscan_gtk_nav_indicator_new (void)
 {

@@ -32,46 +32,6 @@
     <property name="can_focus">False</property>
     <property name="icon_name">list-add-symbolic</property>
   </object>
-  <object class="GtkBox" id="fl_play_control">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="valign">center</property>
-    <property name="margin_left">6</property>
-    <property name="margin_right">6</property>
-    <property name="margin_top">12</property>
-    <property name="hexpand">True</property>
-    <property name="orientation">vertical</property>
-    <child>
-      <object class="GtkScale" id="position">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="valign">center</property>
-        <property name="hexpand">True</property>
-        <property name="show_fill_level">True</property>
-        <property name="round_digits">0</property>
-        <property name="digits">0</property>
-        <property name="value_pos">right</property>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">True</property>
-        <property name="position">0</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="fl_latlong">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">True</property>
-        <property name="position">1</property>
-      </packing>
-    </child>
-  </object>
   <object class="GtkImage" id="fl_scale_image_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -116,9 +76,7 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="valign">start</property>
-    <property name="margin_left">6</property>
-    <property name="margin_right">6</property>
-    <property name="margin_top">12</property>
+    <property name="margin_bottom">6</property>
     <property name="hexpand">False</property>
     <child>
       <object class="GtkLabel" id="pf_brightness_label">
@@ -175,7 +133,7 @@
         <property name="margin_left">6</property>
         <property name="margin_right">6</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;100%&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
         <property name="justify">center</property>
       </object>
@@ -189,7 +147,6 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="margin_top">6</property>
-        <property name="margin_bottom">6</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -250,7 +207,7 @@
         <property name="margin_left">6</property>
         <property name="margin_right">6</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;1:1&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
       </object>
       <packing>
@@ -263,7 +220,6 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="margin_top">6</property>
-        <property name="margin_bottom">6</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -292,7 +248,7 @@
         <property name="can_focus">True</property>
         <property name="halign">center</property>
         <property name="valign">center</property>
-        <signal name="state-set" handler="live_view" swapped="no"/>
+        <signal name="state-set" handler="automove_switched" swapped="no"/>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -320,7 +276,6 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="margin_top">6</property>
-        <property name="margin_bottom">6</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -366,7 +321,7 @@
         <property name="margin_left">6</property>
         <property name="margin_right">6</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;0%&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
       </object>
       <packing>
@@ -378,6 +333,7 @@
       <object class="GtkSeparator" id="pf_separator">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="margin_top">6</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -427,9 +383,7 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="valign">start</property>
-    <property name="margin_left">6</property>
-    <property name="margin_right">6</property>
-    <property name="margin_top">12</property>
+    <property name="margin_bottom">6</property>
     <property name="hexpand">False</property>
     <property name="column_spacing">1</property>
     <child>
@@ -483,7 +437,6 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="margin_top">6</property>
-        <property name="margin_bottom">6</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -541,7 +494,6 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="margin_top">6</property>
-        <property name="margin_bottom">6</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -584,7 +536,6 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="margin_top">6</property>
-        <property name="margin_bottom">6</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -630,7 +581,7 @@
         <property name="margin_left">6</property>
         <property name="margin_right">6</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;100%&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
       </object>
       <packing>
@@ -644,7 +595,7 @@
         <property name="can_focus">False</property>
         <property name="valign">center</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;10&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
       </object>
       <packing>
@@ -660,7 +611,7 @@
         <property name="margin_left">6</property>
         <property name="margin_right">6</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;100%&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
         <property name="justify">center</property>
       </object>
@@ -698,9 +649,6 @@
   <object class="GtkGrid" id="sonar_control">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="margin_left">6</property>
-    <property name="margin_right">6</property>
-    <property name="margin_bottom">12</property>
     <property name="hexpand">False</property>
     <property name="column_spacing">1</property>
     <child>
@@ -755,7 +703,7 @@
         <property name="can_focus">False</property>
         <property name="valign">center</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;100 m&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
         <property name="justify">center</property>
       </object>
@@ -769,7 +717,6 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="margin_top">6</property>
-        <property name="margin_bottom">6</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -814,7 +761,7 @@
         <property name="can_focus">False</property>
         <property name="valign">center</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;Tone 100&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
         <property name="justify">center</property>
         <property name="single_line_mode">True</property>
@@ -839,6 +786,18 @@
         <property name="top_attach">4</property>
       </packing>
     </child>
+    <child>
+      <object class="GtkSeparator" id="separator2">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">6</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">5</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
   </object>
   <object class="GtkImage" id="ss_brightness_image_down">
     <property name="visible">True</property>
@@ -860,13 +819,11 @@
     <property name="can_focus">False</property>
     <property name="icon_name">list-add-symbolic</property>
   </object>
-  <object class="GtkGrid" id="sonar_view_control">
+  <object class="GtkGrid" id="ss_view_control">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="valign">start</property>
-    <property name="margin_left">6</property>
-    <property name="margin_right">6</property>
-    <property name="margin_top">12</property>
+    <property name="margin_bottom">6</property>
     <property name="hexpand">False</property>
     <property name="column_spacing">1</property>
     <child>
@@ -923,7 +880,7 @@
         <property name="can_focus">False</property>
         <property name="valign">center</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;100%&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
         <property name="justify">center</property>
       </object>
@@ -982,7 +939,6 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="margin_top">6</property>
-        <property name="margin_bottom">6</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -1025,7 +981,6 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="margin_top">6</property>
-        <property name="margin_bottom">6</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -1069,8 +1024,11 @@
         <property name="can_focus">False</property>
         <property name="valign">center</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;ЖЁЛТАЯ&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
+        <property name="ellipsize">end</property>
+        <property name="width_chars">10</property>
+        <property name="max_width_chars">10</property>
       </object>
       <packing>
         <property name="left_attach">1</property>
@@ -1082,7 +1040,6 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="margin_top">6</property>
-        <property name="margin_bottom">6</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -1096,7 +1053,7 @@
         <property name="can_focus">False</property>
         <property name="valign">center</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;1:1&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
       </object>
       <packing>
@@ -1110,7 +1067,7 @@
         <property name="can_focus">True</property>
         <property name="halign">center</property>
         <property name="valign">center</property>
-        <signal name="state-set" handler="live_view" swapped="no"/>
+        <signal name="state-set" handler="automove_switched" swapped="no"/>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -1157,8 +1114,6 @@
   <object class="GtkGrid" id="lin_tvg_control">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="margin_left">6</property>
-    <property name="margin_right">6</property>
     <property name="hexpand">False</property>
     <child>
       <object class="GtkLabel" id="tvg_label0">
@@ -1196,7 +1151,7 @@
         <property name="can_focus">False</property>
         <property name="valign">center</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;0 dB&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
       </object>
       <packing>
@@ -1223,8 +1178,7 @@
       <object class="GtkSeparator" id="tvg0_separator">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">9</property>
-        <property name="margin_bottom">6</property>
+        <property name="margin_top">6</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -1269,7 +1223,7 @@
         <property name="can_focus">False</property>
         <property name="valign">center</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;20 dB&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
       </object>
       <packing>
@@ -1290,6 +1244,19 @@
       <packing>
         <property name="left_attach">2</property>
         <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="separator3">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">6</property>
+        <property name="margin_bottom">6</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">5</property>
+        <property name="width">3</property>
       </packing>
     </child>
   </object>
@@ -1316,23 +1283,7 @@
   <object class="GtkGrid" id="auto_tvg_control">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
-    <property name="margin_left">6</property>
-    <property name="margin_right">6</property>
     <property name="hexpand">False</property>
-    <child>
-      <object class="GtkLabel" id="tvg_level_label">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">start</property>
-        <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Уровень</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">0</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
     <child>
       <object class="GtkLabel" id="tvg_sensitivity_label">
         <property name="visible">True</property>
@@ -1348,30 +1299,71 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="tvg_level_down">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="image">tvg_level_down_image</property>
-        <signal name="clicked" handler="tvg_level_down" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">1</property>
-      </packing>
-    </child>
-    <child>
       <object class="GtkButton" id="tvg_sensitivity_down">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="image">tvg_sensitivity_down_image</property>
         <property name="xalign">0.55000001192092896</property>
-        <signal name="clicked" handler="tvg_sensitivity_down" swapped="no"/>
+        <signal name="clicked" handler="tvg_sens_down" swapped="no"/>
       </object>
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="tvg_sensitivity_up">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="image">tvg_sensitivity_up_image</property>
+        <signal name="clicked" handler="tvg_sens_up" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="tvg_sens_value">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="valign">center</property>
+        <property name="hexpand">True</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="use_markup">True</property>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="separator1">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">6</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">2</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="tvg_level_label">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">start</property>
+        <property name="margin_bottom">6</property>
+        <property name="label" translatable="yes">Уровень</property>
+        <property name="ellipsize">end</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">0</property>
+        <property name="width">3</property>
       </packing>
     </child>
     <child>
@@ -1388,24 +1380,25 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="tvg_sensitivity_up">
+      <object class="GtkButton" id="tvg_level_down">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
-        <property name="image">tvg_sensitivity_up_image</property>
-        <signal name="clicked" handler="tvg_sensitivity_up" swapped="no"/>
+        <property name="image">tvg_level_down_image</property>
+        <signal name="clicked" handler="tvg_level_down" swapped="no"/>
       </object>
       <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">4</property>
+        <property name="left_attach">0</property>
+        <property name="top_attach">1</property>
       </packing>
     </child>
     <child>
       <object class="GtkLabel" id="tvg_level_value">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="valign">center</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;0.5&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
       </object>
       <packing>
@@ -1414,28 +1407,15 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="tvg_sensitivity_value">
+      <object class="GtkSeparator" id="separator4">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;1.0&lt;/b&gt;&lt;/small&gt;</property>
-        <property name="use_markup">True</property>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">4</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkSeparator" id="separator1">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="margin_top">9</property>
+        <property name="margin_top">6</property>
         <property name="margin_bottom">6</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">2</property>
+        <property name="top_attach">5</property>
         <property name="width">3</property>
       </packing>
     </child>
