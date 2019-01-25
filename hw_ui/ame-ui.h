@@ -135,12 +135,12 @@ void        build_all (AmeUI   *ui,
                        Global  *global,
                        AmePage *page);
 
-gboolean    build_interface (Global *global);
+G_MODULE_EXPORT gboolean    build_interface (Global *global);
 
-void        destroy_interface (void);
+G_MODULE_EXPORT void        destroy_interface (void);
 
 /* Для кнопочек. */
-gboolean    kf_config    (GKeyFile *kf);
+G_MODULE_EXPORT gboolean    kf_config    (GKeyFile *kf);
 
 /* Внутренние, для ожидания и получения кнопок. */
 gboolean    ame_button_clicker (gpointer data);

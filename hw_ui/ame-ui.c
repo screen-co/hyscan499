@@ -1,5 +1,4 @@
 #include "ame-ui.h"
-#include "ame-ui.h"
 #include "ame-ui-definitions.h"
 
 #include <gmodule.h>

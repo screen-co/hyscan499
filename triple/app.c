@@ -176,7 +176,7 @@ main (int argc, char **argv)
     /* Если нет этих двух функций, то всё, суши вёсла. */
     if ((ui_build == NULL) || (ui_destroy == NULL))
       {
-        g_warning ("failed to load UI builer");
+        g_warning ("failed to load UI builer (%p; %p)", ui_build, ui_destroy);
         goto exit;
       }
   }
