@@ -1,7 +1,7 @@
 #ifndef __HYSCAN_AME_FIXED_H__
 #define __HYSCAN_AME_FIXED_H__
 
-#include "hyscan-ame-button.h"
+#include <hyscan-ame-button.h>
 
 G_BEGIN_DECLS
 
@@ -28,17 +28,22 @@ struct _HyScanAmeFixedClass
   GtkFixedClass parent_class;
 };
 
+HYSCAN_API
 GType                  hyscan_ame_fixed_get_type         (void);
 
+HYSCAN_API
 GtkWidget             *hyscan_ame_fixed_new              (void);
 
+HYSCAN_API
 void                   hyscan_ame_fixed_pack             (HyScanAmeFixed *self,
                                                           guint           position,
                                                           GtkWidget      *child);
 
+HYSCAN_API
 void                   hyscan_ame_fixed_activate         (HyScanAmeFixed *self,
                                                           guint           position);
 
+HYSCAN_API
 void                   hyscan_ame_fixed_set_state        (HyScanAmeFixed *self,
                                                           guint           position,
                                                           gboolean        state);

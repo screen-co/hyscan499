@@ -29,6 +29,7 @@ struct _HyScanMarkSyncClass
   GObjectClass parent_class;
 };
 
+HYSCAN_API
 GType                  hyscan_mark_sync_get_type         (void);
 
 HYSCAN_API

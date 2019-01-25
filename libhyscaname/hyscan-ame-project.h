@@ -2,6 +2,7 @@
 #define __HYSCAN_AME_PROJECT_H__
 
 #include <hyscan-db-info.h>
+#include <hyscan-api.h>
 #include <gtk/gtk.h>
 
 G_BEGIN_DECLS
@@ -35,12 +36,15 @@ struct _HyScanAmeProjectClass
   GtkDialogClass parent_class;
 };
 
+HYSCAN_API
 GType                   hyscan_ame_project_get_type         (void);
 
+HYSCAN_API
 GtkWidget              *hyscan_ame_project_new              (HyScanDB     *db,
                                                              HyScanDBInfo *info,
                                                              GtkWindow    *parent);
 
+HYSCAN_API
 void                    hyscan_ame_project_get              (HyScanAmeProject *ampj,
                                                              gchar           **project,
                                                              gchar           **track);

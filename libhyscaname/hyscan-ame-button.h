@@ -2,6 +2,7 @@
 #define __HYSCAN_AME_BUTTON_H__
 
 #include <gtk/gtk.h>
+#include <hyscan-api.h>
 
 G_BEGIN_DECLS
 
@@ -29,21 +30,27 @@ struct _HyScanAmeButtonClass
   GtkBoxClass parent_class;
 };
 
+HYSCAN_API
 GType                    hyscan_ame_button_get_type         (void);
 
+HYSCAN_API
 GtkWidget               *hyscan_ame_button_new              (const gchar     *icon_name,
                                                              const gchar     *label,
                                                              gboolean         is_toggle,
                                                              gboolean         state);
 
+HYSCAN_API
 GtkLabel *               hyscan_ame_button_create_value     (HyScanAmeButton *ab,
                                                              const gchar     *text);
 
+HYSCAN_API
 void                     hyscan_ame_button_activate         (HyScanAmeButton *ab);
 
+HYSCAN_API
 void                     hyscan_ame_button_set_state       (HyScanAmeButton *ab,
                                                              gboolean         state);
 
+HYSCAN_API
 void                     hyscan_ame_button_set_sensitive    (HyScanAmeButton *ab,
                                                              gboolean         state);
 

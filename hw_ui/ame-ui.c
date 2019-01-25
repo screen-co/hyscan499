@@ -411,7 +411,7 @@ list_scroll_end (GObject *emitter,
 //   #     # #     # ### #     #
 
 /* Самая крутая функция, строит весь уй. */
-G_MODULE_EXPORT gboolean
+gboolean
 build_interface (Global *global)
 {
   AmeUI *ui = &global_ui;
@@ -522,7 +522,7 @@ build_interface (Global *global)
   return TRUE;
 }
 
-G_MODULE_EXPORT  void
+void
 destroy_interface (void)
 {
   g_atomic_int_set (&brec.stop, TRUE);
@@ -631,7 +631,7 @@ ame_button_thread (void * data)
   return NULL;
 }
 
-G_MODULE_EXPORT gboolean
+gboolean
 kf_config (GKeyFile *kf)
 {
   gchar * mcast_addr;

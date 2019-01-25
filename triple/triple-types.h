@@ -28,6 +28,7 @@
 #include <hyscan-gtk-forward-look.h>
 #include <hyscan-fl-coords.h>
 #include <hyscan-mark-sync.h>
+#include <hyscan-api.h>
 
 #define hyscan_return_val_if_fail(expr,val) do {if (!(expr)) {g_warning("Failed at line %i", __LINE__); return (val);}} while (FALSE)
 #define hyscan_exit_if(expr,msg) do {if (!(expr)) break; g_message ((msg)); goto exit;} while (FALSE)
@@ -245,15 +246,15 @@ typedef struct
 
 void ame_panel_destroy (gpointer data);
 
-AmePanel *
+HYSCAN_API AmePanel *
 get_panel (Global *global,
            gint    panelx);
 
-gint
+HYSCAN_API gint
 get_panel_id_by_name (Global      *global,
                       const gchar *name);
 
-void
+HYSCAN_API void
 depth_writer (GObject *emitter);
 
 void
@@ -289,18 +290,18 @@ gboolean idle_key (GdkEvent *event);
 void     nav_common (GtkWidget *target,
                      guint      keyval,
                      guint      state);
-void nav_del      (GObject *emitter, gpointer udata);
-void nav_pg_up    (GObject *emitter, gpointer udata);
-void nav_pg_down  (GObject *emitter, gpointer udata);
-void nav_up    (GObject *emitter, gpointer udata);
-void nav_down  (GObject *emitter, gpointer udata);
-void nav_left  (GObject *emitter, gpointer udata);
-void nav_right (GObject *emitter, gpointer udata);
+HYSCAN_API void nav_del      (GObject *emitter, gpointer udata);
+HYSCAN_API void nav_pg_up    (GObject *emitter, gpointer udata);
+HYSCAN_API void nav_pg_down  (GObject *emitter, gpointer udata);
+HYSCAN_API void nav_up    (GObject *emitter, gpointer udata);
+HYSCAN_API void nav_down  (GObject *emitter, gpointer udata);
+HYSCAN_API void nav_left  (GObject *emitter, gpointer udata);
+HYSCAN_API void nav_right (GObject *emitter, gpointer udata);
 
-void fl_prev (GObject *emitter, gint panelx);
-void fl_next (GObject *emitter, gint panelx);
+HYSCAN_API void fl_prev (GObject *emitter, gint panelx);
+HYSCAN_API void fl_next (GObject *emitter, gint panelx);
 
-gint
+HYSCAN_API gint
 run_manager    (GObject     *emitter);
 
 void
@@ -456,136 +457,136 @@ distance_set (Global  *global,
               gdouble  wanted_distance,
               gint sonar_selector);
 
-void
+HYSCAN_API void
 void_callback (gpointer data);
 
-void
+HYSCAN_API void
 brightness_up (GtkWidget *widget,
                gint        selector);
 
-void
+HYSCAN_API void
 brightness_down (GtkWidget *widget,
                  gint       selector);
 
-void
+HYSCAN_API void
 black_up (GtkWidget *widget,
           gint       selector);
 
-void
+HYSCAN_API void
 black_down (GtkWidget *widget,
             gint       selector);
 
-void
+HYSCAN_API void
 scale_up (GtkWidget *widget,
           gint       selector);
 
-void
+HYSCAN_API void
 scale_down (GtkWidget *widget,
             gint       selector);
 
-void
+HYSCAN_API void
 sensitivity_up (GtkWidget *widget,
                 gint       selector);
 
-void
+HYSCAN_API void
 sensitivity_down (GtkWidget *widget,
                   gint       selector);
 
-void
+HYSCAN_API void
 color_map_up (GtkWidget *widget,
               gint       selector);
 
-void
+HYSCAN_API void
 color_map_down (GtkWidget *widget,
                 gint       selector);
 
-void
+HYSCAN_API void
 color_map_cyclic (GtkWidget *widget,
                   gint       panelx);
 
-void
+HYSCAN_API void
 mode_changed (GtkWidget *widget,
               gboolean   state,
               gint       selector);
 
-gboolean
+HYSCAN_API gboolean
 pf_special (GtkWidget  *widget,
             gboolean    state,
             gint        selector);
 
-gboolean
+HYSCAN_API gboolean
 live_view (GtkWidget  *widget,
            gboolean    state,
            gint        selector);
 
-void
+HYSCAN_API void
 live_view_off (GtkWidget  *widget,
                gboolean    state,
                Global     *global);
 
-gboolean
+HYSCAN_API gboolean
 automove_switched (GtkWidget  *widget,
                    gboolean    state);
 
-void
+HYSCAN_API void
 automove_state_changed (GtkWidget  *widget,
                gboolean    state,
                Global     *global);
 
-void
+HYSCAN_API void
 distance_up (GtkWidget *widget,
              gint       sonar_selector);
 
-void
+HYSCAN_API void
 distance_down (GtkWidget *widget,
                gint       sonar_selector);
 
-void
+HYSCAN_API void
 tvg0_up (GtkWidget *widget,
          gint       selector);
 
-void
+HYSCAN_API void
 tvg0_down (GtkWidget *widget,
            gint       selector);
 
-void
+HYSCAN_API void
 tvg_up (GtkWidget *widget,
         gint       selector);
 
-void
+HYSCAN_API void
 tvg_down (GtkWidget *widget,
           gint       selector);
 
-void
+HYSCAN_API void
 tvg_level_up (GtkWidget *widget,
               gint       selector);
 
-void
+HYSCAN_API void
 tvg_level_down (GtkWidget *widget,
                 gint       selector);
 
-void
+HYSCAN_API void
 tvg_sens_up (GtkWidget *widget,
              gint       selector);
 
-void
+HYSCAN_API void
 tvg_sens_down (GtkWidget *widget,
                gint       selector);
 
-void
+HYSCAN_API void
 signal_up (GtkWidget *widget,
            gint       selector);
 
-void
+HYSCAN_API void
 signal_down (GtkWidget *widget,
              gint       selector);
 
 
-gboolean
+HYSCAN_API gboolean
 start_stop (Global    *global,
             gboolean   state);
 
-gboolean
+HYSCAN_API gboolean
 set_dry (Global    *global,
          gboolean   state);
 

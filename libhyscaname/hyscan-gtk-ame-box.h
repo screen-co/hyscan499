@@ -2,6 +2,7 @@
 #define __HYSCAN_GTK_AME_BOX_H__
 
 #include <gtk/gtk.h>
+#include <hyscan-api.h>
 
 G_BEGIN_DECLS
 
@@ -30,10 +31,13 @@ struct _HyScanGtkAmeBoxClass
   GtkGridClass parent_class;
 };
 
+HYSCAN_API
 GType                  hyscan_gtk_ame_box_get_type         (void);
 
+HYSCAN_API
 GtkWidget *            hyscan_gtk_ame_box_new              (void);
 
+HYSCAN_API
 void                   hyscan_gtk_ame_box_pack             (HyScanGtkAmeBox *box,
                                                             GtkWidget       *widget,
                                                             gint             id,
@@ -42,11 +46,14 @@ void                   hyscan_gtk_ame_box_pack             (HyScanGtkAmeBox *box
                                                             gint             width,
                                                             gint             height);
 
+HYSCAN_API
 void                   hyscan_gtk_ame_box_set_visible      (HyScanGtkAmeBox *box,
                                                             gint             id);
 
+HYSCAN_API
 gint                   hyscan_gtk_ame_box_next_visible     (HyScanGtkAmeBox *box);
 
+HYSCAN_API
 void                   hyscan_gtk_ame_box_show_all         (HyScanGtkAmeBox *box);
 
 

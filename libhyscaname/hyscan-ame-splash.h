@@ -2,6 +2,7 @@
 #define __HYSCAN_AME_SPLASH_H__
 
 #include <gtk/gtk.h>
+#include <hyscan-api.h>
 
 G_BEGIN_DECLS
 
@@ -28,8 +29,10 @@ struct _HyScanAmeSplashClass
   GtkDialogClass parent_class;
 };
 
+HYSCAN_API
 GType                  hyscan_ame_splash_get_type         (void);
 
+HYSCAN_API
 HyScanAmeSplash       *hyscan_ame_splash_new              (const gchar *message);
 
 G_END_DECLS
