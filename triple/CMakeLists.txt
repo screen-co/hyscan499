@@ -20,7 +20,7 @@ set (TRIPLE_LIBS ${GLIB2_LIBRARIES}
 
 
 add_executable (triple
-                triple.c
+                app.c
                 ${CMAKE_BINARY_DIR}/resources/triple-resources.c)
 
 target_link_libraries (triple ${TRIPLE_LIBS})

@@ -1,7 +1,7 @@
 #ifndef __SW_UI_H__
 #define __SW_UI_H__
 
-#include <../triple/triple-types.h>
+#include <triple-types.h>
 #include <hyscan-gtk-ame-box.h>
 #include <gio/gio.h>
 

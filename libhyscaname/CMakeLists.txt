@@ -25,16 +25,13 @@ add_library (${HYSCAN_AME_LIBRARY} SHARED
              hyscan-gtk-ame-box.c
              hyscan-mark-sync.c
              sonar-configure.c
+             triple.c
              ${CMAKE_BINARY_DIR}/resources/hyscan-ame-resources.c)
 
 target_link_libraries (${HYSCAN_AME_LIBRARY} ${GTK3_LIBRARIES} ${HYSCAN_LIBRARIES})
 
 set_target_properties (${HYSCAN_AME_LIBRARY} PROPERTIES DEFINE_SYMBOL "HYSCAN_API_EXPORTS")
 set_target_properties (${HYSCAN_AME_LIBRARY} PROPERTIES SOVERSION ${HYSCAN_AME_VERSION})
-
-# configure_file (hyscangtk.pc.in
-#                 "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/hyscangtk-${HYSCAN_MAJOR_VERSION}.pc"
-#                 @ONLY)
 
 install (TARGETS ${HYSCAN_AME_LIBRARY}
          COMPONENT runtime

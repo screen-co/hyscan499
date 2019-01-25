@@ -1,7 +1,7 @@
 #ifndef __AME_UI_H__
 #define __AME_UI_H__
 
-#include <../triple/triple-types.h>
+#include <triple-types.h>
 #include <hyscan-ame-fixed.h>
 #include <hyscan-ame-button.h>
 #include <hyscan-gtk-ame-box.h>

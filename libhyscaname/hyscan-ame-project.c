@@ -481,8 +481,8 @@ hyscan_ame_project_new (HyScanDB     *db,
   return g_object_new (HYSCAN_TYPE_AME_PROJECT,
                        "db", db, "info", info,
                        "use-header-bar", TRUE,
-                       "type", GTK_WINDOW_POPUP,
-                       "type-hint", GDK_WINDOW_TYPE_HINT_DIALOG,
+                       // "type", GTK_WINDOW_POPUP,
+                       // "type-hint", GDK_WINDOW_TYPE_HINT_DIALOG,
                        "transient-for", parent,
                        NULL);
 }
