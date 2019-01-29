@@ -5,6 +5,12 @@
 #include <hyscan-api.h>
 
 HYSCAN_API
+guint          keyfile_uint_read_helper   (GKeyFile    *config,
+                                           const gchar *group,
+                                           const gchar *key,
+                                           guint        def);
+
+HYSCAN_API
 gchar **       keyfile_strv_read_helper   (GKeyFile    *config,
                                            const gchar *group,
                                            const gchar *key);

@@ -634,17 +634,19 @@ gboolean
 kf_config (GKeyFile *kf)
 {
   gchar * mcast_addr;
+  guint16 mcast_port;
   GInetAddress *addr;
   gboolean source_specific;
   GSocketAddress *isocketadress;
 
   source_specific = keyfile_bool_read_helper (kf, "ame", "source_specific");
-  mcast_addr =  keyfile_string_read_helper (kf, "ame", "buttons");
+  mcast_addr =  keyfile_string_read_helper (kf, "ame", "button_addr");
+  mcast_port =  keyfile_uint_read_helper (kf, "ame", "button_port", 9000);
   g_return_val_if_fail(mcast_addr != NULL, FALSE);
 
   brec.socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, NULL);
   addr = g_inet_address_new_from_string (mcast_addr);
-  isocketadress = g_inet_socket_address_new(addr, 9000);
+  isocketadress = g_inet_socket_address_new(addr, mcast_port);
 
   g_socket_bind (brec.socket, isocketadress, TRUE, NULL);
 

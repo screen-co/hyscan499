@@ -1,5 +1,27 @@
 #include "sonar-configure.h"
 
+guint
+keyfile_uint_read_helper (GKeyFile    *config,
+                          const gchar *group,
+                          const gchar *key,
+                          guint        by_default)
+{
+  GError *error = NULL;
+  guint value;
+
+  if (config == NULL)
+    return by_default;
+
+  value = (guint)g_key_file_get_uint64 (config, group, key, &error);
+
+  if (error == NULL)
+    return value;
+
+  g_error_free (error);
+
+  return by_default;
+}
+
 gchar **
 keyfile_strv_read_helper (GKeyFile    *config,
                           const gchar *group,
