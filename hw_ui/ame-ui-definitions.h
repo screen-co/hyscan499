@@ -215,18 +215,8 @@ static AmePage common_pages[] =
   }
 };
 
-static AmePage sonar_pages[] =
+static AmePage any_sonar_pages[] =
 {
-  {
-    PATH("Меню"), DESTINATION_SELECTOR(DEST_UNSET),
-    .items =
-      {
-        {L, 0, VMOR, "ГБО Локатор",  TOGGLE_NONE, CBK(switch_page), UD("У_ГБО")},
-        {L, 1, VMOR, "ГК Локатор",   TOGGLE_NONE, CBK(switch_page), UD("У_ГК")},
-        {L, 2, VMOR, "ПФ Локатор",   TOGGLE_NONE, CBK(switch_page), UD("У_ПФ")},
-        {END}
-      }
-  },
   {
     PATH("Общее"), DESTINATION_SELECTOR(DEST_AME_UI),
     .items =
@@ -235,8 +225,19 @@ static AmePage sonar_pages[] =
           BUTTON_OFFSET(AmeUI, starter.dry)},
         {L, 4, DOT,  "Работа",       TOGGLE_OFF,  CBK(start_stop_wrapper),
           BUTTON_OFFSET(AmeUI, starter.all)},
-        // {R, 0, DOT,  "Автопрок",     TOGGLE_ON,   live_view,      GINT_TO_POINTER (ALL)},
+        {END}
+      }
+  },
+  { PATH(NULL) } /* Конец. */
+};
 
+static AmePage ss_pages[] =
+{
+  {
+    PATH("Меню"), DESTINATION_SELECTOR(DEST_UNSET),
+    .items =
+      {
+        {L, 0, VMOR, "ГБО Локатор",  TOGGLE_NONE, CBK(switch_page), UD("У_ГБО")},
         {END}
       }
   },
@@ -269,32 +270,16 @@ static AmePage sonar_pages[] =
         {END}
       }
   },
-  {
-    PATH("У_ГК"), DESTINATION_SELECTOR(DEST_PANEL),
-    .items =
-      {
-        {L, 0, MENU, "Меню",        TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
-        {L, 1, MORE, "Сигнал",      TOGGLE_NONE, CBK(signal_up),      UD(XFL),
-            VALUE_OFFSET(AmePanel, gui.signal_value), VALUE_DEFAULT("--")},
-        {L, 2, LESS, NULL,          TOGGLE_NONE, CBK(signal_down),    UD(XFL)},
-        {L, 3, MORE, "Дальность",   TOGGLE_NONE, CBK(distance_up),    UD(XFL),
-            VALUE_OFFSET(AmePanel, gui.distance_value), VALUE_DEFAULT("--")},
-        {L, 4, LESS, NULL,          TOGGLE_NONE, CBK(distance_down),  UD(XFL)},
+  { PATH(NULL) } /* Конец. */
+};
 
-        {R, 1, MORE, "Усиление-0",  TOGGLE_NONE, CBK(tvg0_up),        UD(XFL),
-            VALUE_OFFSET(AmePanel, gui.tvg0_value)},
-        {R, 2, LESS, NULL,          TOGGLE_NONE, CBK(tvg0_down),      UD(XFL)},
-        {R, 3, MORE, "Усиление-Д",  TOGGLE_NONE, CBK(tvg_up),         UD(XFL),
-            VALUE_OFFSET(AmePanel, gui.tvg_value)},
-        {R, 4, LESS, NULL,          TOGGLE_NONE, CBK(tvg_down),       UD(XFL)},
-        {END}
-      }
-  },{
-    PATH("У_ГК"), DESTINATION_SELECTOR(DEST_AME_UI),
+static AmePage pf_pages[] =
+{
+  {
+    PATH("Меню"), DESTINATION_SELECTOR(DEST_UNSET),
     .items =
       {
-        {R, 0, DOT,  "Работа",      TOGGLE_OFF,  CBK(start_stop_wrapper),
-            BUTTON_OFFSET(AmeUI, starter.panel[START_STOP_FORWARDL])},
+        {L, 2, VMOR, "ПФ Локатор",   TOGGLE_NONE, CBK(switch_page), UD("У_ПФ")},
         {END}
       }
   },
@@ -327,10 +312,49 @@ static AmePage sonar_pages[] =
         {END}
       }
   },
-  // Конец.
+  { PATH(NULL) } /* Конец. */
+};
+
+static AmePage fl_pages[] =
+{
   {
-    PATH(NULL)
-  }
+    PATH("Меню"), DESTINATION_SELECTOR(DEST_UNSET),
+    .items =
+      {
+        {L, 1, VMOR, "ГК Локатор",   TOGGLE_NONE, CBK(switch_page), UD("У_ГК")},
+        {END}
+      }
+  },
+  {
+    PATH("У_ГК"), DESTINATION_SELECTOR(DEST_PANEL),
+    .items =
+      {
+        {L, 0, MENU, "Меню",        TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
+        {L, 1, MORE, "Сигнал",      TOGGLE_NONE, CBK(signal_up),      UD(XFL),
+            VALUE_OFFSET(AmePanel, gui.signal_value), VALUE_DEFAULT("--")},
+        {L, 2, LESS, NULL,          TOGGLE_NONE, CBK(signal_down),    UD(XFL)},
+        {L, 3, MORE, "Дальность",   TOGGLE_NONE, CBK(distance_up),    UD(XFL),
+            VALUE_OFFSET(AmePanel, gui.distance_value), VALUE_DEFAULT("--")},
+        {L, 4, LESS, NULL,          TOGGLE_NONE, CBK(distance_down),  UD(XFL)},
+
+        {R, 1, MORE, "Усиление-0",  TOGGLE_NONE, CBK(tvg0_up),        UD(XFL),
+            VALUE_OFFSET(AmePanel, gui.tvg0_value)},
+        {R, 2, LESS, NULL,          TOGGLE_NONE, CBK(tvg0_down),      UD(XFL)},
+        {R, 3, MORE, "Усиление-Д",  TOGGLE_NONE, CBK(tvg_up),         UD(XFL),
+            VALUE_OFFSET(AmePanel, gui.tvg_value)},
+        {R, 4, LESS, NULL,          TOGGLE_NONE, CBK(tvg_down),       UD(XFL)},
+        {END}
+      }
+  },{
+    PATH("У_ГК"), DESTINATION_SELECTOR(DEST_AME_UI),
+    .items =
+      {
+        {R, 0, DOT,  "Работа",      TOGGLE_OFF,  CBK(start_stop_wrapper),
+            BUTTON_OFFSET(AmeUI, starter.panel[START_STOP_FORWARDL])},
+        {END}
+      }
+  },
+  { PATH(NULL) } /* Конец. */
 };
 
 #endif

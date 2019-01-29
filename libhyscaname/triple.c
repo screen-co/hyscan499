@@ -21,10 +21,9 @@ ame_panel_destroy (gpointer data)
   VisualWF *wf;
   VisualFL *fl;
 
-  g_message ("Destroying panel");
-
   if (panel == NULL)
     return;
+
   g_free (panel->name);
   g_free (panel->sources);
 
@@ -1135,7 +1134,7 @@ zoom_changed (HyScanGtkWaterfall *wfall,
 {
   gchar *text = NULL;
   AmePanel *panel = get_panel (tglobal, panelx);
-  
+
   switch (panel->type)
     {
     case AME_PANEL_WATERFALL:
@@ -2050,7 +2049,7 @@ scale_down (GtkWidget *widget,
   scale_set (tglobal, FALSE, panelx);
 }
 
-/* Функция переключает режим отображения виджета ВС. 
+/* Функция переключает режим отображения виджета ВС.
  * Попрошу заметить, возвращается ЛОЖЬ для того, чтобы свитчер нормально переключился. */
 gboolean
 mode_changed (GtkWidget *widget,
@@ -2100,7 +2099,7 @@ pf_special (GtkWidget  *widget,
     flags &= ~HYSCAN_TILE_PROFILER;
 
   hyscan_gtk_waterfall_state_set_tile_flags (HYSCAN_GTK_WATERFALL_STATE (wf->wf), flags);
-  
+
   return FALSE;
 }
 

@@ -105,6 +105,7 @@ main (int argc, char **argv)
 
   // HyScanAmeSplash   *splash = NULL;
   guint              sensor_label_writer_tag = 0;
+  gchar             *hardware_profile_name = NULL;
 
   gboolean status;
 
@@ -119,12 +120,13 @@ main (int argc, char **argv)
 
     GOptionEntry common_entries[] =
       {
-        { "cache-size",      'c',   0, G_OPTION_ARG_INT,     &cache_size,      "Cache size, Mb", NULL },
         { "db-uri",          'd',   0, G_OPTION_ARG_STRING,  &db_uri,          "HyScan DB uri", NULL },
 
         { "sound-velocity",  'v',   0, G_OPTION_ARG_DOUBLE,  &sound_velocity,  "Sound velocity, m/s", NULL },
         { "ship-speed",      'e',   0, G_OPTION_ARG_DOUBLE,  &ship_speed,      "Ship speed, m/s", NULL },
         { "full-screen",     'f',   0, G_OPTION_ARG_NONE,    &full_screen,     "Full screen mode", NULL },
+        { "hardware-profile",'p',   0, G_OPTION_ARG_STRING,  &hardware_profile_name,     "Specify hardware profile name"
+                                                              ", otherwise it will be obtained from config-file.", NULL },
         { "ui", 0,   G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &um_path,    "UI module", NULL },
         { NULL, }
       };
@@ -197,6 +199,7 @@ main (int argc, char **argv)
   svp = make_svp_from_velocity (sound_velocity);
 
   /* Кэш. */
+  cache_size = keyfile_uint_read_helper (config, "common", "cache", 2048);
   cache_size = MAX (256, cache_size);
   global.cache = HYSCAN_CACHE (hyscan_cached_new (cache_size));
 
@@ -214,7 +217,7 @@ main (int argc, char **argv)
       GtkWidget *dialog;
       gint res;
 
-      dialog = hyscan_ame_project_new (global.db, info, window);
+      dialog = hyscan_ame_project_new (global.db, info, GTK_WINDOW (window));
       res = gtk_dialog_run (GTK_DIALOG (dialog));
       hyscan_ame_project_get (HYSCAN_AME_PROJECT (dialog), &project_name, NULL);
       gtk_widget_destroy (dialog);
@@ -258,7 +261,12 @@ main (int argc, char **argv)
     gboolean check;
 
     driver_paths = keyfile_strv_read_helper (config, "common", "paths");
-    sonar_profile_name = keyfile_string_read_helper (config, "common", "hardware");
+    /* Если не задано название профиля, читаем его из конфига. */
+    if (hardware_profile_name == NULL)
+      sonar_profile_name = keyfile_string_read_helper (config, "common", "hardware");
+    else
+      sonar_profile_name = hardware_profile_name;
+
 
     /* Првоеряем, что пути к драйверам и имя профиля на месте. */
 
@@ -408,7 +416,6 @@ main (int argc, char **argv)
 
     vwf->common.main = main_widget;
     g_hash_table_insert (global.panels, GINT_TO_POINTER (X_SIDESCAN), panel);
-    g_message ("Insert!1 %i", X_SIDESCAN);
   }
 
   { /* ПФ */
@@ -451,7 +458,6 @@ main (int argc, char **argv)
 
     vwf->common.main = main_widget;
     g_hash_table_insert (global.panels, GINT_TO_POINTER (X_PROFILER), panel);
-    g_message ("Insert!1 %i", X_PROFILER);
   }
 
   { /* ВСЛ */
@@ -489,7 +495,6 @@ main (int argc, char **argv)
 
     vfl->common.main = GTK_WIDGET (vfl->fl);
     g_hash_table_insert (global.panels, GINT_TO_POINTER (X_FORWARDL), panel);
-    g_message ("Insert!1 %i", X_FORWARDL);
   }
 
 
@@ -525,8 +530,6 @@ main (int argc, char **argv)
         panel->vis_current.colormap =    keyfile_double_read_helper (config, panel->name, "cur_color_map",    0);
         panel->vis_current.black =       keyfile_double_read_helper (config, panel->name, "cur_black",        0);
         panel->vis_current.sensitivity = keyfile_double_read_helper (config, panel->name, "cur_sensitivity",  8.0);
-
-
 
         if (panel->type == AME_PANEL_WATERFALL)
           color_map_set (&global, panel->vis_current.colormap, panelx);

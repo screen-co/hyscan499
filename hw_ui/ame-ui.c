@@ -502,8 +502,32 @@ build_interface (Global *global)
 
   /* Строим интерфейсос. */
   build_all (ui, global, common_pages);
+  /* Определяем, какие локаторы у нас вообще есть. */
+
   if (global->control_s != NULL)
-    build_all (ui, global, sonar_pages);
+    {
+      gboolean found[HYSCAN_SOURCE_LAST];
+      const HyScanSourceType * types;
+      guint32 n;
+
+      for (n = HYSCAN_SOURCE_INVALID; n < HYSCAN_SOURCE_LAST; ++n)
+        found[n] = FALSE;
+
+      types = hyscan_control_sources_list (global->control, &n);
+
+      for (; n != 0; --n, ++types)
+        found[*types] = TRUE;
+
+      build_all (ui, global, any_sonar_pages);
+
+      /* Теперь строим интерфейс в зависимости от найденных источников. */
+      if (found[HYSCAN_SOURCE_SIDE_SCAN_STARBOARD] && found[HYSCAN_SOURCE_SIDE_SCAN_PORT])
+        build_all (ui, global, ss_pages);
+      if (found[HYSCAN_SOURCE_FORWARD_LOOK])
+        build_all (ui, global, fl_pages);
+      if (found[HYSCAN_SOURCE_PROFILER])
+        build_all (ui, global, pf_pages);
+    }
 
   /* Инициализация значений. */
   widget_swap (NULL, GINT_TO_POINTER (ALL));
