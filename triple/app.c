@@ -427,10 +427,10 @@ main (int argc, char **argv)
     panel->short_name = g_strdup ("PF");
     panel->type = AME_PANEL_ECHO;
 
-    panel->sources = g_new0 (HyScanSourceType, 2);
+    panel->sources = g_new0 (HyScanSourceType, 3);
     panel->sources[0] = HYSCAN_SOURCE_PROFILER;
-    // TODO echosounder?
-    panel->sources[1] = HYSCAN_SOURCE_INVALID;
+    panel->sources[1] = HYSCAN_SOURCE_PROFILER_ECHO;
+    panel->sources[2] = HYSCAN_SOURCE_INVALID;
 
     panel->vis_gui = (VisualCommon*)vwf;
 

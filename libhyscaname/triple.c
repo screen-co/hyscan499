@@ -1449,14 +1449,8 @@ signal_set (Global *global,
 
       info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (source));
 
-      /* Если задан мастер, то сигнал не задается. */
-      if (info->master != HYSCAN_SOURCE_INVALID)
-        continue;
-
-      hyscan_return_val_if_fail (info != NULL && info->generator != NULL, FALSE);
-
       /* Ищем нужный сигнал. */
-      link = g_list_nth (info->generator->presets, sig_num);
+      link = g_list_nth (info->presets, sig_num);
       hyscan_return_val_if_fail (link != NULL, FALSE);
       sig = link->data;
       hyscan_return_val_if_fail (sig != NULL, FALSE);
