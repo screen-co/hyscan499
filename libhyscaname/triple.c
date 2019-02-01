@@ -2,6 +2,8 @@
 #include "hyscan-ame-splash.h"
 #include <hyscan-ame-project.h>
 #include <hyscan-ame-button.h>
+#include <hyscan-ame-button.h>
+#include <hyscan-gtk-param-tree.h>
 #include <gmodule.h>
 
 Global *tglobal;
@@ -212,6 +214,40 @@ run_manager (GObject *emitter)
 }
 
 void
+run_param (GObject *emitter)
+{
+  GtkWidget *dialog, *content, *param;
+  gint res;
+
+  dialog = gtk_dialog_new_with_buttons("Параметры оборудования",
+                                       GTK_WINDOW (tglobal->gui.window), 0,
+                                       "Применить", GTK_RESPONSE_APPLY,
+                                       "Откатить", GTK_RESPONSE_CANCEL,
+                                       "Ок", GTK_RESPONSE_YES,
+                                       "Отменить", GTK_RESPONSE_NO,
+                                       NULL);
+  content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+  param = hyscan_gtk_param_tree_new (HYSCAN_PARAM (tglobal->control), "/", FALSE);
+
+  gtk_container_add (GTK_CONTAINER (content), param);
+  gtk_widget_set_size_request (dialog, 600, 800);
+  gtk_widget_show_all (dialog);
+
+  do
+    {
+      res = gtk_dialog_run (GTK_DIALOG (dialog));
+
+      if (res == GTK_RESPONSE_YES || res == GTK_RESPONSE_APPLY)
+        hyscan_gtk_param_apply (HYSCAN_GTK_PARAM (param));
+      if (res == GTK_RESPONSE_NO || res == GTK_RESPONSE_CANCEL)
+        hyscan_gtk_param_discard (HYSCAN_GTK_PARAM (param));
+
+    } while (res == GTK_RESPONSE_APPLY || res == GTK_RESPONSE_CANCEL);
+
+  gtk_widget_destroy (dialog);
+}
+
+void
 turn_meter_helper (AmePanel  *panel,
                    gboolean   state)
 {
@@ -305,27 +341,6 @@ hide_marks (GObject     *emitter,
       hyscan_gtk_waterfall_layer_set_visible (HYSCAN_GTK_WATERFALL_LAYER (wf->wf_mark), state);
     }
 
-}
-
-HyScanDataSchemaEnumValue *
-find_signal_by_name (HyScanDataSchemaEnumValue ** where,
-                     HyScanDataSchemaEnumValue  * what)
-{
-  const gchar * name = what->name;
-  HyScanDataSchemaEnumValue * current;
-
-  if (where == NULL)
-    return NULL;
-
-  for (; *where != NULL; ++where)
-    {
-      current = *where;
-
-      if (g_strcmp0 (current->name, name) == 0)
-        return current;
-    }
-
-  return NULL;
 }
 
 /* Функция изменяет режим окна full screen. */
@@ -1080,6 +1095,8 @@ track_changed (GtkTreeView *list,
           /* Записываемый галс включаем в режиме автопрокрутки. */
           hyscan_gtk_waterfall_automove (HYSCAN_GTK_WATERFALL (wf->wf), on_air);
 
+          break;
+
         case AME_PANEL_FORWARDLOOK:
           fl = (VisualFL*) (panel->vis_gui);
           hyscan_forward_look_player_open (fl->player, global->db, global->cache,
@@ -1090,6 +1107,8 @@ track_changed (GtkTreeView *list,
             hyscan_forward_look_player_real_time (fl->player);
           else
             hyscan_forward_look_player_pause (fl->player);
+
+          break;
         }
     }
 
@@ -1249,7 +1268,7 @@ hyscan_tile_color_compose_colormap_pf (guint *length)
   g=0;
   b=255;
 
-  for (i = 1; i <= 1120; ++i)
+  for (i = 1; i < len; ++i)
     {
       out[i] = hyscan_tile_color_converter_c2i (r, g, b, 255);
       DECR(r, incr_g);
@@ -1364,13 +1383,27 @@ color_map_cyclic (GtkWidget *widget,
 }
 
 /* Функция устанавливает порог чувствительности. */
+void
+sensitivity_label (AmePanel *panel,
+                   gdouble   sens)
+{
+  VisualFL *fl = (VisualFL*)panel->vis_gui;
+  gchar *text;
+
+  if (fl->common.sensitivity_value == NULL)
+    return;
+
+  text = g_strdup_printf ("<small><b>%.0f</b></small>", sens);
+  gtk_label_set_markup (fl->common.sensitivity_value, text);
+  g_free (text);
+}
+
 gboolean
 sensitivity_set (Global  *global,
                  gdouble  desired_sensitivity,
                  guint    panelx)
 {
   VisualFL *fl;
-  gchar *text;
   AmePanel *panel = get_panel (global, panelx);
 
   if (desired_sensitivity < 1.0)
@@ -1384,14 +1417,12 @@ sensitivity_set (Global  *global,
       return FALSE;
     }
 
-  fl = (VisualFL*)panel->vis_gui;
 
+  fl = (VisualFL*)panel->vis_gui;
   hyscan_gtk_forward_look_set_sensitivity (fl->fl, desired_sensitivity);
   gtk_widget_queue_draw (GTK_WIDGET (fl->fl));
 
-  text = g_strdup_printf ("<small><b>%.0f</b></small>", desired_sensitivity);
-  gtk_label_set_markup (fl->common.sensitivity_value, text);
-  g_free (text);
+  sensitivity_label (panel, desired_sensitivity);
 
   return TRUE;
 }
@@ -1424,15 +1455,49 @@ sensitivity_down (GtkWidget *widget,
     g_warning ("sens_down failed");
 }
 
+const HyScanDataSchemaEnumValue *
+signal_finder (Global           *global,
+               AmePanel         *panel,
+               HyScanSourceType  source,
+               gint              n)
+{
+  HyScanSonarInfoSource * info;
+  GList *link;
+
+  /* Информация об источнике. */
+  info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (source));
+  hyscan_return_val_if_fail (info != NULL && info->presets != NULL, NULL);
+
+  /* Ищем сигнал. */
+  link = g_list_nth (info->presets, n);
+  if (link == NULL)
+    link = info->presets;
+
+  return (HyScanDataSchemaEnumValue*) link->data;
+}
+
+void
+signal_label (AmePanel    *panel,
+              const gchar *name)
+{
+  gchar *text;
+
+  if (panel->gui.signal_value != NULL)
+    {
+      text = g_strdup_printf ("<small><b>%s</b></small>", name);
+      gtk_label_set_markup (panel->gui.signal_value, text);
+      g_free (text);
+    }
+}
+
 /* Функция устанавливает излучаемый сигнал. */
 gboolean
 signal_set (Global *global,
             guint   sig_num,
             gint    panelx)
 {
-  gchar *text;
   HyScanSourceType *iter;
-  HyScanDataSchemaEnumValue *sig, *prev_sig = NULL;
+  const HyScanDataSchemaEnumValue *sig, *prev_sig = NULL;
   AmePanel *panel = get_panel (global, panelx);
 
   g_message ("Signal_set: Sonar#%i, Signal %i", panelx, sig_num);
@@ -1444,15 +1509,12 @@ signal_set (Global *global,
     {
       gboolean status;
       HyScanSourceType source = *iter;
-      HyScanSonarInfoSource * info;
-      GList *link;
 
-      info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (source));
+      g_message ("Setting signal for %s", hyscan_source_get_name_by_type (source));
+      if (source == HYSCAN_SOURCE_PROFILER_ECHO)
+        continue;
 
-      /* Ищем нужный сигнал. */
-      link = g_list_nth (info->presets, sig_num);
-      hyscan_return_val_if_fail (link != NULL, FALSE);
-      sig = link->data;
+      sig = signal_finder (global, panel, source, sig_num);
       hyscan_return_val_if_fail (sig != NULL, FALSE);
 
       if (prev_sig != NULL && !g_str_equal (sig->name, prev_sig->name))
@@ -1460,16 +1522,14 @@ signal_set (Global *global,
           g_warning ("Signal names not equal!");
         }
 
+      prev_sig = sig;
       /* Устанавливаем. */
       status = hyscan_sonar_generator_set_preset (global->control_s, source, sig->value);
       if (!status)
         return FALSE;
     }
 
-  text = g_strdup_printf ("<small><b>%s</b></small>", sig->name);
-  gtk_label_set_markup (panel->gui.signal_value, text);
-  g_free (text);
-
+  signal_label (panel, sig->name);
   return TRUE;
 }
 
@@ -1501,6 +1561,27 @@ signal_down (GtkWidget *widget,
     g_warning ("signal_down failed");
 }
 
+void
+tvg_label (AmePanel *panel,
+           gdouble   gain0,
+           gdouble   step)
+{
+  gchar *gain_text, *step_text;
+
+  if (panel->gui.tvg0_value != NULL)
+    {
+      gain_text = g_strdup_printf ("<small><b>%.1f dB</b></small>", gain0);
+      gtk_label_set_markup (panel->gui.tvg0_value, gain_text);
+      g_free (gain_text);
+    }
+  if (panel->gui.tvg_value != NULL)
+    {
+      step_text = g_strdup_printf ("<small><b>%.1f dB</b></small>", step);
+      gtk_label_set_markup (panel->gui.tvg_value, step_text);
+      g_free (step_text);
+    }
+}
+
 /* Функция устанавливает параметры ВАРУ. */
 gboolean
 tvg_set (Global  *global,
@@ -1508,7 +1589,6 @@ tvg_set (Global  *global,
          gdouble  step,
          gint     panelx)
 {
-  gchar *gain_text, *step_text;
   HyScanSourceType *iter;
 
   AmePanel *panel = get_panel (global, panelx);
@@ -1519,9 +1599,11 @@ tvg_set (Global  *global,
       HyScanSonarInfoSource *info;
       HyScanSourceType source = *iter;
 
+      g_message ("setting tvg for %s", hyscan_source_get_name_by_type (source));
+
       /* Проверяем gain0. */
-      info = g_hash_table_lookup (global->panels, GINT_TO_POINTER (source));
-      hyscan_return_val_if_fail (info != NULL && info->tvg != NULL, FALSE);
+      info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (source));
+      hyscan_return_val_if_fail (info != NULL && info->tvg != NULL, TRUE); // TODO do something
       *gain0 = CLAMP (*gain0, info->tvg->min_gain,info->tvg->max_gain);
 
       status = hyscan_sonar_tvg_set_linear_db (global->control_s, source, *gain0, step);
@@ -1529,15 +1611,7 @@ tvg_set (Global  *global,
         return FALSE;
     }
 
-  gain_text = g_strdup_printf ("<small><b>%.1f dB</b></small>", *gain0);
-  step_text = g_strdup_printf ("<small><b>%.1f dB</b></small>", step);
-
-  gtk_label_set_markup (panel->gui.tvg0_value, gain_text);
-  gtk_label_set_markup (panel->gui.tvg_value, step_text);
-
-  g_free (gain_text);
-  g_free (step_text);
-
+  tvg_label (panel, *gain0, step);
   return TRUE;
 }
 
@@ -1601,6 +1675,27 @@ tvg_down (GtkWidget *widget,
     g_warning ("tvg_down failed");
 }
 
+void
+auto_tvg_label (AmePanel *panel,
+                gdouble   level,
+                gdouble   sensitivity)
+{
+  gchar *sens_text, *level_text;
+
+  if (panel->gui.tvg_level_value != NULL)
+    {
+      level_text = g_strdup_printf ("<small><b>%.1f</b></small>", level);
+      gtk_label_set_markup (panel->gui.tvg_level_value, level_text);
+      g_free (level_text);
+    }
+
+  if (panel->gui.tvg_sens_value != NULL)
+    {
+      sens_text = g_strdup_printf ("<small><b>%.1f</b></small>", sensitivity);
+      gtk_label_set_markup (panel->gui.tvg_sens_value, sens_text);
+      g_free (sens_text);
+    }
+}
 
 /* Функция устанавливает параметры автоВАРУ. */
 gboolean
@@ -1610,25 +1705,20 @@ auto_tvg_set (Global   *global,
               gint      panelx)
 {
   gboolean status;
-  gchar *sens_text, *level_text;
   AmePanel *panel = get_panel (global, panelx);
 
   HyScanSourceType *iter;
 
   for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
     {
+      g_message ("setting auto-tvg for %s", hyscan_source_get_name_by_type (*iter));
       status = hyscan_sonar_tvg_set_auto (global->control_s, *iter, level, sensitivity);
       if (!status)
         return FALSE;
     }
 
   /* Теперь печатаем что и куда надо. */
-  sens_text = g_strdup_printf ("<small><b>%.1f</b></small>", sensitivity);
-  level_text = g_strdup_printf ("<small><b>%.1f</b></small>", level);
-
-  gtk_label_set_markup (panel->gui.tvg_sens_value, sens_text);
-  gtk_label_set_markup (panel->gui.tvg_level_value, level_text);
-
+  auto_tvg_label (panel, level, sensitivity);
   return TRUE;
 }
 
@@ -1696,6 +1786,19 @@ tvg_sens_down (GtkWidget *widget,
     g_warning ("tvg_sens_down failed");
 }
 
+void
+distance_label (AmePanel *panel,
+                gdouble   distance)
+{
+  gchar *text;
+  if (panel->gui.distance_value != NULL)
+  {
+    text = g_strdup_printf ("<small><b>%.0f м</b></small>", distance);
+    gtk_label_set_markup (panel->gui.distance_value, text);
+    g_free (text);
+  }
+}
+
 /* Функция устанавливает рабочую дистанцию. */
 gboolean
 distance_set (Global  *global,
@@ -1705,7 +1808,6 @@ distance_set (Global  *global,
   gdouble receive_time;
   gboolean status;
   HyScanSourceType *iter;
-  gchar *text;
   AmePanel *panel = get_panel (global, panelx);
 
   if (meters < 1.0)
@@ -1714,15 +1816,13 @@ distance_set (Global  *global,
   receive_time = meters / (global->sound_velocity / 2.0);
   for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
     {
+      g_message ("setting distance for %s", hyscan_source_get_name_by_type (*iter));
       status = hyscan_sonar_receiver_set_time (global->control_s, *iter, receive_time, 0);
       if (!status)
         return FALSE;
     }
 
-  text = g_strdup_printf ("<small><b>%.0f м</b></small>", meters);
-  gtk_label_set_markup (panel->gui.distance_value, text);
-  g_free (text);
-
+  distance_label (panel, meters);
   return TRUE;
 }
 

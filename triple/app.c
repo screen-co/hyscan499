@@ -294,6 +294,9 @@ main (int argc, char **argv)
   if (global.control != NULL)
     {
       const HyScanSonarInfoSource *info;
+
+      hyscan_control_writer_set_db (global.control, global.db);
+
       global.infos = g_hash_table_new (g_direct_hash, g_direct_equal);
 
       info = hyscan_control_source_get_info (global.control, FORWARDLOOK);
@@ -305,6 +308,9 @@ main (int argc, char **argv)
       info = hyscan_control_source_get_info (global.control, ECHOSOUNDER);
       if (info != NULL)
         g_hash_table_insert (global.infos, GINT_TO_POINTER (ECHOSOUNDER), (void*)info);
+      info = hyscan_control_source_get_info (global.control, HYSCAN_SOURCE_PROFILER_ECHO);
+      if (info != NULL)
+        g_hash_table_insert (global.infos, GINT_TO_POINTER (HYSCAN_SOURCE_PROFILER_ECHO), (void*)info);
       info = hyscan_control_source_get_info (global.control, STARBOARD);
       if (info != NULL)
         g_hash_table_insert (global.infos, GINT_TO_POINTER (STARBOARD), (void*)info);
@@ -541,9 +547,17 @@ main (int argc, char **argv)
         brightness_set (&global, panel->vis_current.brightness, panel->vis_current.black, panelx);
         scale_set (&global, FALSE, panelx);
 
-        /* Для локаторов мы ничего не задаем,
-         * т.к. эти параметры будут
-         * установлены в старт-стоп. */
+        /* Для локаторов мы ничего не задаем, но лейблы всёрно надо проинициализировать. */
+        distance_label (panel, panel->current.distance);
+        tvg_label (panel, panel->current.gain0, panel->current.gain_step);
+        auto_tvg_label (panel, panel->current.level, panel->current.sensitivity);
+
+        /* С сигналом чуть сложней, т.к. надо найти сигнал и вытащить из него имя. */
+        {
+          const HyScanDataSchemaEnumValue * signal;
+          signal = signal_finder (&global, panel, *panel->sources, panel->current.signal);
+          signal_label (panel, signal->name);
+        }
       }
   }
 

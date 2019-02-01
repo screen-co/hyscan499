@@ -277,10 +277,6 @@ hide_marks (GObject     *emitter,
             gboolean     state,
             gint         selector);
 
-HyScanDataSchemaEnumValue *
-find_signal_by_name (HyScanDataSchemaEnumValue ** where,
-                     HyScanDataSchemaEnumValue  * what);
-
 HYSCAN_API gboolean
 key_press (GtkWidget   *widget,
            GdkEventKey *event,
@@ -302,7 +298,10 @@ HYSCAN_API void fl_prev (GObject *emitter, gint panelx);
 HYSCAN_API void fl_next (GObject *emitter, gint panelx);
 
 HYSCAN_API gint
-run_manager    (GObject     *emitter);
+run_manager (GObject     *emitter);
+
+HYSCAN_API void
+run_param (GObject *emitter);
 
 HYSCAN_API void
 projects_changed (HyScanDBInfo *db_info,
@@ -431,6 +430,34 @@ HYSCAN_API gboolean
 color_map_set (Global *global,
                guint   cur_color_map,
                gint    selector);
+
+HYSCAN_API void
+sensitivity_label (AmePanel *panel,
+                   gdouble   sens);
+
+HYSCAN_API const HyScanDataSchemaEnumValue *
+signal_finder (Global           *global,
+               AmePanel         *panel,
+               HyScanSourceType  source,
+               gint              n);
+
+HYSCAN_API void
+signal_label (AmePanel    *panel,
+              const gchar *name);
+
+HYSCAN_API void
+tvg_label (AmePanel *panel,
+           gdouble   gain0,
+           gdouble   step);
+HYSCAN_API void
+auto_tvg_label (AmePanel *panel,
+                gdouble   level,
+                gdouble   sensitivity);
+HYSCAN_API void
+distance_label (AmePanel *panel,
+                gdouble   distance);
+
+
 
 HYSCAN_API gboolean
 sensitivity_set (Global  *global,

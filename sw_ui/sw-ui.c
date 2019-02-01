@@ -382,6 +382,7 @@ build_interface (Global *global)
     GtkWidget * meditor = GTK_WIDGET (global->gui.meditor);
     GtkWidget * manager = gtk_button_new_with_label ("Менеджер проектов");
 
+
     gtk_widget_set_margin_end (lbox, 6);
     gtk_widget_set_margin_top (lbox, 6);
     gtk_widget_set_margin_bottom (lbox, 6);
@@ -398,6 +399,22 @@ build_interface (Global *global)
     g_object_set (meditor, "vexpand", FALSE, "valign", GTK_ALIGN_END,
                            "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
     g_signal_connect (manager, "clicked", G_CALLBACK (run_manager), NULL);
+
+    {
+      gchar ** env;
+      const gchar * param_set;
+      GtkWidget * prm;
+
+      env = g_get_environ ();
+      param_set = g_environ_getenv (env, "HY_PARAM");
+      if (param_set != NULL)
+        {
+          prm = gtk_button_new_with_label ("Параметры оборудования");
+          g_signal_connect (prm, "clicked", G_CALLBACK (run_param), NULL);
+          gtk_box_pack_start (GTK_BOX (lbox), prm, FALSE, FALSE, 0);
+        }
+      g_strfreev (env);
+    }
 
     gtk_box_pack_start (GTK_BOX (lbox), manager, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (lbox), tracks, TRUE, TRUE, 0);
