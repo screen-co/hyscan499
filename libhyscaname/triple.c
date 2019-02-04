@@ -216,7 +216,7 @@ run_manager (GObject *emitter)
 void
 run_param (GObject *emitter)
 {
-  GtkWidget *dialog, *content, *param;
+  GtkWidget *dialog, *content, *tree;
   gint res;
 
   dialog = gtk_dialog_new_with_buttons("Параметры оборудования",
@@ -227,10 +227,11 @@ run_param (GObject *emitter)
                                        "Отменить", GTK_RESPONSE_NO,
                                        NULL);
   content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
-  param = hyscan_gtk_param_tree_new (HYSCAN_PARAM (tglobal->control), "/", FALSE);
+  tree = hyscan_gtk_param_tree_new (HYSCAN_PARAM (tglobal->control), "/", TRUE);
+  hyscan_gtk_param_set_watch_period (HYSCAN_GTK_PARAM (tree), 200);
 
-  gtk_container_add (GTK_CONTAINER (content), param);
-  gtk_widget_set_size_request (dialog, 600, 800);
+  gtk_container_add (GTK_CONTAINER (content), tree);
+  gtk_widget_set_size_request (dialog, 800, 600);
   gtk_widget_show_all (dialog);
 
   do
@@ -238,9 +239,9 @@ run_param (GObject *emitter)
       res = gtk_dialog_run (GTK_DIALOG (dialog));
 
       if (res == GTK_RESPONSE_YES || res == GTK_RESPONSE_APPLY)
-        hyscan_gtk_param_apply (HYSCAN_GTK_PARAM (param));
+        hyscan_gtk_param_apply (HYSCAN_GTK_PARAM (tree));
       if (res == GTK_RESPONSE_NO || res == GTK_RESPONSE_CANCEL)
-        hyscan_gtk_param_discard (HYSCAN_GTK_PARAM (param));
+        hyscan_gtk_param_discard (HYSCAN_GTK_PARAM (tree));
 
     } while (res == GTK_RESPONSE_APPLY || res == GTK_RESPONSE_CANCEL);
 
@@ -826,7 +827,7 @@ get_mark_coords (GHashTable             * locstores,
                  HyScanWaterfallMark    * mark,
                  Global                 * global)
 {
-  gdouble along, across;
+  gdouble across;
   HyScanProjector *pj;
   HyScanAmplitude *amp;
   HyScanAntennaPosition apos;
@@ -854,8 +855,7 @@ get_mark_coords (GHashTable             * locstores,
   if (mark->source0 == HYSCAN_SOURCE_SIDE_SCAN_PORT)
     across *= -1;
 
-  hyscan_mloc_get (mloc, time, &apos, across, 0, 0, &position);
-  #pragma message ("check axis names in the line above")
+  hyscan_mloc_get (mloc, time, &apos, 0, across, 0, &position);
 
   return mark_and_location_new (mark, position.lat, position.lon);
 }
@@ -2262,8 +2262,6 @@ automove_state_changed (GtkWidget  *widget,
   g_hash_table_iter_init (&iter, global->panels);
   while (g_hash_table_iter_next (&iter, &k, &v))
     live_view (NULL, state, GPOINTER_TO_INT (k));
-
-  g_message ("automove_state_changed!");
 }
 
 
@@ -2285,7 +2283,7 @@ start_stop (Global    *global,
   if (state)
     {
       g_message ("Start sonars. Dry is %s", global->dry ? "ON" : "OFF");
-      gint n_tracks = -1;
+      gint track_num = -1;
       gboolean status = TRUE;
 
       /* Закрываем текущий открытый галс. */
@@ -2330,26 +2328,30 @@ start_stop (Global    *global,
         }
 
       /* Число галсов в проекте. */
-      if (n_tracks < 0)
-        {
-          gint32 project_id;
-          gchar **tracks;
-          gchar **strs;
+      {
+        gint number;
+        gint32 project_id;
+        gchar **tracks;
+        gchar **strs;
 
-          project_id = hyscan_db_project_open (global->db, global->project_name);
-          tracks = hyscan_db_track_list (global->db, project_id);
+        project_id = hyscan_db_project_open (global->db, global->project_name);
+        tracks = hyscan_db_track_list (global->db, project_id);
 
-          for (strs = tracks; strs != NULL && *strs != NULL; strs++)
-            {
-              n_tracks++;
-            }
+        for (strs = tracks; strs != NULL && *strs != NULL; strs++)
+          {
+            /* Ищем галс с самым большим номером в названии. */
+            number = g_ascii_strtoll (*strs, NULL, 10);
+            if (number >= track_num)
+              track_num = number + 1;
+            g_message ("ANAL: %s %i %i", *strs, number, track_num);
+          }
 
-          hyscan_db_close (global->db, project_id);
-          g_free (tracks);
-        }
+        hyscan_db_close (global->db, project_id);
+        g_free (tracks);
+      }
 
       /* Включаем запись нового галса. */
-      global->track_name = g_strdup_printf ("%d%s", ++n_tracks, global->dry ? DRY_TRACK_SUFFIX : "");
+      global->track_name = g_strdup_printf ("%d%s", track_num, global->dry ? DRY_TRACK_SUFFIX : "");
 
       status = hyscan_sonar_start (global->control_s, global->project_name,
                                    global->track_name, HYSCAN_TRACK_SURVEY);

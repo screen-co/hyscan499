@@ -150,11 +150,15 @@ main (int argc, char **argv)
     if (db_uri == NULL)
       {
         g_print ("%s", g_option_context_get_help (context, FALSE, NULL));
-        return 0;
+        return -1;
       }
 
-    if (args[1] != NULL)
-      config_file = g_strdup (args[1]);
+    if (args[1] == NULL)
+      {
+        g_print ("%s", g_option_context_get_help (context, FALSE, NULL));
+        return -1;
+      }
+    config_file = g_strdup (args[1]);
 
     g_option_context_free (context);
     g_strfreev (args);
@@ -299,23 +303,17 @@ main (int argc, char **argv)
 
       global.infos = g_hash_table_new (g_direct_hash, g_direct_equal);
 
-      info = hyscan_control_source_get_info (global.control, FORWARDLOOK);
-      if (info != NULL)
+      if (NULL != (info = hyscan_control_source_get_info (global.control, FORWARDLOOK)))
         g_hash_table_insert (global.infos, GINT_TO_POINTER (FORWARDLOOK), (void*)info);
-      info = hyscan_control_source_get_info (global.control, PROFILER);
-      if (info != NULL)
+      if (NULL != (info = hyscan_control_source_get_info (global.control, PROFILER)))
         g_hash_table_insert (global.infos, GINT_TO_POINTER (PROFILER), (void*)info);
-      info = hyscan_control_source_get_info (global.control, ECHOSOUNDER);
-      if (info != NULL)
+      if (NULL != (info = hyscan_control_source_get_info (global.control, ECHOSOUNDER)))
         g_hash_table_insert (global.infos, GINT_TO_POINTER (ECHOSOUNDER), (void*)info);
-      info = hyscan_control_source_get_info (global.control, HYSCAN_SOURCE_PROFILER_ECHO);
-      if (info != NULL)
+      if (NULL != (info = hyscan_control_source_get_info (global.control, HYSCAN_SOURCE_PROFILER_ECHO)))
         g_hash_table_insert (global.infos, GINT_TO_POINTER (HYSCAN_SOURCE_PROFILER_ECHO), (void*)info);
-      info = hyscan_control_source_get_info (global.control, STARBOARD);
-      if (info != NULL)
+      if (NULL != (info = hyscan_control_source_get_info (global.control, STARBOARD)))
         g_hash_table_insert (global.infos, GINT_TO_POINTER (STARBOARD), (void*)info);
-      info = hyscan_control_source_get_info (global.control, PORTSIDE);
-      if (info != NULL)
+      if (NULL != (info = hyscan_control_source_get_info (global.control, PORTSIDE)))
         g_hash_table_insert (global.infos, GINT_TO_POINTER (PORTSIDE), (void*)info);
     }
 
@@ -412,7 +410,7 @@ main (int argc, char **argv)
                                 &vwf->wf_mark, &vwf->wf_metr,
                                 global.marks.model);
 
-    g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_state_changed), &global);
+    g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), &global);
     g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_SIDESCAN));
 
     hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed);
@@ -453,7 +451,7 @@ main (int argc, char **argv)
     hyscan_gtk_waterfall_grid_set_condence (vwf->wf_grid, 10.0);
     hyscan_gtk_waterfall_grid_set_grid_color (vwf->wf_grid, hyscan_tile_color_converter_c2i (32, 32, 32, 255));
 
-    g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_state_changed), &global);
+    g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), &global);
     g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_PROFILER));
 
     hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), PROFILER);
