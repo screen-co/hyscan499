@@ -92,7 +92,8 @@ widget_swap (GObject  *emitter,
 
 spec:
   /* Теперь всякие специальные случаи. */
-  hyscan_gtk_area_set_bottom_visible (ui->area, g_str_equal (child, "ForwardLook"));
+  hyscan_gtk_area_set_bottom_visible (HYSCAN_GTK_AREA (ui->area),
+                                      g_str_equal (child, "ForwardLook"));
 
 }
 

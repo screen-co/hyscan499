@@ -37,7 +37,7 @@ struct _HyScanFlCoordsPrivate
   gint64                time_for_val;
 
   HyScanForwardLookData *fl_data;
-  HyScanAntennaPosition  apos;
+  HyScanAntennaOffset    apos;
   HyScanmLoc            *loc;
 
   HyScanGeoGeodetic     coords;
@@ -192,7 +192,7 @@ hyscan_fl_coords_set_project (HyScanFlCoords *self,
   if (priv->loc == NULL || priv->fl_data == NULL)
     return;
 
-  priv->apos = hyscan_forward_look_data_get_position (priv->fl_data);
+  priv->apos = hyscan_forward_look_data_get_offset (priv->fl_data);
 }
 
 

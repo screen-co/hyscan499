@@ -71,13 +71,13 @@ hyscan_gtk_nav_indicator_constructed (GObject *object)
 
   G_OBJECT_CLASS (hyscan_gtk_nav_indicator_parent_class)->constructed (object);
 
-  priv->parser.time = hyscan_nmea_parser_new_empty (HYSCAN_SOURCE_NMEA_RMC, HYSCAN_NMEA_FIELD_TIME);
-  priv->parser.date = hyscan_nmea_parser_new_empty (HYSCAN_SOURCE_NMEA_RMC, HYSCAN_NMEA_FIELD_DATE);
-  priv->parser.lat = hyscan_nmea_parser_new_empty (HYSCAN_SOURCE_NMEA_RMC, HYSCAN_NMEA_FIELD_LAT);
-  priv->parser.lon = hyscan_nmea_parser_new_empty (HYSCAN_SOURCE_NMEA_RMC, HYSCAN_NMEA_FIELD_LON);
-  priv->parser.trk = hyscan_nmea_parser_new_empty (HYSCAN_SOURCE_NMEA_RMC, HYSCAN_NMEA_FIELD_TRACK);
-  priv->parser.spd = hyscan_nmea_parser_new_empty (HYSCAN_SOURCE_NMEA_RMC, HYSCAN_NMEA_FIELD_SPEED);
-  priv->parser.dpt = hyscan_nmea_parser_new_empty (HYSCAN_SOURCE_NMEA_DPT, HYSCAN_NMEA_FIELD_DEPTH);
+  priv->parser.time = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_RMC, HYSCAN_NMEA_FIELD_TIME);
+  priv->parser.date = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_RMC, HYSCAN_NMEA_FIELD_DATE);
+  priv->parser.lat = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_RMC, HYSCAN_NMEA_FIELD_LAT);
+  priv->parser.lon = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_RMC, HYSCAN_NMEA_FIELD_LON);
+  priv->parser.trk = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_RMC, HYSCAN_NMEA_FIELD_TRACK);
+  priv->parser.spd = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_RMC, HYSCAN_NMEA_FIELD_SPEED);
+  priv->parser.dpt = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_DPT, HYSCAN_NMEA_FIELD_DEPTH);
 
   priv->update_tag = g_timeout_add (1000, (GSourceFunc)(hyscan_gtk_nav_indicator_update), self);
 }

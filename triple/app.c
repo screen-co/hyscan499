@@ -545,6 +545,10 @@ main (int argc, char **argv)
         brightness_set (&global, panel->vis_current.brightness, panel->vis_current.black, panelx);
         scale_set (&global, FALSE, panelx);
 
+        /* Если нет локатора, нечего и задавать. */
+        if (global.control == NULL)
+          continue;
+
         /* Для локаторов мы ничего не задаем, но лейблы всёрно надо проинициализировать. */
         distance_label (panel, panel->current.distance);
         tvg_label (panel, panel->current.gain0, panel->current.gain_step);
@@ -554,6 +558,11 @@ main (int argc, char **argv)
         {
           const HyScanDataSchemaEnumValue * signal;
           signal = signal_finder (&global, panel, *panel->sources, panel->current.signal);
+          if (signal == NULL)
+            {
+              panel->current.signal = 0;
+              signal = signal_finder (&global, panel, *panel->sources, panel->current.signal);
+            }
           signal_label (panel, signal->name);
         }
       }

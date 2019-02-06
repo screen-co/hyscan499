@@ -87,7 +87,7 @@ void
 depth_writer (GObject *emitter)
 {
   guint32 first, last, i;
-  HyScanAntennaPosition antenna;
+  HyScanAntennaOffset antenna;
   HyScanGeoGeodetic coord;
   GString *string = NULL;
   gchar *words = NULL;
@@ -102,7 +102,7 @@ depth_writer (GObject *emitter)
   HyScanmLoc * mloc;
 
   dpt = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track,
-                                                 1, HYSCAN_SOURCE_NMEA_DPT,
+                                                 1, HYSCAN_NMEA_DATA_DPT,
                                                  HYSCAN_NMEA_FIELD_DEPTH));
 
   if (dpt == NULL)
@@ -123,7 +123,7 @@ depth_writer (GObject *emitter)
   g_string_append_printf (string, "%s;%s\n", project, track);
 
   hyscan_nav_data_get_range (dpt, &first, &last);
-  antenna = hyscan_nav_data_get_position (dpt);
+  antenna = hyscan_nav_data_get_offset (dpt);
 
   for (i = first; i <= last; ++i)
     {
@@ -246,6 +246,13 @@ run_param (GObject *emitter)
     } while (res == GTK_RESPONSE_APPLY || res == GTK_RESPONSE_CANCEL);
 
   gtk_widget_destroy (dialog);
+}
+
+void
+sync_sonar (Global *global)
+{
+  if (global->on_air)
+    hyscan_sonar_sync (global->control_s);
 }
 
 void
@@ -830,7 +837,7 @@ get_mark_coords (GHashTable             * locstores,
   gdouble across;
   HyScanProjector *pj;
   HyScanAmplitude *amp;
-  HyScanAntennaPosition apos;
+  HyScanAntennaOffset apos;
   gint64 time;
   guint32 n;
   HyScanGeoGeodetic position;
@@ -849,7 +856,7 @@ get_mark_coords (GHashTable             * locstores,
   // hyscan_projector_index_to_coord (pj, mark->index0, &along);
   hyscan_projector_count_to_coord (pj, mark->count0, &across, 0);
 
-  apos = hyscan_amplitude_get_position (amp);
+  apos = hyscan_amplitude_get_offset (amp);
   hyscan_amplitude_get_amplitude (amp, mark->index0, &n, &time, NULL);
 
   if (mark->source0 == HYSCAN_SOURCE_SIDE_SCAN_PORT)
@@ -1471,7 +1478,8 @@ signal_finder (Global           *global,
   /* Ищем сигнал. */
   link = g_list_nth (info->presets, n);
   if (link == NULL)
-    link = info->presets;
+    // link = info->presets;
+    return NULL;
 
   return (HyScanDataSchemaEnumValue*) link->data;
 }
@@ -1528,6 +1536,8 @@ signal_set (Global *global,
       if (!status)
         return FALSE;
     }
+
+  sync_sonar (global);
 
   signal_label (panel, sig->name);
   return TRUE;
@@ -1610,6 +1620,8 @@ tvg_set (Global  *global,
       if (!status)
         return FALSE;
     }
+
+  sync_sonar (global);
 
   tvg_label (panel, *gain0, step);
   return TRUE;
@@ -1717,6 +1729,8 @@ auto_tvg_set (Global   *global,
         return FALSE;
     }
 
+  sync_sonar (global);
+
   /* Теперь печатаем что и куда надо. */
   auto_tvg_label (panel, level, sensitivity);
   return TRUE;
@@ -1805,7 +1819,7 @@ distance_set (Global  *global,
               gdouble  meters,
               gint     panelx)
 {
-  gdouble receive_time;
+  gdouble receive_time, wait_time;
   gboolean status;
   HyScanSourceType *iter;
   AmePanel *panel = get_panel (global, panelx);
@@ -1816,12 +1830,32 @@ distance_set (Global  *global,
   receive_time = meters / (global->sound_velocity / 2.0);
   for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
     {
-      g_message ("setting distance for %s", hyscan_source_get_name_by_type (*iter));
-      status = hyscan_sonar_receiver_set_time (global->control_s, *iter, receive_time, 0);
+      HyScanSonarInfoSource *info;
+      info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (*iter));
+      hyscan_return_val_if_fail (info != NULL, FALSE);
+
+      if (receive_time > info->receiver->max_time || receive_time < info->receiver->min_time)
+        return FALSE;
+
+      wait_time = 0;
+      if (panelx == X_PROFILER)
+        {
+          gdouble ss_rtime;
+          AmePanel *ss = get_panel (tglobal, X_SIDESCAN);
+          ss_rtime = ss->current.distance / (global->sound_velocity / 2.0);
+
+          receive_time = ss_rtime / 3.0;
+          wait_time = 333 - receive_time;
+        }
+
+      g_message ("setting distance for %s: %f m, r/w time: %f %f",
+                 hyscan_source_get_name_by_type (*iter), meters, receive_time, wait_time);
+      status = hyscan_sonar_receiver_set_time (global->control_s, *iter, receive_time, wait_time);
       if (!status)
         return FALSE;
     }
 
+  sync_sonar (global);
   distance_label (panel, meters);
   return TRUE;
 }
@@ -2283,7 +2317,7 @@ start_stop (Global    *global,
   if (state)
     {
       g_message ("Start sonars. Dry is %s", global->dry ? "ON" : "OFF");
-      gint track_num = -1;
+      gint track_num = 1;
       gboolean status = TRUE;
 
       /* Закрываем текущий открытый галс. */
@@ -2343,7 +2377,6 @@ start_stop (Global    *global,
             number = g_ascii_strtoll (*strs, NULL, 10);
             if (number >= track_num)
               track_num = number + 1;
-            g_message ("ANAL: %s %i %i", *strs, number, track_num);
           }
 
         hyscan_db_close (global->db, project_id);
@@ -2364,11 +2397,15 @@ start_stop (Global    *global,
 
       /* Если локатор включён, переходим в режим онлайн. */
       gtk_widget_set_sensitive (GTK_WIDGET (global->gui.track.tree), FALSE);
+
+      global->on_air = TRUE;
     }
 
   /* Выключаем излучение и блокируем режим онлайн. */
   else
     {
+      global->on_air = FALSE;
+
       g_message ("Stop sonars");
       hyscan_sonar_stop (global->control_s);
       gtk_widget_set_sensitive (GTK_WIDGET (global->gui.track.tree), TRUE);
@@ -2400,10 +2437,6 @@ sensor_cb (HyScanSensor     *sensor,
            HyScanBuffer     *buffer,
            Global           *global)
 {
-  /* Ищем строки RMC и DPT. */
-  if (source != HYSCAN_SOURCE_NMEA_RMC && source != HYSCAN_SOURCE_NMEA_DPT)
-    return;
-
   /* Напрямую загоняем их в виджет. */
   hyscan_gtk_nav_indicator_push (HYSCAN_GTK_NAV_INDICATOR (global->gui.nav), buffer);
 }

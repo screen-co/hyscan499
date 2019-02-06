@@ -63,7 +63,7 @@ static void            hyscan_gtk_forward_look_range                   (HyScanFo
 
 static void            hyscan_gtk_forward_look_data                    (HyScanForwardLookPlayer          *player,
                                                                         HyScanForwardLookPlayerInfo      *info,
-                                                                        HyScanAntennaPosition            *position,
+                                                                        HyScanAntennaOffset              *position,
                                                                         HyScanForwardLookDOA             *doa,
                                                                         guint32                           n_doa,
                                                                         HyScanGtkForwardLook             *fl);
@@ -267,7 +267,7 @@ hyscan_gtk_forward_look_range (HyScanForwardLookPlayer *player,
 static void
 hyscan_gtk_forward_look_data (HyScanForwardLookPlayer     *control,
                               HyScanForwardLookPlayerInfo *info,
-                              HyScanAntennaPosition       *position,
+                              HyScanAntennaOffset         *position,
                               HyScanForwardLookDOA        *doa,
                               guint32                      n_doa,
                               HyScanGtkForwardLook        *fl)
