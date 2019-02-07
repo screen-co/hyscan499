@@ -63,20 +63,23 @@ make_button (GtkGrid *grid,
 int
 main (int argc, char **argv)
 {
+  gint port_val;
   GInetAddress *addr;
   GtkWidget *window;
   GError *error = NULL;
 
   gtk_init (&argc, &argv);
 
-  if (argc < 2)
+  if (argc < 3)
     {
-      g_print ("Usage: ./button-emu address\n");
+      g_print ("Usage: ./button-emu address port\n");
       return -1;
     }
+  port_val = g_ascii_strtoll (argv[2], NULL, 10);
+
   sock = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, NULL);
   addr = g_inet_address_new_from_string (argv[1]);
-  isocketadress = g_inet_socket_address_new (addr, 9000);
+  isocketadress = g_inet_socket_address_new (addr, port_val);
   if (addr == NULL || isocketadress == NULL)
     return -1;
 

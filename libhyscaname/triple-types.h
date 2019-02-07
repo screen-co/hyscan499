@@ -328,7 +328,7 @@ HYSCAN_API void
 active_mark_changed (HyScanGtkProjectViewer *marks_viewer,
                      Global                 *global);
 
-inline gboolean
+gboolean
 ame_float_equal (gdouble a,
                  gdouble b);
 
