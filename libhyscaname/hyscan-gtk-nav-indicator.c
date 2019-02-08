@@ -177,15 +177,31 @@ hyscan_gtk_nav_indicator_push (HyScanGtkNavIndicator *self,
     }
 
   /* Парсим строки. */
-  td_ok = hyscan_nmea_parser_parse_string (priv->parser.time, rmcs, &time) &&
-          hyscan_nmea_parser_parse_string (priv->parser.date, rmcs, &date);
+  if (rmcs != NULL)
+    {
+      td_ok = hyscan_nmea_parser_parse_string (priv->parser.time, rmcs, &time) &&
+              hyscan_nmea_parser_parse_string (priv->parser.date, rmcs, &date);
 
-  ll_ok = hyscan_nmea_parser_parse_string (priv->parser.lat, rmcs, &lat) &&
-          hyscan_nmea_parser_parse_string (priv->parser.lon, rmcs, &lon);
+      ll_ok = hyscan_nmea_parser_parse_string (priv->parser.lat, rmcs, &lat) &&
+              hyscan_nmea_parser_parse_string (priv->parser.lon, rmcs, &lon);
 
-  trk_ok = hyscan_nmea_parser_parse_string (priv->parser.trk, rmcs, &trk);
-  spd_ok = hyscan_nmea_parser_parse_string (priv->parser.spd, rmcs, &spd);
-  dpt_ok = hyscan_nmea_parser_parse_string (priv->parser.dpt, dpts, &dpt);
+      trk_ok = hyscan_nmea_parser_parse_string (priv->parser.trk, rmcs, &trk);
+      spd_ok = hyscan_nmea_parser_parse_string (priv->parser.spd, rmcs, &spd);
+
+    }
+  else
+    {
+      td_ok = ll_ok = trk_ok = spd_ok = FALSE;
+    }
+  if (dpts != NULL)
+    {
+      dpt_ok = hyscan_nmea_parser_parse_string (priv->parser.dpt, dpts, &dpt);
+      g_message ("dpt fnd: %s", dpts);
+    }
+  else
+    {
+      dpt_ok = FALSE;
+    }
 
   /* Обновляем данные виджетов. */
   g_mutex_lock (&priv->lock);

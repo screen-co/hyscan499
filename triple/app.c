@@ -94,6 +94,7 @@ main (int argc, char **argv)
 
   gchar             *config_file = NULL;       /* Название файла конфигурации. */
   GKeyFile          *config = NULL;
+  GKeyFile          *hardware = NULL;
 
   gchar             *um_path = NULL;       /* Модуль с интерфейсом. */
   GModule           *ui_module = NULL;
@@ -317,6 +318,9 @@ main (int argc, char **argv)
         g_hash_table_insert (global.infos, GINT_TO_POINTER (PORTSIDE), (void*)info);
     }
 
+  if (global.control != NULL)
+    g_signal_connect (global.control, "sensor-data", sensor_cb, &global);
+
   /* Закончили подключение к гидролокатору. */
   no_sonar:
 
@@ -384,6 +388,7 @@ main (int argc, char **argv)
    */
   global.panels = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, ame_panel_destroy);
 
+  hardware = g_key_file_new ();
   { /* ГБО */
     GtkWidget *main_widget;
     AmePanel *panel = g_new0 (AmePanel, 1);
@@ -500,6 +505,7 @@ main (int argc, char **argv)
     vfl->common.main = GTK_WIDGET (vfl->fl);
     g_hash_table_insert (global.panels, GINT_TO_POINTER (X_FORWARDL), panel);
   }
+  g_key_file_unref (hardware);
 
 
   // Вызываем постройку билдера!

@@ -671,6 +671,7 @@ kf_config (GKeyFile *kf)
   brec.socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, NULL);
   addr = g_inet_address_new_from_string (mcast_addr);
   isocketadress = g_inet_socket_address_new(addr, mcast_port);
+  g_message ("Buttons: %s %u", mcast_addr, mcast_port);
 
   g_socket_bind (brec.socket, isocketadress, TRUE, NULL);
 

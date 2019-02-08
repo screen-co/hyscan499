@@ -624,6 +624,13 @@ HYSCAN_API gboolean
 set_dry (Global    *global,
          gboolean   state);
 
+HYSCAN_API void
+sensor_cb (HyScanSensor     *sensor,
+           const gchar      *name,
+           HyScanSourceType  source,
+           gint64            recv_time,
+           HyScanBuffer     *buffer,
+           Global           *global);
 
 HYSCAN_API void
 fl_coords_callback (HyScanFlCoords *coords,

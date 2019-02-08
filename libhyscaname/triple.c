@@ -222,9 +222,9 @@ run_param (GObject *emitter)
   dialog = gtk_dialog_new_with_buttons("Параметры оборудования",
                                        GTK_WINDOW (tglobal->gui.window), 0,
                                        "Применить", GTK_RESPONSE_APPLY,
-                                       "Откатить", GTK_RESPONSE_CANCEL,
-                                       "Ок", GTK_RESPONSE_YES,
-                                       "Отменить", GTK_RESPONSE_NO,
+                                       "Сбросить", GTK_RESPONSE_CANCEL,
+                                       "Сохранить и выйти", GTK_RESPONSE_YES,
+                                       "Сбросить и выйти", GTK_RESPONSE_NO,
                                        NULL);
   content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
   tree = hyscan_gtk_param_tree_new (HYSCAN_PARAM (tglobal->control), "/", TRUE);
@@ -252,7 +252,11 @@ void
 sync_sonar (Global *global)
 {
   if (global->on_air)
-    hyscan_sonar_sync (global->control_s);
+    {
+      hyscan_sonar_sync (global->control_s);
+      g_message ("sync...");
+    }
+
 }
 
 void
@@ -1531,6 +1535,7 @@ signal_set (Global *global,
         }
 
       prev_sig = sig;
+
       /* Устанавливаем. */
       status = hyscan_sonar_generator_set_preset (global->control_s, source, sig->value);
       if (!status)
@@ -1791,7 +1796,7 @@ tvg_sens_down (GtkWidget *widget,
   gdouble desired;
   AmePanel *panel = get_panel (tglobal, panelx);
 
-  desired = panel->current.sensitivity + 0.1;
+  desired = panel->current.sensitivity - 0.1;
   desired = CLAMP (desired, 0.0, 1.0);
 
   if (auto_tvg_set (tglobal, panel->current.level, desired, panelx))
@@ -1840,21 +1845,30 @@ distance_set (Global  *global,
       wait_time = 0;
       if (panelx == X_PROFILER)
         {
-          gdouble ss_rtime;
+          gdouble ss_time, requested_time = receive_time;
           AmePanel *ss = get_panel (tglobal, X_SIDESCAN);
-          ss_rtime = ss->current.distance / (global->sound_velocity / 2.0);
 
-          receive_time = ss_rtime / 3.0;
-          wait_time = 333 - receive_time;
+          if (ss != NULL)
+            {
+              ss_time = ss->current.distance / (global->sound_velocity / 2.0);
+
+              receive_time = ss_time / 3.0;
+              if (requested_time > receive_time)
+                return FALSE;
+              receive_time = MIN (receive_time, requested_time);
+              wait_time = 0.333 - receive_time - 0.01;
+            }
         }
 
-      g_message ("setting distance for %s: %f m, r/w time: %f %f",
+      g_message ("setting distance for %s: %4.1f m, r/w time: %f %f",
                  hyscan_source_get_name_by_type (*iter), meters, receive_time, wait_time);
+
       status = hyscan_sonar_receiver_set_time (global->control_s, *iter, receive_time, wait_time);
       if (!status)
         return FALSE;
     }
 
+  /* Специальный случай. */
   sync_sonar (global);
   distance_label (panel, meters);
   return TRUE;
@@ -1868,6 +1882,7 @@ distance_up (GtkWidget *widget,
   AmePanel *panel = get_panel (tglobal, panelx);
 
   desired = panel->current.distance + 5.0;
+  desired = desired - ((int)desired % 5);
   if (distance_set (tglobal, desired, panelx))
     panel->current.distance = desired;
   else
@@ -1882,6 +1897,7 @@ distance_down (GtkWidget *widget,
   AmePanel *panel = get_panel (tglobal, panelx);
 
   desired = panel->current.distance - 5.0;
+  desired = desired - ((int)desired % 5);
   if (distance_set (tglobal, desired, panelx))
     panel->current.distance = desired;
   else
