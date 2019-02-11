@@ -102,6 +102,10 @@ main (int argc, char **argv)
   ame_build          ui_destroy = NULL;
   ame_config         ui_config = NULL;
 
+  gboolean           need_ss = FALSE;
+  gboolean           need_pf = FALSE;
+  gboolean           need_fl = FALSE;
+
   GtkBuilder        *common_builder = NULL;
 
   // HyScanAmeSplash   *splash = NULL;
@@ -126,6 +130,11 @@ main (int argc, char **argv)
         { "sound-velocity",  'v',   0, G_OPTION_ARG_DOUBLE,  &sound_velocity,  "Sound velocity, m/s", NULL },
         { "ship-speed",      'e',   0, G_OPTION_ARG_DOUBLE,  &ship_speed,      "Ship speed, m/s", NULL },
         { "full-screen",     'f',   0, G_OPTION_ARG_NONE,    &full_screen,     "Full screen mode", NULL },
+
+        { "ss",              0,     0, G_OPTION_ARG_NONE,    &need_ss,         "Enable ss panel", NULL },
+        { "pf",              0,     0, G_OPTION_ARG_NONE,    &need_pf,         "Enable pf panel", NULL },
+        { "fl",              0,     0, G_OPTION_ARG_NONE,    &need_fl,         "Enable fl panel", NULL },
+
         { "hardware-profile",'p',   0, G_OPTION_ARG_STRING,  &hardware_profile_name,     "Specify hardware profile name"
                                                               ", otherwise it will be obtained from config-file.", NULL },
         { "ui", 0,   G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &um_path,    "UI module", NULL },
@@ -389,122 +398,130 @@ main (int argc, char **argv)
   global.panels = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, ame_panel_destroy);
 
   hardware = g_key_file_new ();
-  { /* ГБО */
-    GtkWidget *main_widget;
-    AmePanel *panel = g_new0 (AmePanel, 1);
-    VisualWF *vwf = g_new0 (VisualWF, 1);
 
-    panel->name = g_strdup ("SideScan");
-    panel->short_name = g_strdup ("SS");
-    panel->type = AME_PANEL_WATERFALL;
+  /* Проверяем флаги на панели */
+  if (!need_ss && !need_pf && !need_fl)
+    need_ss = need_pf = need_fl = TRUE;
 
-    panel->sources = g_new0 (HyScanSourceType, 3);
-    panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD;
-    panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_PORT;
-    panel->sources[2] = HYSCAN_SOURCE_INVALID;
+  if (need_ss)
+    { /* ГБО */
+      GtkWidget *main_widget;
+      AmePanel *panel = g_new0 (AmePanel, 1);
+      VisualWF *vwf = g_new0 (VisualWF, 1);
 
-    panel->vis_gui = (VisualCommon*)vwf;
+      panel->name = g_strdup ("SideScan");
+      panel->short_name = g_strdup ("SS");
+      panel->type = AME_PANEL_WATERFALL;
 
-    vwf->colormaps = make_color_maps (FALSE);
+      panel->sources = g_new0 (HyScanSourceType, 3);
+      panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD;
+      panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_PORT;
+      panel->sources[2] = HYSCAN_SOURCE_INVALID;
 
-    vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global.cache));
-    gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
+      panel->vis_gui = (VisualCommon*)vwf;
 
-    main_widget = make_overlay (vwf->wf,
-                                &vwf->wf_grid, &vwf->wf_ctrl,
-                                &vwf->wf_mark, &vwf->wf_metr,
-                                global.marks.model);
+      vwf->colormaps = make_color_maps (FALSE);
 
-    g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), &global);
-    g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_SIDESCAN));
+      vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global.cache));
+      gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
 
-    hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed);
-    hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
-    hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
-    hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
+      main_widget = make_overlay (vwf->wf,
+                                  &vwf->wf_grid, &vwf->wf_ctrl,
+                                  &vwf->wf_mark, &vwf->wf_metr,
+                                  global.marks.model);
 
-    vwf->common.main = main_widget;
-    g_hash_table_insert (global.panels, GINT_TO_POINTER (X_SIDESCAN), panel);
-  }
+      g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), &global);
+      g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_SIDESCAN));
 
-  { /* ПФ */
-    GtkWidget *main_widget;
-    AmePanel *panel = g_new0 (AmePanel, 1);
-    VisualWF *vwf = g_new0 (VisualWF, 1);
+      hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed);
+      hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
+      hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
+      hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
 
-    panel->name = g_strdup ("Profiler");
-    panel->short_name = g_strdup ("PF");
-    panel->type = AME_PANEL_ECHO;
+      vwf->common.main = main_widget;
+      g_hash_table_insert (global.panels, GINT_TO_POINTER (X_SIDESCAN), panel);
+    }
 
-    panel->sources = g_new0 (HyScanSourceType, 3);
-    panel->sources[0] = HYSCAN_SOURCE_PROFILER;
-    panel->sources[1] = HYSCAN_SOURCE_PROFILER_ECHO;
-    panel->sources[2] = HYSCAN_SOURCE_INVALID;
+  if (need_pf)
+    { /* ПФ */
+      GtkWidget *main_widget;
+      AmePanel *panel = g_new0 (AmePanel, 1);
+      VisualWF *vwf = g_new0 (VisualWF, 1);
 
-    panel->vis_gui = (VisualCommon*)vwf;
+      panel->name = g_strdup ("Profiler");
+      panel->short_name = g_strdup ("PF");
+      panel->type = AME_PANEL_ECHO;
 
-    vwf->colormaps = make_color_maps (TRUE);
+      panel->sources = g_new0 (HyScanSourceType, 3);
+      panel->sources[0] = HYSCAN_SOURCE_PROFILER;
+      panel->sources[1] = HYSCAN_SOURCE_PROFILER_ECHO;
+      panel->sources[2] = HYSCAN_SOURCE_INVALID;
 
-    vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global.cache));
-    gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
+      panel->vis_gui = (VisualCommon*)vwf;
 
-    main_widget = make_overlay (vwf->wf,
-                                &vwf->wf_grid, &vwf->wf_ctrl,
-                                &vwf->wf_mark, &vwf->wf_metr,
-                                global.marks.model);
+      vwf->colormaps = make_color_maps (TRUE);
 
-    hyscan_gtk_waterfall_grid_set_condence (vwf->wf_grid, 10.0);
-    hyscan_gtk_waterfall_grid_set_grid_color (vwf->wf_grid, hyscan_tile_color_converter_c2i (32, 32, 32, 255));
+      vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global.cache));
+      gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
 
-    g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), &global);
-    g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_PROFILER));
+      main_widget = make_overlay (vwf->wf,
+                                  &vwf->wf_grid, &vwf->wf_ctrl,
+                                  &vwf->wf_mark, &vwf->wf_metr,
+                                  global.marks.model);
 
-    hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), PROFILER);
-    hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed / 10);
-    hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
-    hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
-    hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
+      hyscan_gtk_waterfall_grid_set_condence (vwf->wf_grid, 10.0);
+      hyscan_gtk_waterfall_grid_set_grid_color (vwf->wf_grid, hyscan_tile_color_converter_c2i (32, 32, 32, 255));
 
-    vwf->common.main = main_widget;
-    g_hash_table_insert (global.panels, GINT_TO_POINTER (X_PROFILER), panel);
-  }
+      g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), &global);
+      g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_PROFILER));
 
-  { /* ВСЛ */
-    AmePanel *panel = g_new0 (AmePanel, 1);
-    VisualFL *vfl = g_new0 (VisualFL, 1);
+      hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), PROFILER);
+      hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed / 10);
+      hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
+      hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
+      hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
 
-    panel->name = g_strdup ("ForwardLook");
-    panel->short_name = g_strdup ("FL");
-    panel->type = AME_PANEL_FORWARDLOOK;
+      vwf->common.main = main_widget;
+      g_hash_table_insert (global.panels, GINT_TO_POINTER (X_PROFILER), panel);
+    }
 
-    panel->sources = g_new0 (HyScanSourceType, 2);
-    panel->sources[0] = HYSCAN_SOURCE_FORWARD_LOOK;
-    panel->sources[1] = HYSCAN_SOURCE_INVALID;
+  if (need_fl)
+    { /* ВСЛ */
+      AmePanel *panel = g_new0 (AmePanel, 1);
+      VisualFL *vfl = g_new0 (VisualFL, 1);
 
-    panel->vis_gui = (VisualCommon*)vfl;
+      panel->name = g_strdup ("ForwardLook");
+      panel->short_name = g_strdup ("FL");
+      panel->type = AME_PANEL_FORWARDLOOK;
 
-    vfl->fl = HYSCAN_GTK_FORWARD_LOOK (hyscan_gtk_forward_look_new ());
-    gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vfl->fl), TRUE);
+      panel->sources = g_new0 (HyScanSourceType, 2);
+      panel->sources[0] = HYSCAN_SOURCE_FORWARD_LOOK;
+      panel->sources[1] = HYSCAN_SOURCE_INVALID;
 
-    vfl->player = hyscan_gtk_forward_look_get_player (vfl->fl);
-    vfl->coords = hyscan_fl_coords_new (vfl->fl, global.cache);
+      panel->vis_gui = (VisualCommon*)vfl;
 
-    /* Управление воспроизведением FL. */
-    vfl->play_control = GTK_WIDGET (gtk_builder_get_object (common_builder, "fl_play_control"));
-    hyscan_exit_if (vfl->play_control == NULL, "can't load play control ui");
+      vfl->fl = HYSCAN_GTK_FORWARD_LOOK (hyscan_gtk_forward_look_new ());
+      gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vfl->fl), TRUE);
 
-    vfl->position = GTK_SCALE (gtk_builder_get_object (common_builder, "position"));
-    vfl->coords_label = GTK_LABEL (gtk_builder_get_object (common_builder, "fl_latlong"));
-    g_signal_connect (vfl->coords, "coords", G_CALLBACK (fl_coords_callback), vfl->coords_label);
-    hyscan_exit_if (vfl->position == NULL, "incorrect play control ui");
-    vfl->position_range = hyscan_gtk_forward_look_get_adjustment (vfl->fl);
-    gtk_range_set_adjustment (GTK_RANGE (vfl->position), vfl->position_range);
+      vfl->player = hyscan_gtk_forward_look_get_player (vfl->fl);
+      vfl->coords = hyscan_fl_coords_new (vfl->fl, global.cache);
 
-    hyscan_forward_look_player_set_sv (vfl->player, global.sound_velocity);
+      /* Управление воспроизведением FL. */
+      vfl->play_control = GTK_WIDGET (gtk_builder_get_object (common_builder, "fl_play_control"));
+      hyscan_exit_if (vfl->play_control == NULL, "can't load play control ui");
 
-    vfl->common.main = GTK_WIDGET (vfl->fl);
-    g_hash_table_insert (global.panels, GINT_TO_POINTER (X_FORWARDL), panel);
-  }
+      vfl->position = GTK_SCALE (gtk_builder_get_object (common_builder, "position"));
+      vfl->coords_label = GTK_LABEL (gtk_builder_get_object (common_builder, "fl_latlong"));
+      g_signal_connect (vfl->coords, "coords", G_CALLBACK (fl_coords_callback), vfl->coords_label);
+      hyscan_exit_if (vfl->position == NULL, "incorrect play control ui");
+      vfl->position_range = hyscan_gtk_forward_look_get_adjustment (vfl->fl);
+      gtk_range_set_adjustment (GTK_RANGE (vfl->position), vfl->position_range);
+
+      hyscan_forward_look_player_set_sv (vfl->player, global.sound_velocity);
+
+      vfl->common.main = GTK_WIDGET (vfl->fl);
+      g_hash_table_insert (global.panels, GINT_TO_POINTER (X_FORWARDL), panel);
+    }
   g_key_file_unref (hardware);
 
 

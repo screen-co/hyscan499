@@ -39,11 +39,47 @@ static AmePage common_pages[] =
       {
         {L, 3, VMOR, "Галс",            TOGGLE_NONE, CBK(switch_page), UD("ГАЛС")},
         {L, 4, VMOR, "Общее",           TOGGLE_NONE, CBK(switch_page), UD("Общее")},
-        {R, 0, VMOR, "ГБО Изображение", TOGGLE_NONE, CBK(switch_page), UD("И_ГБО")},
-        {R, 1, VMOR, "ГК Изображение",  TOGGLE_NONE, CBK(switch_page), UD("И_ГК")},
-        {R, 2, VMOR, "ПФ Изображение",  TOGGLE_NONE, CBK(switch_page), UD("И_ПФ")},
         {R, 4, VMOR, "Вид",             TOGGLE_NONE, CBK(widget_swap), GINT_TO_POINTER (ROTATE),
             VALUE_OFFSET(AmeUI, current_view), VALUE_DEFAULT("--")},
+        {END}
+      }
+  },
+  {
+    PATH("ГАЛС"), DESTINATION_SELECTOR(DEST_UNSET),
+    .items =
+      {
+        {L, 0, MENU, "Меню",        TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
+        {L, 1, BACK, "Назад",       TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
+        {L, 4, MNGR, "Проекты",     TOGGLE_NONE, CBK(run_manager),    NULL},
+
+        {R, 0, UP,   "В начало",    TOGGLE_NONE, CBK(list_scroll_start),trkls},
+        {R, 1, DOWN, "В конец",     TOGGLE_NONE, CBK(list_scroll_end),  trkls},
+        {R, 3, MORE, "Выбор галса", TOGGLE_NONE, CBK(list_scroll_up),   trkls},
+        {R, 4, LESS, NULL,          TOGGLE_NONE, CBK(list_scroll_down), trkls},
+        {END}
+      }
+  },
+  {
+    PATH("Общее"), DESTINATION_SELECTOR(DEST_UNSET),
+    .items =
+      {
+        {L, 0, MENU, "Меню",         TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
+        {R, 1, DOT,  "Выгр. глубины",TOGGLE_NONE, CBK(depth_writer),   NULL},
+        {END}
+      }
+  },
+  {
+    PATH(NULL)
+  }
+};
+
+static AmePage ss_image_pages[] = 
+{
+  {
+    PATH("Меню"), DESTINATION_SELECTOR(DEST_AME_UI),
+    .items =
+      {
+        {R, 0, VMOR, "ГБО Изображение", TOGGLE_NONE, CBK(switch_page), UD("И_ГБО")},
         {END}
       }
   },
@@ -94,6 +130,19 @@ static AmePage common_pages[] =
         {R, 1, DOT,  "Удалить",     TOGGLE_NONE, CBK(nav_del),        UD(XSS)},
         {R, 3, UP,   "Выбор",       TOGGLE_NONE, CBK(list_scroll_up),   mrkls},
         {R, 4, DOWN, NULL,          TOGGLE_NONE, CBK(list_scroll_down), mrkls},
+        {END}
+      }
+  },
+  { PATH ( NULL ) }
+};
+
+static AmePage pf_image_pages[] =
+{
+  {
+    PATH("Меню"), DESTINATION_SELECTOR(DEST_AME_UI),
+    .items =
+      {
+        {R, 2, VMOR, "ПФ Изображение",  TOGGLE_NONE, CBK(switch_page), UD("И_ПФ")},
         {END}
       }
   },
@@ -150,6 +199,19 @@ static AmePage common_pages[] =
         {END}
       }
   },
+  { PATH (NULL) }
+};
+
+static AmePage fl_image_pages[] =
+{
+  {
+    PATH("Меню"), DESTINATION_SELECTOR(DEST_AME_UI),
+    .items =
+      {
+        {R, 1, VMOR, "ГК Изображение",  TOGGLE_NONE, CBK(switch_page), UD("И_ГК")},
+        {END}
+      }
+  },
   {
     PATH("И_ГК"), DESTINATION_SELECTOR(DEST_PANEL_SPEC),
     .items =
@@ -186,33 +248,7 @@ static AmePage common_pages[] =
         {END}
       }
   },
-  {
-    PATH("ГАЛС"), DESTINATION_SELECTOR(DEST_UNSET),
-    .items =
-      {
-        {L, 0, MENU, "Меню",        TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
-        {L, 1, BACK, "Назад",       TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
-        {L, 4, MNGR, "Проекты",     TOGGLE_NONE, CBK(run_manager),    NULL},
-
-        {R, 0, UP,   "В начало",    TOGGLE_NONE, CBK(list_scroll_start),trkls},
-        {R, 1, DOWN, "В конец",     TOGGLE_NONE, CBK(list_scroll_end),  trkls},
-        {R, 3, MORE, "Выбор галса", TOGGLE_NONE, CBK(list_scroll_up),   trkls},
-        {R, 4, LESS, NULL,          TOGGLE_NONE, CBK(list_scroll_down), trkls},
-        {END}
-      }
-  },
-  {
-    PATH("Общее"), DESTINATION_SELECTOR(DEST_UNSET),
-    .items =
-      {
-        {L, 0, MENU, "Меню",         TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
-        {R, 1, DOT,  "Выгр. глубины",TOGGLE_NONE, CBK(depth_writer),   NULL},
-        {END}
-      }
-  },
-  {
-    PATH(NULL)
-  }
+  { PATH (NULL) }
 };
 
 static AmePage any_sonar_pages[] =

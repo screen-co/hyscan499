@@ -193,11 +193,15 @@ build_page (AmeUI   *ui,
             {
             case DEST_PANEL:
               panel = get_panel (global, GPOINTER_TO_INT (item->user_data));
+              if (panel == NULL)
+                continue;
               base = (gchar*)panel;
               break;
 
             case DEST_PANEL_SPEC:
               panel = get_panel (global, GPOINTER_TO_INT (item->user_data));
+              if (panel == NULL)
+                continue;
               base = (gchar*)(panel->vis_gui);
               break;
 
@@ -265,11 +269,11 @@ widget_swap (GObject  *emitter,
   const gchar *text = (gchar*)0x1;
   gint id = 0;
 
-if (!HYSCAN_IS_GTK_AME_BOX (global_ui.acoustic))
-{
-  g_warning ("fuck");
+  if (!HYSCAN_IS_GTK_AME_BOX (global_ui.acoustic))
+    {
+      g_warning ("fuck");
 
-}
+    }
   if (selector == ALL)
     {
       hyscan_gtk_ame_box_show_all (abox);
@@ -461,6 +465,10 @@ build_interface (Global *global)
         GtkWidget *w;
         AmePanel *panel = get_panel (global, order[i]);
 
+        /* Может и не получится найти панель. */
+        if (panel == NULL)
+          continue;
+
         w = panel->vis_gui->main;
 
         g_object_set (w, "vexpand", TRUE, "valign", GTK_ALIGN_FILL,
@@ -493,41 +501,58 @@ build_interface (Global *global)
 
   /* Нижняя панель содержит виджет управления впередсмотрящим. */
   {
-    AmePanel *panel = get_panel (global, X_FORWARDL);
-    VisualFL *fl = (VisualFL*)panel->vis_gui;
+    AmePanel *panel;
+    VisualFL *fl;
 
-    gtk_container_add (GTK_CONTAINER (ui->bott_revealer), fl->play_control);
-    gtk_revealer_set_reveal_child (GTK_REVEALER (ui->bott_revealer), FALSE);
+    panel = get_panel (global, X_FORWARDL);
+    if (panel != NULL)
+      {
+        fl = (VisualFL*)panel->vis_gui;
+
+        gtk_container_add (GTK_CONTAINER (ui->bott_revealer), fl->play_control);
+        gtk_revealer_set_reveal_child (GTK_REVEALER (ui->bott_revealer), FALSE);
+      }
   }
 
   /* Строим интерфейсос. */
   build_all (ui, global, common_pages);
-  /* Определяем, какие локаторы у нас вообще есть. */
 
-  if (global->control_s != NULL)
-    {
-      gboolean found[HYSCAN_SOURCE_LAST];
-      const HyScanSourceType * types;
-      guint32 n;
 
-      for (n = HYSCAN_SOURCE_INVALID; n < HYSCAN_SOURCE_LAST; ++n)
-        found[n] = FALSE;
+  /* Определяем, страницы у нас вообще есть. */
+  {
+    GHashTableIter iter;
+    gpointer key, value;
 
-      types = hyscan_control_sources_list (global->control, &n);
+    /* Общие ГЛ-виджеты. */
+    build_all (ui, global, any_sonar_pages);
 
-      for (; n != 0; --n, ++types)
-        found[*types] = TRUE;
-
-      build_all (ui, global, any_sonar_pages);
-
-      /* Теперь строим интерфейс в зависимости от найденных источников. */
-      if (found[HYSCAN_SOURCE_SIDE_SCAN_STARBOARD] && found[HYSCAN_SOURCE_SIDE_SCAN_PORT])
-        build_all (ui, global, ss_pages);
-      if (found[HYSCAN_SOURCE_FORWARD_LOOK])
-        build_all (ui, global, fl_pages);
-      if (found[HYSCAN_SOURCE_PROFILER])
-        build_all (ui, global, pf_pages);
-    }
+    /* Виджеты по страницам. */
+    g_hash_table_iter_init(&iter, global->panels);
+    while (g_hash_table_iter_next(&iter, &key, &value))
+      {
+        switch (GPOINTER_TO_INT (key))
+          {
+            case X_SIDESCAN:
+              g_message ("SIDESCAN page found");
+              build_all (ui, global, ss_image_pages);
+              if (global->control_s != NULL)
+                build_all (ui, global, ss_pages);
+              break;
+            case X_FORWARDL:
+              g_message ("FORWARDL page found");
+              build_all (ui, global, fl_image_pages);
+              if (global->control_s != NULL)
+                build_all (ui, global, fl_pages);
+              break;
+            case X_PROFILER:
+              g_message ("PROFILER page found");
+              build_all (ui, global, pf_image_pages);
+              if (global->control_s != NULL)
+                build_all (ui, global, pf_pages);
+              break;
+          }
+      }
+  }
 
   /* Инициализация значений. */
   widget_swap (NULL, GINT_TO_POINTER (ALL));
