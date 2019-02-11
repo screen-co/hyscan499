@@ -1510,7 +1510,7 @@ signal_set (Global *global,
             gint    panelx)
 {
   HyScanSourceType *iter;
-  const HyScanDataSchemaEnumValue *sig, *prev_sig = NULL;
+  const HyScanDataSchemaEnumValue *sig = NULL, *prev_sig = NULL;
   AmePanel *panel = get_panel (global, panelx);
 
   g_message ("Signal_set: Sonar#%i, Signal %i", panelx, sig_num);
@@ -1545,7 +1545,9 @@ signal_set (Global *global,
 
   sync_sonar (global);
 
-  signal_label (panel, sig->name);
+  if (sig != NULL)
+    signal_label (panel, sig->name);
+
   return TRUE;
 }
 

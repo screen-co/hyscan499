@@ -4,6 +4,7 @@
 
 GtkWidget *label;
 gint stop;
+GSocketAddress *isocketadress;
 
 void error_check (GError **error)
 {
@@ -24,7 +25,7 @@ clicked (GtkButton *butt,
   const gchar *msg = gtk_button_get_label (butt);
   gchar *text;
 
-  sent = g_socket_send (sock, msg, strlen (msg) + 1, NULL, &error);
+  sent = g_socket_send_to (sock, isocketadress, msg, strlen (msg) + 1, NULL, &error);
   g_message ("Message: <%s>, sent: %i", msg, (int)sent);
 
   if (sent > 0)
@@ -46,11 +47,11 @@ read_thread (void * data)
   GInetAddress *addr;
   GError *error = NULL;
   GSocket *sock;
-  GSocketAddress *isocketadress;
   gboolean triggered;
   gchar buf[128];
   gsize bytes;
 
+  return NULL;
   sock = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, NULL);
   addr = g_inet_address_new_from_string (argv[1]);
   port_val = g_ascii_strtoll (argv[2], NULL, 10);
@@ -121,36 +122,53 @@ make_button (GtkGrid *grid,
 int
 main (int argc, char **argv)
 {
-  gint port_val;
+  gchar * mcast_addr;
+  guint16 mcast_port;
+  gboolean source_specific = FALSE;
+
   GInetAddress *addr;
   GtkWidget *window;
   GError *error = NULL;
   GSocket *sock;
-  GSocketAddress *isocketadress;
   GThread *thr;
 
   gtk_init (&argc, &argv);
 
-  if (argc < 3)
+  if (argc == 2)
     {
-      g_print ("Usage: ./button-emu address port\n");
+      GKeyFile * kf = g_key_file_new ();
+      g_key_file_load_from_file (kf, argv[1], G_KEY_FILE_NONE, NULL);
+
+      source_specific = g_key_file_get_boolean (kf, "ame", "source_specific", NULL);
+      mcast_addr =  g_key_file_get_string (kf, "ame", "button_addr", NULL);
+      mcast_port =  (guint16)g_key_file_get_integer (kf, "ame", "button_port", NULL);
+
+      g_key_file_unref (kf);
+    }
+  else if (argc == 3)
+    {
+      mcast_addr = argv[1];
+      mcast_port = g_ascii_strtoll (argv[2], NULL, 10);
+    }
+  else
+    {
+      g_print ("Usage:\n\t./button-emu address port\nOR\n\t./button-emu config-file \n");
       return -1;
     }
-  port_val = g_ascii_strtoll (argv[2], NULL, 10);
-
+  g_message ("Connecting to %s:%u", mcast_addr, mcast_port);
   sock = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, NULL);
-  addr = g_inet_address_new_from_string (argv[1]);
-  isocketadress = g_inet_socket_address_new (addr, port_val);
+  addr = g_inet_address_new_from_string (mcast_addr);
+  isocketadress = g_inet_socket_address_new (addr, mcast_port);
   if (addr == NULL || isocketadress == NULL)
     return -1;
 
   g_socket_bind (sock, isocketadress, TRUE, &error);
   error_check (&error);
-  g_socket_join_multicast_group (sock, addr, FALSE, NULL, &error);
+  g_socket_join_multicast_group (sock, addr, source_specific, NULL, &error);
   error_check (&error);
 
   stop = FALSE;
-  thr = g_thread_new ("emu-receive", read_thread, argv);
+  // thr = g_thread_new ("emu-receive", read_thread, argv);
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   {
@@ -160,7 +178,6 @@ main (int argc, char **argv)
     grid = gtk_grid_new ();
     label = gtk_label_new("No activity");
     gtk_grid_attach (GTK_GRID (grid), label, 0, -1, 2, 1);
-
 
     for (i = 0; i < 5; ++i)
       {
@@ -177,6 +194,6 @@ main (int argc, char **argv)
   gtk_main ();
 
   stop = 1;
-  g_thread_join (thr);
+  // g_thread_join (thr);
   return 0;
 }
