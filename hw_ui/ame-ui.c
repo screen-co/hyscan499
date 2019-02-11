@@ -534,7 +534,7 @@ build_interface (Global *global)
 
   /* Собираем воедино.                                   L  T  W  H */
   gtk_grid_attach (GTK_GRID (grid), ui->lstack,          0, 0, 1, 3);
-  gtk_grid_attach (GTK_GRID (grid), ui->rstack,          1, 0, 1, 3);
+  gtk_grid_attach (GTK_GRID (grid), ui->rstack,          5, 0, 1, 3);
   gtk_grid_attach (GTK_GRID (grid), ui->left_revealer,   2, 0, 1, 3);
   gtk_grid_attach (GTK_GRID (grid), ui->acoustic,        4, 0, 1, 1);
   gtk_grid_attach (GTK_GRID (grid), ui->bott_revealer,   4, 1, 1, 1);
