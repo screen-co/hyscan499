@@ -48,21 +48,21 @@ make_color_maps (gboolean profiler)
     }
 
   new_map = g_new (AmeColormap, 1);
-  new_map->name = g_strdup ("Адидах");
+  new_map->name = g_strdup ("Оранж");
   new_map->colors = g_memdup (orange, 256 * sizeof (guint32));
   new_map->len = 256;
   new_map->bg = BLACK_BG;
   g_array_append_vals (colormaps, &new_map, 1);
 
   new_map = g_new (AmeColormap, 1);
-  new_map->name = g_strdup ("Максимум Ретро");
+  new_map->name = g_strdup ("Сепия");
   new_map->colors = g_memdup (sepia, 256 * sizeof (guint32));
   new_map->len = 256;
   new_map->bg = BLACK_BG;
   g_array_append_vals (colormaps, &new_map, 1);
 
   new_map = g_new (AmeColormap, 1);
-  new_map->name = g_strdup ("Белоснежный");
+  new_map->name = g_strdup ("Белый");
   kolors[0] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
   kolors[1] = hyscan_tile_color_converter_d2i (1.0, 1.0, 1.0, 1.0);
   new_map->colors = hyscan_tile_color_compose_colormap (kolors, 2, &new_map->len);
@@ -70,9 +70,9 @@ make_color_maps (gboolean profiler)
   g_array_append_vals (colormaps, &new_map, 1);
 
   new_map = g_new (AmeColormap, 1);
-  new_map->name = g_strdup ("Киберпанк");
-  kolors[0] = hyscan_tile_color_converter_d2i (0.0, 0.11, 1.0, 1.0);
-  kolors[1] = hyscan_tile_color_converter_d2i (0.83, 0.0, 1.0, 1.0);
+  new_map->name = g_strdup ("Инверсия");
+  kolors[0] = hyscan_tile_color_converter_d2i (1.0, 1.0, 1.0, 1.0);
+  kolors[1] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
   new_map->colors = hyscan_tile_color_compose_colormap (kolors, 2, &new_map->len);
   new_map->bg = BLACK_BG;
   g_array_append_vals (colormaps, &new_map, 1);
