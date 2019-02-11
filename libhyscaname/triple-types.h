@@ -488,8 +488,8 @@ distance_printer (GtkLabel *label,
 
 gboolean
 distance_set (Global  *global,
-              gdouble  wanted_distance,
-              gint sonar_selector);
+              gdouble *distance,
+              gint     sonar_selector);
 
 HYSCAN_API void
 void_callback (gpointer data);

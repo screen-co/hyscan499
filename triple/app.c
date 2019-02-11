@@ -96,7 +96,7 @@ main (int argc, char **argv)
   GKeyFile          *config = NULL;
   GKeyFile          *hardware = NULL;
 
-  gchar             *um_path = NULL;       /* Модуль с интерфейсом. */
+  gchar             *um_path = "hardware.ui";       /* Модуль с интерфейсом. */
   GModule           *ui_module = NULL;
   ame_build          ui_build = NULL;
   ame_build          ui_destroy = NULL;

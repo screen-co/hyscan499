@@ -5,6 +5,7 @@
 #include <hyscan-ame-button.h>
 #include <hyscan-gtk-param-tree.h>
 #include <gmodule.h>
+#include <math.h>
 
 Global *tglobal;
 
@@ -1821,7 +1822,7 @@ distance_label (AmePanel *panel,
 /* Функция устанавливает рабочую дистанцию. */
 gboolean
 distance_set (Global  *global,
-              gdouble  meters,
+              gdouble *meters,
               gint     panelx)
 {
   gdouble receive_time, wait_time;
@@ -1829,10 +1830,10 @@ distance_set (Global  *global,
   HyScanSourceType *iter;
   AmePanel *panel = get_panel (global, panelx);
 
-  if (meters < 1.0)
+  if (*meters < 1.0)
     return FALSE;
 
-  receive_time = meters / (global->sound_velocity / 2.0);
+  receive_time = *meters / (global->sound_velocity / 2.0);
   for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
     {
       HyScanSonarInfoSource *info;
@@ -1853,15 +1854,15 @@ distance_set (Global  *global,
               ss_time = ss->current.distance / (global->sound_velocity / 2.0);
 
               receive_time = ss_time / 3.0;
-              if (requested_time > receive_time)
-                return FALSE;
               receive_time = MIN (receive_time, requested_time);
+              if (requested_time > receive_time)
+                *meters = receive_time * (global->sound_velocity/2.0);
               wait_time = 0.333 - receive_time - 0.01;
             }
         }
 
       g_message ("setting distance for %s: %4.1f m, r/w time: %f %f",
-                 hyscan_source_get_name_by_type (*iter), meters, receive_time, wait_time);
+                 hyscan_source_get_name_by_type (*iter), *meters, receive_time, wait_time);
 
       status = hyscan_sonar_receiver_set_time (global->control_s, *iter, receive_time, wait_time);
       if (!status)
@@ -1870,7 +1871,7 @@ distance_set (Global  *global,
 
   /* Специальный случай. */
   sync_sonar (global);
-  distance_label (panel, meters);
+  distance_label (panel, *meters);
   return TRUE;
 }
 
@@ -1882,8 +1883,9 @@ distance_up (GtkWidget *widget,
   AmePanel *panel = get_panel (tglobal, panelx);
 
   desired = panel->current.distance + 5.0;
-  desired = desired - ((int)desired % 5);
-  if (distance_set (tglobal, desired, panelx))
+  desired = desired - fmod (desired, 5);
+
+  if (distance_set (tglobal, &desired, panelx))
     panel->current.distance = desired;
   else
     g_warning ("distance_up failed");
@@ -1897,8 +1899,9 @@ distance_down (GtkWidget *widget,
   AmePanel *panel = get_panel (tglobal, panelx);
 
   desired = panel->current.distance - 5.0;
-  desired = desired - ((int)desired % 5);
-  if (distance_set (tglobal, desired, panelx))
+  desired = desired - fmod (desired, 5);
+
+  if (distance_set (tglobal, &desired, panelx))
     panel->current.distance = desired;
   else
     g_warning ("distance_down failed");
@@ -2351,7 +2354,7 @@ start_stop (Global    *global,
             status &= signal_set (global, panel->current.signal, panelx);
 
           /* Приемник. */
-          status &= distance_set (global, panel->current.distance, panelx);
+          status &= distance_set (global, &panel->current.distance, panelx);
 
           /* TVG */
           switch (panel->type)
