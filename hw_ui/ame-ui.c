@@ -524,7 +524,8 @@ build_interface (Global *global)
     gpointer key, value;
 
     /* Общие ГЛ-виджеты. */
-    build_all (ui, global, any_sonar_pages);
+    if (global->control_s != NULL)
+      build_all (ui, global, any_sonar_pages);
 
     /* Виджеты по страницам. */
     g_hash_table_iter_init(&iter, global->panels);

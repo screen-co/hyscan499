@@ -340,7 +340,6 @@ hyscan_ame_button_set_state (HyScanAmeButton *self,
 
   if (priv->is_toggle)
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (priv->button), state);
-  g_message ("%p set state: %i ", self, state);
 }
 
 void

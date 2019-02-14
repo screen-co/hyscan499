@@ -13,7 +13,7 @@ G_BEGIN_DECLS
 #define HYSCAN_IS_AME_BUTTON_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), HYSCAN_TYPE_AME_BUTTON))
 #define HYSCAN_AME_BUTTON_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), HYSCAN_TYPE_AME_BUTTON, HyScanAmeButtonClass))
 
-#define HYSCAN_AME_BUTTON_HEIGHT_REQUEST 150
+#define HYSCAN_AME_BUTTON_HEIGHT_REQUEST 172
 
 typedef struct _HyScanAmeButton HyScanAmeButton;
 typedef struct _HyScanAmeButtonPrivate HyScanAmeButtonPrivate;

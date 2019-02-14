@@ -328,7 +328,7 @@ main (int argc, char **argv)
     }
 
   if (global.control != NULL)
-    g_signal_connect (global.control, "sensor-data", sensor_cb, &global);
+    g_signal_connect (global.control, "sensor-data", G_CALLBACK (sensor_cb), &global);
 
   /* Закончили подключение к гидролокатору. */
   no_sonar:

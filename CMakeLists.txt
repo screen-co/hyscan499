@@ -78,7 +78,7 @@ set (HYSCAN_LIBRARIES gtkcifroarea-3.1
                       hyscangui-${HYSCAN_MAJOR_VERSION}
                       urpc)
 
-add_definitions (-DG_LOG_DOMAIN="HyScan-triple")
+add_definitions (-DG_LOG_DOMAIN="Triple")
 add_subdirectory (libhyscaname)
 add_subdirectory (hw_ui)
 add_subdirectory (sw_ui)
