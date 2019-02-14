@@ -71,10 +71,13 @@ do_draw (GtkWidget   *area,
          cairo_t     *cr,
          gpointer     udata)
 {
-  draw_h_lines (area, cr, 10, 20, "green");
-  draw_h_lines (area, cr, 50, 50, "red");
-  draw_v_lines (area, cr, 10, 20, "blue");
-  draw_v_lines (area, cr, 50, 50, "black");
+  draw_h_lines (area, cr, 10, 10, "green");
+  draw_h_lines (area, cr, 50, 25, "red");
+  draw_h_lines (area, cr, 100, 50, "blue");
+
+  draw_v_lines (area, cr, 10, 10, "cyan");
+  draw_v_lines (area, cr, 50, 25, "magenta");
+  draw_v_lines (area, cr, 100, 50, "yellow");
   return FALSE;
 }
 

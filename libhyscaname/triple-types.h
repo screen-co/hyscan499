@@ -209,6 +209,8 @@ typedef struct
   HyScanControl                       *control;
   HyScanSonar                         *control_s;
   gboolean                             on_air;
+  gint64                               last_click_time;
+  gboolean                             synced;
 
   GHashTable                          *panels; /* AmePanel, panelx as key */
   GHashTable                          *infos; /* HyScanSonarInfoSource */

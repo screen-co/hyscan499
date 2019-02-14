@@ -249,15 +249,32 @@ run_param (GObject *emitter)
   gtk_widget_destroy (dialog);
 }
 
+gboolean
+real_sonar_sync (Global *global)
+{
+  gint64 cur_time = g_get_monotonic_time ();
+  gint64 last_clk = global->last_click_time;
+
+  if (cur_time - last_clk < 750 * G_TIME_SPAN_MILLISECOND)
+    {
+      return G_SOURCE_CONTINUE;
+    }
+
+  if (global->on_air && !global->synced)
+    {
+      hyscan_sonar_sync (global->control_s);
+      global->synced = TRUE;
+      g_message ("sync...");
+    }
+  return G_SOURCE_REMOVE;
+}
+
 void
 sync_sonar (Global *global)
 {
-  if (global->on_air)
-    {
-      hyscan_sonar_sync (global->control_s);
-      g_message ("sync...");
-    }
-
+  global->synced = FALSE;
+  global->last_click_time = g_get_monotonic_time ();
+  g_timeout_add (250, (GSourceFunc)real_sonar_sync, global);
 }
 
 void
@@ -564,6 +581,11 @@ tracks_changed (HyScanDBInfo *db_info,
     {
       HyScanTrackInfo *track_info = value;
 
+      if (track_info->id == NULL)
+        {
+          g_message ("Unable to open track <%s>", track_info->name);
+          continue;
+        }
       /* Добавляем в список галсов. */
       gtk_list_store_append (GTK_LIST_STORE (global->gui.track.list), &tree_iter);
       gtk_list_store_set (GTK_LIST_STORE (global->gui.track.list), &tree_iter,
