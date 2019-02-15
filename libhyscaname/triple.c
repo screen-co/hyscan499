@@ -254,6 +254,7 @@ real_sonar_sync (Global *global)
 {
   gint64 cur_time = g_get_monotonic_time ();
   gint64 last_clk = global->last_click_time;
+  gboolean st;
 
   if (cur_time - last_clk < 750 * G_TIME_SPAN_MILLISECOND)
     {
@@ -262,9 +263,9 @@ real_sonar_sync (Global *global)
 
   if (global->on_air && !global->synced)
     {
-      hyscan_sonar_sync (global->control_s);
+      st = hyscan_sonar_sync (global->control_s);
       global->synced = TRUE;
-      g_message ("sync...");
+      g_message ("sync %s", st ? "OK" : "FAILED");
     }
   return G_SOURCE_REMOVE;
 }
@@ -590,7 +591,7 @@ tracks_changed (HyScanDBInfo *db_info,
       gtk_list_store_append (GTK_LIST_STORE (global->gui.track.list), &tree_iter);
       gtk_list_store_set (GTK_LIST_STORE (global->gui.track.list), &tree_iter,
                           DATE_SORT_COLUMN, g_date_time_to_unix (track_info->ctime),
-                          TRACK_COLUMN, g_strdup (track_info->name),
+                          TRACK_COLUMN, g_strdup (track_info->name), //todo memleak
                           DATE_COLUMN, g_date_time_format (track_info->ctime, "%d.%m %H:%M"),
                           -1);
 
