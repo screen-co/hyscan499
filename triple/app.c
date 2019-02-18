@@ -322,17 +322,17 @@ main (int argc, char **argv)
       global.infos = g_hash_table_new (g_direct_hash, g_direct_equal);
 
       if (NULL != (info = hyscan_control_source_get_info (global.control, FORWARDLOOK)))
-        g_hash_table_insert (global.infos, GINT_TO_POINTER (FORWARDLOOK), (void*)info);
+        {g_message ("FORWARDLOOK");g_hash_table_insert (global.infos, GINT_TO_POINTER (FORWARDLOOK), (void*)info);}
       if (NULL != (info = hyscan_control_source_get_info (global.control, PROFILER)))
-        g_hash_table_insert (global.infos, GINT_TO_POINTER (PROFILER), (void*)info);
+        {g_message ("PROFILER");g_hash_table_insert (global.infos, GINT_TO_POINTER (PROFILER), (void*)info);}
       if (NULL != (info = hyscan_control_source_get_info (global.control, ECHOSOUNDER)))
-        g_hash_table_insert (global.infos, GINT_TO_POINTER (ECHOSOUNDER), (void*)info);
+        {g_message ("ECHOSOUNDER");g_hash_table_insert (global.infos, GINT_TO_POINTER (ECHOSOUNDER), (void*)info);}
       if (NULL != (info = hyscan_control_source_get_info (global.control, HYSCAN_SOURCE_PROFILER_ECHO)))
-        g_hash_table_insert (global.infos, GINT_TO_POINTER (HYSCAN_SOURCE_PROFILER_ECHO), (void*)info);
+        {g_message ("HYSCAN_SOURCE_PROFILER_ECHO");g_hash_table_insert (global.infos, GINT_TO_POINTER (HYSCAN_SOURCE_PROFILER_ECHO), (void*)info);}
       if (NULL != (info = hyscan_control_source_get_info (global.control, STARBOARD)))
-        g_hash_table_insert (global.infos, GINT_TO_POINTER (STARBOARD), (void*)info);
+        {g_message ("STARBOARD");g_hash_table_insert (global.infos, GINT_TO_POINTER (STARBOARD), (void*)info);}
       if (NULL != (info = hyscan_control_source_get_info (global.control, PORTSIDE)))
-        g_hash_table_insert (global.infos, GINT_TO_POINTER (PORTSIDE), (void*)info);
+        {g_message ("PORTSIDE");g_hash_table_insert (global.infos, GINT_TO_POINTER (PORTSIDE), (void*)info);}
     }
 
   if (global.control != NULL)

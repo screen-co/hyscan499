@@ -23,6 +23,7 @@ ui_start_stop (GtkSwitch *button,
   SwUI *ui = &global_ui;
   gboolean status;
 
+  set_dry (_global, FALSE);
   status = start_stop (_global, state);
 
   if (!status)
@@ -41,6 +42,7 @@ ui_start_stop_dry (GtkSwitch *button,
   SwUI *ui = &global_ui;
   gboolean status;
 
+  set_dry (_global, TRUE);
   status = start_stop (_global, state);
 
   if (!status)
