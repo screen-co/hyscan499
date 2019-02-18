@@ -97,7 +97,7 @@ typedef enum
 typedef struct
 {
   gdouble   distance;
-  guint     signal;
+  gint      signal;
   gdouble   gain0;
   gdouble   gain_step;
   gdouble   level;
@@ -469,7 +469,7 @@ sensitivity_set (Global  *global,
 
 HYSCAN_API gboolean
 signal_set (Global *global,
-            guint   cur_signal,
+            gint    cur_signal,
             gint    selector);
 
 HYSCAN_API gboolean

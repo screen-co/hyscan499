@@ -1334,9 +1334,6 @@ color_map_set (Global *global,
   AmeColormap *colormap;
   AmePanel *panel = get_panel (global, panelx);
 
-  if (desired_cmap >= MAX_COLOR_MAPS)
-    return FALSE;
-
   /* Проверяем тип панели. */
   if (panel->type != AME_PANEL_WATERFALL && panel->type != AME_PANEL_ECHO)
     {
@@ -1345,6 +1342,10 @@ color_map_set (Global *global,
     }
 
   wf = (VisualWF*)panel->vis_gui;
+
+  if (desired_cmap >= wf->colormaps->len)
+    return FALSE;
+
   colormap = g_array_index (wf->colormaps, AmeColormap*, desired_cmap);
 
   hyscan_gtk_waterfall_set_colormap_for_all (wf->wf,
@@ -1529,7 +1530,7 @@ signal_label (AmePanel    *panel,
 /* Функция устанавливает излучаемый сигнал. */
 gboolean
 signal_set (Global *global,
-            guint   sig_num,
+            gint    sig_num,
             gint    panelx)
 {
   HyScanSourceType *iter;
@@ -1538,7 +1539,7 @@ signal_set (Global *global,
 
   g_message ("Signal_set: Sonar#%i, Signal %i", panelx, sig_num);
 
-  if (sig_num == 0)
+  if (sig_num < 0)
     return FALSE;
 
   for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
@@ -1576,9 +1577,9 @@ signal_set (Global *global,
 
 void
 signal_up (GtkWidget *widget,
-           gint      panelx)
+           gint       panelx)
 {
-  guint desired_signal;
+  gint desired_signal;
   AmePanel *panel = get_panel (tglobal, panelx);
 
   desired_signal = panel->current.signal + 1;
@@ -1590,9 +1591,9 @@ signal_up (GtkWidget *widget,
 
 void
 signal_down (GtkWidget *widget,
-             gint      panelx)
+             gint       panelx)
 {
-  guint desired_signal;
+  gint desired_signal;
   AmePanel *panel = get_panel (tglobal, panelx);
 
   desired_signal = panel->current.signal - 1;
@@ -1871,18 +1872,25 @@ distance_set (Global  *global,
       wait_time = 0;
       if (panelx == X_PROFILER)
         {
-          gdouble ss_time, requested_time = receive_time;
+          gdouble ss_freq, pf_freq = 3.0, ss_time;
+          gdouble requested_time = receive_time;
+          gdouble full_time;
           AmePanel *ss = get_panel (tglobal, X_SIDESCAN);
 
           if (ss != NULL)
             {
               ss_time = ss->current.distance / (global->sound_velocity / 2.0);
+              ss_freq = 1 / ss_time;
 
               receive_time = ss_time / 3.0;
+
               receive_time = MIN (receive_time, requested_time);
               if (requested_time > receive_time)
                 *meters = receive_time * (global->sound_velocity/2.0);
-              wait_time = 0.333 - receive_time - 0.01;
+
+              full_time = ceil (ss_freq / pf_freq) * ss_time;
+              wait_time = full_time - receive_time;
+              wait_time = wait_time * 1.1;
             }
         }
 

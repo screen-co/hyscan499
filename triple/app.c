@@ -75,6 +75,14 @@ make_color_maps (gboolean profiler)
   kolors[1] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
   new_map->colors = hyscan_tile_color_compose_colormap (kolors, 2, &new_map->len);
   new_map->bg = BLACK_BG;
+  g_array_append_vals (colormaps, &new_map, 1);new_map = g_new (AmeColormap, 1);
+
+  new_map = g_new (AmeColormap, 1);
+  new_map->name = g_strdup ("Зеленый");
+  kolors[0] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
+  kolors[1] = hyscan_tile_color_converter_d2i (0.2, 1.0, 0.2, 1.0);
+  new_map->colors = hyscan_tile_color_compose_colormap (kolors, 2, &new_map->len);
+  new_map->bg = BLACK_BG;
   g_array_append_vals (colormaps, &new_map, 1);
 
   return colormaps;
