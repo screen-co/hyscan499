@@ -1888,9 +1888,7 @@ distance_set (Global  *global,
 
           if (ss != NULL)
             {
-              ss_time = ss->current.distance / (global->sound_velocity / 2.0);
-
-              full_time = floor (0.333 / master_time);
+              full_time = floor (0.333 / master_time) * master_time;
               receive_time = master_time / 3.0;
 
               receive_time = MIN (receive_time, requested_time);
