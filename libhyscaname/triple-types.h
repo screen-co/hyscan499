@@ -304,7 +304,8 @@ HYSCAN_API gint
 run_manager (GObject     *emitter);
 
 HYSCAN_API void
-run_param (GObject *emitter);
+run_param (GObject     *emitter,
+           const gchar *root);
 
 HYSCAN_API void
 projects_changed (HyScanDBInfo *db_info,

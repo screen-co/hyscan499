@@ -21,6 +21,7 @@
 #define VMOR ("view-list-symbolic")
 #define REPT ("media-playlist-repeat-symbolic")
 #define MNGR ("accessories-dictionary-symbolic")
+#define INFO ("dialog-information-symbolic")
 
 #define PATH(x) .path=(gchar*)(x)
 #define DESTINATION_SELECTOR(x) .destination_selector=(x)
@@ -261,6 +262,8 @@ static AmePage any_sonar_pages[] =
           BUTTON_OFFSET(AmeUI, starter.dry)},
         {L, 4, DOT,  "Работа",       TOGGLE_OFF,  CBK(start_stop_wrapper),
           BUTTON_OFFSET(AmeUI, starter.all)},
+        {R, 4, INFO, "Версия ГЛ",    TOGGLE_NONE, CBK(run_param),
+          UD("/info"), },
         {END}
       }
   },

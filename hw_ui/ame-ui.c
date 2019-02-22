@@ -595,7 +595,7 @@ ame_button_clicker (gpointer data)
       g_warning ("wrong code");
       return G_SOURCE_REMOVE;
     }
-g_message ("push, %s, %i", gtk_stack_get_visible_child_name (GTK_STACK (stack)), code);
+  g_message ("push, %s, %i", gtk_stack_get_visible_child_name (GTK_STACK (stack)), code);
   fixed = gtk_stack_get_visible_child (GTK_STACK (stack));
   hyscan_ame_fixed_activate (HYSCAN_AME_FIXED (fixed), code % 1000);
 
@@ -623,7 +623,7 @@ ame_button_parse (const gchar * buf)
     return 4;
 
   if (buf[4] >= '0' && buf[4] <= '6')
-    code += buf[4]-'0';
+    code += buf[4]-'0'-1;
 
   g_idle_add (ame_button_clicker, GINT_TO_POINTER (code));
 

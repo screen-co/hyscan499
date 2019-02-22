@@ -413,7 +413,7 @@ build_interface (Global *global)
       if (param_set != NULL)
         {
           prm = gtk_button_new_with_label ("Параметры оборудования");
-          g_signal_connect (prm, "clicked", G_CALLBACK (run_param), NULL);
+          g_signal_connect (prm, "clicked", G_CALLBACK (run_param), "/");
           gtk_box_pack_start (GTK_BOX (lbox), prm, FALSE, FALSE, 0);
         }
       g_strfreev (env);

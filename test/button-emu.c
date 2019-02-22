@@ -179,7 +179,7 @@ main (int argc, char **argv)
     label = gtk_label_new("No activity");
     gtk_grid_attach (GTK_GRID (grid), label, 0, -1, 2, 1);
 
-    for (i = 0; i < 5; ++i)
+    for (i = 1; i < 6; ++i)
       {
         make_button (GTK_GRID (grid), sock, 'l', i, 0, i);
         make_button (GTK_GRID (grid), sock, 'r', i, 1, i);

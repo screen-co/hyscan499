@@ -215,7 +215,8 @@ run_manager (GObject *emitter)
 }
 
 void
-run_param (GObject *emitter)
+run_param (GObject     *emitter,
+           const gchar *root)
 {
   GtkWidget *dialog, *content, *tree;
   gint res;
@@ -224,27 +225,27 @@ run_param (GObject *emitter)
                                        GTK_WINDOW (tglobal->gui.window), 0,
                                        "Применить", GTK_RESPONSE_APPLY,
                                        "Сбросить", GTK_RESPONSE_CANCEL,
-                                       "Сохранить и выйти", GTK_RESPONSE_YES,
-                                       "Сбросить и выйти", GTK_RESPONSE_NO,
+                                       "Выйти", GTK_RESPONSE_CLOSE,
                                        NULL);
   content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
-  tree = hyscan_gtk_param_tree_new (HYSCAN_PARAM (tglobal->control), "/", TRUE);
+  tree = hyscan_gtk_param_tree_new (HYSCAN_PARAM (tglobal->control), root, TRUE);
   hyscan_gtk_param_set_watch_period (HYSCAN_GTK_PARAM (tree), 200);
 
   gtk_container_add (GTK_CONTAINER (content), tree);
   gtk_widget_set_size_request (dialog, 800, 600);
   gtk_widget_show_all (dialog);
 
-  do
+  while (TRUE)
     {
       res = gtk_dialog_run (GTK_DIALOG (dialog));
 
-      if (res == GTK_RESPONSE_YES || res == GTK_RESPONSE_APPLY)
+      if (res == GTK_RESPONSE_APPLY)
         hyscan_gtk_param_apply (HYSCAN_GTK_PARAM (tree));
-      if (res == GTK_RESPONSE_NO || res == GTK_RESPONSE_CANCEL)
+      else if (res == GTK_RESPONSE_CANCEL)
         hyscan_gtk_param_discard (HYSCAN_GTK_PARAM (tree));
-
-    } while (res == GTK_RESPONSE_APPLY || res == GTK_RESPONSE_CANCEL);
+      else
+        break;
+    };
 
   gtk_widget_destroy (dialog);
 }
@@ -863,8 +864,8 @@ get_mark_coords (GHashTable             * locstores,
                  Global                 * global)
 {
   gdouble across;
-  HyScanProjector *pj;
-  HyScanAmplitude *amp;
+  HyScanProjector *pj = NULL;
+  HyScanAmplitude *amp = NULL;
   HyScanAntennaOffset apos;
   gint64 time;
   guint32 n;
@@ -880,6 +881,9 @@ get_mark_coords (GHashTable             * locstores,
     }
 
   pj = get_projector (locstores, mark->track, mark->source0, &mloc, &amp);
+
+  if (pj == NULL || amp == NULL)
+    return NULL;
 
   // hyscan_projector_index_to_coord (pj, mark->index0, &along);
   hyscan_projector_count_to_coord (pj, mark->count0, &across, 0);
@@ -920,7 +924,8 @@ make_marks_with_coords (HyScanMarkModel *model,
       HyScanWaterfallMark *wfmark = value;
       mark_ll = get_mark_coords (global->marks.loc_storage, wfmark, global);
 
-      g_hash_table_insert (marks, g_strdup (wfmark->track), mark_ll);
+      if (mark_ll != NULL)
+        g_hash_table_insert (marks, g_strdup (wfmark->track), mark_ll);
     }
 
   return marks;
