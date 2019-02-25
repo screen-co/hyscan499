@@ -218,15 +218,18 @@ projects_changed (HyScanDBInfo     *db_info,
   g_hash_table_iter_init (&htiter, projects);
   while (g_hash_table_iter_next (&htiter, &key, &value))
     {
+      GDateTime *local;
+      gchar *time_str;
       HyScanProjectInfo *pinfo = value;
 
-      g_message ("pj!1 %s", pinfo->name);
+      local = g_date_time_to_local (pinfo->ctime);
+      time_str = g_date_time_format (local, "%d.%m %H:%M");
 
       gtk_list_store_append (GTK_LIST_STORE (priv->project_ls), &tree_iter);
       gtk_list_store_set (GTK_LIST_STORE (priv->project_ls), &tree_iter,
-                          ID,   g_strdup (pinfo->name),
-                          NAME, g_strdup (pinfo->name),
-                          DATE, g_date_time_format (pinfo->ctime, "%d.%m %H:%M"),
+                          ID,   pinfo->name,
+                          NAME, pinfo->name,
+                          DATE, time_str,
                           SORT, g_date_time_to_unix (pinfo->ctime),
                           -1);
 
@@ -242,6 +245,9 @@ projects_changed (HyScanDBInfo     *db_info,
           gtk_tree_view_set_cursor (priv->projects_tw, tree_path, NULL, FALSE);
           gtk_tree_path_free (tree_path);
         }
+
+      g_date_time_unref (local);
+      g_free (time_str);
     }
 
   g_hash_table_unref (projects);

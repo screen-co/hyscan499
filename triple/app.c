@@ -4,11 +4,23 @@
 #include <hyscan-ame-button.h>
 #include <gmodule.h>
 
+#ifndef G_OS_WIN32 /* Ловим сигналы ОС. */
+ #include <signal.h>
+ #include <errno.h>
+#endif
+
 /* Вот он, наш жирненький красавчик. */
 Global global = {0,};
 
 typedef gboolean (*ame_build) (Global *);
 typedef gboolean (*ame_config) (GKeyFile *);
+
+/* Обработчик сигналов TERM и INT. */
+void shutdown_handler (gint signum)
+{
+  g_message ("term");
+  gtk_main_quit ();
+}
 
 GArray *
 make_svp_from_velocity (gdouble velocity)
@@ -182,6 +194,24 @@ main (int argc, char **argv)
     g_option_context_free (context);
     g_strfreev (args);
   }
+
+#ifndef G_OS_WIN32 /* Ловим сигналы ОС. */
+  {
+    struct sigaction term_signal;
+
+    /* Обработка сигналов TERM и INT. */
+    sigemptyset (&term_signal.sa_mask);
+    term_signal.sa_handler = shutdown_handler;
+    term_signal.sa_flags = SA_RESTART;
+
+    if ((sigaction (SIGTERM, &term_signal, NULL) != 0) ||
+        (sigaction (SIGINT, &term_signal, NULL) != 0))
+      {
+        g_message ("can't setup signals handler: %s", strerror (errno));
+        return -1;
+      }
+  }
+#endif
 
   /* Грузим модуль построения интерфейса. */
   {

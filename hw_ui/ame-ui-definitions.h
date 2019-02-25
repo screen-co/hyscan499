@@ -262,7 +262,7 @@ static AmePage any_sonar_pages[] =
           BUTTON_OFFSET(AmeUI, starter.dry)},
         {L, 4, DOT,  "Работа",       TOGGLE_OFF,  CBK(start_stop_wrapper),
           BUTTON_OFFSET(AmeUI, starter.all)},
-        {R, 4, INFO, "Версия ГЛ",    TOGGLE_NONE, CBK(run_param),
+        {R, 4, INFO, "Версия ГЛ",    TOGGLE_NONE, CBK(run_show_sonar_info),
           UD("/info"), },
         {END}
       }

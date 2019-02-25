@@ -225,7 +225,7 @@ run_param (GObject     *emitter,
                                        GTK_WINDOW (tglobal->gui.window), 0,
                                        "Применить", GTK_RESPONSE_APPLY,
                                        "Сбросить", GTK_RESPONSE_CANCEL,
-                                       "Выйти", GTK_RESPONSE_CLOSE,
+                                       "Закрыть", GTK_RESPONSE_CLOSE,
                                        NULL);
   content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
   tree = hyscan_gtk_param_tree_new (HYSCAN_PARAM (tglobal->control), root, TRUE);
@@ -247,6 +247,29 @@ run_param (GObject     *emitter,
         break;
     };
 
+  gtk_widget_destroy (dialog);
+}
+
+void
+run_show_sonar_info (GObject     *emitter,
+                     const gchar *root)
+{
+  GtkWidget *dialog, *content, *tree;
+
+  dialog = gtk_dialog_new_with_buttons("Информация о гидролокаторе",
+                                       GTK_WINDOW (tglobal->gui.window), 0,
+                                       "Закрыть", GTK_RESPONSE_CLOSE,
+                                       NULL);
+  content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+  tree = hyscan_gtk_param_tree_new (HYSCAN_PARAM (tglobal->control), root, TRUE);
+  hyscan_gtk_param_set_watch_period (HYSCAN_GTK_PARAM (tree), 200);
+
+  gtk_container_add (GTK_CONTAINER (content), tree);
+  gtk_widget_set_size_request (dialog, 800, 600);
+  gtk_widget_show_all (dialog);
+
+  gtk_dialog_run (GTK_DIALOG (dialog));
+  hyscan_gtk_param_discard (HYSCAN_GTK_PARAM (tree));
   gtk_widget_destroy (dialog);
 }
 
@@ -420,13 +443,28 @@ nav_common (GtkWidget *target,
 }
 
 /* Макроселло для нав. ф-ий, чтобы их не плодить без надобности. */
-#define NAV_FN(fname, button) void \
-fname (GObject * emitter, \
-       gpointer  udata) \
-{ \
-  AmePanel *panel = get_panel (tglobal, GPOINTER_TO_INT (udata)); \
-  nav_common (panel->vis_gui->main, \
-             button, GDK_CONTROL_MASK); \
+#define NAV_FN(fname, button)                                                \
+void                                                                         \
+fname (GObject * emitter,                                                    \
+       gpointer  udata)                                                      \
+{                                                                            \
+  VisualWF *wf;                                                              \
+  VisualFL *fl;                                                              \
+  GtkWidget *widget;                                                         \
+  AmePanel *panel = get_panel (tglobal, GPOINTER_TO_INT (udata));            \
+  switch (panel->type)                                                       \
+    {                                                                        \
+      case AME_PANEL_WATERFALL:                                              \
+      case AME_PANEL_ECHO:                                                   \
+        wf = (VisualWF*)panel->vis_gui;                                      \
+        widget = GTK_WIDGET (wf->wf);                                        \
+        break;                                                               \
+      case AME_PANEL_FORWARDLOOK:                                            \
+        fl = (VisualFL*)panel->vis_gui;                                      \
+        widget = GTK_WIDGET (fl->fl);                                        \
+        break;                                                               \
+    }                                                                        \
+  nav_common (widget, button, GDK_CONTROL_MASK);                             \
 }
 
 NAV_FN (nav_del, GDK_KEY_Delete)
@@ -450,7 +488,7 @@ fl_prev (GObject *emitter,
   adj = fl->position_range;
 
   value = gtk_adjustment_get_value (adj);
-  gtk_adjustment_set_value (adj, value - 1);
+  gtk_adjustment_set_value (adj, value - 10);
 }
 
 void
@@ -466,7 +504,7 @@ fl_next (GObject *emitter,
   adj = fl->position_range;
 
   value = gtk_adjustment_get_value (adj);
-  gtk_adjustment_set_value (adj, value + 1);
+  gtk_adjustment_set_value (adj, value + 10);
 }
 
 /* Функция вызывается при изменении списка проектов. */
@@ -581,6 +619,8 @@ tracks_changed (HyScanDBInfo *db_info,
 
   while (g_hash_table_iter_next (&hash_iter, &key, &value))
     {
+      GDateTime *local;
+      gchar *time_str;
       HyScanTrackInfo *track_info = value;
 
       if (track_info->id == NULL)
@@ -589,11 +629,14 @@ tracks_changed (HyScanDBInfo *db_info,
           continue;
         }
       /* Добавляем в список галсов. */
+      local = g_date_time_to_local (track_info->ctime);
+      time_str = g_date_time_format (local, "%d.%m %H:%M");
+
       gtk_list_store_append (GTK_LIST_STORE (global->gui.track.list), &tree_iter);
       gtk_list_store_set (GTK_LIST_STORE (global->gui.track.list), &tree_iter,
                           DATE_SORT_COLUMN, g_date_time_to_unix (track_info->ctime),
-                          TRACK_COLUMN, g_strdup (track_info->name), //todo memleak
-                          DATE_COLUMN, g_date_time_format (track_info->ctime, "%d.%m %H:%M"),
+                          TRACK_COLUMN, track_info->name,
+                          DATE_COLUMN, time_str,
                           -1);
 
       /* Подсвечиваем текущий галс. */
@@ -603,6 +646,9 @@ tracks_changed (HyScanDBInfo *db_info,
           gtk_tree_view_set_cursor (global->gui.track.tree, tree_path, NULL, FALSE);
           gtk_tree_path_free (tree_path);
         }
+
+      g_free (time_str);
+      g_date_time_unref (local);
     }
 
   g_hash_table_unref (tracks);
@@ -734,6 +780,31 @@ mark_sync_func (GHashTable *marks,
 }
 
 
+static gchar *
+get_track_name_by_id (HyScanDBInfo *info,
+                      const gchar  *id)
+{
+  GHashTable *tracks; /* HyScanTrackInfo. */
+  HyScanTrackInfo *value;
+  gchar *key = NULL;
+  GHashTableIter iter;
+
+  tracks = hyscan_db_info_get_tracks (info);
+  g_hash_table_iter_init (&iter, tracks);
+
+  while (g_hash_table_iter_next (&iter, (gpointer)&key, (gpointer)&value))
+    {
+      if (0 == g_strcmp0 (value->id, id))
+        {
+          key = g_strdup (key);
+          break;
+        }
+    }
+
+  g_hash_table_unref (tracks);
+  return key;
+}
+
 /* создает LocStore. */
 LocStore *
 loc_store_new (HyScanDB    *db,
@@ -749,7 +820,7 @@ loc_store_new (HyScanDB    *db,
   loc->projectors = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
                                            (GDestroyNotify)g_object_unref);
   loc->factory = hyscan_amplitude_factory_new (cache);
-  hyscan_amplitude_factory_set_track (loc->factory, db, project, track);
+  hyscan_amplitude_factory_set_track (loc->factory, db, project, loc->track);
 
   if (loc->mloc == NULL || loc->factory == NULL)
     {
@@ -857,6 +928,13 @@ mark_and_location_free (gpointer data)
   g_free (loc);
 }
 
+gboolean
+request_mark_update (Global *global)
+{
+  mark_model_changed (global->marks.model, global);
+  return G_SOURCE_REMOVE;
+}
+
 /* Функция определяет координаты метки. */
 MarkAndLocation *
 get_mark_coords (GHashTable             * locstores,
@@ -872,10 +950,19 @@ get_mark_coords (GHashTable             * locstores,
   HyScanGeoGeodetic position;
   HyScanmLoc *mloc;
 
+  /* Определяем название галса по айди. */
   if (!g_hash_table_contains (locstores, mark->track))
     {
       LocStore *ls;
-      ls = loc_store_new (global->db, global->cache, global->project_name, mark->track);
+      gchar * track_name;
+
+      track_name = get_track_name_by_id (global->db_info, mark->track);
+      if (track_name == NULL)
+        {
+          g_timeout_add (1000, request_mark_update, global);
+          return NULL;
+        }
+      ls = loc_store_new (global->db, global->cache, global->project_name, track_name);
 
       g_hash_table_insert (locstores, g_strdup (mark->track), ls);
     }

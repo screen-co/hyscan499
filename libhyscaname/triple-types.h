@@ -308,6 +308,10 @@ run_param (GObject     *emitter,
            const gchar *root);
 
 HYSCAN_API void
+run_show_sonar_info (GObject     *emitter,
+                     const gchar *root);
+
+HYSCAN_API void
 projects_changed (HyScanDBInfo *db_info,
                   Global       *global);
 
