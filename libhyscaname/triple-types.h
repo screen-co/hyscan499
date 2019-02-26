@@ -59,6 +59,7 @@ enum
   X_SIDESCAN = 155642,
   X_PROFILER = 251539,
   X_FORWARDL = 356753,
+  X_ECHOSOUND = 429878,
 };
 
 /* структура: локейшн + прожекторы */

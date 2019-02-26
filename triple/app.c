@@ -2,6 +2,7 @@
 #include <hyscan-ame-splash.h>
 #include <hyscan-ame-project.h>
 #include <hyscan-ame-button.h>
+#include <hyscan-hw-connector.h>
 #include <gmodule.h>
 
 #ifndef G_OS_WIN32 /* Ловим сигналы ОС. */
@@ -125,6 +126,7 @@ main (int argc, char **argv)
 
   gboolean           need_ss = FALSE;
   gboolean           need_pf = FALSE;
+  gboolean           need_es = FALSE;
   gboolean           need_fl = FALSE;
 
   GtkBuilder        *common_builder = NULL;
@@ -155,6 +157,7 @@ main (int argc, char **argv)
         { "ss",              0,     0, G_OPTION_ARG_NONE,    &need_ss,         "Enable ss panel", NULL },
         { "pf",              0,     0, G_OPTION_ARG_NONE,    &need_pf,         "Enable pf panel", NULL },
         { "fl",              0,     0, G_OPTION_ARG_NONE,    &need_fl,         "Enable fl panel", NULL },
+        { "es",              0,     0, G_OPTION_ARG_NONE,    &need_es,         "Enable es panel", NULL },
 
         { "hardware-profile",'p',   0, G_OPTION_ARG_STRING,  &hardware_profile_name,     "Specify hardware profile name"
                                                               ", otherwise it will be obtained from config-file.", NULL },
@@ -311,6 +314,7 @@ main (int argc, char **argv)
     gchar *sonar_profile_name;
     gchar **driver_paths;      /* Путь к драйверам гидролокатора. */
     HyScanHWProfile *hw_profile;
+    HyScanHWConnector *connector;
     gboolean check;
 
     driver_paths = keyfile_strv_read_helper (config, "common", "paths");
@@ -322,18 +326,22 @@ main (int argc, char **argv)
 
 
     /* Првоеряем, что пути к драйверам и имя профиля на месте. */
-
-    hw_profile = hyscan_hw_profile_new (sonar_profile_name);
-    hyscan_hw_profile_set_driver_paths (hw_profile, driver_paths);
+    connector = hyscan_hw_connector_new ();
+    // hw_profile = hyscan_hw_profile_new (sonar_profile_name);
+    // hyscan_hw_profile_set_driver_paths (hw_profile, driver_paths);
+    hyscan_hw_connector_set_driver_paths (connector, driver_paths);
 
     /* Читаем профиль. */
-    hyscan_hw_profile_read (hw_profile);
+    hyscan_hw_connector_read (connector, sonar_profile_name);
+    // hyscan_hw_profile_read (hw_profile);
 
-    check = hyscan_hw_profile_check (hw_profile);
+    // check = hyscan_hw_profile_check (hw_profile);
+    check = hyscan_hw_connector_check (connector);
 
     if (check)
       {
-        global.control = hyscan_hw_profile_connect (hw_profile);
+        // global.control = hyscan_hw_profile_connect (hw_profile);
+        global.control = hyscan_hw_connector_connect (connector);
         global.control_s = HYSCAN_SONAR (global.control);
       }
 
@@ -439,8 +447,12 @@ main (int argc, char **argv)
   hardware = g_key_file_new ();
 
   /* Проверяем флаги на панели */
-  if (!need_ss && !need_pf && !need_fl)
-    need_ss = need_pf = need_fl = TRUE;
+  if (!need_ss && !need_pf && !need_fl && !need_es)
+    {
+      g_warning ("You must explicitly choose panels");
+      g_warning ("Enabling: SS, PF, FL");
+      need_ss = need_pf = need_fl = TRUE;
+    }
 
   if (need_ss)
     { /* ГБО */
@@ -448,7 +460,7 @@ main (int argc, char **argv)
       AmePanel *panel = g_new0 (AmePanel, 1);
       VisualWF *vwf = g_new0 (VisualWF, 1);
 
-      panel->name = g_strdup ("SideScan");
+      panel->name = g_strdup ("ГБО");
       panel->short_name = g_strdup ("SS");
       panel->type = AME_PANEL_WATERFALL;
 
@@ -487,7 +499,7 @@ main (int argc, char **argv)
       AmePanel *panel = g_new0 (AmePanel, 1);
       VisualWF *vwf = g_new0 (VisualWF, 1);
 
-      panel->name = g_strdup ("Profiler");
+      panel->name = g_strdup ("Профилограф");
       panel->short_name = g_strdup ("PF");
       panel->type = AME_PANEL_ECHO;
 
@@ -524,12 +536,54 @@ main (int argc, char **argv)
       g_hash_table_insert (global.panels, GINT_TO_POINTER (X_PROFILER), panel);
     }
 
+  if (need_es)
+    { /* Эхолот */
+      GtkWidget *main_widget;
+      AmePanel *panel = g_new0 (AmePanel, 1);
+      VisualWF *vwf = g_new0 (VisualWF, 1);
+
+      panel->name = g_strdup ("Эхолот");
+      panel->short_name = g_strdup ("ES");
+      panel->type = AME_PANEL_ECHO;
+
+      panel->sources = g_new0 (HyScanSourceType, 2);
+      panel->sources[0] = HYSCAN_SOURCE_ECHOSOUNDER;
+      panel->sources[1] = HYSCAN_SOURCE_INVALID;
+
+      panel->vis_gui = (VisualCommon*)vwf;
+
+      vwf->colormaps = make_color_maps (TRUE);
+
+      vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global.cache));
+      gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
+
+      main_widget = make_overlay (vwf->wf,
+                                  &vwf->wf_grid, &vwf->wf_ctrl,
+                                  &vwf->wf_mark, &vwf->wf_metr,
+                                  global.marks.model);
+
+      hyscan_gtk_waterfall_grid_set_condence (vwf->wf_grid, 10.0);
+      hyscan_gtk_waterfall_grid_set_grid_color (vwf->wf_grid, hyscan_tile_color_converter_c2i (32, 32, 32, 255));
+
+      g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), &global);
+      g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_ECHOSOUND));
+
+      hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ECHOSOUNDER);
+      hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed / 10);
+      hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
+      hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
+      hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
+
+      vwf->common.main = main_widget;
+      g_hash_table_insert (global.panels, GINT_TO_POINTER (X_ECHOSOUND), panel);
+    }
+
   if (need_fl)
     { /* ВСЛ */
       AmePanel *panel = g_new0 (AmePanel, 1);
       VisualFL *vfl = g_new0 (VisualFL, 1);
 
-      panel->name = g_strdup ("ForwardLook");
+      panel->name = g_strdup ("Курсовой");
       panel->short_name = g_strdup ("FL");
       panel->type = AME_PANEL_FORWARDLOOK;
 

@@ -1,5 +1,6 @@
 #include <gmodule.h>
 #include <hyscan-gtk-area.h>
+#include <glib/gi18n.h>
 #include "sw-ui.h"
 
 SwUI global_ui = {0,};
@@ -347,11 +348,11 @@ build_interface (Global *global)
 
   /* Начнем с центра, добавим все отображаемые виджеты. */
   {
-    #define N_PANELS 3
-    gint order[N_PANELS]  = {X_SIDESCAN, X_PROFILER, X_FORWARDL};
-    gint left[N_PANELS]   = {0, 1, 1};
-    gint top[N_PANELS]    = {0, 0, 1};
-    gint height[N_PANELS] = {2, 1, 1};
+    #define N_PANELS 4
+    gint order[N_PANELS]  = {X_SIDESCAN, X_PROFILER, X_FORWARDL, X_ECHOSOUND};
+    gint left[N_PANELS]   = {0, 1, 1, 1};
+    gint top[N_PANELS]    = {0, 0, 1, 2};
+    gint height[N_PANELS] = {3, 1, 1, 1};
     gint i, n;
 
     /* Проверяем размеры моего могучего списка панелей. */
@@ -383,7 +384,7 @@ build_interface (Global *global)
     GtkWidget * tracks = GTK_WIDGET (global->gui.track.view);
     GtkWidget * mlist = GTK_WIDGET (global->gui.mark_view);
     GtkWidget * meditor = GTK_WIDGET (global->gui.meditor);
-    GtkWidget * manager = gtk_button_new_with_label ("Менеджер проектов");
+    GtkWidget * manager = gtk_button_new_with_label (_("Менеджер проектов"));
 
 
     gtk_widget_set_margin_end (lbox, 6);
