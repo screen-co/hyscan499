@@ -22,6 +22,7 @@
 #define REPT ("media-playlist-repeat-symbolic")
 #define MNGR ("accessories-dictionary-symbolic")
 #define INFO ("dialog-information-symbolic")
+#define EXIT ("window-close-symbolic")
 
 #define PATH(x) .path=(gchar*)(x)
 #define DESTINATION_SELECTOR(x) .destination_selector=(x)
@@ -66,6 +67,7 @@ static AmePage common_pages[] =
       {
         {L, 0, MENU, "Меню",         TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
         {R, 1, DOT,  "Выгр. глубины",TOGGLE_NONE, CBK(depth_writer),   NULL},
+        {R, 4, EXIT, "Выход",        TOGGLE_NONE, CBK(gtk_main_quit),  NULL},
         {END}
       }
   },
@@ -262,7 +264,7 @@ static AmePage any_sonar_pages[] =
           BUTTON_OFFSET(AmeUI, starter.dry)},
         {L, 4, DOT,  "Работа",       TOGGLE_OFF,  CBK(start_stop_wrapper),
           BUTTON_OFFSET(AmeUI, starter.all)},
-        {R, 4, INFO, "Версия ГЛ",    TOGGLE_NONE, CBK(run_show_sonar_info),
+        {R, 0, INFO, "Версия ГЛ",    TOGGLE_NONE, CBK(run_show_sonar_info),
           UD("/info"), },
         {END}
       }

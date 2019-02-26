@@ -679,7 +679,8 @@ main (int argc, char **argv)
               panel->current.signal = 0;
               signal = signal_finder (&global, panel, *panel->sources, panel->current.signal);
             }
-          signal_label (panel, signal->name);
+          if (signal != NULL)
+            signal_label (panel, signal->name);
         }
       }
   }
