@@ -9,6 +9,7 @@
       <object class="GtkBox" id="box2">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="spacing">2</property>
         <child>
           <object class="GtkLabel" id="coord_label">
             <property name="visible">True</property>
@@ -52,6 +53,7 @@
       <object class="GtkBox" id="box3">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="spacing">2</property>
         <child>
           <object class="GtkLabel" id="track_label">
             <property name="visible">True</property>
@@ -94,6 +96,7 @@
       <object class="GtkBox" id="box4">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="spacing">2</property>
         <child>
           <object class="GtkLabel" id="speed_label">
             <property name="visible">True</property>
@@ -136,6 +139,7 @@
       <object class="GtkBox" id="box5">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="spacing">2</property>
         <child>
           <object class="GtkLabel" id="depth_label">
             <property name="visible">True</property>
@@ -178,6 +182,7 @@
       <object class="GtkBox" id="box6">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
+        <property name="spacing">2</property>
         <child>
           <object class="GtkLabel" id="time_label">
             <property name="visible">True</property>
