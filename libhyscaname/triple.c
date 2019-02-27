@@ -786,7 +786,8 @@ get_track_name_by_id (HyScanDBInfo *info,
 {
   GHashTable *tracks; /* HyScanTrackInfo. */
   HyScanTrackInfo *value;
-  gchar *key = NULL;
+  gchar *key;
+  gchar *retval = NULL;
   GHashTableIter iter;
 
   tracks = hyscan_db_info_get_tracks (info);
@@ -796,13 +797,13 @@ get_track_name_by_id (HyScanDBInfo *info,
     {
       if (0 == g_strcmp0 (value->id, id))
         {
-          key = g_strdup (key);
+          retval = g_strdup (key);
           break;
         }
     }
 
   g_hash_table_unref (tracks);
-  return key;
+  return retval;
 }
 
 /* создает LocStore. */
@@ -886,6 +887,10 @@ void
 loc_store_free (gpointer data)
 {
   LocStore *loc = data;
+
+  if (loc == NULL)
+    return;
+
   g_clear_pointer (&loc->track, g_free);
   g_clear_object  (&loc->mloc);
   g_clear_object  (&loc->factory);
@@ -928,9 +933,13 @@ mark_and_location_free (gpointer data)
   g_free (loc);
 }
 
+static uint request_mark_update_tag = 0;
 gboolean
 request_mark_update (Global *global)
 {
+
+  request_mark_update_tag = 0;
+  g_message ("RMU");
   mark_model_changed (global->marks.model, global);
   return G_SOURCE_REMOVE;
 }
@@ -954,15 +963,24 @@ get_mark_coords (GHashTable             * locstores,
   if (!g_hash_table_contains (locstores, mark->track))
     {
       LocStore *ls;
-      gchar * track_name;
+      gchar * track_name = NULL;
 
       track_name = get_track_name_by_id (global->db_info, mark->track);
       if (track_name == NULL)
         {
-          g_timeout_add (1000, request_mark_update, global);
+          if (request_mark_update_tag == 0)
+            request_mark_update_tag = g_timeout_add (1000, request_mark_update, global);
           return NULL;
         }
+
       ls = loc_store_new (global->db, global->cache, global->project_name, track_name);
+
+      if (ls == NULL)
+        {
+          if (request_mark_update_tag == 0)
+            request_mark_update_tag = g_timeout_add (1000, request_mark_update, global);
+          return NULL;
+        }
 
       g_hash_table_insert (locstores, g_strdup (mark->track), ls);
     }
@@ -1012,7 +1030,7 @@ make_marks_with_coords (HyScanMarkModel *model,
       mark_ll = get_mark_coords (global->marks.loc_storage, wfmark, global);
 
       if (mark_ll != NULL)
-        g_hash_table_insert (marks, g_strdup (wfmark->track), mark_ll);
+        g_hash_table_insert (marks, g_strdup (key), mark_ll);
     }
 
   return marks;
@@ -1057,6 +1075,9 @@ mark_model_changed (HyScanMarkModel *model,
       g_free (mtime_str);
       g_date_time_unref (mtime);
     }
+
+  g_clear_pointer (&global->marks.current, g_hash_table_unref);
+  global->marks.current = marks;
 
   /* Сравниваем с предыдущими метками. Если надо, отсылаем наружу. */
   mark_sync_func (marks, global);

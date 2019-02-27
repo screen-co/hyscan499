@@ -313,7 +313,6 @@ main (int argc, char **argv)
   {
     gchar *sonar_profile_name;
     gchar **driver_paths;      /* Путь к драйверам гидролокатора. */
-    HyScanHWProfile *hw_profile;
     HyScanHWConnector *connector;
     gboolean check;
 
@@ -327,26 +326,20 @@ main (int argc, char **argv)
 
     /* Првоеряем, что пути к драйверам и имя профиля на месте. */
     connector = hyscan_hw_connector_new ();
-    // hw_profile = hyscan_hw_profile_new (sonar_profile_name);
-    // hyscan_hw_profile_set_driver_paths (hw_profile, driver_paths);
     hyscan_hw_connector_set_driver_paths (connector, driver_paths);
 
     /* Читаем профиль. */
     hyscan_hw_connector_read (connector, sonar_profile_name);
-    // hyscan_hw_profile_read (hw_profile);
 
-    // check = hyscan_hw_profile_check (hw_profile);
     check = hyscan_hw_connector_check (connector);
 
     if (check)
       {
-        // global.control = hyscan_hw_profile_connect (hw_profile);
         global.control = hyscan_hw_connector_connect (connector);
         global.control_s = HYSCAN_SONAR (global.control);
       }
 
     g_strfreev (driver_paths);
-    g_object_unref (hw_profile);
 
     if (!check || global.control == NULL)
       goto no_sonar;
