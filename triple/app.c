@@ -633,7 +633,7 @@ main (int argc, char **argv)
         gint panelx = GPOINTER_TO_INT (k);
         AmePanel *panel = v;
         panel->current.distance =    keyfile_double_read_helper (config, panel->name, "sonar.cur_distance", 50);
-        panel->current.signal =      keyfile_double_read_helper (config, panel->name, "sonar.cur_signal", 1);
+        panel->current.signal =      keyfile_double_read_helper (config, panel->name, "sonar.cur_signal", 0);
         panel->current.gain0 =       keyfile_double_read_helper (config, panel->name, "sonar.cur_gain0", 0);
         panel->current.gain_step =   keyfile_double_read_helper (config, panel->name, "sonar.cur_gain_step", 10);
         panel->current.level =       keyfile_double_read_helper (config, panel->name, "sonar.cur_level", 0.5);
