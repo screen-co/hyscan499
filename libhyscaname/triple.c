@@ -2571,6 +2571,10 @@ start_stop (Global    *global,
           g_message ("Sonar startup failed @ %i",__LINE__);
           return FALSE;
         }
+      else
+        {
+          g_message ("Sonar started");
+        }
 
       /* Если локатор включён, переходим в режим онлайн. */
       gtk_widget_set_sensitive (GTK_WIDGET (global->gui.track.tree), FALSE);
@@ -2583,7 +2587,7 @@ start_stop (Global    *global,
     {
       global->on_air = FALSE;
 
-      g_message ("Stop sonars");
+      g_message ("Sonar stopped");
       hyscan_sonar_stop (global->control_s);
       gtk_widget_set_sensitive (GTK_WIDGET (global->gui.track.tree), TRUE);
     }
