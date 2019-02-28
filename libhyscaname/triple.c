@@ -1999,7 +1999,7 @@ distance_set (Global  *global,
 
           master_time = MAX (fl_time, ss_time);
 
-          if (ss != NULL)
+          if (ss != NULL || fl != NULL)
             {
               full_time = floor (0.333 / master_time) * master_time;
               receive_time = master_time / 3.0;
@@ -2009,20 +2009,13 @@ distance_set (Global  *global,
                 *meters = receive_time * (global->sound_velocity/2.0);
 
               wait_time = full_time - receive_time - (master_time / 2.0);
-              g_message ("MASTER: %f RCV %f WT %f", master_time, receive_time, wait_time);
-              /*
-              ss_freq = 1 / ss_time;
-
-              receive_time = ss_time / 3.0;
-
-              receive_time = MIN (receive_time, requested_time);
-              if (requested_time > receive_time)
-                *meters = receive_time * (global->sound_velocity/2.0);
-
-              full_time = ceil (ss_freq / pf_freq) * ss_time;
-              wait_time = full_time - receive_time;
-              wait_time = wait_time * 1.1;
-              */
+            }
+          else
+            {
+              if (receive_time >= 0.333)
+                wait_time = receive_time;
+              else
+                wait_time = 0.333 - receive_time;
             }
         }
 

@@ -595,9 +595,13 @@ ame_button_clicker (gpointer data)
       g_warning ("wrong code");
       return G_SOURCE_REMOVE;
     }
-  g_message ("push, %s, %i", gtk_stack_get_visible_child_name (GTK_STACK (stack)), code);
+  code %= 1000;
+  g_message ("AmeButton: %"G_GINT64_FORMAT" clicked <%s>(%i)",
+             g_get_monotonic_time(),
+             gtk_stack_get_visible_child_name (GTK_STACK (stack)),
+             code);
   fixed = gtk_stack_get_visible_child (GTK_STACK (stack));
-  hyscan_ame_fixed_activate (HYSCAN_AME_FIXED (fixed), code % 1000);
+  hyscan_ame_fixed_activate (HYSCAN_AME_FIXED (fixed), code);
 
   return G_SOURCE_REMOVE;
 }
@@ -665,7 +669,7 @@ ame_button_thread (void * data)
 
       /* нуль-терминируем. */
       buf[bytes] = '\0';
-      g_message ("Received <%s>", buf);
+      g_message ("AmeButton: %"G_GINT64_FORMAT" received <%s>", g_get_monotonic_time(), buf);
 
       for (pbuf = buf; bytes > 0 && pbuf < buf + 127; )
         {
