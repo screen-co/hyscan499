@@ -939,7 +939,6 @@ request_mark_update (Global *global)
 {
 
   request_mark_update_tag = 0;
-  g_message ("RMU");
   mark_model_changed (global->marks.model, global);
   return G_SOURCE_REMOVE;
 }
@@ -1748,13 +1747,15 @@ tvg_set (Global  *global,
 
   AmePanel *panel = get_panel (global, panelx);
 
+  g_message ("tvg_set: Sonar#%i, gain0 %f, step %f", panelx, *gain0, step);
+
   for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
     {
       gboolean status;
       HyScanSonarInfoSource *info;
       HyScanSourceType source = *iter;
 
-      g_message ("setting tvg for %s", hyscan_source_get_name_by_type (source));
+      g_message ("Setting tvg for %s", hyscan_source_get_name_by_type (source));
 
       /* Проверяем gain0. */
       info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (source));
@@ -1866,9 +1867,11 @@ auto_tvg_set (Global   *global,
 
   HyScanSourceType *iter;
 
+  g_message ("auto_tvg_set: Sonar#%i, level %f, sensitivity %f", panelx, level, sensitivity);
+
   for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
     {
-      g_message ("setting auto-tvg for %s", hyscan_source_get_name_by_type (*iter));
+      g_message ("Setting auto-tvg for %s", hyscan_source_get_name_by_type (*iter));
       status = hyscan_sonar_tvg_set_auto (global->control_s, *iter, level, sensitivity);
       if (!status)
         return FALSE;
@@ -1969,6 +1972,7 @@ distance_set (Global  *global,
   HyScanSourceType *iter;
   AmePanel *panel = get_panel (global, panelx);
 
+  g_message ("Distance_set: Sonar#%i, distance %f", panelx, *meters);
   if (*meters < 1.0)
     return FALSE;
 
@@ -1976,11 +1980,19 @@ distance_set (Global  *global,
   for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
     {
       HyScanSonarInfoSource *info;
+
+      g_message ("Setting distance for %s", hyscan_source_get_name_by_type (*iter));
       info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (*iter));
       hyscan_return_val_if_fail (info != NULL, FALSE);
 
       if (receive_time > info->receiver->max_time || receive_time < info->receiver->min_time)
-        return FALSE;
+        {
+          g_message ("Receive time %f (%fm) out of range [%f; %f]",
+                     receive_time, *meters,
+                     info->receiver->min_time,
+                     info->receiver->max_time);
+          return FALSE;
+        }
 
       wait_time = 0;
       if (panelx == X_PROFILER)
@@ -2001,6 +2013,7 @@ distance_set (Global  *global,
 
           if (ss != NULL || fl != NULL)
             {
+              g_message ("  distance: profiler synced");
               full_time = floor (0.333 / master_time) * master_time;
               receive_time = master_time / 3.0;
 
@@ -2012,6 +2025,7 @@ distance_set (Global  *global,
             }
           else
             {
+              g_message ("  distance: profiler unsynced")
               if (receive_time >= 0.333)
                 wait_time = receive_time;
               else
@@ -2019,7 +2033,7 @@ distance_set (Global  *global,
             }
         }
 
-      g_message ("setting distance for %s: %4.1f m, r/w time: %f %f",
+      g_message ("  %s: %4.1f m, r/w time: %f %f",
                  hyscan_source_get_name_by_type (*iter), *meters, receive_time, wait_time);
 
       status = hyscan_sonar_receiver_set_time (global->control_s, *iter, receive_time, wait_time);
