@@ -2013,7 +2013,7 @@ distance_set (Global  *global,
 
           if (ss != NULL || fl != NULL)
             {
-              g_message ("  distance: profiler synced");
+              g_message ("  distance: PF synced");
               full_time = floor (0.333 / master_time) * master_time;
               receive_time = master_time / 3.0;
 
@@ -2025,7 +2025,7 @@ distance_set (Global  *global,
             }
           else
             {
-              g_message ("  distance: profiler unsynced")
+              g_message ("  distance: PF unsynced");
               if (receive_time >= 0.333)
                 wait_time = receive_time;
               else

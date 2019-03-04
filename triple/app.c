@@ -330,7 +330,10 @@ main (int argc, char **argv)
 
     /* Читаем профиль. */
     if (!hyscan_hw_connector_read (connector, sonar_profile_name))
-      goto no_sonar;
+      {
+        g_message ("Profile read error");
+        goto no_sonar;
+      }
 
     check = hyscan_hw_connector_check (connector);
 
