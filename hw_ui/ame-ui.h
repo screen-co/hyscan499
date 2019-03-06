@@ -100,6 +100,8 @@ typedef struct
     } starter;
 
   GtkWidget  *current_view;
+
+  gchar * depth_writer_path;
 } AmeUI;
 
 enum
@@ -167,5 +169,8 @@ list_scroll_start (GObject *emitter,
 void
 list_scroll_end (GObject *emitter,
                  gpointer udata);
+
+void
+depth_writer (GObject *emitter);
 
 #endif /* __AME_UI_H__ */

@@ -315,6 +315,9 @@ main (int argc, char **argv)
     gchar **driver_paths;      /* Путь к драйверам гидролокатора. */
     HyScanHWConnector *connector;
     gboolean check;
+    guint32 n_sources;
+    const gchar * const * sensors;
+    const HyScanSourceType * source;
 
     driver_paths = keyfile_strv_read_helper (config, "common", "paths");
     /* Если не задано название профиля, читаем его из конфига. */
@@ -347,32 +350,37 @@ main (int argc, char **argv)
 
     if (!check || global.control == NULL)
       goto no_sonar;
+
+    hyscan_control_writer_set_db (global.control, global.db);
+
+    global.infos = g_hash_table_new (g_direct_hash, g_direct_equal);
+
+    if (global.control != NULL)
+      g_signal_connect (global.control, "sensor-data", G_CALLBACK (sensor_cb), &global);
+
+
+    sensors = hyscan_control_sensors_list (global.control);
+    for (; sensors != NULL && *sensors != NULL; ++sensors)
+      {
+        g_print ("Sensor found: %s\n", *sensors);
+        hyscan_sensor_set_enable (HYSCAN_SENSOR (global.control), *sensors, TRUE);
+      }
+
+
+    source = hyscan_control_sources_list (global.control, &n_sources);
+    for (; n_sources > 0; --n_sources)
+      {
+        const HyScanSonarInfoSource *info;
+
+        info = hyscan_control_source_get_info (global.control, source[n_sources]);
+        if (info == NULL)
+          continue;
+
+        g_print ("Source found: %s\n", hyscan_source_get_name_by_type(source[n_sources]));
+        g_hash_table_insert (global.infos, GINT_TO_POINTER (source[n_sources]), (void*)info);
+      }
+
   }
-
-  if (global.control != NULL)
-    {
-      const HyScanSonarInfoSource *info;
-
-      hyscan_control_writer_set_db (global.control, global.db);
-
-      global.infos = g_hash_table_new (g_direct_hash, g_direct_equal);
-
-      if (NULL != (info = hyscan_control_source_get_info (global.control, FORWARDLOOK)))
-        {g_message ("FORWARDLOOK FOUND");g_hash_table_insert (global.infos, GINT_TO_POINTER (FORWARDLOOK), (void*)info);}
-      if (NULL != (info = hyscan_control_source_get_info (global.control, PROFILER)))
-        {g_message ("PROFILER FOUND");g_hash_table_insert (global.infos, GINT_TO_POINTER (PROFILER), (void*)info);}
-      if (NULL != (info = hyscan_control_source_get_info (global.control, ECHOSOUNDER)))
-        {g_message ("ECHOSOUNDER FOUND");g_hash_table_insert (global.infos, GINT_TO_POINTER (ECHOSOUNDER), (void*)info);}
-      if (NULL != (info = hyscan_control_source_get_info (global.control, HYSCAN_SOURCE_PROFILER_ECHO)))
-        {g_message ("PROFILER_ECHO FOUND");g_hash_table_insert (global.infos, GINT_TO_POINTER (HYSCAN_SOURCE_PROFILER_ECHO), (void*)info);}
-      if (NULL != (info = hyscan_control_source_get_info (global.control, STARBOARD)))
-        {g_message ("STARBOARD FOUND");g_hash_table_insert (global.infos, GINT_TO_POINTER (STARBOARD), (void*)info);}
-      if (NULL != (info = hyscan_control_source_get_info (global.control, PORTSIDE)))
-        {g_message ("PORTSIDE FOUND");g_hash_table_insert (global.infos, GINT_TO_POINTER (PORTSIDE), (void*)info);}
-    }
-
-  if (global.control != NULL)
-    g_signal_connect (global.control, "sensor-data", G_CALLBACK (sensor_cb), &global);
 
   /* Закончили подключение к гидролокатору. */
   no_sonar:
@@ -416,7 +424,6 @@ main (int argc, char **argv)
   gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (global.gui.track.list), 0, GTK_SORT_DESCENDING);
 
   /* Список меток. */
-  global.marks.sync = hyscan_mark_sync_new ("127.0.0.1", 10010);
   global.marks.model = hyscan_mark_model_new ();
   // TODO: перепроверить, что в ран-менеджере, что в трек-чейнджед, что здесь
   global.marks.loc_storage = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,

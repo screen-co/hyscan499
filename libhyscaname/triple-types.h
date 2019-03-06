@@ -76,8 +76,10 @@ typedef struct
 typedef struct
 {
   HyScanWaterfallMark *mark;
+
   gdouble              lat;
   gdouble              lon;
+  gboolean             ok;
 } MarkAndLocation;
 
 typedef struct 
@@ -258,12 +260,13 @@ HYSCAN_API AmePanel *
 get_panel (Global *global,
            gint    panelx);
 
+HYSCAN_API AmePanel *
+get_panel_quiet (Global *global,
+                 gint    panelx);
+
 HYSCAN_API gint
 get_panel_id_by_name (Global      *global,
                       const gchar *name);
-
-HYSCAN_API void
-depth_writer (GObject *emitter);
 
 void
 button_set_active (GObject *object,
@@ -373,6 +376,7 @@ loc_store_free (gpointer data);
 
 MarkAndLocation *
 mark_and_location_new (HyScanWaterfallMark *mark,
+                       gboolean             ok,
                        gdouble              lat,
                        gdouble              lon);
 

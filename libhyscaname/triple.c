@@ -63,6 +63,15 @@ get_panel (Global *global,
   return panel;
 }
 
+AmePanel *
+get_panel_quiet (Global *global,
+                 gint    panelx)
+{
+  AmePanel * panel;
+  panel = g_hash_table_lookup (global->panels, GINT_TO_POINTER (panelx));
+  return panel;
+}
+
 gint
 get_panel_id_by_name (Global      *global,
                       const gchar *name)
@@ -85,88 +94,6 @@ get_panel_id_by_name (Global      *global,
 }
 
 void
-depth_writer (GObject *emitter)
-{
-  guint32 first, last, i;
-  HyScanAntennaOffset antenna;
-  HyScanGeoGeodetic coord;
-  GString *string = NULL;
-  gchar *words = NULL;
-  GError *error = NULL;
-
-  HyScanDB * db = tglobal->db;
-  HyScanCache * cache = tglobal->cache;
-  gchar *project = tglobal->project_name;
-  gchar *track = tglobal->track_name;
-
-  HyScanNavData * dpt;
-  HyScanmLoc * mloc;
-
-  dpt = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track,
-                                                 1, HYSCAN_NMEA_DATA_DPT,
-                                                 HYSCAN_NMEA_FIELD_DEPTH));
-
-  if (dpt == NULL)
-    {
-      g_warning ("Failed to open dpt parser.");
-      return;
-    }
-
-  mloc = hyscan_mloc_new (db, cache, project, track);
-  if (mloc == NULL)
-    {
-      g_warning ("Failed to open mLocation.");
-      g_clear_object (&dpt);
-      return;
-    }
-
-  string = g_string_new (NULL);
-  g_string_append_printf (string, "%s;%s\n", project, track);
-
-  hyscan_nav_data_get_range (dpt, &first, &last);
-  antenna = hyscan_nav_data_get_offset (dpt);
-
-  for (i = first; i <= last; ++i)
-    {
-      gdouble val;
-      gint64 time;
-      gboolean status;
-      gchar lat_str[1024] = {'\0'};
-      gchar lon_str[1024] = {'\0'};
-      gchar dpt_str[1024] = {'\0'};
-
-      status = hyscan_nav_data_get (dpt, i, &time, &val);
-      if (!status)
-        continue;
-
-      status = hyscan_mloc_get (mloc, time, &antenna, 0, 0, 0, &coord);
-      if (!status)
-        continue;
-
-      g_ascii_formatd (lat_str, 1024, "%f", coord.lat);
-      g_ascii_formatd (lon_str, 1024, "%f", coord.lon);
-      g_ascii_formatd (dpt_str, 1024, "%f", val);
-      g_string_append_printf (string, "%s;%s;%s\n", lat_str, lon_str, dpt_str);
-    }
-
-  words = g_string_free (string, FALSE);
-
-  if (words == NULL)
-    return;
-
-  g_file_set_contents ("/srv/hyscan/lat-lon-depth.txt",
-                       words, strlen (words), &error);
-
-  if (error != NULL)
-    {
-      g_message ("Depth save failure: %s", error->message);
-      g_error_free (error);
-    }
-
-  g_free (words);
-}
-
-void
 button_set_active (GObject *object,
                    gboolean setting)
 {
@@ -183,6 +110,9 @@ run_manager (GObject *emitter)
   GtkWidget *dialog;
   gint res;
 
+  if (tglobal->control_s != NULL)
+    start_stop (tglobal, FALSE);
+
   info = hyscan_db_info_new (tglobal->db);
   dialog = hyscan_ame_project_new (tglobal->db, info, GTK_WINDOW (tglobal->gui.window));
   res = gtk_dialog_run (GTK_DIALOG (dialog));
@@ -190,9 +120,6 @@ run_manager (GObject *emitter)
   if (res == HYSCAN_AME_PROJECT_OPEN || res == HYSCAN_AME_PROJECT_CREATE)
     {
       gchar *project;
-
-      if (tglobal->control_s != NULL)
-        start_stop (tglobal, FALSE);
 
       g_clear_pointer (&tglobal->project_name, g_free);
       hyscan_ame_project_get (HYSCAN_AME_PROJECT (dialog), &project, NULL);
@@ -671,8 +598,7 @@ active_mark_changed (HyScanGtkProjectViewer *marks_viewer,
                                        mark->mark->name,
                                        mark->mark->operator_name,
                                        mark->mark->description,
-                                       mark->lat,
-                                       mark->lon);
+                                       mark->lat, mark->lon);
     }
 }
 
@@ -697,6 +623,7 @@ marks_equal (MarkAndLocation *a,
     }
 
   coords = ame_float_equal (a->lat, b->lat) && ame_float_equal (a->lon, b->lon);
+  // name = g_strcmp0 (a->mark->name, b->mark->name) == 0;
   name = g_strcmp0 (a->mark->name, b->mark->name) == 0;
   size = (a->mark->width == b->mark->width) && (a->mark->height == b->mark->height);
 
@@ -762,14 +689,16 @@ mark_sync_func (GHashTable *marks,
   /* Надо пройтись сначала по старому, чтобы знать, что удалилось.
    * А потом по актуальному списку, посмотреть,
    * что появилось нового, а что поменялось */
+  if (global->marks.sync != NULL)
+    {
+      g_hash_table_iter_init (&iter, global->marks.previous);
+      while (g_hash_table_iter_next (&iter, &key, &value))
+        mark_processor (key, value, marks, global->marks.sync, TRUE);
 
-  g_hash_table_iter_init (&iter, global->marks.previous);
-  while (g_hash_table_iter_next (&iter, &key, &value))
-    mark_processor (key, value, marks, global->marks.sync, TRUE);
-
-  g_hash_table_iter_init (&iter, marks);
-  while (g_hash_table_iter_next (&iter, &key, &value))
-    mark_processor (key, value, global->marks.previous, global->marks.sync, FALSE);
+      g_hash_table_iter_init (&iter, marks);
+      while (g_hash_table_iter_next (&iter, &key, &value))
+        mark_processor (key, value, global->marks.previous, global->marks.sync, FALSE);
+    }
 
   g_hash_table_remove_all (global->marks.previous);
 
@@ -900,13 +829,15 @@ loc_store_free (gpointer data)
 /* Создание структуры MarkAndLocation */
 MarkAndLocation *
 mark_and_location_new (HyScanWaterfallMark *mark,
+                       gboolean             ok,
                        gdouble              lat,
                        gdouble              lon)
 {
   MarkAndLocation *dst = g_new (MarkAndLocation, 1);
   dst->mark = hyscan_waterfall_mark_copy (mark);
-  dst->lat = lat;
-  dst->lon = lon;
+  dst->ok  = ok;
+  dst->lat = ok ? lat : 0.0;
+  dst->lon = ok ? lon : 0.0;
 
   return dst;
 }
@@ -918,6 +849,7 @@ mark_and_location_copy (gpointer data)
   MarkAndLocation *src = data;
   MarkAndLocation *dst = g_new (MarkAndLocation, 1);
   dst->mark = hyscan_waterfall_mark_copy (src->mark);
+  dst->ok  = src->ok;
   dst->lat = src->lat;
   dst->lon = src->lon;
 
@@ -1000,7 +932,7 @@ get_mark_coords (GHashTable             * locstores,
 
   hyscan_mloc_get (mloc, time, &apos, 0, across, 0, &position);
 
-  return mark_and_location_new (mark, position.lat, position.lon);
+  return mark_and_location_new (mark, TRUE, position.lat, position.lon);
 }
 
 /* Возвращает таблицу меток с координатами. */
@@ -1981,13 +1913,13 @@ distance_set (Global  *global,
     {
       HyScanSonarInfoSource *info;
 
-      g_message ("Setting distance for %s", hyscan_source_get_name_by_type (*iter));
+      g_message ("  Setting distance for %s", hyscan_source_get_name_by_type (*iter));
       info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (*iter));
       hyscan_return_val_if_fail (info != NULL, FALSE);
 
       if (receive_time > info->receiver->max_time || receive_time < info->receiver->min_time)
         {
-          g_message ("Receive time %f (%fm) out of range [%f; %f]",
+          g_message ("  Receive time %f (%fm) out of range [%f; %f]",
                      receive_time, *meters,
                      info->receiver->min_time,
                      info->receiver->max_time);
@@ -2002,10 +1934,10 @@ distance_set (Global  *global,
           gdouble full_time;
           AmePanel *ss, *fl;
 
-          ss = get_panel (tglobal, X_SIDESCAN);
+          ss = get_panel_quiet (tglobal, X_SIDESCAN);
           if (ss != NULL)
             ss_time = ss->current.distance / (global->sound_velocity / 2.0);
-          fl = get_panel (tglobal, X_FORWARDL);
+          fl = get_panel_quiet (tglobal, X_FORWARDL);
           if (fl != NULL)
             fl_time = fl->current.distance / (global->sound_velocity / 2.0);
 
@@ -2018,7 +1950,9 @@ distance_set (Global  *global,
               receive_time = master_time / 3.0;
 
               receive_time = MIN (receive_time, requested_time);
-              if (requested_time > receive_time)
+              receive_time = CLAMP(receive_time, info->receiver->min_time, info->receiver->max_time);
+
+              if (requested_time != receive_time)
                 *meters = receive_time * (global->sound_velocity/2.0);
 
               wait_time = full_time - receive_time - (master_time / 2.0);

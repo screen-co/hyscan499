@@ -51,7 +51,6 @@ void        hyscan_gtk_mark_editor_set_mark  (HyScanGtkMarkEditor   *mark_editor
                                               const gchar           *title,
                                               const gchar           *operator_name,
                                               const gchar           *description,
-
                                               gdouble lat,
                                               gdouble lon);
 

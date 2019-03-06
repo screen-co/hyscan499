@@ -176,6 +176,9 @@ delete_project (HyScanAmeProject *self)
   if (project == NULL)
     return;
 
+  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_AME_PROJECT_OPEN, FALSE);
+  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_AME_PROJECT_CREATE, FALSE);
+
   hyscan_db_project_remove (priv->db, project);
   g_free (project);
 }
@@ -213,7 +216,10 @@ projects_changed (HyScanDBInfo     *db_info,
 
   gtk_list_store_clear (GTK_LIST_STORE (priv->project_ls));
 
+  g_message ("Projects changed...");
   projects = hyscan_db_info_get_projects (db_info);
+  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_AME_PROJECT_OPEN, TRUE);
+  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_AME_PROJECT_CREATE, TRUE);
 
   g_hash_table_iter_init (&htiter, projects);
   while (g_hash_table_iter_next (&htiter, &key, &value))
@@ -344,13 +350,17 @@ response_clicked (GtkDialog        *self,
             {
               HyScanProjectInfo *pinfo = value;
               if (g_str_equal (name, pinfo->name))
+                {
+                  g_message ("Same project found %s %s", name, pinfo->name);
                 goto increment;
+                }
             }
 
           break;
+
           increment:
           g_free (name);
-          name = g_strdup_printf ("%s %i", date, i);
+          name = g_strdup_printf ("%s-%i", date, i);
         }
 
       priv->project_name = name;
@@ -456,6 +466,9 @@ constructed (GObject *object)
   button = gtk_dialog_add_button (GTK_DIALOG (self), "Создать и открыть проект", HYSCAN_AME_PROJECT_CREATE);
   gtk_style_context_add_class (gtk_widget_get_style_context (button), GTK_STYLE_CLASS_SUGGESTED_ACTION);
 
+  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_AME_PROJECT_OPEN, FALSE);
+  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_AME_PROJECT_CREATE, FALSE);
+
   gtk_widget_set_size_request (GTK_WIDGET (self), 800, 600);
   gtk_widget_show_all (GTK_WIDGET (self));
 }
@@ -487,8 +500,6 @@ hyscan_ame_project_new (HyScanDB     *db,
   return g_object_new (HYSCAN_TYPE_AME_PROJECT,
                        "db", db, "info", info,
                        "use-header-bar", TRUE,
-                       // "type", GTK_WINDOW_POPUP,
-                       // "type-hint", GDK_WINDOW_TYPE_HINT_DIALOG,
                        "transient-for", parent,
                        NULL);
 }

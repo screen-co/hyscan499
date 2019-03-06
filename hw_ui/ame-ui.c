@@ -693,6 +693,30 @@ kf_config (GKeyFile *kf)
   gboolean source_specific;
   GSocketAddress *isocketadress;
 
+  /* Синхр. меток. */
+  {
+    gchar * mark_addr =  keyfile_string_read_helper (kf, "ame", "mark_addr");
+    guint16 mark_port =  keyfile_uint_read_helper (kf, "ame", "mark_port", 10010);
+
+    _global->marks.sync = hyscan_mark_sync_new (mark_addr, mark_port);
+
+    g_message ("Mark sync: %s %u", mark_addr, mark_port);
+    g_free (mark_addr);
+  }
+
+  /* Выгрузка глубины. */
+  {
+    gchar * depth_writer_path =  keyfile_string_read_helper (kf, "ame", "depth_path");
+
+    if (depth_writer_path == NULL)
+      {
+        g_warning ("Depth export path not set. Using default.");
+        depth_writer_path = g_strdup ("/srv/hyscan/lat-lon-depth.txt");
+      }
+    g_message ("Depth export path: %s", depth_writer_path);
+    global_ui.depth_writer_path = depth_writer_path;
+  }
+
   source_specific = keyfile_bool_read_helper (kf, "ame", "source_specific");
   mcast_addr =  keyfile_string_read_helper (kf, "ame", "button_addr");
   mcast_port =  keyfile_uint_read_helper (kf, "ame", "button_port", 9000);
@@ -709,6 +733,89 @@ kf_config (GKeyFile *kf)
   brec.thread = g_thread_new ("buttons", ame_button_thread, NULL);
   g_socket_join_multicast_group (brec.socket, addr, source_specific, NULL, NULL);
 
+  g_free (mcast_addr);
+
   return TRUE;
 }
 
+void
+depth_writer (GObject *emitter)
+{
+  guint32 first, last, i;
+  HyScanAntennaOffset antenna;
+  HyScanGeoGeodetic coord;
+  GString *string = NULL;
+  gchar *words = NULL;
+  GError *error = NULL;
+
+  HyScanDB * db = _global->db;
+  HyScanCache * cache = _global->cache;
+  gchar *project = _global->project_name;
+  gchar *track = _global->track_name;
+
+  HyScanNavData * dpt;
+  HyScanmLoc * mloc;
+
+  dpt = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track,
+                                                 1, HYSCAN_NMEA_DATA_DPT,
+                                                 HYSCAN_NMEA_FIELD_DEPTH));
+
+  if (dpt == NULL)
+    {
+      g_warning ("Failed to open dpt parser.");
+      return;
+    }
+
+  mloc = hyscan_mloc_new (db, cache, project, track);
+  if (mloc == NULL)
+    {
+      g_warning ("Failed to open mLocation.");
+      g_clear_object (&dpt);
+      return;
+    }
+
+  string = g_string_new (NULL);
+  g_string_append_printf (string, "%s;%s\n", project, track);
+
+  hyscan_nav_data_get_range (dpt, &first, &last);
+  antenna = hyscan_nav_data_get_offset (dpt);
+
+  for (i = first; i <= last; ++i)
+    {
+      gdouble val;
+      gint64 time;
+      gboolean status;
+      gchar lat_str[1024] = {'\0'};
+      gchar lon_str[1024] = {'\0'};
+      gchar dpt_str[1024] = {'\0'};
+
+      status = hyscan_nav_data_get (dpt, i, &time, &val);
+      if (!status)
+        continue;
+
+      status = hyscan_mloc_get (mloc, time, &antenna, 0, 0, 0, &coord);
+      if (!status)
+        continue;
+
+      g_ascii_formatd (lat_str, 1024, "%f", coord.lat);
+      g_ascii_formatd (lon_str, 1024, "%f", coord.lon);
+      g_ascii_formatd (dpt_str, 1024, "%f", val);
+      g_string_append_printf (string, "%s;%s;%s\n", lat_str, lon_str, dpt_str);
+    }
+
+  words = g_string_free (string, FALSE);
+
+  if (words == NULL)
+    return;
+
+  g_file_set_contents (global_ui.depth_writer_path,
+                       words, strlen (words), &error);
+
+  if (error != NULL)
+    {
+      g_message ("Depth save failure: %s", error->message);
+      g_error_free (error);
+    }
+
+  g_free (words);
+}

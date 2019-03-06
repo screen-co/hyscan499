@@ -183,6 +183,7 @@ hyscan_mark_sync_set (HyScanMarkSync *sync,
 
   sentence_length = strlen (sentence);
 
+  g_print ("MarkSync: %s", sentence);
   return (g_socket_send (priv->socket, sentence, sentence_length, NULL, NULL) == sentence_length);
 }
 
@@ -215,5 +216,6 @@ hyscan_mark_sync_remove (HyScanMarkSync *sync,
 
   sentence_length = strlen (sentence);
 
+  g_print ("MarkSync: %s", sentence);
   return (g_socket_send (priv->socket, sentence, sentence_length, NULL, NULL) == sentence_length);
 }
