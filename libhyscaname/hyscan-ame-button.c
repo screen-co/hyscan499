@@ -149,7 +149,6 @@ button_toggled (GtkToggleButton *button,
 {
   gboolean state, changed;
   HyScanAmeButtonPrivate *priv = self->priv;
-
   state = gtk_toggle_button_get_active (button);
   changed = priv->state != state;
 
@@ -211,6 +210,7 @@ button_setup (HyScanAmeButton *self)
   if (priv->is_toggle)
     {
       hyscan_ame_button_set_sensitive (self, TRUE);
+      gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button), priv->state);
       button_toggled (GTK_TOGGLE_BUTTON (button), self);
       g_signal_connect (button, "toggled", G_CALLBACK (button_toggled), self);
     }

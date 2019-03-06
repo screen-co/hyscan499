@@ -318,6 +318,7 @@ main (int argc, char **argv)
     guint32 n_sources;
     const gchar * const * sensors;
     const HyScanSourceType * source;
+    guint32 i;
 
     driver_paths = keyfile_strv_read_helper (config, "common", "paths");
     /* Если не задано название профиля, читаем его из конфига. */
@@ -368,16 +369,16 @@ main (int argc, char **argv)
 
 
     source = hyscan_control_sources_list (global.control, &n_sources);
-    for (; n_sources > 0; --n_sources)
+    for (i = 0; i < n_sources; ++i)
       {
         const HyScanSonarInfoSource *info;
 
-        info = hyscan_control_source_get_info (global.control, source[n_sources]);
+        info = hyscan_control_source_get_info (global.control, source[i]);
         if (info == NULL)
           continue;
 
-        g_print ("Source found: %s\n", hyscan_source_get_name_by_type(source[n_sources]));
-        g_hash_table_insert (global.infos, GINT_TO_POINTER (source[n_sources]), (void*)info);
+        g_print ("Source found: %s\n", hyscan_source_get_name_by_type(source[i]));
+        g_hash_table_insert (global.infos, GINT_TO_POINTER (source[i]), (void*)info);
       }
 
   }

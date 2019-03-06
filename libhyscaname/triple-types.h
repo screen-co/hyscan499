@@ -23,6 +23,7 @@
 #include <urpc-server.h>
 #include <math.h>
 #include <string.h>
+#include <glib/gi18n.h>
 
 #include <sonar-configure.h>
 #include <hyscan-gtk-forward-look.h>

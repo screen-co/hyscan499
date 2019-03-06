@@ -96,6 +96,7 @@ make_item (AmePageItem  *item,
   gboolean is_toggle = item->toggle != TOGGLE_NONE;
   gboolean state = item->toggle == TOGGLE_ON;
 
+  g_message ("item:: %s %i %i", item->title, is_toggle, state);
   GtkWidget *button = hyscan_ame_button_new (item->icon_name,
                                              item->title,
                                              is_toggle,

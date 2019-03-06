@@ -137,6 +137,9 @@ main (int argc, char **argv)
       b6 = gtk_switch_new ();
       b7 = gtk_switch_new ();
 
+      gtk_switch_set_state (GTK_SWITCH (b5), TRUE);
+      gtk_switch_set_state (GTK_SWITCH (b6), !!(i & 2));
+
       g_signal_connect_swapped (b1, "clicked", G_CALLBACK (direct_pusher), ame_button);
       g_signal_connect (b2, "clicked", G_CALLBACK (fixed_pusher), GINT_TO_POINTER (i));
       g_signal_connect (b3, "clicked", G_CALLBACK (off_setter), GINT_TO_POINTER (i));
@@ -156,8 +159,7 @@ main (int argc, char **argv)
       gtk_grid_attach(GTK_GRID (grid), b6, 6, i, 1, 1);
       gtk_grid_attach(GTK_GRID (grid), b7, 7, i, 1, 1);
 
-      gtk_switch_set_state (GTK_SWITCH (b5), TRUE);
-      gtk_switch_set_state (GTK_SWITCH (b6), TRUE);
+
     }
 
   g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (gtk_main_quit), NULL);
