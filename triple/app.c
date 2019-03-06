@@ -511,7 +511,7 @@ main (int argc, char **argv)
       panel->sources = g_new0 (HyScanSourceType, 3);
       panel->sources[0] = HYSCAN_SOURCE_PROFILER;
       panel->sources[1] = HYSCAN_SOURCE_PROFILER_ECHO;
-      panel->sources[2cd] = HYSCAN_SOURCE_INVALID;
+      panel->sources[2] = HYSCAN_SOURCE_INVALID;
 
       panel->vis_gui = (VisualCommon*)vwf;
 
