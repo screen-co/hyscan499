@@ -39,7 +39,7 @@ static AmePage common_pages[] =
     PATH("Меню"), DESTINATION_SELECTOR(DEST_AME_UI),
     .items =
       {
-        {L, 3, VMOR, _("Галс"),            TOGGLE_NONE, CBK(switch_page), UD("ГАЛС")},
+        {L, 3, VMOR, "Галс",            TOGGLE_NONE, CBK(switch_page), UD("ГАЛС")},
         {L, 4, VMOR, "Общее",           TOGGLE_NONE, CBK(switch_page), UD("Общее")},
         {R, 4, VMOR, "Вид",             TOGGLE_NONE, CBK(widget_swap), GINT_TO_POINTER (ROTATE),
             VALUE_OFFSET(AmeUI, current_view), VALUE_DEFAULT("--")},
