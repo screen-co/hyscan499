@@ -23,10 +23,12 @@
 #define MNGR ("accessories-dictionary-symbolic")
 #define INFO ("dialog-information-symbolic")
 #define EXIT ("window-close-symbolic")
+#define SHOT ("camera-photo-symbolic")
 
 #define PATH(x) .path=(gchar*)(x)
 #define DESTINATION_SELECTOR(x) .destination_selector=(x)
 
+#define MID(x) .msg_id = (const gchar*)(x)
 #define CBK(x) .callback = (gpointer)(x)
 #define UD(x) .user_data = (gpointer)(x)
 #define VALUE_OFFSET(x, y) .value_offset = offsetof(x,y)
@@ -39,9 +41,9 @@ static AmePage common_pages[] =
     PATH("Меню"), DESTINATION_SELECTOR(DEST_AME_UI),
     .items =
       {
-        {L, 3, VMOR, "Галс",            TOGGLE_NONE, CBK(switch_page), UD("ГАЛС")},
-        {L, 4, VMOR, "Общее",           TOGGLE_NONE, CBK(switch_page), UD("Общее")},
-        {R, 4, VMOR, "Вид",             TOGGLE_NONE, CBK(widget_swap), GINT_TO_POINTER (ROTATE),
+        {L, 3, VMOR, "Галсы",       TOGGLE_NONE, CBK(switch_page), UD("ГАЛС")},
+        {L, 4, VMOR, "Общее",       TOGGLE_NONE, CBK(switch_page), UD("Общее")},
+        {R, 4, VMOR, "Вид",         TOGGLE_NONE, CBK(widget_swap), GINT_TO_POINTER (ROTATE),
             VALUE_OFFSET(AmeUI, current_view), VALUE_DEFAULT("--")},
         {END}
       }
@@ -66,6 +68,7 @@ static AmePage common_pages[] =
     .items =
       {
         {L, 0, MENU, "Меню",         TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
+        {L, 2, SHOT, "Скриншот",     TOGGLE_NONE, CBK(screenshooter),  NULL},
         {R, 1, DOT,  "Выгр. глубины",TOGGLE_NONE, CBK(depth_writer),   NULL},
         {R, 4, EXIT, "Выход",        TOGGLE_NONE, CBK(gtk_main_quit),  NULL},
         {END}
@@ -260,9 +263,9 @@ static AmePage any_sonar_pages[] =
     PATH("Общее"), DESTINATION_SELECTOR(DEST_AME_UI),
     .items =
       {
-        {L, 3, DOT,  "Сух. поверка", TOGGLE_OFF,  CBK(start_stop_dry_wrapper),
+        {L, 4, DOT,  "Сух. поверка", TOGGLE_OFF,  CBK(start_stop_dry_wrapper),
           BUTTON_OFFSET(AmeUI, starter.dry)},
-        {L, 4, DOT,  "Работа",       TOGGLE_OFF,  CBK(start_stop_wrapper),
+        {L, 3, DOT,  "Работа",       TOGGLE_OFF,  CBK(start_stop_wrapper),
           BUTTON_OFFSET(AmeUI, starter.all)},
         {R, 0, INFO, "Версия ГЛ",    TOGGLE_NONE, CBK(run_show_sonar_info),
           UD("/info"), },

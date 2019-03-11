@@ -95,12 +95,10 @@ make_item (AmePageItem  *item,
 {
   gboolean is_toggle = item->toggle != TOGGLE_NONE;
   gboolean state = item->toggle == TOGGLE_ON;
+  const gchar * title = item->msg_id;
 
-  g_message ("item:: %s %i %i", item->title, is_toggle, state);
   GtkWidget *button = hyscan_ame_button_new (item->icon_name,
-                                             item->title,
-                                             is_toggle,
-                                             state);
+                                             title, is_toggle, state);
 
   g_signal_connect (button, is_toggle ? "ame-toggled" : "ame-activated",
                     G_CALLBACK (item->callback), item->user_data);
@@ -118,7 +116,7 @@ make_item (AmePageItem  *item,
       *value_widget = NULL;
     }
 
-  gtk_widget_set_name (button, item->title);
+  gtk_widget_set_name (button, title);
   /* Возвращаем кнопку целиком. */
   return button;
 }
@@ -161,6 +159,7 @@ build_page (AmeUI   *ui,
   // TODO: check, if this can help me avoid {END}
   for (i = 0; ; ++i)
     {
+      const gchar *title;
       GtkWidget *button, *value;
       HyScanAmeFixed *fixed;
       AmePageItem *item = &page->items[i];
@@ -175,7 +174,8 @@ build_page (AmeUI   *ui,
         g_error ("AmeUI: wrong item->side");
 
       button = make_item (item, &value);
-      wname = g_strdup_printf ("%i: %s", item->position, item->title);
+      title = item->msg_id;
+      wname = g_strdup_printf ("%i: %s", item->position, title);
       gtk_widget_set_name(button, wname);
 
       /* Ща сложно будет. В странице есть destination_selector. Он определяет,
@@ -300,7 +300,7 @@ widget_swap (GObject  *emitter,
         {
           hyscan_gtk_ame_box_set_visible (abox, id);
           panel = get_panel (_global, id);
-          text = panel->name;
+          text = panel->name_ru;
         }
     }
 

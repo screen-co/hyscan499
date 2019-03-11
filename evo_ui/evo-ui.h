@@ -1,5 +1,5 @@
-#ifndef __SW_UI_H__
-#define __SW_UI_H__
+#ifndef __EVO_UI_H__
+#define __EVO_UI_H__
 
 #include <triple-types.h>
 #include <hyscan-gtk-ame-box.h>
@@ -10,10 +10,11 @@ typedef struct
 {
   GHashTable *builders;
 
+  GtkWidget  *grid;     // grid
   GtkWidget  *area;     // hyscan_gtk_area
-  GtkWidget  *acoustic; // центральная зона
-  GtkWidget  *stack;    // стек упр-я локаторами
-  GtkWidget  *single;
+  GtkWidget  *acoustic_stack; // центральная зона
+  GtkWidget  *control_stack;    // стек упр-я локаторами
+  GtkWidget  *switcher;
 
   struct
     {
@@ -21,8 +22,8 @@ typedef struct
       GtkWidget  *all;
     } starter;
 
-  GtkWidget  *current_view;
-} SwUI;
+  GtkWidget  *more;
+} EvoUI;
 
 /* Врапперы. */
 void start_stop_wrapper (GtkSwitch   *switcher,
@@ -42,4 +43,4 @@ void        switch_page (GObject     *emitter,
                          const gchar *page);
 
 
-#endif /* __SW_UI_H__ */
+#endif /* __EVO_UI_H__ */

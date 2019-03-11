@@ -1,8 +1,11 @@
 #include <gmodule.h>
 #include <hyscan-gtk-area.h>
-#include "sw-ui.h"
+#include "evo-settings.h"
+#include "evo-sensors.h"
+#include "evo-ui.h"
+#include "evo-ui-overrides.h"
 
-SwUI global_ui = {0,};
+EvoUI global_ui = {0,};
 Global *_global = NULL;
 /***
  *     #     # ######     #    ######  ######  ####### ######   #####
@@ -20,7 +23,7 @@ ui_start_stop (GtkSwitch *button,
                gboolean   state,
                gpointer   user_data)
 {
-  SwUI *ui = &global_ui;
+  EvoUI *ui = &global_ui;
   gboolean status;
 
   set_dry (_global, FALSE);
@@ -39,7 +42,7 @@ ui_start_stop_dry (GtkSwitch *button,
                    gboolean   state,
                    gpointer   user_data)
 {
-  SwUI *ui = &global_ui;
+  EvoUI *ui = &global_ui;
   gboolean status;
 
   set_dry (_global, TRUE);
@@ -66,33 +69,15 @@ void
 widget_swap (GObject  *emitter,
              gpointer  user_data)
 {
-  SwUI *ui = &global_ui;
+  EvoUI *ui = &global_ui;
   const gchar *child;
-  gboolean active;
 
-  child = gtk_stack_get_visible_child_name (GTK_STACK (ui->stack));
+  child = gtk_stack_get_visible_child_name (GTK_STACK (ui->acoustic_stack));
   if (child == NULL)
     return;
 
-  if (ui->single == NULL)
-    {
-      hyscan_gtk_ame_box_show_all (HYSCAN_GTK_AME_BOX (ui->acoustic));
-      goto spec;
-    }
+  // gtk_stack_set_visible_child_name (GTK_STACK (ui->control_stack), child);
 
-  active = gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (ui->single));
-
-  if (!active)
-    {
-      hyscan_gtk_ame_box_show_all (HYSCAN_GTK_AME_BOX (ui->acoustic));
-    }
-  else
-    {
-      gint id = get_panel_id_by_name (_global, child);
-      hyscan_gtk_ame_box_set_visible (HYSCAN_GTK_AME_BOX (ui->acoustic), id);
-    }
-
-spec:
   /* Теперь всякие специальные случаи. */
   hyscan_gtk_area_set_bottom_visible (HYSCAN_GTK_AREA (ui->area),
                                       g_str_equal (child, "ForwardLook"));
@@ -115,7 +100,7 @@ get_widget_from_builder (GtkBuilder * builder,
   GObject *obj = gtk_builder_get_object (builder, name);
   if (obj == NULL)
     {
-      g_warning ("SwUI: <%s> not found.", name);
+      g_warning ("EvoUI: <%s> not found.", name);
       return NULL;
     }
 
@@ -135,51 +120,15 @@ make_stack (void)
   GtkWidget *stack;
 
   stack = gtk_stack_new ();
-  gtk_stack_set_transition_type (GTK_STACK (stack), GTK_STACK_TRANSITION_TYPE_SLIDE_UP_DOWN);
+  gtk_stack_set_transition_type (GTK_STACK (stack), GTK_STACK_TRANSITION_TYPE_CROSSFADE);
   gtk_stack_set_transition_duration (GTK_STACK (stack), 100);
-
-  g_signal_connect (stack, "notify::visible-child-name", G_CALLBACK (widget_swap), NULL);
 
   return stack;
 }
 
 GtkWidget *
-make_stack_switcher (GtkStack *stack,
-                     Global   *global)
-{
-  GtkWidget *sw;
-
-  sw = gtk_stack_switcher_new ();
-  gtk_orientable_set_orientation (GTK_ORIENTABLE (sw), GTK_ORIENTATION_VERTICAL);
-  gtk_widget_set_margin_start (sw, 6);
-  gtk_stack_switcher_set_stack (GTK_STACK_SWITCHER (sw), GTK_STACK (stack));
-
-  return sw;
-}
-
-GtkWidget *
-make_single_switcher (SwUI   *ui,
-                      Global *global)
-{
-  GtkWidget *sw;
-
-  /* Если только 1 панель, то и нечего создавать кнопку. */
-  if (g_hash_table_size (global->panels) < 2)
-    return NULL;
-
-  sw = gtk_toggle_button_new_with_label ("Скрыть остальные");
-  gtk_widget_set_margin_start (sw, 6);
-  gtk_widget_set_margin_top (sw, 3);
-  gtk_widget_set_margin_bottom (sw, 3);
-
-  g_signal_connect (sw, "toggled", G_CALLBACK (widget_swap), NULL);
-
-  return sw;
-}
-
-GtkWidget *
 make_record_control (Global *global,
-                     SwUI   *ui)
+                     EvoUI   *ui)
 {
   GtkBuilder *b;
   GtkWidget *w;
@@ -187,7 +136,7 @@ make_record_control (Global *global,
   if (global->control_s == NULL)
     return NULL;
 
-  b = gtk_builder_new_from_resource ("/org/sw/gtk/record.ui");
+  b = gtk_builder_new_from_resource ("/org/evo/gtk/record.ui");
 
   w = g_object_ref (get_widget_from_builder (b, "record_control"));
   ui->starter.dry = g_object_ref (get_widget_from_builder (b, "start_stop_dry"));
@@ -202,8 +151,15 @@ make_record_control (Global *global,
   return w;
 }
 
+GtkWidget *
+make_settings (Global *global,
+               EvoUI   *ui)
+{
+
+}
+
 GtkBuilder *
-get_builder_for_panel (SwUI * ui,
+get_builder_for_panel (EvoUI * ui,
                        gint   panelx)
 {
   GtkBuilder * b;
@@ -214,7 +170,7 @@ get_builder_for_panel (SwUI * ui,
   if (b != NULL)
     return b;
 
-  b = gtk_builder_new_from_resource ("/org/sw/gtk/sw.ui");
+  b = gtk_builder_new_from_resource ("/org/evo/gtk/evo.ui");
   gtk_builder_set_translation_domain (b, GETTEXT_PACKAGE);
   g_hash_table_insert (ui->builders, k, b);
 
@@ -223,7 +179,7 @@ get_builder_for_panel (SwUI * ui,
 
 /* Ядро всего уйца. Подключает сигналы, достает виджеты. */
 GtkWidget *
-make_page_for_panel (SwUI     *ui,
+make_page_for_panel (EvoUI     *ui,
                      AmePanel *panel,
                      gint      panelx,
                      Global   *global)
@@ -240,12 +196,13 @@ make_page_for_panel (SwUI     *ui,
 
       view = get_widget_from_builder (b, "ss_view_control");
       panel->vis_gui->brightness_value  = get_label_from_builder (b, "ss_brightness_value");
+      panel->vis_gui->black_value       = get_label_from_builder (b, "ss_black_value");
       panel->vis_gui->scale_value       = get_label_from_builder (b, "ss_scale_value");
       panel->vis_gui->colormap_value    = get_label_from_builder (b, "ss_color_map_value");
       panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");
 
       if (global->control_s == NULL)
-        break;
+          break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
       tvg = get_widget_from_builder (b, "auto_tvg_control");
@@ -265,7 +222,7 @@ make_page_for_panel (SwUI     *ui,
       panel->vis_gui->live_view         = get_widget_from_builder(b, "pf_live_view");
 
       if (global->control_s == NULL)
-        break;
+          break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
       tvg = get_widget_from_builder (b, "lin_tvg_control");
@@ -284,7 +241,7 @@ make_page_for_panel (SwUI     *ui,
       panel->vis_gui->sensitivity_value = get_label_from_builder (b, "fl_sensitivity_value");
 
       if (global->control_s == NULL)
-        break;
+          break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
       tvg = get_widget_from_builder (b, "lin_tvg_control");
@@ -296,7 +253,7 @@ make_page_for_panel (SwUI     *ui,
       break;
 
     default:
-      g_warning ("SwUI: wrong panel type!");
+      g_warning ("EvoUI: wrong panel type!");
     }
 
   gtk_builder_connect_signals (b, GINT_TO_POINTER (panelx));
@@ -320,26 +277,37 @@ make_page_for_panel (SwUI     *ui,
 G_MODULE_EXPORT gboolean
 build_interface (Global *global)
 {
-  SwUI *ui = &global_ui;
+  EvoUI *ui = &global_ui;
   _global = global;
 
+  GtkWidget *settings;
   GtkWidget *lbox, *rbox;
 
-  /* Мышевозный гуй представляет собой HyScanGtkArea.
+  global->override.brightness_set = evo_brightness_set_override;
+
+  /* EvoUi это грид, вверху стек-свитчер с кнопками панелей,
+   * внизу HyScanGtkArea. Внутри арии:
    * Справа у нас управление локаторами и отображением,
    * слева выезжает контроль над галсами и метками,
    * снизу выезжает управление ВСЛ. */
+  ui->grid = gtk_grid_new ();
 
   ui->area = hyscan_gtk_area_new ();
 
   /* Центральная зона: виджет с виджетами. Да. */
-  ui->acoustic = hyscan_gtk_ame_box_new ();
+  ui->acoustic_stack = make_stack ();
+
+  g_signal_connect (ui->acoustic_stack, "notify::visible-child-name", G_CALLBACK (widget_swap), NULL);
 
   /* Коробки и стек для управления локаторами. */
   lbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
   rbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
-  ui->stack = g_object_ref (make_stack ());
+  ui->control_stack = make_stack ();
 
+  /* Связываем стеки. */
+  g_object_bind_property (ui->acoustic_stack, "visible-child-name",
+                          ui->control_stack, "visible-child-name",
+                          G_BINDING_DEFAULT);
 
   /* Особенности реализации: хеш-таблица билдеров.*/
   ui->builders = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_object_unref);
@@ -350,9 +318,6 @@ build_interface (Global *global)
   {
     #define N_PANELS 4
     gint order[N_PANELS]  = {X_SIDESCAN, X_PROFILER, X_FORWARDL, X_ECHOSOUND};
-    gint left[N_PANELS]   = {0, 1, 1, 1};
-    gint top[N_PANELS]    = {0, 0, 1, 2};
-    gint height[N_PANELS] = {3, 1, 1, 1};
     gint i, n;
 
     /* Проверяем размеры моего могучего списка панелей. */
@@ -372,11 +337,18 @@ build_interface (Global *global)
         g_object_set (w, "vexpand", TRUE, "valign", GTK_ALIGN_FILL,
                          "hexpand", TRUE, "halign", GTK_ALIGN_FILL, NULL);
 
-        hyscan_gtk_ame_box_pack (HYSCAN_GTK_AME_BOX (ui->acoustic), w, order[i],
-                                 left[i], top[i], 1, height[i]);
+        gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), w, panel->name_en, panel->name_en);
       }
 
-    hyscan_gtk_area_set_central (HYSCAN_GTK_AREA (ui->area), ui->acoustic);
+    hyscan_gtk_area_set_central (HYSCAN_GTK_AREA (ui->area), ui->acoustic_stack);
+  }
+
+  /* Stack switcher */
+  {
+    ui->switcher = gtk_stack_switcher_new ();
+    g_object_set (ui->switcher, "margin", 6,
+                  "hexpand", TRUE, "halign", GTK_ALIGN_CENTER, NULL);
+    gtk_stack_switcher_set_stack (GTK_STACK_SWITCHER (ui->switcher), GTK_STACK (ui->acoustic_stack));
   }
 
   /* Левая панель содержит список галсов, меток и редактор меток. */
@@ -447,7 +419,7 @@ build_interface (Global *global)
   /* Правая панель -- бокс с упр. записью и упр. локаторами. */
   /* Кстати, мои личные виджеты используются только в этом месте.  */
   {
-    GtkWidget * st_switcher, * record, * single;
+    GtkWidget * record;
     GHashTableIter iter;
     AmePanel *panel;
     gpointer k;
@@ -462,27 +434,36 @@ build_interface (Global *global)
         GtkWidget *packable;
 
         packable = make_page_for_panel (ui, panel, GPOINTER_TO_INT (k), global);
-        gtk_stack_add_titled (GTK_STACK (ui->stack), packable, panel->name_en, panel->name_ru);
+        gtk_stack_add_titled (GTK_STACK (ui->control_stack), packable, panel->name_en, panel->name_en);
       }
 
-    st_switcher = make_stack_switcher (GTK_STACK (ui->stack), global);
-    if ((single = make_single_switcher (ui, global)) != NULL)
-      ui->single = g_object_ref (single);
     record = make_record_control (global, ui);
 
-    gtk_box_pack_start (GTK_BOX (rbox), st_switcher, FALSE, FALSE, 0);
-    if (single != NULL)
-      gtk_box_pack_start (GTK_BOX (rbox), ui->single, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (rbox), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
-    gtk_box_pack_start (GTK_BOX (rbox), ui->stack, TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (rbox), ui->control_stack, TRUE, TRUE, 0);
     if (record != NULL)
       gtk_box_pack_start (GTK_BOX (rbox), record, FALSE, FALSE, 0);
 
     hyscan_gtk_area_set_right (HYSCAN_GTK_AREA (ui->area), rbox);
   }
 
-  /* Инициализация значений. */
-  gtk_container_add (GTK_CONTAINER (global->gui.window), ui->area);
+  /* Настройки. */
+  {
+    GtkWidget *grid, * sensors, *scroll;
+    settings = evo_settings_new ();
+    grid = evo_settings_get_grid (EVO_SETTINGS (settings));
+
+    sensors = evo_sensors_new (global->control);
+
+    gtk_grid_attach (GTK_GRID (grid), gtk_label_new ("Sensors"), 0, 0, 1, 1);
+    gtk_grid_attach (GTK_GRID (grid), sensors, 0, 1, 1, 1);
+  }
+
+  /* Пакуем всё. */
+  gtk_container_add (GTK_CONTAINER (global->gui.window), ui->grid);
+  gtk_grid_attach (GTK_GRID (ui->grid), ui->switcher, 0, 0, 1, 1);
+  gtk_grid_attach (GTK_GRID (ui->grid), settings,     1, 0, 1, 1);
+  gtk_grid_attach (GTK_GRID (ui->grid), ui->area,     0, 1, 2, 1);
 
   return TRUE;
 }
@@ -490,14 +471,12 @@ build_interface (Global *global)
 G_MODULE_EXPORT void
 destroy_interface (void)
 {
-  SwUI *ui = &global_ui;
+  EvoUI *ui = &global_ui;
 
   g_hash_table_unref (ui->builders);
 
   g_clear_object (&ui->starter.all);
   g_clear_object (&ui->starter.dry);
-  g_clear_object (&ui->stack);
-  g_clear_object (&ui->single);
 }
 
 

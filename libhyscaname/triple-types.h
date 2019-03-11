@@ -23,7 +23,7 @@
 #include <urpc-server.h>
 #include <math.h>
 #include <string.h>
-#include <glib/gi18n.h>
+#include <locale.h>
 
 #include <sonar-configure.h>
 #include <hyscan-gtk-forward-look.h>
@@ -34,6 +34,8 @@
 #define hyscan_return_val_if_fail(expr,val) do {if (!(expr)) {g_warning("Failed at line %i", __LINE__); return (val);}} while (FALSE)
 #define hyscan_exit_if(expr,msg) do {if (!(expr)) break; g_message ((msg)); goto exit;} while (FALSE)
 #define hyscan_exit_if_w_param(expr,msg,param) do {if (!(expr)) break; g_message ((msg),(param)); goto exit;} while (FALSE)
+
+#define GETTEXT_PACKAGE "hyscan-4.99"
 
 #define WRONG_SELECTOR { g_message ("Wrong sonar selector @%i", __LINE__); }
 
@@ -174,8 +176,9 @@ typedef struct
 
 typedef struct 
 {
-  gchar            *name;
   gchar            *short_name;
+  gchar            *name_en;
+  gchar            *name_ru;
   AmePanelType      type;    /* тип панели: вф, фл, пф */
   HyScanSourceType *sources; /* Источники для панели */
 
@@ -193,7 +196,8 @@ typedef struct
   
 } AmePanel;
 
-typedef struct
+typedef struct _Global Global;
+struct _Global
 {
   HyScanDB                            *db;
   HyScanDBInfo                        *db_info;
@@ -249,7 +253,14 @@ typedef struct
       GtkWidget                           *meditor;
     } gui;
 
-} Global;
+  struct 
+  {
+    gboolean (*brightness_set) (Global  *global,
+                                gdouble  brightness,
+                                gdouble  black,
+                                gint     selector);
+  } override;
+}; // Global
 
 HYSCAN_API void
 ame_colormap_free (gpointer data);
@@ -420,7 +431,7 @@ HYSCAN_API void
 position_changed (GtkAdjustment *range,
                   Global        *global);
 
-HYSCAN_API  gboolean
+HYSCAN_API gboolean 
 brightness_set (Global  *global,
                 gdouble  cur_brightness,
                 gdouble  cur_black,
@@ -437,7 +448,8 @@ scale_set (Global   *global,
            gboolean  scale_up,
            gint      selector);
 
-HYSCAN_API guint32*
+HYSCAN_API
+guint32 *
 hyscan_tile_color_compose_colormap_pf (guint *length);
 
 HYSCAN_API gboolean
@@ -656,6 +668,9 @@ make_overlay (HyScanGtkWaterfall          *wf,
               HyScanGtkWaterfallMark     **_mark,
               HyScanGtkWaterfallMeter    **_meter,
               HyScanMarkModel             *mark_model);
+
+HYSCAN_API
+void screenshooter (void);
 
 HYSCAN_API void
 init_triple (Global *ext_global);

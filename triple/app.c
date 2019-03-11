@@ -10,6 +10,8 @@
  #include <errno.h>
 #endif
 
+#include <glib/gi18n.h>
+
 /* Вот он, наш жирненький красавчик. */
 Global global = {0,};
 
@@ -136,6 +138,11 @@ main (int argc, char **argv)
   gchar             *hardware_profile_name = NULL;
 
   gboolean status;
+
+  setlocale (LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, "./locale");
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+  textdomain (GETTEXT_PACKAGE);
 
   gtk_init (&argc, &argv);
   init_triple (&global);
@@ -380,7 +387,6 @@ main (int argc, char **argv)
         g_print ("Source found: %s\n", hyscan_source_get_name_by_type(source[i]));
         g_hash_table_insert (global.infos, GINT_TO_POINTER (source[i]), (void*)info);
       }
-
   }
 
   /* Закончили подключение к гидролокатору. */
@@ -465,7 +471,8 @@ main (int argc, char **argv)
       AmePanel *panel = g_new0 (AmePanel, 1);
       VisualWF *vwf = g_new0 (VisualWF, 1);
 
-      panel->name = g_strdup ("ГБО");
+      panel->name_ru = g_strdup ("ГБО");
+      panel->name_en = g_strdup ("SideScan");
       panel->short_name = g_strdup ("SS");
       panel->type = AME_PANEL_WATERFALL;
 
@@ -504,7 +511,8 @@ main (int argc, char **argv)
       AmePanel *panel = g_new0 (AmePanel, 1);
       VisualWF *vwf = g_new0 (VisualWF, 1);
 
-      panel->name = g_strdup ("Профилограф");
+      panel->name_ru = g_strdup ("Профилограф");
+      panel->name_en = g_strdup ("Profiler");
       panel->short_name = g_strdup ("PF");
       panel->type = AME_PANEL_ECHO;
 
@@ -547,7 +555,8 @@ main (int argc, char **argv)
       AmePanel *panel = g_new0 (AmePanel, 1);
       VisualWF *vwf = g_new0 (VisualWF, 1);
 
-      panel->name = g_strdup ("Эхолот");
+      panel->name_ru = g_strdup ("Эхолот");
+      panel->name_en = g_strdup ("Echosounder");
       panel->short_name = g_strdup ("ES");
       panel->type = AME_PANEL_ECHO;
 
@@ -588,7 +597,8 @@ main (int argc, char **argv)
       AmePanel *panel = g_new0 (AmePanel, 1);
       VisualFL *vfl = g_new0 (VisualFL, 1);
 
-      panel->name = g_strdup ("Курсовой");
+      panel->name_ru = g_strdup ("Курсовой");
+      panel->name_en = g_strdup ("ForwardLook");
       panel->short_name = g_strdup ("FL");
       panel->type = AME_PANEL_FORWARDLOOK;
 
@@ -644,17 +654,17 @@ main (int argc, char **argv)
       {
         gint panelx = GPOINTER_TO_INT (k);
         AmePanel *panel = v;
-        panel->current.distance =    keyfile_double_read_helper (config, panel->name, "sonar.cur_distance", 50);
-        panel->current.signal =      keyfile_double_read_helper (config, panel->name, "sonar.cur_signal", 0);
-        panel->current.gain0 =       keyfile_double_read_helper (config, panel->name, "sonar.cur_gain0", 0);
-        panel->current.gain_step =   keyfile_double_read_helper (config, panel->name, "sonar.cur_gain_step", 10);
-        panel->current.level =       keyfile_double_read_helper (config, panel->name, "sonar.cur_level", 0.5);
-        panel->current.sensitivity = keyfile_double_read_helper (config, panel->name, "sonar.cur_sensitivity", 0.6);
+        panel->current.distance =    keyfile_double_read_helper (config, panel->name_en, "sonar.cur_distance", 50);
+        panel->current.signal =      keyfile_double_read_helper (config, panel->name_en, "sonar.cur_signal", 0);
+        panel->current.gain0 =       keyfile_double_read_helper (config, panel->name_en, "sonar.cur_gain0", 0);
+        panel->current.gain_step =   keyfile_double_read_helper (config, panel->name_en, "sonar.cur_gain_step", 10);
+        panel->current.level =       keyfile_double_read_helper (config, panel->name_en, "sonar.cur_level", 0.5);
+        panel->current.sensitivity = keyfile_double_read_helper (config, panel->name_en, "sonar.cur_sensitivity", 0.6);
 
-        panel->vis_current.brightness =  keyfile_double_read_helper (config, panel->name, "cur_brightness",   80.0);
-        panel->vis_current.colormap =    keyfile_double_read_helper (config, panel->name, "cur_color_map",    0);
-        panel->vis_current.black =       keyfile_double_read_helper (config, panel->name, "cur_black",        0);
-        panel->vis_current.sensitivity = keyfile_double_read_helper (config, panel->name, "cur_sensitivity",  8.0);
+        panel->vis_current.brightness =  keyfile_double_read_helper (config, panel->name_en, "cur_brightness",   80.0);
+        panel->vis_current.colormap =    keyfile_double_read_helper (config, panel->name_en, "cur_color_map",    0);
+        panel->vis_current.black =       keyfile_double_read_helper (config, panel->name_en, "cur_black",        0);
+        panel->vis_current.sensitivity = keyfile_double_read_helper (config, panel->name_en, "cur_sensitivity",  8.0);
 
         if (panel->type == AME_PANEL_WATERFALL)
           color_map_set (&global, panel->vis_current.colormap, panelx);
@@ -721,17 +731,17 @@ main (int argc, char **argv)
       while (g_hash_table_iter_next (&iter, &k, &v))
         {
           AmePanel *panel = v;
-          keyfile_double_write_helper (config, panel->name, "sonar.cur_distance", panel->current.distance);
-          keyfile_double_write_helper (config, panel->name, "sonar.cur_signal", panel->current.signal);
-          keyfile_double_write_helper (config, panel->name, "sonar.cur_gain0", panel->current.gain0);
-          keyfile_double_write_helper (config, panel->name, "sonar.cur_gain_step", panel->current.gain_step);
-          keyfile_double_write_helper (config, panel->name, "sonar.cur_level", panel->current.level);
-          keyfile_double_write_helper (config, panel->name, "sonar.cur_sensitivity", panel->current.sensitivity);
+          keyfile_double_write_helper (config, panel->name_en, "sonar.cur_distance", panel->current.distance);
+          keyfile_double_write_helper (config, panel->name_en, "sonar.cur_signal", panel->current.signal);
+          keyfile_double_write_helper (config, panel->name_en, "sonar.cur_gain0", panel->current.gain0);
+          keyfile_double_write_helper (config, panel->name_en, "sonar.cur_gain_step", panel->current.gain_step);
+          keyfile_double_write_helper (config, panel->name_en, "sonar.cur_level", panel->current.level);
+          keyfile_double_write_helper (config, panel->name_en, "sonar.cur_sensitivity", panel->current.sensitivity);
 
-          keyfile_double_write_helper (config, panel->name, "cur_brightness",          panel->vis_current.brightness);
-          keyfile_double_write_helper (config, panel->name, "cur_color_map",           panel->vis_current.colormap);
-          keyfile_double_write_helper (config, panel->name, "cur_black",               panel->vis_current.black);
-          keyfile_double_write_helper (config, panel->name, "cur_sensitivity",         panel->vis_current.sensitivity);
+          keyfile_double_write_helper (config, panel->name_en, "cur_brightness",          panel->vis_current.brightness);
+          keyfile_double_write_helper (config, panel->name_en, "cur_color_map",           panel->vis_current.colormap);
+          keyfile_double_write_helper (config, panel->name_en, "cur_black",               panel->vis_current.black);
+          keyfile_double_write_helper (config, panel->name_en, "cur_sensitivity",         panel->vis_current.sensitivity);
         }
 
       keyfile_string_write_helper (config, "common",  "project", global.project_name);

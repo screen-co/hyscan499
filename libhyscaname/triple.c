@@ -6,6 +6,7 @@
 #include <hyscan-gtk-param-tree.h>
 #include <gmodule.h>
 #include <math.h>
+#include <glib/gi18n-lib.h>
 
 Global *tglobal;
 
@@ -27,7 +28,8 @@ ame_panel_destroy (gpointer data)
   if (panel == NULL)
     return;
 
-  g_free (panel->name);
+  g_free (panel->name_en);
+  g_free (panel->name_ru);
   g_free (panel->sources);
 
   switch (panel->type)
@@ -86,7 +88,7 @@ get_panel_id_by_name (Global      *global,
 
   while (g_hash_table_iter_next (&iter, &k, (gpointer*)&panel))
     {
-      if (g_str_equal (panel->name, name))
+      if (g_str_equal (panel->name_en, name))
         return GPOINTER_TO_INT (k);
     }
 
@@ -390,6 +392,9 @@ fname (GObject * emitter,                                                    \
         fl = (VisualFL*)panel->vis_gui;                                      \
         widget = GTK_WIDGET (fl->fl);                                        \
         break;                                                               \
+      default:                                                               \
+        g_message ("Nav not available");                                     \
+        return;                                                              \
     }                                                                        \
   nav_common (widget, button, GDK_CONTROL_MASK);                             \
 }
@@ -900,7 +905,7 @@ get_mark_coords (GHashTable             * locstores,
       if (track_name == NULL)
         {
           if (request_mark_update_tag == 0)
-            request_mark_update_tag = g_timeout_add (1000, request_mark_update, global);
+            request_mark_update_tag = g_timeout_add (1000, (GSourceFunc)request_mark_update, global);
           return NULL;
         }
 
@@ -909,7 +914,7 @@ get_mark_coords (GHashTable             * locstores,
       if (ls == NULL)
         {
           if (request_mark_update_tag == 0)
-            request_mark_update_tag = g_timeout_add (1000, request_mark_update, global);
+            request_mark_update_tag = g_timeout_add (1000, (GSourceFunc)request_mark_update, global);
           return NULL;
         }
 
@@ -1712,7 +1717,8 @@ tvg0_up (GtkWidget *widget,
   gdouble desired;
   AmePanel *panel = get_panel (tglobal, panelx);
 
-  desired = panel->current.gain0 + 0.5;
+  desired = panel->current.gain0 + 1;
+  desired = desired - fmod (desired, 1);
 
   if (tvg_set (tglobal, &desired, panel->current.gain_step, panelx))
     panel->current.gain0 = desired;
@@ -1727,7 +1733,8 @@ tvg0_down (GtkWidget *widget,
   gdouble desired;
   AmePanel *panel = get_panel (tglobal, panelx);
 
-  desired = panel->current.gain0 - 0.5;
+  desired = panel->current.gain0 - 1;
+  desired = desired - fmod (desired, 1);
 
   if (tvg_set (tglobal, &desired, panel->current.gain_step, panelx))
     panel->current.gain0 = desired;
@@ -1742,7 +1749,8 @@ tvg_up (GtkWidget *widget,
   gdouble desired;
   AmePanel *panel = get_panel (tglobal, panelx);
 
-  desired = panel->current.gain_step + 0.5;
+  desired = panel->current.gain_step + 1.0;
+  desired = desired - fmod (desired, 1);
 
   if (tvg_set (tglobal, &panel->current.gain0, desired, panelx))
     panel->current.gain_step = desired;
@@ -1757,7 +1765,8 @@ tvg_down (GtkWidget *widget,
   gdouble desired;
   AmePanel *panel = get_panel (tglobal, panelx);
 
-  desired = panel->current.gain_step - 0.5;
+  desired = panel->current.gain_step - 1.0;
+  desired = desired - fmod (desired, 1);
 
   if (tvg_set (tglobal, &panel->current.gain0, desired, panelx))
     panel->current.gain_step = desired;
@@ -2032,7 +2041,12 @@ brightness_set (Global  *global,
   gchar *text_bright;
   gchar *text_black;
   gdouble b, g, w;
-  AmePanel *panel = get_panel (global, panelx);
+  AmePanel *panel;
+
+  if (global->override.brightness_set != NULL)
+    return global->override.brightness_set (global, new_brightness, new_black, panelx);
+
+  panel = get_panel (global, panelx);
 
   if (new_brightness < 1.0)
     return FALSE;
@@ -2050,8 +2064,9 @@ brightness_set (Global  *global,
     {
     case AME_PANEL_WATERFALL:
       b = 0;
-      w = 1.0 - (new_brightness / 100.0) * 0.99;
+      w = 1 - new_brightness / 100.0;
       g = 1.25 - 0.5 * (new_brightness / 100.0);
+      g_message ("%f : %f", b, w);
 
       wf = (VisualWF*)panel->vis_gui;
       hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), b, g, w);
@@ -2059,10 +2074,10 @@ brightness_set (Global  *global,
       break;
 
     case AME_PANEL_ECHO:
-      b = new_black * 0.0000025;
-      w = 1.0 - (new_brightness / 100.0) * 0.99;
-      w *= w;
+      b = new_black / 250000;
+      w = b + (1 - 0.99 * new_brightness / 100.0) * (1 - b);
       g = 1;
+      g_message ("%f : %f", b, w);
       if (b >= w)
         {
           g_message ("BBC error");
@@ -2097,6 +2112,7 @@ brightness_up (GtkWidget *widget,
                gint       panelx)
 {
   gdouble new_brightness;
+  gdouble step;
   AmePanel *panel = get_panel (tglobal, panelx);
 
   new_brightness = panel->vis_current.brightness;
@@ -2107,24 +2123,24 @@ brightness_up (GtkWidget *widget,
       case AME_PANEL_ECHO:
         {
           if (new_brightness < 50.0)
-            new_brightness += 10.0;
+            step = 10.0;
           else if (new_brightness < 90.0)
-            new_brightness += 5.0;
+            step = 5.0;
           else
-            new_brightness += 1.0;
+            step = 1.0;
         }
         break;
 
       case AME_PANEL_FORWARDLOOK:
         {
           if (new_brightness < 10.0)
-            new_brightness += 1.0;
+            step = 1.0;
           else if (new_brightness < 30.0)
-            new_brightness += 2.0;
+            step = 2.0;
           else if (new_brightness < 50.0)
-            new_brightness += 5.0;
+            step = 5.0;
           else
-            new_brightness += 10.0;
+            step = 10.0;
         }
         break;
 
@@ -2133,6 +2149,8 @@ brightness_up (GtkWidget *widget,
         return;
     }
 
+  new_brightness = new_brightness + step;
+  new_brightness = new_brightness - fmod (new_brightness, ABS(step));
   new_brightness = CLAMP (new_brightness, 1.0, 100.0);
 
   if (brightness_set (tglobal, new_brightness, panel->vis_current.black, panelx))
@@ -2145,7 +2163,7 @@ void
 brightness_down (GtkWidget *widget,
                  gint        panelx)
 {
-  gdouble new_brightness;
+  gdouble new_brightness, step;
   AmePanel *panel = get_panel (tglobal, panelx);
 
   new_brightness = panel->vis_current.brightness;
@@ -2156,22 +2174,22 @@ brightness_down (GtkWidget *widget,
       case AME_PANEL_ECHO:
         {
           if (new_brightness > 90.0)
-            new_brightness = new_brightness - 1.0;
+            step = -1.0;
           else if (new_brightness > 50.0)
-            new_brightness = new_brightness - 5.0;
+            step = -5.0;
           else
-            new_brightness = new_brightness - 10.0;
+            step = -10.0;
         }
         break;
 
       case AME_PANEL_FORWARDLOOK:
         {
           if (new_brightness <= 10.0)
-            new_brightness -= 1.0;
+            step = -1.0;
           else if (new_brightness <= 30.0)
-            new_brightness -= 2.0;
+            step = -2.0;
           else if (new_brightness <= 50.0)
-            new_brightness -= 5.0;
+            step = -5.0;
           else
             new_brightness -= 10.0;
         }
@@ -2182,6 +2200,8 @@ brightness_down (GtkWidget *widget,
         return;
     }
 
+  new_brightness = new_brightness + step;
+  new_brightness = new_brightness - fmod (new_brightness, ABS(step));
   new_brightness = CLAMP (new_brightness, 1.0, 100.0);
 
   if (brightness_set (tglobal, new_brightness, panel->vis_current.black, panelx))
@@ -2194,7 +2214,7 @@ void
 black_up (GtkWidget *widget,
           gint       panelx)
 {
-  gdouble new_black;
+  gdouble new_black, step;
   AmePanel *panel = get_panel (tglobal, panelx);
 
   new_black = panel->vis_current.black;
@@ -2205,24 +2225,24 @@ black_up (GtkWidget *widget,
       case AME_PANEL_ECHO:
         {
           if (new_black < 50.0)
-            new_black += 10.0;
+            step = 10.0;
           else if (new_black < 90.0)
-            new_black += 5.0;
+            step = 5.0;
           else
-            new_black += 1.0;
+            step = 1.0;
         }
         break;
 
       case AME_PANEL_FORWARDLOOK:
         {
           if (new_black < 10.0)
-            new_black += 1.0;
+            step = 1.0;
           else if (new_black < 30.0)
-            new_black += 2.0;
+            step = 2.0;
           else if (new_black < 50.0)
-            new_black += 5.0;
+            step = 5.0;
           else
-            new_black += 10.0;
+            step = 10.0;
         }
         break;
 
@@ -2231,7 +2251,9 @@ black_up (GtkWidget *widget,
         return;
     }
 
-  new_black = CLAMP (new_black, 0.0, 100.0);
+  new_black = new_black + step;
+  new_black = new_black - fmod (new_black, ABS(step));
+  new_black = CLAMP (new_black, 1.0, 100.0);
 
   if (brightness_set (tglobal, panel->vis_current.brightness, new_black, panelx))
     panel->vis_current.black = new_black;
@@ -2243,7 +2265,7 @@ void
 black_down (GtkWidget *widget,
             gint       panelx)
 {
-  gdouble new_black;
+  gdouble new_black, step;
   AmePanel *panel = get_panel (tglobal, panelx);
 
   new_black = panel->vis_current.black;
@@ -2254,24 +2276,24 @@ black_down (GtkWidget *widget,
       case AME_PANEL_ECHO:
         {
           if (new_black > 90.0)
-            new_black = new_black - 1.0;
+            step = -1.0;
           else if (new_black > 50.0)
-            new_black = new_black - 5.0;
+            step = -5.0;
           else
-            new_black = new_black - 10.0;
+            step = -10.0;
         }
         break;
 
       case AME_PANEL_FORWARDLOOK:
         {
           if (new_black <= 10.0)
-            new_black -= 1.0;
+            step = -1.0;
           else if (new_black <= 30.0)
-            new_black -= 2.0;
+            step = -2.0;
           else if (new_black <= 50.0)
-            new_black -= 5.0;
+            step = -5.0;
           else
-            new_black -= 10.0;
+            step = -10.0;
         }
         break;
 
@@ -2280,7 +2302,9 @@ black_down (GtkWidget *widget,
         return;
     }
 
-  new_black = CLAMP (new_black, 0.0, 100.0);
+  new_black = new_black + step;
+  new_black = new_black - fmod (new_black, ABS(step));
+  new_black = CLAMP (new_black, 1.0, 100.0);
 
   if (brightness_set (tglobal, panel->vis_current.brightness, new_black, panelx))
     panel->vis_current.black = new_black;
@@ -2658,6 +2682,43 @@ ame_colormap_free (gpointer data)
   g_clear_pointer (&cmap->name, g_free);
 
   g_free (cmap);
+}
+
+void
+screenshooter (void)
+{
+  GdkWindow * root;
+  GdkPixbuf * screenshot;
+  GFileIOStream * fios;
+  GFile * file;
+  gint x, y, width, height;
+  GDateTime * dt;
+  gchar *path, *postfix;
+
+  root = gdk_get_default_root_window ();
+  gdk_window_get_geometry (root, &x, &y, &width, &height);
+  screenshot = gdk_pixbuf_get_from_window (root, x, y, width, height);
+
+  dt = g_date_time_new_now_local ();
+  postfix = g_date_time_format (dt, "%y%m%d-%H%M%S.png");
+  path = g_build_path ("/", "/tmp", postfix, NULL);
+  file = g_file_new_for_path (path);
+  fios = g_file_create_readwrite (file, G_FILE_CREATE_NONE, NULL, NULL);
+
+  if (fios != NULL)
+    {
+      GOutputStream * ostream;
+      ostream = g_io_stream_get_output_stream (G_IO_STREAM (fios));
+      gdk_pixbuf_save_to_stream (screenshot, ostream, "png", NULL, NULL, NULL);
+      g_message ("Screenshot saved: %s", path);
+    }
+
+  g_date_time_unref (dt);
+  g_free (postfix);
+  g_free (path);
+  g_object_unref (screenshot);
+  g_object_unref (file);
+  g_object_unref (fios);
 }
 
 void

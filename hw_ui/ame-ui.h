@@ -51,7 +51,8 @@ typedef struct
   gint         position;
 
   const gchar *icon_name;
-  const gchar *title;
+  // const gchar *title;
+  const gchar *msg_id;
   AmeToggle    toggle;
 
   gpointer     callback;
