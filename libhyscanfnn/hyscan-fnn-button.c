@@ -1,4 +1,4 @@
-#include "hyscan-ame-button.h"
+#include "hyscan-fnn-button.h"
 
 #define ICON_OFF "window-maximize-symbolic"
 #define ICON_ON "emblem-ok-symbolic"
@@ -19,7 +19,7 @@ enum
   SIG_LAST
 };
 
-struct _HyScanAmeButtonPrivate
+struct _HyScanFnnButtonPrivate
 {
   gchar           *icon_name;
   gchar           *label;
@@ -35,32 +35,32 @@ struct _HyScanAmeButtonPrivate
   GtkWidget       *image_on;
 };
 
-static void    hyscan_ame_button_set_property             (GObject               *object,
+static void    hyscan_fnn_button_set_property             (GObject               *object,
                                                            guint                  prop_id,
                                                            const GValue          *value,
                                                            GParamSpec            *pspec);
-static void    hyscan_ame_button_get_property             (GObject               *object,
+static void    hyscan_fnn_button_get_property             (GObject               *object,
                                                            guint                  prop_id,
                                                            GValue                *value,
                                                            GParamSpec            *pspec);
-static void    hyscan_ame_button_object_constructed       (GObject               *object);
-static void    hyscan_ame_button_object_finalize          (GObject               *object);
+static void    hyscan_fnn_button_object_constructed       (GObject               *object);
+static void    hyscan_fnn_button_object_finalize          (GObject               *object);
 
-static guint   hyscan_ame_button_signals[SIG_LAST] = {0};
+static guint   hyscan_fnn_button_signals[SIG_LAST] = {0};
 
-G_DEFINE_TYPE_WITH_PRIVATE (HyScanAmeButton, hyscan_ame_button, GTK_TYPE_BOX);
+G_DEFINE_TYPE_WITH_PRIVATE (HyScanFnnButton, hyscan_fnn_button, GTK_TYPE_BOX);
 
 static void
-hyscan_ame_button_class_init (HyScanAmeButtonClass *klass)
+hyscan_fnn_button_class_init (HyScanFnnButtonClass *klass)
 {
   GParamFlags flags = G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY;
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  object_class->set_property = hyscan_ame_button_set_property;
-  object_class->get_property = hyscan_ame_button_get_property;
+  object_class->set_property = hyscan_fnn_button_set_property;
+  object_class->get_property = hyscan_fnn_button_get_property;
 
-  object_class->constructed = hyscan_ame_button_object_constructed;
-  object_class->finalize = hyscan_ame_button_object_finalize;
+  object_class->constructed = hyscan_fnn_button_object_constructed;
+  object_class->finalize = hyscan_fnn_button_object_finalize;
 
   g_object_class_install_property (object_class, PROP_ICON,
     g_param_spec_string ("icon-name", "icon-name", "icon-name", NULL, flags));
@@ -74,14 +74,14 @@ hyscan_ame_button_class_init (HyScanAmeButtonClass *klass)
     g_param_spec_boolean ("state", "state", "state", FALSE, G_PARAM_READWRITE));
 
   /* Инициализируем сигналы. */
-  hyscan_ame_button_signals[SIG_ACTIVATED] =
-    g_signal_new ("ame-activated", HYSCAN_TYPE_AME_BUTTON, G_SIGNAL_RUN_LAST, 0,
+  hyscan_fnn_button_signals[SIG_ACTIVATED] =
+    g_signal_new ("fnn-activated", HYSCAN_TYPE_FNN_BUTTON, G_SIGNAL_RUN_LAST, 0,
                   NULL, NULL,
                   g_cclosure_marshal_VOID__VOID,
                   G_TYPE_NONE,
                   0);
-  hyscan_ame_button_signals[SIG_TOGGLED] =
-    g_signal_new ("ame-toggled", HYSCAN_TYPE_AME_BUTTON, G_SIGNAL_RUN_LAST, 0,
+  hyscan_fnn_button_signals[SIG_TOGGLED] =
+    g_signal_new ("fnn-toggled", HYSCAN_TYPE_FNN_BUTTON, G_SIGNAL_RUN_LAST, 0,
                   NULL, NULL,
                   g_cclosure_marshal_VOID__BOOLEAN,
                   G_TYPE_NONE,
@@ -89,19 +89,19 @@ hyscan_ame_button_class_init (HyScanAmeButtonClass *klass)
 }
 
 static void
-hyscan_ame_button_init (HyScanAmeButton *self)
+hyscan_fnn_button_init (HyScanFnnButton *self)
 {
-  self->priv = hyscan_ame_button_get_instance_private (self);
+  self->priv = hyscan_fnn_button_get_instance_private (self);
 }
 
 static void
-hyscan_ame_button_set_property (GObject      *object,
+hyscan_fnn_button_set_property (GObject      *object,
                                 guint         prop_id,
                                 const GValue *value,
                                 GParamSpec   *pspec)
 {
-  HyScanAmeButton *self = HYSCAN_AME_BUTTON (object);
-  HyScanAmeButtonPrivate *priv = self->priv;
+  HyScanFnnButton *self = HYSCAN_FNN_BUTTON (object);
+  HyScanFnnButtonPrivate *priv = self->priv;
 
   if (prop_id == PROP_ICON)
     priv->icon_name = g_value_dup_string (value);
@@ -112,22 +112,21 @@ hyscan_ame_button_set_property (GObject      *object,
   else if (prop_id == PROP_INITIAL_STATE)
     priv->state = g_value_get_boolean (value);
   else if (prop_id == PROP_STATE)
-    hyscan_ame_button_set_state (self, g_value_get_boolean (value));
+    hyscan_fnn_button_set_state (self, g_value_get_boolean (value));
   else
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 }
 
 static void
-hyscan_ame_button_get_property (GObject      *object,
+hyscan_fnn_button_get_property (GObject      *object,
                                 guint         prop_id,
                                 GValue       *value,
                                 GParamSpec   *pspec)
 {
-  HyScanAmeButton *self = HYSCAN_AME_BUTTON (object);
-  HyScanAmeButtonPrivate *priv = self->priv;
+  HyScanFnnButton *self = HYSCAN_FNN_BUTTON (object);
 
   if (prop_id == PROP_STATE)
-    hyscan_ame_button_set_state (self, g_value_get_boolean (value));
+    hyscan_fnn_button_set_state (self, g_value_get_boolean (value));
   else
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 }
@@ -145,17 +144,17 @@ label_maker (const gchar * markup)
 
 static gboolean
 button_toggled (GtkToggleButton *button,
-                HyScanAmeButton *self)
+                HyScanFnnButton *self)
 {
   gboolean state, changed;
-  HyScanAmeButtonPrivate *priv = self->priv;
+  HyScanFnnButtonPrivate *priv = self->priv;
   state = gtk_toggle_button_get_active (button);
   changed = priv->state != state;
 
   if (changed)
     {
       priv->state = state;
-      g_signal_emit (self, hyscan_ame_button_signals[SIG_TOGGLED], 0, priv->state);
+      g_signal_emit (self, hyscan_fnn_button_signals[SIG_TOGGLED], 0, priv->state);
     }
 
   gtk_button_set_image (GTK_BUTTON (button), priv->state ? priv->image_on : priv->image_off);
@@ -166,20 +165,20 @@ button_toggled (GtkToggleButton *button,
 
 static gboolean
 button_clicked (GtkButton       *button,
-                HyScanAmeButton *self)
+                HyScanFnnButton *self)
 {
   if (!self->priv->is_toggle)
-    g_signal_emit (self, hyscan_ame_button_signals[SIG_ACTIVATED], 0);
+    g_signal_emit (self, hyscan_fnn_button_signals[SIG_ACTIVATED], 0);
 
   return FALSE;
 }
 
 static void
-button_setup (HyScanAmeButton *self)
+button_setup (HyScanFnnButton *self)
 {
   GtkWidget *button;
   GtkStyleContext *context;
-  HyScanAmeButtonPrivate *priv = self->priv;
+  HyScanFnnButtonPrivate *priv = self->priv;
 
   if (priv->is_toggle)
     {
@@ -209,7 +208,7 @@ button_setup (HyScanAmeButton *self)
 
   if (priv->is_toggle)
     {
-      hyscan_ame_button_set_sensitive (self, TRUE);
+      hyscan_fnn_button_set_sensitive (self, TRUE);
       gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (button), priv->state);
       button_toggled (GTK_TOGGLE_BUTTON (button), self);
       g_signal_connect (button, "toggled", G_CALLBACK (button_toggled), self);
@@ -222,12 +221,12 @@ button_setup (HyScanAmeButton *self)
 }
 
 static void
-text_box_setup (HyScanAmeButton *self)
+text_box_setup (HyScanFnnButton *self)
 {
   GtkWidget *box;
   GtkWidget *title;
   gchar *bold;
-  HyScanAmeButtonPrivate *priv = self->priv;
+  HyScanFnnButtonPrivate *priv = self->priv;
 
   if (priv->label == NULL)
     return;
@@ -245,11 +244,11 @@ text_box_setup (HyScanAmeButton *self)
 }
 
 static void
-hyscan_ame_button_object_constructed (GObject *object)
+hyscan_fnn_button_object_constructed (GObject *object)
 {
-  HyScanAmeButton *self = HYSCAN_AME_BUTTON (object);
+  HyScanFnnButton *self = HYSCAN_FNN_BUTTON (object);
 
-  G_OBJECT_CLASS (hyscan_ame_button_parent_class)->constructed (object);
+  G_OBJECT_CLASS (hyscan_fnn_button_parent_class)->constructed (object);
 
   self->priv->sensitivity = TRUE;
 
@@ -257,17 +256,17 @@ hyscan_ame_button_object_constructed (GObject *object)
   gtk_box_set_spacing (GTK_BOX (self), 2);
   gtk_widget_set_margin_start (GTK_WIDGET (self), 6);
   gtk_widget_set_margin_end (GTK_WIDGET (self), 6);
-  gtk_widget_set_size_request (GTK_WIDGET (self), -1, HYSCAN_AME_BUTTON_HEIGHT_REQUEST);
+  gtk_widget_set_size_request (GTK_WIDGET (self), -1, HYSCAN_FNN_BUTTON_HEIGHT_REQUEST);
 
   button_setup (self);
   text_box_setup (self);
 }
 
 static void
-hyscan_ame_button_object_finalize (GObject *object)
+hyscan_fnn_button_object_finalize (GObject *object)
 {
-  HyScanAmeButton *self = HYSCAN_AME_BUTTON (object);
-  HyScanAmeButtonPrivate *priv = self->priv;
+  HyScanFnnButton *self = HYSCAN_FNN_BUTTON (object);
+  HyScanFnnButtonPrivate *priv = self->priv;
 
   g_free (priv->icon_name);
   g_free (priv->label);
@@ -278,17 +277,17 @@ hyscan_ame_button_object_finalize (GObject *object)
   g_clear_object (&priv->image_on);
   g_clear_object (&priv->image_off);
 
-  G_OBJECT_CLASS (hyscan_ame_button_parent_class)->finalize (object);
+  G_OBJECT_CLASS (hyscan_fnn_button_parent_class)->finalize (object);
 }
 
 /* .*/
 GtkWidget *
-hyscan_ame_button_new (const gchar     *icon_name,
+hyscan_fnn_button_new (const gchar     *icon_name,
                        const gchar     *label,
                        gboolean         is_toggle,
                        gboolean         state)
 {
-  return g_object_new (HYSCAN_TYPE_AME_BUTTON,
+  return g_object_new (HYSCAN_TYPE_FNN_BUTTON,
                        "icon-name", icon_name,
                        "label", label,
                        "is_toggle", is_toggle,
@@ -297,13 +296,13 @@ hyscan_ame_button_new (const gchar     *icon_name,
 }
 
 GtkLabel *
-hyscan_ame_button_create_value (HyScanAmeButton *self,
+hyscan_fnn_button_create_value (HyScanFnnButton *self,
                                 const gchar     *text)
 {
   GtkWidget * value;
-  HyScanAmeButtonPrivate *priv;
+  HyScanFnnButtonPrivate *priv;
 
-  g_return_val_if_fail (HYSCAN_IS_AME_BUTTON (self), NULL);
+  g_return_val_if_fail (HYSCAN_IS_FNN_BUTTON (self), NULL);
   priv = self->priv;
 
   value = label_maker (text);
@@ -314,11 +313,11 @@ hyscan_ame_button_create_value (HyScanAmeButton *self,
 }
 
 void
-hyscan_ame_button_activate (HyScanAmeButton *self)
+hyscan_fnn_button_activate (HyScanFnnButton *self)
 {
-  HyScanAmeButtonPrivate *priv;
+  HyScanFnnButtonPrivate *priv;
 
-  g_return_if_fail (HYSCAN_IS_AME_BUTTON (self));
+  g_return_if_fail (HYSCAN_IS_FNN_BUTTON (self));
   priv = self->priv;
 
   if (priv->sensitivity)
@@ -326,11 +325,11 @@ hyscan_ame_button_activate (HyScanAmeButton *self)
 }
 
 void
-hyscan_ame_button_set_state (HyScanAmeButton *self,
+hyscan_fnn_button_set_state (HyScanFnnButton *self,
                               gboolean         state)
 {
-  HyScanAmeButtonPrivate *priv;
-  g_return_if_fail (HYSCAN_IS_AME_BUTTON (self));
+  HyScanFnnButtonPrivate *priv;
+  g_return_if_fail (HYSCAN_IS_FNN_BUTTON (self));
   priv = self->priv;
 
   if (!priv->sensitivity)
@@ -343,12 +342,12 @@ hyscan_ame_button_set_state (HyScanAmeButton *self,
 }
 
 void
-hyscan_ame_button_set_sensitive (HyScanAmeButton *self,
+hyscan_fnn_button_set_sensitive (HyScanFnnButton *self,
                                  gboolean         state)
 {
-  HyScanAmeButtonPrivate *priv;
+  HyScanFnnButtonPrivate *priv;
 
-  g_return_if_fail (HYSCAN_IS_AME_BUTTON (self));
+  g_return_if_fail (HYSCAN_IS_FNN_BUTTON (self));
   priv = self->priv;
 
   priv->sensitivity = state;

@@ -52,7 +52,7 @@ enum
 
 enum
 {
-  COL_NAME,
+  COL_NFNN,
   COL_STATE,
   N_COLUMNS
 };
@@ -172,7 +172,7 @@ evo_sensors_make_tree (EvoSensors *self)
 
   renderer = gtk_cell_renderer_text_new ();
   column = gtk_tree_view_column_new_with_attributes ("Name", renderer,
-                                                     "text", COL_NAME,
+                                                     "text", COL_NFNN,
                                                      NULL);
   gtk_tree_view_column_set_visible (column, TRUE);
   gtk_tree_view_append_column (tself, column);
@@ -197,7 +197,7 @@ evo_sensors_fill_model (EvoSensorsPrivate *priv)
       GtkTreeIter iter;
       gtk_list_store_append (GTK_LIST_STORE (priv->store), &iter);
       gtk_list_store_set (GTK_LIST_STORE (priv->store), &iter,
-                          COL_NAME, *sensors,
+                          COL_NFNN, *sensors,
                           COL_STATE, TRUE,
                           -1);
     }
@@ -217,7 +217,7 @@ evo_sensors_toggled (GtkCellRendererToggle *cell_renderer,
   active = !gtk_cell_renderer_toggle_get_active (cell_renderer);
 
   gtk_tree_model_get_iter_from_string (priv->store, &iter, path);
-  gtk_tree_model_get (priv->store, &iter, COL_NAME, &name, -1);
+  gtk_tree_model_get (priv->store, &iter, COL_NFNN, &name, -1);
 
 
   if (hyscan_sensor_set_enable (HYSCAN_SENSOR (priv->control), name, active))

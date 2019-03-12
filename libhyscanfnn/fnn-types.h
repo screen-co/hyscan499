@@ -91,14 +91,14 @@ typedef struct
   guint     len;
   gchar   * name;
   guint32   bg;
-} AmeColormap;
+} FnnColormap;
 
 typedef enum 
 {
-  AME_PANEL_WATERFALL,
-  AME_PANEL_ECHO,
-  AME_PANEL_FORWARDLOOK,
-} AmePanelType;
+  FNN_PANEL_WATERFALL,
+  FNN_PANEL_ECHO,
+  FNN_PANEL_FORWARDLOOK,
+} FnnPanelType;
 
 typedef struct
 {
@@ -149,7 +149,7 @@ typedef struct
 {
   VisualCommon                    common; /* Важно, чтобы было на 1 месте. */
 
-  GArray                        * colormaps; /* struct AmeColormap */
+  GArray                        * colormaps; /* struct FnnColormap */
 
   HyScanGtkWaterfall            * wf;
   HyScanGtkWaterfallGrid        * wf_grid;
@@ -179,7 +179,7 @@ typedef struct
   gchar            *short_name;
   gchar            *name_en;
   gchar            *name_ru;
-  AmePanelType      type;    /* тип панели: вф, фл, пф */
+  FnnPanelType      type;    /* тип панели: вф, фл, пф */
   HyScanSourceType *sources; /* Источники для панели */
 
   SonarCurrent      current;   /* Текущие значения параметров ГЛ. */
@@ -194,7 +194,7 @@ typedef struct
     VisualFL     fl;
   } vis_gui; */
   
-} AmePanel;
+} FnnPanel;
 
 typedef struct _Global Global;
 struct _Global
@@ -220,7 +220,7 @@ struct _Global
   gint64                               last_click_time;
   gboolean                             synced;
 
-  GHashTable                          *panels; /* AmePanel, panelx as key */
+  GHashTable                          *panels; /* FnnPanel, panelx as key */
   GHashTable                          *infos; /* HyScanSonarInfoSource */
 
   struct
@@ -263,16 +263,16 @@ struct _Global
 }; // Global
 
 HYSCAN_API void
-ame_colormap_free (gpointer data);
+fnn_colormap_free (gpointer data);
 
 HYSCAN_API void
-ame_panel_destroy (gpointer data);
+fnn_panel_destroy (gpointer data);
 
-HYSCAN_API AmePanel *
+HYSCAN_API FnnPanel *
 get_panel (Global *global,
            gint    panelx);
 
-HYSCAN_API AmePanel *
+HYSCAN_API FnnPanel *
 get_panel_quiet (Global *global,
                  gint    panelx);
 
@@ -458,29 +458,29 @@ color_map_set (Global *global,
                gint    selector);
 
 HYSCAN_API void
-sensitivity_label (AmePanel *panel,
+sensitivity_label (FnnPanel *panel,
                    gdouble   sens);
 
 HYSCAN_API const HyScanDataSchemaEnumValue *
 signal_finder (Global           *global,
-               AmePanel         *panel,
+               FnnPanel         *panel,
                HyScanSourceType  source,
                gint              n);
 
 HYSCAN_API void
-signal_label (AmePanel    *panel,
+signal_label (FnnPanel    *panel,
               const gchar *name);
 
 HYSCAN_API void
-tvg_label (AmePanel *panel,
+tvg_label (FnnPanel *panel,
            gdouble   gain0,
            gdouble   step);
 HYSCAN_API void
-auto_tvg_label (AmePanel *panel,
+auto_tvg_label (FnnPanel *panel,
                 gdouble   level,
                 gdouble   sensitivity);
 HYSCAN_API void
-distance_label (AmePanel *panel,
+distance_label (FnnPanel *panel,
                 gdouble   distance);
 
 
@@ -668,9 +668,6 @@ make_overlay (HyScanGtkWaterfall          *wf,
               HyScanGtkWaterfallMark     **_mark,
               HyScanGtkWaterfallMeter    **_meter,
               HyScanMarkModel             *mark_model);
-
-HYSCAN_API
-void screenshooter (void);
 
 HYSCAN_API void
 init_triple (Global *ext_global);

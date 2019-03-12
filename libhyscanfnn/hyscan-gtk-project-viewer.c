@@ -21,7 +21,7 @@ static guint hyscan_gtk_project_viewer_signals[SIGNAL_LAST] = {0};
 enum
 {
   COLUMN_ID,
-  COLUMN_NAME,
+  COLUMN_NFNN,
   COLUMN_DATE,
   COLUMN_SORT,
   COLUMN_COLOR,

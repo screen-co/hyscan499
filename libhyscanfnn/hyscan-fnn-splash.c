@@ -1,51 +1,51 @@
-#include "hyscan-ame-splash.h"
+#include "hyscan-fnn-splash.h"
 
-struct _HyScanAmeSplashPrivate
+struct _HyScanFnnSplashPrivate
 {
   gchar          *message;
   guint           pulse;
 };
 
-static void    hyscan_ame_splash_set_property             (GObject               *object,
+static void    hyscan_fnn_splash_set_property             (GObject               *object,
                                                            guint                  prop_id,
                                                            const GValue          *value,
                                                            GParamSpec            *pspec);
-static void    hyscan_ame_splash_object_constructed       (GObject               *object);
-static void    hyscan_ame_splash_object_finalize          (GObject               *object);
+static void    hyscan_fnn_splash_object_constructed       (GObject               *object);
+static void    hyscan_fnn_splash_object_finalize          (GObject               *object);
 
-static gboolean hyscan_ame_splash_pulse (gpointer data);
-static gboolean hyscan_ame_splash_response (gpointer data);
+static gboolean hyscan_fnn_splash_pulse (gpointer data);
+static gboolean hyscan_fnn_splash_response (gpointer data);
 
-G_DEFINE_TYPE_WITH_PRIVATE (HyScanAmeSplash, hyscan_ame_splash, GTK_TYPE_DIALOG);
+G_DEFINE_TYPE_WITH_PRIVATE (HyScanFnnSplash, hyscan_fnn_splash, GTK_TYPE_DIALOG);
 
 static void
-hyscan_ame_splash_class_init (HyScanAmeSplashClass *klass)
+hyscan_fnn_splash_class_init (HyScanFnnSplashClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
-  object_class->constructed = hyscan_ame_splash_object_constructed;
-  object_class->finalize = hyscan_ame_splash_object_finalize;
+  object_class->constructed = hyscan_fnn_splash_object_constructed;
+  object_class->finalize = hyscan_fnn_splash_object_finalize;
 
-  object_class->set_property = hyscan_ame_splash_set_property;
+  object_class->set_property = hyscan_fnn_splash_set_property;
   g_object_class_install_property (object_class, 1,
     g_param_spec_string ("message", "message", "message", NULL,
                          G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
-hyscan_ame_splash_init (HyScanAmeSplash *self)
+hyscan_fnn_splash_init (HyScanFnnSplash *self)
 {
-  self->priv = hyscan_ame_splash_get_instance_private (self);
+  self->priv = hyscan_fnn_splash_get_instance_private (self);
 }
 
 static void
-hyscan_ame_splash_set_property (GObject      *object,
+hyscan_fnn_splash_set_property (GObject      *object,
                                 guint         prop_id,
                                 const GValue *value,
                                 GParamSpec   *pspec)
 {
-  HyScanAmeSplash *self = HYSCAN_AME_SPLASH (object);
-  HyScanAmeSplashPrivate *priv = self->priv;
+  HyScanFnnSplash *self = HYSCAN_FNN_SPLASH (object);
+  HyScanFnnSplashPrivate *priv = self->priv;
 
   if (prop_id == 1)
     priv->message = g_value_dup_string (value);
@@ -54,13 +54,13 @@ hyscan_ame_splash_set_property (GObject      *object,
 }
 
 static void
-hyscan_ame_splash_object_constructed (GObject *object)
+hyscan_fnn_splash_object_constructed (GObject *object)
 {
-  HyScanAmeSplash *self = HYSCAN_AME_SPLASH (object);
+  HyScanFnnSplash *self = HYSCAN_FNN_SPLASH (object);
 
-  HyScanAmeSplashPrivate *priv = self->priv;
+  HyScanFnnSplashPrivate *priv = self->priv;
 
-  G_OBJECT_CLASS (hyscan_ame_splash_parent_class)->constructed (object);
+  G_OBJECT_CLASS (hyscan_fnn_splash_parent_class)->constructed (object);
 
   GtkWidget *box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
   GtkWidget *label = gtk_label_new (NULL);
@@ -80,24 +80,24 @@ hyscan_ame_splash_object_constructed (GObject *object)
 
   gtk_widget_show_all (GTK_WIDGET (self));
 
-  priv->pulse = g_timeout_add (100, hyscan_ame_splash_pulse, progress);
-  g_timeout_add (100, hyscan_ame_splash_response, self);
+  priv->pulse = g_timeout_add (100, hyscan_fnn_splash_pulse, progress);
+  g_timeout_add (100, hyscan_fnn_splash_response, self);
   gtk_dialog_run (GTK_DIALOG (self));
 }
 
 static void
-hyscan_ame_splash_object_finalize (GObject *object)
+hyscan_fnn_splash_object_finalize (GObject *object)
 {
-  HyScanAmeSplash *self = HYSCAN_AME_SPLASH (object);
+  HyScanFnnSplash *self = HYSCAN_FNN_SPLASH (object);
 
   g_source_remove (self->priv->pulse);
   g_free (self->priv->message);
 
-  G_OBJECT_CLASS (hyscan_ame_splash_parent_class)->finalize (object);
+  G_OBJECT_CLASS (hyscan_fnn_splash_parent_class)->finalize (object);
 }
 
 static gboolean
-hyscan_ame_splash_pulse (gpointer data)
+hyscan_fnn_splash_pulse (gpointer data)
 {
   GtkProgressBar *progress = data;
   gtk_progress_bar_pulse (progress);
@@ -105,7 +105,7 @@ hyscan_ame_splash_pulse (gpointer data)
 }
 
 static gboolean
-hyscan_ame_splash_response (gpointer data)
+hyscan_fnn_splash_response (gpointer data)
 {
   GtkDialog *dialog = data;
   gtk_dialog_response (dialog, 0);
@@ -113,9 +113,9 @@ hyscan_ame_splash_response (gpointer data)
 
 }
 
-HyScanAmeSplash*
-hyscan_ame_splash_new (const gchar *message)
+HyScanFnnSplash*
+hyscan_fnn_splash_new (const gchar *message)
 {
-  return g_object_new (HYSCAN_TYPE_AME_SPLASH,
+  return g_object_new (HYSCAN_TYPE_FNN_SPLASH,
                        "message", message, NULL);
 }

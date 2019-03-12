@@ -2,10 +2,10 @@
 cmake_minimum_required (VERSION 2.6)
 
 set (HYSCAN_MAJOR_VERSION 5)
-set (HYSCAN_AME_VERSION 0)
-project (triple)
+set (HYSCAN_FNN_VERSION 0)
+project (hyscan-499)
 
-set (HYSCAN_AME_LIBRARY "hyscaname-${HYSCAN_MAJOR_VERSION}")
+set (HYSCAN_FNN_LIBRARY "hyscanfnn-${HYSCAN_MAJOR_VERSION}")
 
 include (FindPkgConfig)
 
@@ -56,7 +56,7 @@ include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancache/hyscancache"
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancore/hyscancore")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscanmodel/hyscanmodel")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscangui/hyscangui")
-include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/libhyscaname")
+include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/libhyscanfnn")
 
 
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../urpc/bin")
@@ -78,10 +78,10 @@ set (HYSCAN_LIBRARIES gtkcifroarea-3.1
                       hyscangui-${HYSCAN_MAJOR_VERSION}
                       urpc)
 
-add_definitions (-DG_LOG_DOMAIN="Triple")
-add_subdirectory (libhyscaname)
+add_definitions (-DG_LOG_DOMAIN="Fnn")
+add_subdirectory (libhyscanfnn)
 add_subdirectory (hw_ui)
 add_subdirectory (sw_ui)
 add_subdirectory (evo_ui)
 add_subdirectory (test)
-add_subdirectory (triple)
+add_subdirectory (fnn)

@@ -76,7 +76,7 @@ widget_swap (GObject  *emitter,
 
   if (ui->single == NULL)
     {
-      hyscan_gtk_ame_box_show_all (HYSCAN_GTK_AME_BOX (ui->acoustic));
+      hyscan_gtk_fnn_box_show_all (HYSCAN_GTK_FNN_BOX (ui->acoustic));
       goto spec;
     }
 
@@ -84,12 +84,12 @@ widget_swap (GObject  *emitter,
 
   if (!active)
     {
-      hyscan_gtk_ame_box_show_all (HYSCAN_GTK_AME_BOX (ui->acoustic));
+      hyscan_gtk_fnn_box_show_all (HYSCAN_GTK_FNN_BOX (ui->acoustic));
     }
   else
     {
       gint id = get_panel_id_by_name (_global, child);
-      hyscan_gtk_ame_box_set_visible (HYSCAN_GTK_AME_BOX (ui->acoustic), id);
+      hyscan_gtk_fnn_box_set_visible (HYSCAN_GTK_FNN_BOX (ui->acoustic), id);
     }
 
 spec:
@@ -224,7 +224,7 @@ get_builder_for_panel (SwUI * ui,
 /* Ядро всего уйца. Подключает сигналы, достает виджеты. */
 GtkWidget *
 make_page_for_panel (SwUI     *ui,
-                     AmePanel *panel,
+                     FnnPanel *panel,
                      gint      panelx,
                      Global   *global)
 {
@@ -236,7 +236,7 @@ make_page_for_panel (SwUI     *ui,
 
   switch (panel->type)
     {
-    case AME_PANEL_WATERFALL:
+    case FNN_PANEL_WATERFALL:
 
       view = get_widget_from_builder (b, "ss_view_control");
       panel->vis_gui->brightness_value  = get_label_from_builder (b, "ss_brightness_value");
@@ -256,7 +256,7 @@ make_page_for_panel (SwUI     *ui,
 
       break;
 
-    case AME_PANEL_ECHO:
+    case FNN_PANEL_ECHO:
 
       view = get_widget_from_builder (b, "pf_view_control");
       panel->vis_gui->brightness_value  = get_label_from_builder (b, "pf_brightness_value");
@@ -276,7 +276,7 @@ make_page_for_panel (SwUI     *ui,
 
       break;
 
-    case AME_PANEL_FORWARDLOOK:
+    case FNN_PANEL_FORWARDLOOK:
 
       view = get_widget_from_builder (b, "fl_view_control");
       panel->vis_gui->brightness_value  = get_label_from_builder (b, "fl_brightness_value");
@@ -333,7 +333,7 @@ build_interface (Global *global)
   ui->area = hyscan_gtk_area_new ();
 
   /* Центральная зона: виджет с виджетами. Да. */
-  ui->acoustic = hyscan_gtk_ame_box_new ();
+  ui->acoustic = hyscan_gtk_fnn_box_new ();
 
   /* Коробки и стек для управления локаторами. */
   lbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
@@ -363,7 +363,7 @@ build_interface (Global *global)
     for (i = 0; i < N_PANELS; ++i)
       {
         GtkWidget *w;
-        AmePanel *panel = get_panel (global, order[i]);
+        FnnPanel *panel = get_panel (global, order[i]);
         if (panel == NULL)
           continue;
 
@@ -372,7 +372,7 @@ build_interface (Global *global)
         g_object_set (w, "vexpand", TRUE, "valign", GTK_ALIGN_FILL,
                          "hexpand", TRUE, "halign", GTK_ALIGN_FILL, NULL);
 
-        hyscan_gtk_ame_box_pack (HYSCAN_GTK_AME_BOX (ui->acoustic), w, order[i],
+        hyscan_gtk_fnn_box_pack (HYSCAN_GTK_FNN_BOX (ui->acoustic), w, order[i],
                                  left[i], top[i], 1, height[i]);
       }
 
@@ -433,7 +433,7 @@ build_interface (Global *global)
 
   /* Нижняя панель содержит виджет управления впередсмотрящим. */
   {
-    AmePanel *panel = get_panel (global, X_FORWARDL);
+    FnnPanel *panel = get_panel (global, X_FORWARDL);
     VisualFL *fl;
 
     if (panel != NULL)
@@ -449,7 +449,7 @@ build_interface (Global *global)
   {
     GtkWidget * st_switcher, * record, * single;
     GHashTableIter iter;
-    AmePanel *panel;
+    FnnPanel *panel;
     gpointer k;
 
     gtk_widget_set_margin_start (rbox, 6);

@@ -11,7 +11,7 @@ evo_brightness_set_override (Global  *global,
   gchar *text_bright;
   gchar *text_black;
   gdouble b, g, w;
-  AmePanel *panel;
+  FnnPanel *panel;
 
   panel = get_panel (global, panelx);
 
@@ -29,7 +29,7 @@ evo_brightness_set_override (Global  *global,
 
   switch (panel->type)
     {
-    case AME_PANEL_WATERFALL:
+    case FNN_PANEL_WATERFALL:
       b = new_black / 100.0;
       w = 1 - new_brightness / 100.0;
       g = 1.25 - 0.5 * (new_brightness / 100.0);
@@ -40,7 +40,7 @@ evo_brightness_set_override (Global  *global,
       gtk_label_set_markup (wf->common.black_value, text_black);
       break;
 
-    case AME_PANEL_ECHO:
+    case FNN_PANEL_ECHO:
       b = new_black / 250000;
       w = b + (1 - 0.99 * new_brightness / 100.0) * (1 - b);
       g = 1;
@@ -57,7 +57,7 @@ evo_brightness_set_override (Global  *global,
       gtk_label_set_markup (wf->common.black_value, text_black);
       break;
 
-    case AME_PANEL_FORWARDLOOK:
+    case FNN_PANEL_FORWARDLOOK:
       fl = (VisualFL*)panel->vis_gui;
       hyscan_gtk_forward_look_set_brightness (fl->fl, new_brightness);
       gtk_label_set_markup (fl->common.brightness_value, text_bright);

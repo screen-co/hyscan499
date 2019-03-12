@@ -1,14 +1,14 @@
-#ifndef __AME_UI_H__
-#define __AME_UI_H__
+#ifndef __FNN_UI_H__
+#define __FNN_UI_H__
 
-#include <triple-types.h>
-#include <hyscan-ame-fixed.h>
-#include <hyscan-ame-button.h>
-#include <hyscan-gtk-ame-box.h>
+#include <fnn-types.h>
+#include <hyscan-fnn-fixed.h>
+#include <hyscan-fnn-button.h>
+#include <hyscan-gtk-fnn-box.h>
 
 #include <gio/gio.h>
 
-#define AME_N_BUTTONS 5
+#define FNN_N_BUTTONS 5
 
 typedef struct 
 {
@@ -23,14 +23,14 @@ typedef enum
   END,
   L,
   R
-} AmeSide;
+} FnnSide;
 
 typedef enum
 {
   TOGGLE_NONE,
   TOGGLE_OFF,
   TOGGLE_ON
-} AmeToggle;
+} FnnToggle;
 
 /*
  * Ща сложно будет. В странице есть destination_selector.
@@ -40,20 +40,20 @@ typedef enum
 typedef enum
 {
   DEST_UNSET,
-  DEST_PANEL, // AmePanel.gui + offt
-  DEST_PANEL_SPEC,  // AmePanel.vis_gui + offt
-  DEST_AME_UI // AmeUI + offt
-} AmePageDestination;
+  DEST_PANEL, // FnnPanel.gui + offt
+  DEST_PANEL_SPEC,  // FnnPanel.vis_gui + offt
+  DEST_FNN_UI // FnnUI + offt
+} FnnPageDestination;
 
 typedef struct
 {
-  AmeSide      side;
+  FnnSide      side;
   gint         position;
 
   const gchar *icon_name;
   // const gchar *title;
   const gchar *msg_id;
-  AmeToggle    toggle;
+  FnnToggle    toggle;
 
   gpointer     callback;
   gpointer     user_data; // либо юзердата, либо панелх.
@@ -62,14 +62,14 @@ typedef struct
   gsize        button_offset; // оффсет до места для самой кнопки.
 
   gchar       *value_default; 
-} AmePageItem;
+} FnnPageItem;
 
 typedef struct
 {
   gchar              *path;
-  AmePageDestination  destination_selector; //
-  AmePageItem         items[2 * AME_N_BUTTONS + 1];
-} AmePage;
+  FnnPageDestination  destination_selector; //
+  FnnPageItem         items[2 * FNN_N_BUTTONS + 1];
+} FnnPage;
 
 enum
 {
@@ -103,7 +103,8 @@ typedef struct
   GtkWidget  *current_view;
 
   gchar * depth_writer_path;
-} AmeUI;
+  gchar * screenshot_dir;
+} FnnUI;
 
 enum
 {
@@ -119,24 +120,26 @@ enum
 };
 
 /* Врапперы. */
-void start_stop_wrapper (HyScanAmeButton *button,
+void start_stop_wrapper (HyScanFnnButton *button,
                          gboolean         state,
                          gpointer         user_data);
-void start_stop_dry_wrapper (HyScanAmeButton *button,
+void start_stop_dry_wrapper (HyScanFnnButton *button,
                          gboolean         state,
                          gpointer         user_data);
 
 /* Функции построения интерфейса. */
-GtkWidget * make_item (AmePageItem  *item,
+GtkWidget * make_item (FnnPageItem  *item,
                        GtkWidget   **value);
 
-void        build_page (AmeUI   *ui,
+void        build_page (FnnUI   *ui,
                         Global  *global,
-                        AmePage *page);
+                        FnnPage *page);
 
-void        build_all (AmeUI   *ui,
+void        build_all (FnnUI   *ui,
                        Global  *global,
-                       AmePage *page);
+                       FnnPage *page);
+
+void screenshooter (void);
 
 G_MODULE_EXPORT gboolean    build_interface (Global *global);
 
@@ -174,4 +177,4 @@ list_scroll_end (GObject *emitter,
 void
 depth_writer (GObject *emitter);
 
-#endif /* __AME_UI_H__ */
+#endif /* __FNN_UI_H__ */

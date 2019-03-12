@@ -1,5 +1,6 @@
 #include <gmodule.h>
 #include <hyscan-gtk-area.h>
+#include <hyscan-gtk-fnn-offsets.h>
 #include "evo-settings.h"
 #include "evo-sensors.h"
 #include "evo-ui.h"
@@ -84,6 +85,30 @@ widget_swap (GObject  *emitter,
 
 }
 
+void
+run_offset_setup (GObject *emitter,
+                  Global  *global)
+{
+  GtkWidget *dialog;
+  gint res;
+
+  dialog = hyscan_gtk_fnn_offsets_new (global->control, global->gui.window);
+  // dialog = gtk_dialog_new_with_buttons ("Параметры оборудования",
+  //                                       GTK_WINDOW (global->gui.window), 0,
+  //                                       "Done2", GTK_RESPONSE_OK,
+  //                                       NULL);
+  // content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+  // tree = hyscan_gtk_param_tree_new (HYSCAN_PARAM (tglobal->control), root, TRUE);
+  // hyscan_gtk_param_set_watch_period (HYSCAN_GTK_PARAM (tree), 200);
+
+  // gtk_container_add (GTK_CONTAINER (content), tree);
+  // gtk_widget_set_size_request (dialog, 800, 600);
+  gtk_widget_show_all (dialog);
+
+  gtk_dialog_run (GTK_DIALOG (dialog));
+
+  gtk_widget_destroy (dialog);
+}
 
 //   #     #    #    ### #     #
 //   ##   ##   # #    #  ##    #
@@ -180,7 +205,7 @@ get_builder_for_panel (EvoUI * ui,
 /* Ядро всего уйца. Подключает сигналы, достает виджеты. */
 GtkWidget *
 make_page_for_panel (EvoUI     *ui,
-                     AmePanel *panel,
+                     FnnPanel *panel,
                      gint      panelx,
                      Global   *global)
 {
@@ -192,7 +217,7 @@ make_page_for_panel (EvoUI     *ui,
 
   switch (panel->type)
     {
-    case AME_PANEL_WATERFALL:
+    case FNN_PANEL_WATERFALL:
 
       view = get_widget_from_builder (b, "ss_view_control");
       panel->vis_gui->brightness_value  = get_label_from_builder (b, "ss_brightness_value");
@@ -213,7 +238,7 @@ make_page_for_panel (EvoUI     *ui,
 
       break;
 
-    case AME_PANEL_ECHO:
+    case FNN_PANEL_ECHO:
 
       view = get_widget_from_builder (b, "pf_view_control");
       panel->vis_gui->brightness_value  = get_label_from_builder (b, "pf_brightness_value");
@@ -233,7 +258,7 @@ make_page_for_panel (EvoUI     *ui,
 
       break;
 
-    case AME_PANEL_FORWARDLOOK:
+    case FNN_PANEL_FORWARDLOOK:
 
       view = get_widget_from_builder (b, "fl_view_control");
       panel->vis_gui->brightness_value  = get_label_from_builder (b, "fl_brightness_value");
@@ -328,7 +353,7 @@ build_interface (Global *global)
     for (i = 0; i < N_PANELS; ++i)
       {
         GtkWidget *w;
-        AmePanel *panel = get_panel (global, order[i]);
+        FnnPanel *panel = get_panel (global, order[i]);
         if (panel == NULL)
           continue;
 
@@ -405,7 +430,7 @@ build_interface (Global *global)
 
   /* Нижняя панель содержит виджет управления впередсмотрящим. */
   {
-    AmePanel *panel = get_panel (global, X_FORWARDL);
+    FnnPanel *panel = get_panel (global, X_FORWARDL);
     VisualFL *fl;
 
     if (panel != NULL)
@@ -421,7 +446,7 @@ build_interface (Global *global)
   {
     GtkWidget * record;
     GHashTableIter iter;
-    AmePanel *panel;
+    FnnPanel *panel;
     gpointer k;
 
     gtk_widget_set_margin_start (rbox, 6);
@@ -449,14 +474,17 @@ build_interface (Global *global)
 
   /* Настройки. */
   {
-    GtkWidget *grid, * sensors, *scroll;
+    GtkWidget *grid, * sensors, * offsets;
     settings = evo_settings_new ();
     grid = evo_settings_get_grid (EVO_SETTINGS (settings));
 
     sensors = evo_sensors_new (global->control);
+    offsets = gtk_button_new_with_label ("Setup offsets");
+    g_signal_connect (offsets, "clicked", G_CALLBACK (run_offset_setup), global);
 
     gtk_grid_attach (GTK_GRID (grid), gtk_label_new ("Sensors"), 0, 0, 1, 1);
     gtk_grid_attach (GTK_GRID (grid), sensors, 0, 1, 1, 1);
+    gtk_grid_attach (GTK_GRID (grid), offsets, 0, 2, 1, 1);
   }
 
   /* Пакуем всё. */

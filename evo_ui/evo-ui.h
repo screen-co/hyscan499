@@ -1,8 +1,8 @@
 #ifndef __EVO_UI_H__
 #define __EVO_UI_H__
 
-#include <triple-types.h>
-#include <hyscan-gtk-ame-box.h>
+#include <fnn-types.h>
+#include <hyscan-gtk-fnn-box.h>
 #include <gio/gio.h>
 #include <glib/gi18n-lib.h>
 

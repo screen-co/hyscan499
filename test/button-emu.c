@@ -130,7 +130,6 @@ main (int argc, char **argv)
   GtkWidget *window;
   GError *error = NULL;
   GSocket *sock;
-  GThread *thr;
 
   gtk_init (&argc, &argv);
 

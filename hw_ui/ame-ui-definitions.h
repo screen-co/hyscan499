@@ -1,5 +1,5 @@
-#ifndef _AME_UI_DEFINITIONS_H
-#define _AME_UI_DEFINITIONS_H
+#ifndef _FNN_UI_DEFINITIONS_H
+#define _FNN_UI_DEFINITIONS_H
 
 #include "ame-ui.h"
 
@@ -35,16 +35,16 @@
 #define VALUE_DEFAULT(x) .value_default = ((gchar*)(x))
 #define BUTTON_OFFSET(x, y) .button_offset = offsetof(x,y)
 
-static AmePage common_pages[] =
+static FnnPage common_pages[] =
 {
   {
-    PATH("Меню"), DESTINATION_SELECTOR(DEST_AME_UI),
+    PATH("Меню"), DESTINATION_SELECTOR(DEST_FNN_UI),
     .items =
       {
         {L, 3, VMOR, "Галсы",       TOGGLE_NONE, CBK(switch_page), UD("ГАЛС")},
         {L, 4, VMOR, "Общее",       TOGGLE_NONE, CBK(switch_page), UD("Общее")},
         {R, 4, VMOR, "Вид",         TOGGLE_NONE, CBK(widget_swap), GINT_TO_POINTER (ROTATE),
-            VALUE_OFFSET(AmeUI, current_view), VALUE_DEFAULT("--")},
+            VALUE_OFFSET(FnnUI, current_view), VALUE_DEFAULT("--")},
         {END}
       }
   },
@@ -79,10 +79,10 @@ static AmePage common_pages[] =
   }
 };
 
-static AmePage ss_image_pages[] = 
+static FnnPage ss_image_pages[] = 
 {
   {
-    PATH("Меню"), DESTINATION_SELECTOR(DEST_AME_UI),
+    PATH("Меню"), DESTINATION_SELECTOR(DEST_FNN_UI),
     .items =
       {
         {R, 0, VMOR, "ГБО Изображение", TOGGLE_NONE, CBK(switch_page), UD("И_ГБО")},
@@ -142,10 +142,10 @@ static AmePage ss_image_pages[] =
   { PATH ( NULL ) }
 };
 
-static AmePage pf_image_pages[] =
+static FnnPage pf_image_pages[] =
 {
   {
-    PATH("Меню"), DESTINATION_SELECTOR(DEST_AME_UI),
+    PATH("Меню"), DESTINATION_SELECTOR(DEST_FNN_UI),
     .items =
       {
         {R, 2, VMOR, "ПФ Изображение",  TOGGLE_NONE, CBK(switch_page), UD("И_ПФ")},
@@ -180,7 +180,7 @@ static AmePage pf_image_pages[] =
         {L, 1, BACK,"Назад",        TOGGLE_NONE, CBK(switch_page),    UD("И_ПФ")},
         {L, 4, DOT, "Слои",         TOGGLE_ON,   CBK(pf_special),     UD(XPF)},
 
-        {R, 0, MORE, "Шир диап",    TOGGLE_NONE, CBK(brightness_up),  UD(XPF),
+        {R, 0, MORE, "Сжатие диап", TOGGLE_NONE, CBK(brightness_up),  UD(XPF),
             VALUE_OFFSET(VisualCommon, brightness_value)},
         {R, 1, LESS, NULL,          TOGGLE_NONE, CBK(brightness_down),UD(XPF)},
         {R, 2, MORE, "Нач ур",      TOGGLE_NONE, CBK(black_up),       UD(XPF),
@@ -208,10 +208,10 @@ static AmePage pf_image_pages[] =
   { PATH (NULL) }
 };
 
-static AmePage fl_image_pages[] =
+static FnnPage fl_image_pages[] =
 {
   {
-    PATH("Меню"), DESTINATION_SELECTOR(DEST_AME_UI),
+    PATH("Меню"), DESTINATION_SELECTOR(DEST_FNN_UI),
     .items =
       {
         {R, 1, VMOR, "ГК Изображение",  TOGGLE_NONE, CBK(switch_page), UD("И_ГК")},
@@ -257,16 +257,16 @@ static AmePage fl_image_pages[] =
   { PATH (NULL) }
 };
 
-static AmePage any_sonar_pages[] =
+static FnnPage any_sonar_pages[] =
 {
   {
-    PATH("Общее"), DESTINATION_SELECTOR(DEST_AME_UI),
+    PATH("Общее"), DESTINATION_SELECTOR(DEST_FNN_UI),
     .items =
       {
         {L, 4, DOT,  "Сух. поверка", TOGGLE_OFF,  CBK(start_stop_dry_wrapper),
-          BUTTON_OFFSET(AmeUI, starter.dry)},
+          BUTTON_OFFSET(FnnUI, starter.dry)},
         {L, 3, DOT,  "Работа",       TOGGLE_OFF,  CBK(start_stop_wrapper),
-          BUTTON_OFFSET(AmeUI, starter.all)},
+          BUTTON_OFFSET(FnnUI, starter.all)},
         {R, 0, INFO, "Версия ГЛ",    TOGGLE_NONE, CBK(run_show_sonar_info),
           UD("/info"), },
         {END}
@@ -275,7 +275,7 @@ static AmePage any_sonar_pages[] =
   { PATH(NULL) } /* Конец. */
 };
 
-static AmePage ss_pages[] =
+static FnnPage ss_pages[] =
 {
   {
     PATH("Меню"), DESTINATION_SELECTOR(DEST_UNSET),
@@ -291,33 +291,33 @@ static AmePage ss_pages[] =
       {
         {L, 0, MENU, "Меню",        TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
         {L, 1, MORE, "Сигнал",      TOGGLE_NONE, CBK(signal_up),      UD(XSS),
-            VALUE_OFFSET(AmePanel, gui.signal_value), VALUE_DEFAULT("--")},
+            VALUE_OFFSET(FnnPanel, gui.signal_value), VALUE_DEFAULT("--")},
         {L, 2, LESS, NULL,          TOGGLE_NONE, CBK(signal_down),    UD(XSS)},
         {L, 3, MORE, "Дальность",   TOGGLE_NONE, CBK(distance_up),    UD(XSS),
-            VALUE_OFFSET(AmePanel, gui.distance_value), VALUE_DEFAULT("--")},
+            VALUE_OFFSET(FnnPanel, gui.distance_value), VALUE_DEFAULT("--")},
         {L, 4, LESS, NULL,          TOGGLE_NONE, CBK(distance_down),  UD(XSS)},
 
         {R, 1, MORE, "Уровень",     TOGGLE_NONE, CBK(tvg_level_up),   UD(XSS),
-            VALUE_OFFSET(AmePanel, gui.tvg_level_value), VALUE_DEFAULT("-ss-")},
+            VALUE_OFFSET(FnnPanel, gui.tvg_level_value), VALUE_DEFAULT("-ss-")},
         {R, 2, LESS, NULL,          TOGGLE_NONE, CBK(tvg_level_down), UD(XSS)},
         {R, 3, MORE, "Чувств.",     TOGGLE_NONE, CBK(tvg_sens_up),    UD(XSS),
-            VALUE_OFFSET(AmePanel, gui.tvg_sens_value), VALUE_DEFAULT("-aa-")},
+            VALUE_OFFSET(FnnPanel, gui.tvg_sens_value), VALUE_DEFAULT("-aa-")},
         {R, 4, LESS, NULL,          TOGGLE_NONE, CBK(tvg_sens_down),  UD(XSS)},
         {END}
       }
   },{
-    PATH("У_ГБО"), DESTINATION_SELECTOR(DEST_AME_UI),
+    PATH("У_ГБО"), DESTINATION_SELECTOR(DEST_FNN_UI),
     .items =
       {
         {R, 0, DOT,  "Работа",      TOGGLE_OFF,  CBK(start_stop_wrapper),
-            BUTTON_OFFSET(AmeUI, starter.panel[START_STOP_SIDESCAN])},
+            BUTTON_OFFSET(FnnUI, starter.panel[START_STOP_SIDESCAN])},
         {END}
       }
   },
   { PATH(NULL) } /* Конец. */
 };
 
-static AmePage pf_pages[] =
+static FnnPage pf_pages[] =
 {
   {
     PATH("Меню"), DESTINATION_SELECTOR(DEST_UNSET),
@@ -333,33 +333,33 @@ static AmePage pf_pages[] =
       {
         {L, 0, MENU, "Меню",        TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
         {L, 1, MORE, "Сигнал",      TOGGLE_NONE, CBK(signal_up),      UD(XPF),
-            VALUE_OFFSET (AmePanel, gui.signal_value), VALUE_DEFAULT("--")},
+            VALUE_OFFSET (FnnPanel, gui.signal_value), VALUE_DEFAULT("--")},
         {L, 2, LESS, NULL,          TOGGLE_NONE, CBK(signal_down),    UD(XPF)},
         {L, 3, MORE, "Дальность",   TOGGLE_NONE, CBK(distance_up),    UD(XPF),
-            VALUE_OFFSET (AmePanel, gui.distance_value), VALUE_DEFAULT("--")},
+            VALUE_OFFSET (FnnPanel, gui.distance_value), VALUE_DEFAULT("--")},
         {L, 4, LESS, NULL,          TOGGLE_NONE, CBK(distance_down),  UD(XPF)},
 
         {R, 1, MORE, "Усиление-0",  TOGGLE_NONE, CBK(tvg0_up),        UD(XPF),
-            VALUE_OFFSET (AmePanel, gui.tvg0_value)},
+            VALUE_OFFSET (FnnPanel, gui.tvg0_value)},
         {R, 2, LESS, NULL,          TOGGLE_NONE, CBK(tvg0_down),      UD(XPF)},
         {R, 3, MORE, "Усиление-Д",  TOGGLE_NONE, CBK(tvg_up),         UD(XPF),
-            VALUE_OFFSET (AmePanel, gui.tvg_value)},
+            VALUE_OFFSET (FnnPanel, gui.tvg_value)},
         {R, 4, LESS, NULL,          TOGGLE_NONE, CBK(tvg_down),       UD(XPF)},
         {END}
       }
   },{
-    PATH("У_ПФ"), DESTINATION_SELECTOR(DEST_AME_UI),
+    PATH("У_ПФ"), DESTINATION_SELECTOR(DEST_FNN_UI),
     .items =
       {
         {R, 0, DOT,  "Работа",      TOGGLE_OFF,  CBK(start_stop_wrapper),
-            BUTTON_OFFSET(AmeUI, starter.panel[START_STOP_PROFILER])},
+            BUTTON_OFFSET(FnnUI, starter.panel[START_STOP_PROFILER])},
         {END}
       }
   },
   { PATH(NULL) } /* Конец. */
 };
 
-static AmePage fl_pages[] =
+static FnnPage fl_pages[] =
 {
   {
     PATH("Меню"), DESTINATION_SELECTOR(DEST_UNSET),
@@ -375,26 +375,26 @@ static AmePage fl_pages[] =
       {
         {L, 0, MENU, "Меню",        TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
         {L, 1, MORE, "Сигнал",      TOGGLE_NONE, CBK(signal_up),      UD(XFL),
-            VALUE_OFFSET(AmePanel, gui.signal_value), VALUE_DEFAULT("--")},
+            VALUE_OFFSET(FnnPanel, gui.signal_value), VALUE_DEFAULT("--")},
         {L, 2, LESS, NULL,          TOGGLE_NONE, CBK(signal_down),    UD(XFL)},
         {L, 3, MORE, "Дальность",   TOGGLE_NONE, CBK(distance_up),    UD(XFL),
-            VALUE_OFFSET(AmePanel, gui.distance_value), VALUE_DEFAULT("--")},
+            VALUE_OFFSET(FnnPanel, gui.distance_value), VALUE_DEFAULT("--")},
         {L, 4, LESS, NULL,          TOGGLE_NONE, CBK(distance_down),  UD(XFL)},
 
         {R, 1, MORE, "Усиление-0",  TOGGLE_NONE, CBK(tvg0_up),        UD(XFL),
-            VALUE_OFFSET(AmePanel, gui.tvg0_value)},
+            VALUE_OFFSET(FnnPanel, gui.tvg0_value)},
         {R, 2, LESS, NULL,          TOGGLE_NONE, CBK(tvg0_down),      UD(XFL)},
         {R, 3, MORE, "Усиление-Д",  TOGGLE_NONE, CBK(tvg_up),         UD(XFL),
-            VALUE_OFFSET(AmePanel, gui.tvg_value)},
+            VALUE_OFFSET(FnnPanel, gui.tvg_value)},
         {R, 4, LESS, NULL,          TOGGLE_NONE, CBK(tvg_down),       UD(XFL)},
         {END}
       }
   },{
-    PATH("У_ГК"), DESTINATION_SELECTOR(DEST_AME_UI),
+    PATH("У_ГК"), DESTINATION_SELECTOR(DEST_FNN_UI),
     .items =
       {
         {R, 0, DOT,  "Работа",      TOGGLE_OFF,  CBK(start_stop_wrapper),
-            BUTTON_OFFSET(AmeUI, starter.panel[START_STOP_FORWARDL])},
+            BUTTON_OFFSET(FnnUI, starter.panel[START_STOP_FORWARDL])},
         {END}
       }
   },

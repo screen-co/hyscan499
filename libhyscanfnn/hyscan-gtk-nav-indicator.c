@@ -196,7 +196,6 @@ hyscan_gtk_nav_indicator_push (HyScanGtkNavIndicator *self,
   if (dpts != NULL)
     {
       dpt_ok = hyscan_nmea_parser_parse_string (priv->parser.dpt, dpts, &dpt);
-      g_message ("dpt fnd: %s", dpts);
     }
   else
     {

@@ -1,7 +1,7 @@
-#include <triple-types.h>
-#include <hyscan-ame-splash.h>
-#include <hyscan-ame-project.h>
-#include <hyscan-ame-button.h>
+#include <fnn-types.h>
+#include <hyscan-fnn-splash.h>
+#include <hyscan-fnn-project.h>
+#include <hyscan-fnn-button.h>
 #include <hyscan-hw-connector.h>
 #include <gmodule.h>
 
@@ -44,15 +44,15 @@ make_color_maps (gboolean profiler)
 {
   guint32 kolors[2];
   GArray * colormaps;
-  AmeColormap *new_map;
+  FnnColormap *new_map;
   #include "colormaps.h"
 
-  colormaps = g_array_new (FALSE, TRUE, sizeof (AmeColormap*));
-  g_array_set_clear_func (colormaps, ame_colormap_free);
+  colormaps = g_array_new (FALSE, TRUE, sizeof (FnnColormap*));
+  g_array_set_clear_func (colormaps, fnn_colormap_free);
 
   if (profiler)
     {
-      new_map = g_new (AmeColormap, 1);
+      new_map = g_new (FnnColormap, 1);
       new_map->name = g_strdup ("Причудливый Профилограф");
       new_map->colors = hyscan_tile_color_compose_colormap_pf (&new_map->len);
       new_map->len = 256;
@@ -62,7 +62,7 @@ make_color_maps (gboolean profiler)
       return colormaps;
     }
 
-  new_map = g_new (AmeColormap, 1);
+  new_map = g_new (FnnColormap, 1);
   new_map->name = g_strdup ("Желтый");
   kolors[0] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
   kolors[1] = hyscan_tile_color_converter_d2i (1.0, 1.0, 0.0, 1.0);
@@ -70,14 +70,14 @@ make_color_maps (gboolean profiler)
   new_map->bg = BLACK_BG;
   g_array_append_vals (colormaps, &new_map, 1);
 
-  new_map = g_new (AmeColormap, 1);
+  new_map = g_new (FnnColormap, 1);
   new_map->name = g_strdup ("Сепия");
   new_map->colors = g_memdup (sepia, 256 * sizeof (guint32));
   new_map->len = 256;
   new_map->bg = BLACK_BG;
   g_array_append_vals (colormaps, &new_map, 1);
 
-  new_map = g_new (AmeColormap, 1);
+  new_map = g_new (FnnColormap, 1);
   new_map->name = g_strdup ("Белый");
   kolors[0] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
   kolors[1] = hyscan_tile_color_converter_d2i (1.0, 1.0, 1.0, 1.0);
@@ -85,15 +85,15 @@ make_color_maps (gboolean profiler)
   new_map->bg = BLACK_BG;
   g_array_append_vals (colormaps, &new_map, 1);
 
-  new_map = g_new (AmeColormap, 1);
+  new_map = g_new (FnnColormap, 1);
   new_map->name = g_strdup ("Инверсия");
   kolors[0] = hyscan_tile_color_converter_d2i (1.0, 1.0, 1.0, 1.0);
   kolors[1] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
   new_map->colors = hyscan_tile_color_compose_colormap (kolors, 2, &new_map->len);
   new_map->bg = BLACK_BG;
-  g_array_append_vals (colormaps, &new_map, 1);new_map = g_new (AmeColormap, 1);
+  g_array_append_vals (colormaps, &new_map, 1);new_map = g_new (FnnColormap, 1);
 
-  new_map = g_new (AmeColormap, 1);
+  new_map = g_new (FnnColormap, 1);
   new_map->name = g_strdup ("Зеленый");
   kolors[0] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
   kolors[1] = hyscan_tile_color_converter_d2i (0.2, 1.0, 0.2, 1.0);
@@ -133,7 +133,7 @@ main (int argc, char **argv)
 
   GtkBuilder        *common_builder = NULL;
 
-  // HyScanAmeSplash   *splash = NULL;
+  // HyScanFnnSplash   *splash = NULL;
   guint              sensor_label_writer_tag = 0;
   gchar             *hardware_profile_name = NULL;
 
@@ -280,14 +280,14 @@ main (int argc, char **argv)
       GtkWidget *dialog;
       gint res;
 
-      dialog = hyscan_ame_project_new (global.db, info, GTK_WINDOW (window));
+      dialog = hyscan_fnn_project_new (global.db, info, GTK_WINDOW (window));
       res = gtk_dialog_run (GTK_DIALOG (dialog));
-      hyscan_ame_project_get (HYSCAN_AME_PROJECT (dialog), &project_name, NULL);
+      hyscan_fnn_project_get (HYSCAN_FNN_PROJECT (dialog), &project_name, NULL);
       gtk_widget_destroy (dialog);
       gtk_widget_destroy (window);
 
       /* Если был нажат крестик - сорян, сваливаем отсюда. */
-      if (res != HYSCAN_AME_PROJECT_OPEN && res != HYSCAN_AME_PROJECT_CREATE)
+      if (res != HYSCAN_FNN_PROJECT_OPEN && res != HYSCAN_FNN_PROJECT_CREATE)
         goto exit;
 
       g_object_unref (info);
@@ -303,8 +303,8 @@ main (int argc, char **argv)
   global.full_screen = full_screen;
   global.project_name = g_strdup (project_name);
 
-  // splash = hyscan_ame_splash_new ();
-  // hyscan_ame_splash_start (splash, "Подключение");
+  // splash = hyscan_fnn_splash_new ();
+  // hyscan_fnn_splash_start (splash, "Подключение");
 
   /***
    *     ___   ___         ___   ___         ___   ___               ___   ___   ___   ___   ___
@@ -453,7 +453,7 @@ main (int argc, char **argv)
    *
    * Создаем панели.
    */
-  global.panels = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, ame_panel_destroy);
+  global.panels = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, fnn_panel_destroy);
 
   hardware = g_key_file_new ();
 
@@ -468,13 +468,13 @@ main (int argc, char **argv)
   if (need_ss)
     { /* ГБО */
       GtkWidget *main_widget;
-      AmePanel *panel = g_new0 (AmePanel, 1);
+      FnnPanel *panel = g_new0 (FnnPanel, 1);
       VisualWF *vwf = g_new0 (VisualWF, 1);
 
       panel->name_ru = g_strdup ("ГБО");
       panel->name_en = g_strdup ("SideScan");
       panel->short_name = g_strdup ("SS");
-      panel->type = AME_PANEL_WATERFALL;
+      panel->type = FNN_PANEL_WATERFALL;
 
       panel->sources = g_new0 (HyScanSourceType, 3);
       panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD;
@@ -508,13 +508,13 @@ main (int argc, char **argv)
   if (need_pf)
     { /* ПФ */
       GtkWidget *main_widget;
-      AmePanel *panel = g_new0 (AmePanel, 1);
+      FnnPanel *panel = g_new0 (FnnPanel, 1);
       VisualWF *vwf = g_new0 (VisualWF, 1);
 
       panel->name_ru = g_strdup ("Профилограф");
       panel->name_en = g_strdup ("Profiler");
       panel->short_name = g_strdup ("PF");
-      panel->type = AME_PANEL_ECHO;
+      panel->type = FNN_PANEL_ECHO;
 
       panel->sources = g_new0 (HyScanSourceType, 3);
       panel->sources[0] = HYSCAN_SOURCE_PROFILER;
@@ -552,13 +552,13 @@ main (int argc, char **argv)
   if (need_es)
     { /* Эхолот */
       GtkWidget *main_widget;
-      AmePanel *panel = g_new0 (AmePanel, 1);
+      FnnPanel *panel = g_new0 (FnnPanel, 1);
       VisualWF *vwf = g_new0 (VisualWF, 1);
 
       panel->name_ru = g_strdup ("Эхолот");
       panel->name_en = g_strdup ("Echosounder");
       panel->short_name = g_strdup ("ES");
-      panel->type = AME_PANEL_ECHO;
+      panel->type = FNN_PANEL_ECHO;
 
       panel->sources = g_new0 (HyScanSourceType, 2);
       panel->sources[0] = HYSCAN_SOURCE_ECHOSOUNDER;
@@ -594,13 +594,13 @@ main (int argc, char **argv)
 
   if (need_fl)
     { /* ВСЛ */
-      AmePanel *panel = g_new0 (AmePanel, 1);
+      FnnPanel *panel = g_new0 (FnnPanel, 1);
       VisualFL *vfl = g_new0 (VisualFL, 1);
 
       panel->name_ru = g_strdup ("Курсовой");
       panel->name_en = g_strdup ("ForwardLook");
       panel->short_name = g_strdup ("FL");
-      panel->type = AME_PANEL_FORWARDLOOK;
+      panel->type = FNN_PANEL_FORWARDLOOK;
 
       panel->sources = g_new0 (HyScanSourceType, 2);
       panel->sources[0] = HYSCAN_SOURCE_FORWARD_LOOK;
@@ -653,7 +653,7 @@ main (int argc, char **argv)
     while (g_hash_table_iter_next (&iter, &k, &v))
       {
         gint panelx = GPOINTER_TO_INT (k);
-        AmePanel *panel = v;
+        FnnPanel *panel = v;
         panel->current.distance =    keyfile_double_read_helper (config, panel->name_en, "sonar.cur_distance", 50);
         panel->current.signal =      keyfile_double_read_helper (config, panel->name_en, "sonar.cur_signal", 0);
         panel->current.gain0 =       keyfile_double_read_helper (config, panel->name_en, "sonar.cur_gain0", 0);
@@ -666,11 +666,11 @@ main (int argc, char **argv)
         panel->vis_current.black =       keyfile_double_read_helper (config, panel->name_en, "cur_black",        0);
         panel->vis_current.sensitivity = keyfile_double_read_helper (config, panel->name_en, "cur_sensitivity",  8.0);
 
-        if (panel->type == AME_PANEL_WATERFALL)
+        if (panel->type == FNN_PANEL_WATERFALL)
           color_map_set (&global, panel->vis_current.colormap, panelx);
-        else if (panel->type == AME_PANEL_ECHO)
+        else if (panel->type == FNN_PANEL_ECHO)
           color_map_set (&global, panel->vis_current.colormap, panelx);
-        else if (panel->type == AME_PANEL_FORWARDLOOK)
+        else if (panel->type == FNN_PANEL_FORWARDLOOK)
           sensitivity_set (&global, panel->vis_current.sensitivity, panelx);
 
         brightness_set (&global, panel->vis_current.brightness, panel->vis_current.black, panelx);
@@ -708,7 +708,7 @@ main (int argc, char **argv)
 
   if (sensor_label_writer_tag > 0)
     g_source_remove (sensor_label_writer_tag);
-  // hyscan_ame_splash_start (splash, "Отключение");
+  // hyscan_fnn_splash_start (splash, "Отключение");
 
   if (global.control != NULL)
     hyscan_sonar_stop (global.control_s);
@@ -730,7 +730,7 @@ main (int argc, char **argv)
       g_hash_table_iter_init (&iter, global.panels);
       while (g_hash_table_iter_next (&iter, &k, &v))
         {
-          AmePanel *panel = v;
+          FnnPanel *panel = v;
           keyfile_double_write_helper (config, panel->name_en, "sonar.cur_distance", panel->current.distance);
           keyfile_double_write_helper (config, panel->name_en, "sonar.cur_signal", panel->current.signal);
           keyfile_double_write_helper (config, panel->name_en, "sonar.cur_gain0", panel->current.gain0);

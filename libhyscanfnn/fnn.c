@@ -1,8 +1,8 @@
-#include "triple-types.h"
-#include "hyscan-ame-splash.h"
-#include <hyscan-ame-project.h>
-#include <hyscan-ame-button.h>
-#include <hyscan-ame-button.h>
+#include "fnn-types.h"
+#include "hyscan-fnn-splash.h"
+#include <hyscan-fnn-project.h>
+#include <hyscan-fnn-button.h>
+#include <hyscan-fnn-button.h>
 #include <hyscan-gtk-param-tree.h>
 #include <gmodule.h>
 #include <math.h>
@@ -19,9 +19,9 @@ enum
 };
 
 void
-ame_panel_destroy (gpointer data)
+fnn_panel_destroy (gpointer data)
 {
-  AmePanel *panel = data;
+  FnnPanel *panel = data;
   VisualWF *wf;
   VisualFL *fl;
 
@@ -34,14 +34,14 @@ ame_panel_destroy (gpointer data)
 
   switch (panel->type)
     {
-    case AME_PANEL_WATERFALL:
-    case AME_PANEL_ECHO:
+    case FNN_PANEL_WATERFALL:
+    case FNN_PANEL_ECHO:
       wf = (VisualWF*)panel->vis_gui;
 
       g_array_unref (wf->colormaps);
       break;
 
-    case AME_PANEL_FORWARDLOOK:
+    case FNN_PANEL_FORWARDLOOK:
       fl = (VisualFL*)panel->vis_gui;
 
       g_object_unref (fl->coords);
@@ -51,11 +51,11 @@ ame_panel_destroy (gpointer data)
   g_free (panel);
 }
 
-AmePanel *
+FnnPanel *
 get_panel (Global *global,
            gint    panelx)
 {
-  AmePanel * panel;
+  FnnPanel * panel;
 
   panel = g_hash_table_lookup (global->panels, GINT_TO_POINTER (panelx));
 
@@ -65,11 +65,11 @@ get_panel (Global *global,
   return panel;
 }
 
-AmePanel *
+FnnPanel *
 get_panel_quiet (Global *global,
                  gint    panelx)
 {
-  AmePanel * panel;
+  FnnPanel * panel;
   panel = g_hash_table_lookup (global->panels, GINT_TO_POINTER (panelx));
   return panel;
 }
@@ -80,7 +80,7 @@ get_panel_id_by_name (Global      *global,
 {
   GHashTableIter iter;
   gpointer k;
-  AmePanel *panel;
+  FnnPanel *panel;
 
   g_return_val_if_fail (name != NULL, -1);
 
@@ -116,15 +116,15 @@ run_manager (GObject *emitter)
     start_stop (tglobal, FALSE);
 
   info = hyscan_db_info_new (tglobal->db);
-  dialog = hyscan_ame_project_new (tglobal->db, info, GTK_WINDOW (tglobal->gui.window));
+  dialog = hyscan_fnn_project_new (tglobal->db, info, GTK_WINDOW (tglobal->gui.window));
   res = gtk_dialog_run (GTK_DIALOG (dialog));
 
-  if (res == HYSCAN_AME_PROJECT_OPEN || res == HYSCAN_AME_PROJECT_CREATE)
+  if (res == HYSCAN_FNN_PROJECT_OPEN || res == HYSCAN_FNN_PROJECT_CREATE)
     {
       gchar *project;
 
       g_clear_pointer (&tglobal->project_name, g_free);
-      hyscan_ame_project_get (HYSCAN_AME_PROJECT (dialog), &project, NULL);
+      hyscan_fnn_project_get (HYSCAN_FNN_PROJECT (dialog), &project, NULL);
 
       tglobal->project_name = g_strdup (project);
       hyscan_db_info_set_project (tglobal->db_info, project);
@@ -232,14 +232,14 @@ sync_sonar (Global *global)
 }
 
 void
-turn_meter_helper (AmePanel  *panel,
+turn_meter_helper (FnnPanel  *panel,
                    gboolean   state)
 {
   void * layer = NULL;
   VisualWF *wf;
 
   /* Только вотерфольные панели. */
-  if (panel->type != AME_PANEL_WATERFALL && panel->type != AME_PANEL_ECHO)
+  if (panel->type != FNN_PANEL_WATERFALL && panel->type != FNN_PANEL_ECHO)
     return;
 
   wf = (VisualWF*)panel->vis_gui;
@@ -261,25 +261,25 @@ turn_meter (GObject     *emitter,
   v = g_hash_table_lookup (tglobal->panels, GINT_TO_POINTER (panelx));
   if (v != NULL)
     {
-      turn_meter_helper ((AmePanel*)v, state);
+      turn_meter_helper ((FnnPanel*)v, state);
     }
   else
     {
       g_hash_table_iter_init (&iter, tglobal->panels);
       while (g_hash_table_iter_next (&iter, &k, &v))
-        turn_meter_helper ((AmePanel*)v, state);
+        turn_meter_helper ((FnnPanel*)v, state);
     }
 }
 
 void
-turn_mark_helper (AmePanel  *panel,
+turn_mark_helper (FnnPanel  *panel,
                   gboolean   state)
 {
   void * layer = NULL;
   VisualWF *wf;
 
   /* Только вотерфольные панели. */
-  if (panel->type != AME_PANEL_WATERFALL && panel->type != AME_PANEL_ECHO)
+  if (panel->type != FNN_PANEL_WATERFALL && panel->type != FNN_PANEL_ECHO)
     return;
 
   wf = (VisualWF*)panel->vis_gui;
@@ -298,11 +298,11 @@ turn_marks (GObject     *emitter,
   /* Сначала везде включаем вфконтрол, а потом в требуемом включаем метки. */
   g_hash_table_iter_init (&iter, tglobal->panels);
   while (g_hash_table_iter_next (&iter, &k, &v))
-    turn_mark_helper ((AmePanel*)v, FALSE);
+    turn_mark_helper ((FnnPanel*)v, FALSE);
 
   v = g_hash_table_lookup (tglobal->panels, GINT_TO_POINTER (panelx));
   if (v != NULL)
-    turn_mark_helper ((AmePanel*)v, TRUE);
+    turn_mark_helper ((FnnPanel*)v, TRUE);
 }
 
 void
@@ -315,10 +315,10 @@ hide_marks (GObject     *emitter,
   v = g_hash_table_lookup (tglobal->panels, GINT_TO_POINTER (selector));
   if (v != NULL)
     {
-      AmePanel *panel = v;
+      FnnPanel *panel = v;
       VisualWF *wf;
 
-      if (panel->type != AME_PANEL_WATERFALL && panel->type != AME_PANEL_ECHO)
+      if (panel->type != FNN_PANEL_WATERFALL && panel->type != FNN_PANEL_ECHO)
         return;
       wf = (VisualWF*)panel->vis_gui;
 
@@ -379,16 +379,16 @@ fname (GObject * emitter,                                                    \
 {                                                                            \
   VisualWF *wf;                                                              \
   VisualFL *fl;                                                              \
-  GtkWidget *widget;                                                         \
-  AmePanel *panel = get_panel (tglobal, GPOINTER_TO_INT (udata));            \
+  GtkWidget *widget = NULL;                                                  \
+  FnnPanel *panel = get_panel (tglobal, GPOINTER_TO_INT (udata));            \
   switch (panel->type)                                                       \
     {                                                                        \
-      case AME_PANEL_WATERFALL:                                              \
-      case AME_PANEL_ECHO:                                                   \
+      case FNN_PANEL_WATERFALL:                                              \
+      case FNN_PANEL_ECHO:                                                   \
         wf = (VisualWF*)panel->vis_gui;                                      \
         widget = GTK_WIDGET (wf->wf);                                        \
         break;                                                               \
-      case AME_PANEL_FORWARDLOOK:                                            \
+      case FNN_PANEL_FORWARDLOOK:                                            \
         fl = (VisualFL*)panel->vis_gui;                                      \
         widget = GTK_WIDGET (fl->fl);                                        \
         break;                                                               \
@@ -414,7 +414,7 @@ fl_prev (GObject *emitter,
   gdouble value;
   GtkAdjustment *adj;
   VisualFL *fl;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   fl = (VisualFL*)panel->vis_gui;
   adj = fl->position_range;
@@ -430,7 +430,7 @@ fl_next (GObject *emitter,
   gdouble value;
   GtkAdjustment *adj;
   VisualFL *fl;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   fl = (VisualFL*)panel->vis_gui;
   adj = fl->position_range;
@@ -454,7 +454,7 @@ projects_changed (HyScanDBInfo *db_info,
 }
 
 GtkTreePath *
-ame_gtk_tree_model_get_last_path (GtkTreeView *tree)
+fnn_gtk_tree_model_get_last_path (GtkTreeView *tree)
 {
   GtkTreeModel * model;
   GtkTreeIter cur, prev;
@@ -472,14 +472,14 @@ ame_gtk_tree_model_get_last_path (GtkTreeView *tree)
 }
 
 GtkTreePath *
-ame_gtk_tree_path_prev (GtkTreePath *path)
+fnn_gtk_tree_path_prev (GtkTreePath *path)
 {
   gtk_tree_path_prev (path);
   return path;
 }
 
 GtkTreePath *
-ame_gtk_tree_path_next (GtkTreePath *path)
+fnn_gtk_tree_path_next (GtkTreePath *path)
 {
   gtk_tree_path_next (path);
   return path;
@@ -498,7 +498,7 @@ track_scroller (GtkTreeView *tree,
   /* Текущий выбранный элемент, первый и последний. */
   gtk_tree_view_get_cursor (tree, &real, NULL);
   first = gtk_tree_path_new_first ();
-  last = ame_gtk_tree_model_get_last_path (tree);
+  last = fnn_gtk_tree_model_get_last_path (tree);
 
   if (to_top) /* Вверх. */
     {
@@ -507,7 +507,7 @@ track_scroller (GtkTreeView *tree,
       else if (0 == gtk_tree_path_compare (first, real))
         path = last;
       else
-        path = ame_gtk_tree_path_prev (real);
+        path = fnn_gtk_tree_path_prev (real);
     }
   else /* Вниз. */
     {
@@ -516,7 +516,7 @@ track_scroller (GtkTreeView *tree,
       else if (0 == gtk_tree_path_compare (last, real))
         path = first;
       else
-        path = ame_gtk_tree_path_next (real);
+        path = fnn_gtk_tree_path_next (real);
     }
 
   gtk_tree_view_set_cursor (tree, path, NULL, FALSE);
@@ -608,7 +608,7 @@ active_mark_changed (HyScanGtkProjectViewer *marks_viewer,
 }
 
 inline gboolean
-ame_float_equal (gdouble a, gdouble b)
+fnn_float_equal (gdouble a, gdouble b)
 {
   return (ABS(a - b) < 1e-6);
 }
@@ -627,7 +627,7 @@ marks_equal (MarkAndLocation *a,
       return FALSE;
     }
 
-  coords = ame_float_equal (a->lat, b->lat) && ame_float_equal (a->lon, b->lon);
+  coords = fnn_float_equal (a->lat, b->lat) && fnn_float_equal (a->lon, b->lon);
   // name = g_strcmp0 (a->mark->name, b->mark->name) == 0;
   name = g_strcmp0 (a->mark->name, b->mark->name) == 0;
   size = (a->mark->width == b->mark->width) && (a->mark->height == b->mark->height);
@@ -1166,12 +1166,12 @@ track_changed (GtkTreeView *list,
     {
       VisualWF *wf;
       VisualFL *fl;
-      AmePanel *panel = v;
+      FnnPanel *panel = v;
 
       switch (panel->type)
         {
-        case AME_PANEL_WATERFALL:
-        case AME_PANEL_ECHO:
+        case FNN_PANEL_WATERFALL:
+        case FNN_PANEL_ECHO:
           wf = (VisualWF*) (panel->vis_gui);
           hyscan_gtk_waterfall_state_set_track (HYSCAN_GTK_WATERFALL_STATE (wf->wf),
                                                 global->db, global->project_name, track_name);
@@ -1181,7 +1181,7 @@ track_changed (GtkTreeView *list,
 
           break;
 
-        case AME_PANEL_FORWARDLOOK:
+        case FNN_PANEL_FORWARDLOOK:
           fl = (VisualFL*) (panel->vis_gui);
           hyscan_forward_look_player_open (fl->player, global->db, global->cache,
                                            global->project_name, track_name);
@@ -1236,15 +1236,15 @@ zoom_changed (HyScanGtkWaterfall *wfall,
               gint                panelx)
 {
   gchar *text = NULL;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   switch (panel->type)
     {
-    case AME_PANEL_WATERFALL:
-    case AME_PANEL_ECHO:
+    case FNN_PANEL_WATERFALL:
+    case FNN_PANEL_ECHO:
       break;
 
-    case AME_PANEL_FORWARDLOOK:
+    case FNN_PANEL_FORWARDLOOK:
     default:
       g_warning ("zoom_changed: wrong panel type!");
       return;
@@ -1268,12 +1268,12 @@ scale_set (Global   *global,
   const gdouble *scales;
   gint n_scales, i_scale;
   gdouble scale;
-  AmePanel *panel = get_panel (global, panelx);
+  FnnPanel *panel = get_panel (global, panelx);
 
   switch (panel->type)
     {
-    case AME_PANEL_WATERFALL:
-    case AME_PANEL_ECHO:
+    case FNN_PANEL_WATERFALL:
+    case FNN_PANEL_ECHO:
       wf = (VisualWF*)panel->vis_gui;
       hyscan_gtk_waterfall_control_zoom (wf->wf_ctrl, scale_up);
 
@@ -1283,7 +1283,7 @@ scale_set (Global   *global,
       text = g_strdup_printf ("<small><b>1:%.0f</b></small>", scale);
       break;
 
-    case AME_PANEL_FORWARDLOOK:
+    case FNN_PANEL_FORWARDLOOK:
       {
         GtkCifroArea *carea;
         GtkCifroAreaZoomType zoom_dir;
@@ -1380,11 +1380,11 @@ color_map_set (Global *global,
 {
   VisualWF *wf;
   gchar   *text;
-  AmeColormap *colormap;
-  AmePanel *panel = get_panel (global, panelx);
+  FnnColormap *colormap;
+  FnnPanel *panel = get_panel (global, panelx);
 
   /* Проверяем тип панели. */
-  if (panel->type != AME_PANEL_WATERFALL && panel->type != AME_PANEL_ECHO)
+  if (panel->type != FNN_PANEL_WATERFALL && panel->type != FNN_PANEL_ECHO)
     {
       g_warning ("color_map_set: wrong panel type");
       return FALSE;
@@ -1395,7 +1395,7 @@ color_map_set (Global *global,
   if (desired_cmap >= wf->colormaps->len)
     return FALSE;
 
-  colormap = g_array_index (wf->colormaps, AmeColormap*, desired_cmap);
+  colormap = g_array_index (wf->colormaps, FnnColormap*, desired_cmap);
 
   hyscan_gtk_waterfall_set_colormap_for_all (wf->wf,
                                              colormap->colors,
@@ -1419,7 +1419,7 @@ color_map_up (GtkWidget *widget,
               gint       panelx)
 {
   guint desired_cmap;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired_cmap = panel->vis_current.colormap + 1;
   if (color_map_set (tglobal, desired_cmap, panelx))
@@ -1433,7 +1433,7 @@ color_map_down (GtkWidget *widget,
                 gint       panelx)
 {
   guint desired_cmap;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired_cmap = panel->vis_current.colormap - 1;
   if (color_map_set (tglobal, desired_cmap, panelx))
@@ -1448,9 +1448,9 @@ color_map_cyclic (GtkWidget *widget,
 {
   guint desired_cmap;
   VisualWF *wf;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
-  if (panel->type != AME_PANEL_WATERFALL && panel->type != AME_PANEL_ECHO)
+  if (panel->type != FNN_PANEL_WATERFALL && panel->type != FNN_PANEL_ECHO)
     {
       g_warning ("color_map_cyclic: wrong panel type");
       return;
@@ -1469,7 +1469,7 @@ color_map_cyclic (GtkWidget *widget,
 
 /* Функция устанавливает порог чувствительности. */
 void
-sensitivity_label (AmePanel *panel,
+sensitivity_label (FnnPanel *panel,
                    gdouble   sens)
 {
   VisualFL *fl = (VisualFL*)panel->vis_gui;
@@ -1489,14 +1489,14 @@ sensitivity_set (Global  *global,
                  guint    panelx)
 {
   VisualFL *fl;
-  AmePanel *panel = get_panel (global, panelx);
+  FnnPanel *panel = get_panel (global, panelx);
 
   if (desired_sensitivity < 1.0)
    return FALSE;
   if (desired_sensitivity > 10.0)
    return FALSE;
 
-  if (panel->type != AME_PANEL_FORWARDLOOK)
+  if (panel->type != FNN_PANEL_FORWARDLOOK)
     {
       g_warning ("sensitivity_set: wrong panel type!");
       return FALSE;
@@ -1517,7 +1517,7 @@ sensitivity_up (GtkWidget *widget,
                 gint       panelx)
 {
   gdouble desired_sensitivity;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired_sensitivity = panel->vis_current.sensitivity + 1;
   if (sensitivity_set (tglobal, desired_sensitivity, panelx))
@@ -1531,7 +1531,7 @@ sensitivity_down (GtkWidget *widget,
                   gint       panelx)
 {
   gdouble desired_sensitivity;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired_sensitivity = panel->vis_current.sensitivity - 1;
   if (sensitivity_set (tglobal, desired_sensitivity, panelx))
@@ -1542,7 +1542,7 @@ sensitivity_down (GtkWidget *widget,
 
 const HyScanDataSchemaEnumValue *
 signal_finder (Global           *global,
-               AmePanel         *panel,
+               FnnPanel         *panel,
                HyScanSourceType  source,
                gint              n)
 {
@@ -1563,7 +1563,7 @@ signal_finder (Global           *global,
 }
 
 void
-signal_label (AmePanel    *panel,
+signal_label (FnnPanel    *panel,
               const gchar *name)
 {
   gchar *text;
@@ -1584,7 +1584,7 @@ signal_set (Global *global,
 {
   HyScanSourceType *iter;
   const HyScanDataSchemaEnumValue *sig = NULL, *prev_sig = NULL;
-  AmePanel *panel = get_panel (global, panelx);
+  FnnPanel *panel = get_panel (global, panelx);
 
   g_message ("Signal_set: Sonar#%i, Signal %i", panelx, sig_num);
 
@@ -1629,7 +1629,7 @@ signal_up (GtkWidget *widget,
            gint       panelx)
 {
   gint desired_signal;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired_signal = panel->current.signal + 1;
   if (signal_set (tglobal, desired_signal, panelx))
@@ -1643,7 +1643,7 @@ signal_down (GtkWidget *widget,
              gint       panelx)
 {
   gint desired_signal;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired_signal = panel->current.signal - 1;
   if (signal_set (tglobal, desired_signal, panelx))
@@ -1653,7 +1653,7 @@ signal_down (GtkWidget *widget,
 }
 
 void
-tvg_label (AmePanel *panel,
+tvg_label (FnnPanel *panel,
            gdouble   gain0,
            gdouble   step)
 {
@@ -1682,7 +1682,7 @@ tvg_set (Global  *global,
 {
   HyScanSourceType *iter;
 
-  AmePanel *panel = get_panel (global, panelx);
+  FnnPanel *panel = get_panel (global, panelx);
 
   g_message ("tvg_set: Sonar#%i, gain0 %f, step %f", panelx, *gain0, step);
 
@@ -1715,7 +1715,7 @@ tvg0_up (GtkWidget *widget,
          gint       panelx)
 {
   gdouble desired;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired = panel->current.gain0 + 1;
   desired = desired - fmod (desired, 1);
@@ -1731,7 +1731,7 @@ tvg0_down (GtkWidget *widget,
            gint       panelx)
 {
   gdouble desired;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired = panel->current.gain0 - 1;
   desired = desired - fmod (desired, 1);
@@ -1747,7 +1747,7 @@ tvg_up (GtkWidget *widget,
          gint       panelx)
 {
   gdouble desired;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired = panel->current.gain_step + 1.0;
   desired = desired - fmod (desired, 1);
@@ -1763,7 +1763,7 @@ tvg_down (GtkWidget *widget,
            gint       panelx)
 {
   gdouble desired;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired = panel->current.gain_step - 1.0;
   desired = desired - fmod (desired, 1);
@@ -1775,7 +1775,7 @@ tvg_down (GtkWidget *widget,
 }
 
 void
-auto_tvg_label (AmePanel *panel,
+auto_tvg_label (FnnPanel *panel,
                 gdouble   level,
                 gdouble   sensitivity)
 {
@@ -1804,7 +1804,7 @@ auto_tvg_set (Global   *global,
               gint      panelx)
 {
   gboolean status;
-  AmePanel *panel = get_panel (global, panelx);
+  FnnPanel *panel = get_panel (global, panelx);
 
   HyScanSourceType *iter;
 
@@ -1830,7 +1830,7 @@ tvg_level_up (GtkWidget *widget,
               gint       panelx)
 {
   gdouble desired;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired = panel->current.level + 0.1;
   desired = CLAMP (desired, 0.0, 1.0);
@@ -1846,7 +1846,7 @@ tvg_level_down (GtkWidget *widget,
                 gint       panelx)
 {
   gdouble desired;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired = panel->current.level - 0.1;
   desired = CLAMP (desired, 0.0, 1.0);
@@ -1862,7 +1862,7 @@ tvg_sens_up (GtkWidget *widget,
              gint       panelx)
 {
   gdouble desired;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired = panel->current.sensitivity + 0.1;
   desired = CLAMP (desired, 0.0, 1.0);
@@ -1878,7 +1878,7 @@ tvg_sens_down (GtkWidget *widget,
                gint       panelx)
 {
   gdouble desired;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired = panel->current.sensitivity - 0.1;
   desired = CLAMP (desired, 0.0, 1.0);
@@ -1890,7 +1890,7 @@ tvg_sens_down (GtkWidget *widget,
 }
 
 void
-distance_label (AmePanel *panel,
+distance_label (FnnPanel *panel,
                 gdouble   distance)
 {
   gchar *text;
@@ -1911,7 +1911,7 @@ distance_set (Global  *global,
   gdouble receive_time, wait_time;
   gboolean status;
   HyScanSourceType *iter;
-  AmePanel *panel = get_panel (global, panelx);
+  FnnPanel *panel = get_panel (global, panelx);
 
   g_message ("Distance_set: Sonar#%i, distance %f", panelx, *meters);
   if (*meters < 1.0)
@@ -1941,7 +1941,7 @@ distance_set (Global  *global,
           gdouble ss_time = 0, fl_time = 0, master_time;
           gdouble requested_time = receive_time;
           gdouble full_time;
-          AmePanel *ss, *fl;
+          FnnPanel *ss, *fl;
 
           ss = get_panel_quiet (tglobal, X_SIDESCAN);
           if (ss != NULL)
@@ -1995,7 +1995,7 @@ distance_up (GtkWidget *widget,
              gint       panelx)
 {
   gdouble desired;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired = panel->current.distance + 5.0;
   desired = desired - fmod (desired, 5);
@@ -2011,7 +2011,7 @@ distance_down (GtkWidget *widget,
                gint       panelx)
 {
   gdouble desired;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired = panel->current.distance - 5.0;
   desired = desired - fmod (desired, 5);
@@ -2041,7 +2041,7 @@ brightness_set (Global  *global,
   gchar *text_bright;
   gchar *text_black;
   gdouble b, g, w;
-  AmePanel *panel;
+  FnnPanel *panel;
 
   if (global->override.brightness_set != NULL)
     return global->override.brightness_set (global, new_brightness, new_black, panelx);
@@ -2062,7 +2062,7 @@ brightness_set (Global  *global,
 
   switch (panel->type)
     {
-    case AME_PANEL_WATERFALL:
+    case FNN_PANEL_WATERFALL:
       b = 0;
       w = 1 - new_brightness / 100.0;
       g = 1.25 - 0.5 * (new_brightness / 100.0);
@@ -2073,7 +2073,7 @@ brightness_set (Global  *global,
       gtk_label_set_markup (wf->common.brightness_value, text_bright);
       break;
 
-    case AME_PANEL_ECHO:
+    case FNN_PANEL_ECHO:
       b = new_black / 250000;
       w = b + (1 - 0.99 * new_brightness / 100.0) * (1 - b);
       g = 1;
@@ -2091,7 +2091,7 @@ brightness_set (Global  *global,
       gtk_label_set_markup (wf->common.black_value, text_black);
       break;
 
-    case AME_PANEL_FORWARDLOOK:
+    case FNN_PANEL_FORWARDLOOK:
       fl = (VisualFL*)panel->vis_gui;
       hyscan_gtk_forward_look_set_brightness (fl->fl, new_brightness);
       gtk_label_set_markup (fl->common.brightness_value, text_bright);
@@ -2113,14 +2113,14 @@ brightness_up (GtkWidget *widget,
 {
   gdouble new_brightness;
   gdouble step;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   new_brightness = panel->vis_current.brightness;
 
   switch (panel->type)
     {
-      case AME_PANEL_WATERFALL:
-      case AME_PANEL_ECHO:
+      case FNN_PANEL_WATERFALL:
+      case FNN_PANEL_ECHO:
         {
           if (new_brightness < 50.0)
             step = 10.0;
@@ -2131,7 +2131,7 @@ brightness_up (GtkWidget *widget,
         }
         break;
 
-      case AME_PANEL_FORWARDLOOK:
+      case FNN_PANEL_FORWARDLOOK:
         {
           if (new_brightness < 10.0)
             step = 1.0;
@@ -2164,14 +2164,14 @@ brightness_down (GtkWidget *widget,
                  gint        panelx)
 {
   gdouble new_brightness, step;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   new_brightness = panel->vis_current.brightness;
 
   switch (panel->type)
     {
-      case AME_PANEL_WATERFALL:
-      case AME_PANEL_ECHO:
+      case FNN_PANEL_WATERFALL:
+      case FNN_PANEL_ECHO:
         {
           if (new_brightness > 90.0)
             step = -1.0;
@@ -2182,7 +2182,7 @@ brightness_down (GtkWidget *widget,
         }
         break;
 
-      case AME_PANEL_FORWARDLOOK:
+      case FNN_PANEL_FORWARDLOOK:
         {
           if (new_brightness <= 10.0)
             step = -1.0;
@@ -2215,14 +2215,14 @@ black_up (GtkWidget *widget,
           gint       panelx)
 {
   gdouble new_black, step;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   new_black = panel->vis_current.black;
 
   switch (panel->type)
     {
-      case AME_PANEL_WATERFALL:
-      case AME_PANEL_ECHO:
+      case FNN_PANEL_WATERFALL:
+      case FNN_PANEL_ECHO:
         {
           if (new_black < 50.0)
             step = 10.0;
@@ -2233,7 +2233,7 @@ black_up (GtkWidget *widget,
         }
         break;
 
-      case AME_PANEL_FORWARDLOOK:
+      case FNN_PANEL_FORWARDLOOK:
         {
           if (new_black < 10.0)
             step = 1.0;
@@ -2266,14 +2266,14 @@ black_down (GtkWidget *widget,
             gint       panelx)
 {
   gdouble new_black, step;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   new_black = panel->vis_current.black;
 
   switch (panel->type)
     {
-      case AME_PANEL_WATERFALL:
-      case AME_PANEL_ECHO:
+      case FNN_PANEL_WATERFALL:
+      case FNN_PANEL_ECHO:
         {
           if (new_black > 90.0)
             step = -1.0;
@@ -2284,7 +2284,7 @@ black_down (GtkWidget *widget,
         }
         break;
 
-      case AME_PANEL_FORWARDLOOK:
+      case FNN_PANEL_FORWARDLOOK:
         {
           if (new_black <= 10.0)
             step = -1.0;
@@ -2336,9 +2336,9 @@ mode_changed (GtkWidget *widget,
   VisualFL *fl;
   HyScanGtkForwardLookViewType type;
 
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
-  if (panel->type != AME_PANEL_FORWARDLOOK)
+  if (panel->type != FNN_PANEL_FORWARDLOOK)
     {
       g_message ("mode_changed: wrong panel type!");
       return TRUE;
@@ -2359,9 +2359,9 @@ pf_special (GtkWidget  *widget,
 {
   VisualWF *wf;
   HyScanTileFlags flags = 0;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
-  if (panel->type != AME_PANEL_ECHO)
+  if (panel->type != FNN_PANEL_ECHO)
     {
       g_message ("pf_special: wrong panel type!");
       return TRUE;
@@ -2389,17 +2389,17 @@ live_view (GtkWidget  *widget,
   VisualWF *wf;
   VisualFL *fl;
   gboolean current;
-  AmePanel *panel = get_panel (tglobal, panelx);
+  FnnPanel *panel = get_panel (tglobal, panelx);
 
   switch (panel->type)
     {
-    case AME_PANEL_WATERFALL:
-    case AME_PANEL_ECHO:
+    case FNN_PANEL_WATERFALL:
+    case FNN_PANEL_ECHO:
       wf = (VisualWF*)panel->vis_gui;
       current = hyscan_gtk_waterfall_automove (wf->wf, state);
       break;
 
-    case AME_PANEL_FORWARDLOOK:
+    case FNN_PANEL_FORWARDLOOK:
 
       fl = (VisualFL*)panel->vis_gui;
       if (state)
@@ -2476,7 +2476,7 @@ start_stop (Global    *global,
       g_hash_table_iter_init (&iter, global->panels);
       while (g_hash_table_iter_next (&iter, &k, &v))
         {
-          AmePanel *panel = v;
+          FnnPanel *panel = v;
           gint panelx = GPOINTER_TO_INT (k);
 
           /* Излучение НЕ в режиме сух. пов. */
@@ -2492,11 +2492,11 @@ start_stop (Global    *global,
               /* TODO: механизм определения, где автотвг, где просто твг.
                  Сейчас пригодно только для АМЭ.
                */
-            case AME_PANEL_WATERFALL:
+            case FNN_PANEL_WATERFALL:
               status &= auto_tvg_set (global, panel->current.level, panel->current.sensitivity, panelx);
               break;
-            case AME_PANEL_ECHO:
-            case AME_PANEL_FORWARDLOOK:
+            case FNN_PANEL_ECHO:
+            case FNN_PANEL_FORWARDLOOK:
               status &= tvg_set (global, &panel->current.gain0, panel->current.gain_step, panelx);
               break;
 
@@ -2672,9 +2672,9 @@ make_overlay (HyScanGtkWaterfall          *wf,
 }
 
 void
-ame_colormap_free (gpointer data)
+fnn_colormap_free (gpointer data)
 {
-  AmeColormap *cmap = *(AmeColormap**)data;
+  FnnColormap *cmap = *(FnnColormap**)data;
   if (cmap == NULL)
     return;
 
@@ -2682,43 +2682,6 @@ ame_colormap_free (gpointer data)
   g_clear_pointer (&cmap->name, g_free);
 
   g_free (cmap);
-}
-
-void
-screenshooter (void)
-{
-  GdkWindow * root;
-  GdkPixbuf * screenshot;
-  GFileIOStream * fios;
-  GFile * file;
-  gint x, y, width, height;
-  GDateTime * dt;
-  gchar *path, *postfix;
-
-  root = gdk_get_default_root_window ();
-  gdk_window_get_geometry (root, &x, &y, &width, &height);
-  screenshot = gdk_pixbuf_get_from_window (root, x, y, width, height);
-
-  dt = g_date_time_new_now_local ();
-  postfix = g_date_time_format (dt, "%y%m%d-%H%M%S.png");
-  path = g_build_path ("/", "/tmp", postfix, NULL);
-  file = g_file_new_for_path (path);
-  fios = g_file_create_readwrite (file, G_FILE_CREATE_NONE, NULL, NULL);
-
-  if (fios != NULL)
-    {
-      GOutputStream * ostream;
-      ostream = g_io_stream_get_output_stream (G_IO_STREAM (fios));
-      gdk_pixbuf_save_to_stream (screenshot, ostream, "png", NULL, NULL, NULL);
-      g_message ("Screenshot saved: %s", path);
-    }
-
-  g_date_time_unref (dt);
-  g_free (postfix);
-  g_free (path);
-  g_object_unref (screenshot);
-  g_object_unref (file);
-  g_object_unref (fios);
 }
 
 void

@@ -1,8 +1,8 @@
-#include "hyscan-gtk-ame-box.h"
+#include "hyscan-gtk-fnn-box.h"
 
 gchar *names[3] = {"pan-up-symbolic", "pan-down-symbolic", "pan-start-symbolic"};
 
-HyScanGtkAmeBox *abox;
+HyScanGtkFnnBox *abox;
 
 void
 draw_h_lines (GtkWidget   *area,

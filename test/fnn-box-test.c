@@ -1,14 +1,14 @@
-#include "hyscan-gtk-ame-box.h"
+#include <hyscan-gtk-fnn-box.h>
 
 gchar *names[3] = {"pan-up-symbolic", "pan-down-symbolic", "pan-start-symbolic"};
 
-HyScanGtkAmeBox *abox;
+HyScanGtkFnnBox *abox;
 
 void
 clicked (GObject *emitter,
          gint     id)
 {
-  hyscan_gtk_ame_box_set_visible (abox, id);
+  hyscan_gtk_fnn_box_set_visible (abox, id);
 }
 
 int
@@ -22,7 +22,7 @@ main (int argc, char **argv)
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
-  abox = hyscan_gtk_ame_box_new ();
+  abox = hyscan_gtk_fnn_box_new ();
 
   gtk_box_pack_start (GTK_BOX (box), GTK_WIDGET (abox), TRUE, TRUE, 0);
 
@@ -40,8 +40,8 @@ main (int argc, char **argv)
       g_object_set (view, "hexpand", TRUE, "vexpand", TRUE,
                     "halign", GTK_ALIGN_FILL, "valign", GTK_ALIGN_FILL, NULL);
 
-      // hyscan_gtk_ame_box_pack (HYSCAN_GTK_AME_BOX (abox), view, i, i, 0, 1, 1);
-      hyscan_gtk_ame_box_pack (HYSCAN_GTK_AME_BOX (abox), view, i,
+      // hyscan_gtk_fnn_box_pack (HYSCAN_GTK_FNN_BOX (abox), view, i, i, 0, 1, 1);
+      hyscan_gtk_fnn_box_pack (HYSCAN_GTK_FNN_BOX (abox), view, i,
                                i == 0 ? 0 : 1, // 0 - 0; 1, 2 - 1
                                i != 2 ? 0 : 1,  // 0, 1 -- 0; 2 - 1r
                                1,
@@ -57,13 +57,13 @@ main (int argc, char **argv)
   {
     GtkWidget *control;
     control = gtk_button_new_with_label ("show all");
-    g_signal_connect_swapped (control, "clicked", G_CALLBACK (hyscan_gtk_ame_box_show_all), abox);
+    g_signal_connect_swapped (control, "clicked", G_CALLBACK (hyscan_gtk_fnn_box_show_all), abox);
     gtk_box_pack_start (GTK_BOX(box), control, FALSE, FALSE, 0);
   }
   {
     GtkWidget *control;
     control = gtk_button_new_with_label ("next");
-    g_signal_connect_swapped (control, "clicked", G_CALLBACK (hyscan_gtk_ame_box_next_visible), abox);
+    g_signal_connect_swapped (control, "clicked", G_CALLBACK (hyscan_gtk_fnn_box_next_visible), abox);
     gtk_box_pack_start (GTK_BOX(box), control, FALSE, FALSE, 0);
   }
 

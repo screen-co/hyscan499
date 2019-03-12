@@ -4,10 +4,10 @@ if (${RESOURCE_COMPILER} STREQUAL RESOURCE_COMPILER-NOTFOUND)
 endif ()
 
 file (MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/resources)
-add_custom_command (OUTPUT ${CMAKE_BINARY_DIR}/resources/triple-resources.c
+add_custom_command (OUTPUT ${CMAKE_BINARY_DIR}/resources/hyscan499-resources.c
                     COMMAND ${RESOURCE_COMPILER} --generate-source
-                            --target ${CMAKE_BINARY_DIR}/resources/triple-resources.c
-                            triple-resources.xml
+                            --target ${CMAKE_BINARY_DIR}/resources/hyscan499-resources.c
+                            hyscan499-resources.xml
                     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
                     DEPENDS common.ui
                     VERBATIM)
@@ -15,13 +15,12 @@ add_custom_command (OUTPUT ${CMAKE_BINARY_DIR}/resources/triple-resources.c
 set (TRIPLE_LIBS ${GLIB2_LIBRARIES}
                  ${GTK3_LIBRARIES}
                  ${HYSCAN_LIBRARIES}
-                 ${HYSCAN_AME_LIBRARY}
+                 ${HYSCAN_FNN_LIBRARY}
                  ${MATH_LIBRARIES})
 
-
-add_executable (triple
+add_executable (hyscan499
                 app.c
-                ${CMAKE_BINARY_DIR}/resources/triple-resources.c)
+                ${CMAKE_BINARY_DIR}/resources/hyscan499-resources.c)
 
-target_link_libraries (triple ${TRIPLE_LIBS})
+target_link_libraries (hyscan499 ${TRIPLE_LIBS})
 

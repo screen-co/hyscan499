@@ -1,7 +1,7 @@
 #ifndef EVO_OVERRIDES_H
 #define EVO_OVERRIDES_H
 
-#include <triple-types.h>
+#include <fnn-types.h>
 
 /* Функция устанавливает яркость отображения. */
 gboolean

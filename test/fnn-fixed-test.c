@@ -1,6 +1,6 @@
-#include "hyscan-ame-fixed.h"
+#include "hyscan-fnn-fixed.h"
 
-#define ICON_NAME "media-record-symbolic"
+#define ICON_NFNN "media-record-symbolic"
 
 #define N_BUTTONS 5
 
@@ -13,7 +13,7 @@ gchar *texts3[N_BUTTONS] = {"on 0", "on 1", "on 2", "on 3", "on 4"};
 GtkWidget *ame_fixed;
 
 static void
-clicked (HyScanAmeButton *button,
+clicked (HyScanFnnButton *button,
          gpointer         data)
 {
   int val = GPOINTER_TO_INT (data);
@@ -21,7 +21,7 @@ clicked (HyScanAmeButton *button,
 }
 
 static void
-toggled (HyScanAmeButton *button,
+toggled (HyScanFnnButton *button,
          gboolean         state,
          gpointer         data)
 {
@@ -30,10 +30,10 @@ toggled (HyScanAmeButton *button,
 }
 
 static void
-direct_pusher (HyScanAmeButton *button)
+direct_pusher (HyScanFnnButton *button)
 {
   g_print ("Act: Activate.\n");
-  hyscan_ame_button_activate (button);
+  hyscan_fnn_button_activate (button);
 }
 
 static void
@@ -43,7 +43,7 @@ fixed_pusher (GtkButton      *button,
   int i = GPOINTER_TO_INT (value);
 
   g_print ("Act: Push. %i.\n", i);
-  hyscan_ame_fixed_activate (HYSCAN_AME_FIXED (ame_fixed), i);
+  hyscan_fnn_fixed_activate (HYSCAN_FNN_FIXED (ame_fixed), i);
 }
 
 static void
@@ -53,7 +53,7 @@ on_setter (GtkButton      *button,
   int i = GPOINTER_TO_INT (value);
 
   g_print ("Act: turn on. %i.\n", i);
-  hyscan_ame_fixed_set_state (HYSCAN_AME_FIXED (ame_fixed), i, TRUE);
+  hyscan_fnn_fixed_set_state (HYSCAN_FNN_FIXED (ame_fixed), i, TRUE);
 }
 
 static void
@@ -63,29 +63,29 @@ off_setter (GtkButton      *button,
   int i = GPOINTER_TO_INT (value);
 
   g_print ("Act: turn off. %i.\n", i);
-  hyscan_ame_fixed_set_state (HYSCAN_AME_FIXED (ame_fixed), i, FALSE);
+  hyscan_fnn_fixed_set_state (HYSCAN_FNN_FIXED (ame_fixed), i, FALSE);
 }
 
 static gboolean
-sensitive_setter (HyScanAmeButton *button,
+sensitive_setter (HyScanFnnButton *button,
                   gboolean         state)
 {
   g_print ("Act: change sensitivity.\n");
-  hyscan_ame_button_set_sensitive (button, state);
+  hyscan_fnn_button_set_sensitive (button, state);
   return FALSE;
 }
 
 static gboolean
-state_setter (HyScanAmeButton *button,
+state_setter (HyScanFnnButton *button,
               gboolean         state)
 {
   g_print ("Act: set active.\n");
-  hyscan_ame_button_set_state (button, state);
+  hyscan_fnn_button_set_state (button, state);
   return FALSE;
 }
 
 static gboolean
-prop_setter (HyScanAmeButton *button,
+prop_setter (HyScanFnnButton *button,
              gboolean         unused,
              GtkSwitch       *source)
 {
@@ -109,7 +109,7 @@ main (int argc, char **argv)
 
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   grid = gtk_grid_new ();
-  ame_fixed = hyscan_ame_fixed_new ();
+  ame_fixed = hyscan_fnn_fixed_new ();
 
   gtk_grid_attach(GTK_GRID (grid), ame_fixed, 0, 0, 1, 5);
   gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("dir"), 1, -1, 1, 1);
@@ -125,9 +125,9 @@ main (int argc, char **argv)
       GtkWidget *ame_button;
       GtkWidget *b1, *b2, *b3, *b4, *b5, *b6, *b7;
 
-      ame_button = hyscan_ame_button_new (ICON_NAME, texts[i], !!(i % 2), !!(i & 2));
-      g_signal_connect (ame_button, "ame-activated", G_CALLBACK (clicked), GINT_TO_POINTER(i));
-      g_signal_connect (ame_button, "ame-toggled", G_CALLBACK (toggled), GINT_TO_POINTER(i));
+      ame_button = hyscan_fnn_button_new (ICON_NFNN, texts[i], !!(i % 2), !!(i & 2));
+      g_signal_connect (ame_button, "fnn-activated", G_CALLBACK (clicked), GINT_TO_POINTER(i));
+      g_signal_connect (ame_button, "fnn-toggled", G_CALLBACK (toggled), GINT_TO_POINTER(i));
 
       b1 = gtk_button_new_with_label (texts0[i]);
       b2 = gtk_button_new_with_label (texts1[i]);
@@ -148,9 +148,9 @@ main (int argc, char **argv)
       g_signal_connect_swapped (b6, "state-set", G_CALLBACK (state_setter), ame_button);
       g_signal_connect_swapped (b7, "state-set", G_CALLBACK (prop_setter), ame_button);
 
-      hyscan_ame_button_create_value (HYSCAN_AME_BUTTON (ame_button), "value");
+      hyscan_fnn_button_create_value (HYSCAN_FNN_BUTTON (ame_button), "value");
 
-      hyscan_ame_fixed_pack (HYSCAN_AME_FIXED (ame_fixed), i, ame_button);
+      hyscan_fnn_fixed_pack (HYSCAN_FNN_FIXED (ame_fixed), i, ame_button);
       gtk_grid_attach(GTK_GRID (grid), b1, 1, i, 1, 1);
       gtk_grid_attach(GTK_GRID (grid), b2, 2, i, 1, 1);
       gtk_grid_attach(GTK_GRID (grid), b3, 3, i, 1, 1);

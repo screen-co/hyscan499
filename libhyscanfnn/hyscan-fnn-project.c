@@ -1,4 +1,4 @@
-#include "hyscan-ame-project.h"
+#include "hyscan-fnn-project.h"
 #include <hyscan-gtk-project-viewer.h>
 
 enum
@@ -11,13 +11,13 @@ enum
 enum
 {
   ID,
-  NAME,
+  NFNN,
   DATE,
   SORT,
   N_COLUMNS
 };
 
-struct _HyScanAmeProjectPrivate
+struct _HyScanFnnProjectPrivate
 {
   HyScanDB     *db;
   HyScanDBInfo *info;
@@ -43,18 +43,18 @@ static void    set_property      (GObject          *object,
                                   GParamSpec       *pspec);
 static void    constructed       (GObject          *object);
 static void    finalize          (GObject          *object);
-static void    delete_project    (HyScanAmeProject *self);
-static void    delete_track      (HyScanAmeProject *self);
-static void    fill_grid         (HyScanAmeProject *self,
+static void    delete_project    (HyScanFnnProject *self);
+static void    delete_track      (HyScanFnnProject *self);
+static void    fill_grid         (HyScanFnnProject *self,
                                   GtkGrid          *grid);
 static void    projects_changed  (HyScanDBInfo     *db_info,
-                                  HyScanAmeProject *self);
+                                  HyScanFnnProject *self);
 static void    tracks_changed    (HyScanDBInfo     *db_info,
-                                  HyScanAmeProject *self);
+                                  HyScanFnnProject *self);
 static void    project_selected  (GtkTreeView      *tree,
-                                  HyScanAmeProject *self);
+                                  HyScanFnnProject *self);
 static void    track_selected    (GtkTreeView      *tree,
-                                  HyScanAmeProject *self);
+                                  HyScanFnnProject *self);
 static void    set_button_text   (GtkButton        *button,
                                   const gchar      *mid,
                                   const gchar      *name);
@@ -62,10 +62,10 @@ static void    response_clicked  (GtkDialog        *self,
                                   gint              response_id);
 
 
-G_DEFINE_TYPE_WITH_PRIVATE (HyScanAmeProject, hyscan_ame_project, GTK_TYPE_DIALOG);
+G_DEFINE_TYPE_WITH_PRIVATE (HyScanFnnProject, hyscan_fnn_project, GTK_TYPE_DIALOG);
 
 static void
-hyscan_ame_project_class_init (HyScanAmeProjectClass *klass)
+hyscan_fnn_project_class_init (HyScanFnnProjectClass *klass)
 {
   GObjectClass *object_class = G_OBJECT_CLASS (klass);
 
@@ -83,9 +83,9 @@ hyscan_ame_project_class_init (HyScanAmeProjectClass *klass)
 }
 
 static void
-hyscan_ame_project_init (HyScanAmeProject *self)
+hyscan_fnn_project_init (HyScanFnnProject *self)
 {
-  self->priv = hyscan_ame_project_get_instance_private (self);
+  self->priv = hyscan_fnn_project_get_instance_private (self);
 }
 
 static void
@@ -94,8 +94,8 @@ set_property (GObject      *object,
               const GValue *value,
               GParamSpec   *pspec)
 {
-  HyScanAmeProject *self = HYSCAN_AME_PROJECT (object);
-  HyScanAmeProjectPrivate *priv = self->priv;
+  HyScanFnnProject *self = HYSCAN_FNN_PROJECT (object);
+  HyScanFnnProjectPrivate *priv = self->priv;
 
   if (prop_id == PROP_DB)
     priv->db = g_value_dup_object (value);
@@ -106,13 +106,13 @@ set_property (GObject      *object,
 }
 
 static void
-fill_grid (HyScanAmeProject *self,
+fill_grid (HyScanFnnProject *self,
            GtkGrid          *grid)
 {
   GtkWidget *projects, *tracks, *del_project, *del_track, *abar;
   GtkTreeView *project_tree, *track_tree;
 
-  HyScanAmeProjectPrivate *priv = self->priv;
+  HyScanFnnProjectPrivate *priv = self->priv;
 
   projects = hyscan_gtk_project_viewer_new ();
   tracks = hyscan_gtk_project_viewer_new ();
@@ -167,26 +167,26 @@ fill_grid (HyScanAmeProject *self,
 }
 
 static void
-delete_project (HyScanAmeProject *self)
+delete_project (HyScanFnnProject *self)
 {
-  HyScanAmeProjectPrivate *priv = self->priv;
+  HyScanFnnProjectPrivate *priv = self->priv;
   gchar * project = priv->project_name;
   priv->project_name = NULL;
 
   if (project == NULL)
     return;
 
-  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_AME_PROJECT_OPEN, FALSE);
-  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_AME_PROJECT_CREATE, FALSE);
+  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_OPEN, FALSE);
+  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_CREATE, FALSE);
 
   hyscan_db_project_remove (priv->db, project);
   g_free (project);
 }
 
 static void
-delete_track (HyScanAmeProject *self)
+delete_track (HyScanFnnProject *self)
 {
-  HyScanAmeProjectPrivate *priv = self->priv;
+  HyScanFnnProjectPrivate *priv = self->priv;
   gint32 project_id;
 
   if (priv->track_name == NULL)
@@ -206,9 +206,9 @@ delete_track (HyScanAmeProject *self)
 
 static void
 projects_changed (HyScanDBInfo     *db_info,
-                  HyScanAmeProject *self)
+                  HyScanFnnProject *self)
 {
-  HyScanAmeProjectPrivate *priv = self->priv;
+  HyScanFnnProjectPrivate *priv = self->priv;
   GtkTreeIter tree_iter;
   GHashTable *projects;
   GHashTableIter htiter;
@@ -218,8 +218,8 @@ projects_changed (HyScanDBInfo     *db_info,
 
   g_message ("Projects changed...");
   projects = hyscan_db_info_get_projects (db_info);
-  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_AME_PROJECT_OPEN, TRUE);
-  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_AME_PROJECT_CREATE, TRUE);
+  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_OPEN, TRUE);
+  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_CREATE, TRUE);
 
   g_hash_table_iter_init (&htiter, projects);
   while (g_hash_table_iter_next (&htiter, &key, &value))
@@ -234,7 +234,7 @@ projects_changed (HyScanDBInfo     *db_info,
       gtk_list_store_append (GTK_LIST_STORE (priv->project_ls), &tree_iter);
       gtk_list_store_set (GTK_LIST_STORE (priv->project_ls), &tree_iter,
                           ID,   pinfo->name,
-                          NAME, pinfo->name,
+                          NFNN, pinfo->name,
                           DATE, time_str,
                           SORT, g_date_time_to_unix (pinfo->ctime),
                           -1);
@@ -261,9 +261,9 @@ projects_changed (HyScanDBInfo     *db_info,
 
 static void
 tracks_changed (HyScanDBInfo     *db_info,
-                HyScanAmeProject *self)
+                HyScanFnnProject *self)
 {
-  HyScanAmeProjectPrivate *priv = self->priv;
+  HyScanFnnProjectPrivate *priv = self->priv;
   GtkTreeIter tree_iter;
   GHashTable *tracks;
   GHashTableIter htiter;
@@ -280,7 +280,7 @@ tracks_changed (HyScanDBInfo     *db_info,
       gtk_list_store_append (GTK_LIST_STORE (priv->track_ls), &tree_iter);
       gtk_list_store_set (GTK_LIST_STORE (priv->track_ls), &tree_iter,
                           ID,   g_strdup (tinfo->name),
-                          NAME, g_strdup (tinfo->name),
+                          NFNN, g_strdup (tinfo->name),
                           DATE, g_date_time_format (tinfo->ctime, "%d.%m %H:%M"),
                           SORT, g_date_time_to_unix (tinfo->ctime),
                           -1);
@@ -323,9 +323,9 @@ static void
 response_clicked (GtkDialog        *self,
                   gint              response_id)
 {
-  HyScanAmeProjectPrivate *priv = HYSCAN_AME_PROJECT (self)->priv;
+  HyScanFnnProjectPrivate *priv = HYSCAN_FNN_PROJECT (self)->priv;
 
-  if (response_id == HYSCAN_AME_PROJECT_CREATE)
+  if (response_id == HYSCAN_FNN_PROJECT_CREATE)
     {
       GHashTable *projects;
       gchar *date, *name;
@@ -385,7 +385,7 @@ get_selected (GtkTreeView *tree)
   if (!gtk_tree_model_get_iter (model, &iter, path))
     return NULL;
 
-  gtk_tree_model_get_value (model, &iter, NAME, &value);
+  gtk_tree_model_get_value (model, &iter, NFNN, &value);
   text = g_value_get_string (&value);
 
   g_message ("Selected item is <%s>", text);
@@ -394,9 +394,9 @@ get_selected (GtkTreeView *tree)
 
 static void
 project_selected (GtkTreeView      *tree,
-                  HyScanAmeProject *self)
+                  HyScanFnnProject *self)
 {
-  HyScanAmeProjectPrivate *priv = self->priv;
+  HyScanFnnProjectPrivate *priv = self->priv;
   GtkWidget *resp_widget;
   gchar *project;
 
@@ -417,16 +417,16 @@ project_selected (GtkTreeView      *tree,
 
   set_button_text (priv->del_project, "Удалить проект", priv->project_name);
 
-  resp_widget = gtk_dialog_get_widget_for_response (GTK_DIALOG (self), HYSCAN_AME_PROJECT_OPEN);
+  resp_widget = gtk_dialog_get_widget_for_response (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_OPEN);
   set_button_text (GTK_BUTTON (resp_widget), "Открыть проект", priv->project_name);
   g_free (project);
 }
 
 static void
 track_selected (GtkTreeView      *tree,
-                HyScanAmeProject *self)
+                HyScanFnnProject *self)
 {
-  HyScanAmeProjectPrivate *priv = self->priv;
+  HyScanFnnProjectPrivate *priv = self->priv;
   gchar *track;
 
   track = get_selected (tree);
@@ -445,10 +445,10 @@ constructed (GObject *object)
   GtkWidget *content, *grid, *button;
 
 
-  HyScanAmeProject *self = HYSCAN_AME_PROJECT (object);
-  HyScanAmeProjectPrivate *priv = self->priv;
+  HyScanFnnProject *self = HYSCAN_FNN_PROJECT (object);
+  HyScanFnnProjectPrivate *priv = self->priv;
 
-  G_OBJECT_CLASS (hyscan_ame_project_parent_class)->constructed (object);
+  G_OBJECT_CLASS (hyscan_fnn_project_parent_class)->constructed (object);
 
   grid = gtk_grid_new ();
   fill_grid (self, GTK_GRID (grid));
@@ -461,13 +461,13 @@ constructed (GObject *object)
   g_signal_connect (priv->info, "tracks-changed", G_CALLBACK (tracks_changed), self);
   projects_changed (priv->info, self);
 
-  button = gtk_dialog_add_button (GTK_DIALOG (self), "Открыть проект", HYSCAN_AME_PROJECT_OPEN);
+  button = gtk_dialog_add_button (GTK_DIALOG (self), "Открыть проект", HYSCAN_FNN_PROJECT_OPEN);
   gtk_style_context_add_class (gtk_widget_get_style_context (button), GTK_STYLE_CLASS_SUGGESTED_ACTION);
-  button = gtk_dialog_add_button (GTK_DIALOG (self), "Создать и открыть проект", HYSCAN_AME_PROJECT_CREATE);
+  button = gtk_dialog_add_button (GTK_DIALOG (self), "Создать и открыть проект", HYSCAN_FNN_PROJECT_CREATE);
   gtk_style_context_add_class (gtk_widget_get_style_context (button), GTK_STYLE_CLASS_SUGGESTED_ACTION);
 
-  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_AME_PROJECT_OPEN, FALSE);
-  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_AME_PROJECT_CREATE, FALSE);
+  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_OPEN, FALSE);
+  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_CREATE, FALSE);
 
   gtk_widget_set_size_request (GTK_WIDGET (self), 800, 600);
   gtk_widget_show_all (GTK_WIDGET (self));
@@ -476,8 +476,8 @@ constructed (GObject *object)
 static void
 finalize (GObject *object)
 {
-  HyScanAmeProject *self = HYSCAN_AME_PROJECT (object);
-  HyScanAmeProjectPrivate *priv = self->priv;
+  HyScanFnnProject *self = HYSCAN_FNN_PROJECT (object);
+  HyScanFnnProjectPrivate *priv = self->priv;
 
   g_signal_handlers_disconnect_by_data (priv->info, self);
 
@@ -488,16 +488,16 @@ finalize (GObject *object)
   g_clear_pointer (&priv->track_name, g_free);
   g_clear_pointer (&priv->project_name, g_free);
 
-  G_OBJECT_CLASS (hyscan_ame_project_parent_class)->finalize (object);
+  G_OBJECT_CLASS (hyscan_fnn_project_parent_class)->finalize (object);
 }
 
 /* .*/
 GtkWidget *
-hyscan_ame_project_new (HyScanDB     *db,
+hyscan_fnn_project_new (HyScanDB     *db,
                         HyScanDBInfo *info,
                         GtkWindow    *parent)
 {
-  return g_object_new (HYSCAN_TYPE_AME_PROJECT,
+  return g_object_new (HYSCAN_TYPE_FNN_PROJECT,
                        "db", db, "info", info,
                        "use-header-bar", TRUE,
                        "transient-for", parent,
@@ -505,11 +505,11 @@ hyscan_ame_project_new (HyScanDB     *db,
 }
 
 void
-hyscan_ame_project_get (HyScanAmeProject *self,
+hyscan_fnn_project_get (HyScanFnnProject *self,
                         gchar           **project,
                         gchar           **track)
 {
-  g_return_if_fail (HYSCAN_IS_AME_PROJECT (self));
+  g_return_if_fail (HYSCAN_IS_FNN_PROJECT (self));
 
   if (project != NULL)
     *project = g_strdup (self->priv->project_name);

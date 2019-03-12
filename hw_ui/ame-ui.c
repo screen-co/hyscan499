@@ -3,7 +3,7 @@
 
 #include <gmodule.h>
 
-AmeUI global_ui = {0,};
+FnnUI global_ui = {0,};
 Global *_global = NULL;
 ButtonReceive brec;
 /***
@@ -18,11 +18,11 @@ ButtonReceive brec;
  */
 
 void
-start_stop_wrapper (HyScanAmeButton *button,
+start_stop_wrapper (HyScanFnnButton *button,
                     gboolean         state,
                     gpointer         user_data)
 {
-  AmeUI *ui = &global_ui;
+  FnnUI *ui = &global_ui;
   gboolean status;
   gint i;
 
@@ -30,7 +30,7 @@ start_stop_wrapper (HyScanAmeButton *button,
 
   if (!status)
     {
-      hyscan_ame_button_set_state (button, !state);
+      hyscan_fnn_button_set_state (button, !state);
       return;
     }
 
@@ -38,21 +38,21 @@ start_stop_wrapper (HyScanAmeButton *button,
    *  Выкл: сухая энейбл, остальные неактив
    */
   gtk_widget_set_sensitive (ui->starter.dry, !state);
-  hyscan_ame_button_set_state ((HyScanAmeButton*)ui->starter.all, state);
+  hyscan_fnn_button_set_state ((HyScanFnnButton*)ui->starter.all, state);
 
   for (i = 0; i < START_STOP_LAST; ++i)
     {
       if (ui->starter.panel[i] != NULL)
-        hyscan_ame_button_set_state ((HyScanAmeButton*)ui->starter.panel[i], state);
+        hyscan_fnn_button_set_state ((HyScanFnnButton*)ui->starter.panel[i], state);
     }
 }
 
 void
-start_stop_dry_wrapper (HyScanAmeButton *button,
+start_stop_dry_wrapper (HyScanFnnButton *button,
                         gboolean         state,
                         gpointer         user_data)
 {
-  AmeUI *ui = &global_ui;
+  FnnUI *ui = &global_ui;
   gboolean status;
   gint i;
 
@@ -61,14 +61,14 @@ start_stop_dry_wrapper (HyScanAmeButton *button,
 
   if (!status)
     {
-      hyscan_ame_button_set_state (button, !state);
+      hyscan_fnn_button_set_state (button, !state);
       return;
     }
 
   /*  Вкл: сухая актив, остальные дизейбл
    *  Выкл: сухая неактив, остальные энейблед
    */
-  hyscan_ame_button_set_state ((HyScanAmeButton*)ui->starter.dry, state);
+  hyscan_fnn_button_set_state ((HyScanFnnButton*)ui->starter.dry, state);
   gtk_widget_set_sensitive (ui->starter.all, !state);
 
   for (i = 0; i < START_STOP_LAST; ++i)
@@ -90,24 +90,24 @@ start_stop_dry_wrapper (HyScanAmeButton *button,
  */
 /* ф-ия делает 1 элемент. */
 GtkWidget *
-make_item (AmePageItem  *item,
+make_item (FnnPageItem  *item,
            GtkWidget   **value_widget)
 {
   gboolean is_toggle = item->toggle != TOGGLE_NONE;
   gboolean state = item->toggle == TOGGLE_ON;
   const gchar * title = item->msg_id;
 
-  GtkWidget *button = hyscan_ame_button_new (item->icon_name,
+  GtkWidget *button = hyscan_fnn_button_new (item->icon_name,
                                              title, is_toggle, state);
 
-  g_signal_connect (button, is_toggle ? "ame-toggled" : "ame-activated",
+  g_signal_connect (button, is_toggle ? "fnn-toggled" : "fnn-activated",
                     G_CALLBACK (item->callback), item->user_data);
   /* Если указано, куда сохранять виджет значения, создадим его. */
   if (item->value_offset > 0)
     {
       GtkLabel *value;
 
-      value = hyscan_ame_button_create_value (HYSCAN_AME_BUTTON (button),
+      value = hyscan_fnn_button_create_value (HYSCAN_FNN_BUTTON (button),
                                               item->value_default);
       *value_widget = GTK_WIDGET (value);
     }
@@ -123,9 +123,9 @@ make_item (AmePageItem  *item,
 
 /* функция делает 1 страницу*/
 void
-build_page (AmeUI   *ui,
+build_page (FnnUI   *ui,
             Global  *global,
-            AmePage *page)
+            FnnPage *page)
 {
   gint i;
   GtkWidget *left, *right;
@@ -142,7 +142,7 @@ build_page (AmeUI   *ui,
   if (left == NULL)
     {
       wname = g_strdup_printf ("%s", page->path);
-      left = hyscan_ame_fixed_new ();
+      left = hyscan_fnn_fixed_new ();
       gtk_widget_set_name (GTK_WIDGET (left), wname);
       g_free (wname);
       gtk_stack_add_titled (lstack, left, page->path, page->path);
@@ -150,7 +150,7 @@ build_page (AmeUI   *ui,
   if (right == NULL)
     {
       wname = g_strdup_printf ("%s", page->path);
-      right = hyscan_ame_fixed_new ();
+      right = hyscan_fnn_fixed_new ();
       gtk_widget_set_name (GTK_WIDGET (right), wname);
       g_free (wname);
       gtk_stack_add_titled (rstack, right, page->path, page->path);
@@ -161,17 +161,17 @@ build_page (AmeUI   *ui,
     {
       const gchar *title;
       GtkWidget *button, *value;
-      HyScanAmeFixed *fixed;
-      AmePageItem *item = &page->items[i];
+      HyScanFnnFixed *fixed;
+      FnnPageItem *item = &page->items[i];
 
       if (item->side == L)
-        fixed = (HyScanAmeFixed*)left;
+        fixed = (HyScanFnnFixed*)left;
       else if (item->side == R)
-        fixed = (HyScanAmeFixed*)right;
+        fixed = (HyScanFnnFixed*)right;
       else if (item->side == END)
         break;
       else
-        g_error ("AmeUI: wrong item->side");
+        g_error ("FnnUI: wrong item->side");
 
       button = make_item (item, &value);
       title = item->msg_id;
@@ -188,7 +188,7 @@ build_page (AmeUI   *ui,
         {
           gchar * base;
           GtkWidget ** dest;
-          AmePanel *panel;
+          FnnPanel *panel;
 
           switch (page->destination_selector)
             {
@@ -206,13 +206,13 @@ build_page (AmeUI   *ui,
               base = (gchar*)(panel->vis_gui);
               break;
 
-            case DEST_AME_UI:
+            case DEST_FNN_UI:
               base = (gchar*)ui;
               break;
 
             default:
               base = 0;
-              g_warning ("AmeUI: wrong page->destination_selector");
+              g_warning ("FnnUI: wrong page->destination_selector");
             }
 
           /* Кстати, я там специально не проверяю на NULL, потому что криво
@@ -231,15 +231,15 @@ build_page (AmeUI   *ui,
             }
         }
 
-      hyscan_ame_fixed_pack (fixed, item->position, button);
+      hyscan_fnn_fixed_pack (fixed, item->position, button);
     }
 }
 
 /* Функция делает массив переданных страниц. */
 void
-build_all (AmeUI   *ui,
+build_all (FnnUI   *ui,
            Global  *global,
-           AmePage *page)
+           FnnPage *page)
 {
   for (; page->path != NULL; ++page)
     build_page (ui, global, page);
@@ -265,27 +265,27 @@ widget_swap (GObject  *emitter,
    * айдишники панелей -- соотв. панель.
    */
   gint selector = GPOINTER_TO_INT (user_data);
-  HyScanGtkAmeBox *abox = HYSCAN_GTK_AME_BOX (global_ui.acoustic);
+  HyScanGtkFnnBox *abox = HYSCAN_GTK_FNN_BOX (global_ui.acoustic);
   gchar *markup;
   const gchar *text = (gchar*)0x1;
   gint id = 0;
 
-  if (!HYSCAN_IS_GTK_AME_BOX (global_ui.acoustic))
+  if (!HYSCAN_IS_GTK_FNN_BOX (global_ui.acoustic))
     {
       g_warning ("fuck");
 
     }
   if (selector == ALL)
     {
-      hyscan_gtk_ame_box_show_all (abox);
+      hyscan_gtk_fnn_box_show_all (abox);
       text = "Всё";
     }
   else
     {
-      AmePanel *panel;
+      FnnPanel *panel;
 
       if (selector == ROTATE)
-        id = hyscan_gtk_ame_box_next_visible (abox);
+        id = hyscan_gtk_fnn_box_next_visible (abox);
       else
         id = selector;
 
@@ -293,12 +293,12 @@ widget_swap (GObject  *emitter,
        * все панели. Иначе вернется юзердата с panelx. */
       if (id == -1)
         {
-          hyscan_gtk_ame_box_show_all (abox);
+          hyscan_gtk_fnn_box_show_all (abox);
           text = "Всё";
         }
       else
         {
-          hyscan_gtk_ame_box_set_visible (abox, id);
+          hyscan_gtk_fnn_box_set_visible (abox, id);
           panel = get_panel (_global, id);
           text = panel->name_ru;
         }
@@ -313,19 +313,19 @@ void
 switch_page (GObject     *emitter,
              const gchar *page)
 {
-  AmeUI *ui = &global_ui;
+  FnnUI *ui = &global_ui;
   GtkStack * lstack = GTK_STACK (ui->lstack);
   GtkStack * rstack = GTK_STACK (ui->rstack);
   GtkRevealer * left = GTK_REVEALER (ui->left_revealer);
   GtkRevealer * bottom = GTK_REVEALER (ui->bott_revealer);
 
-  // HyScanAmeFixed * rold = HYSCAN_AME_FIXED (gtk_stack_get_visible_child (rstack));
+  // HyScanFnnFixed * rold = HYSCAN_FNN_FIXED (gtk_stack_get_visible_child (rstack));
   // const gchar * old = gtk_stack_get_visible_child_name (lstack);
 
   // if (g_str_equal (old, "И_ПФд"))
-  //   hyscan_ame_fixed_set_state (rold, 4, FALSE);
+  //   hyscan_fnn_fixed_set_state (rold, 4, FALSE);
   // if (g_str_equal (old, "И_ГБОд"))
-  //   hyscan_ame_fixed_set_state (rold, 4, FALSE);
+  //   hyscan_fnn_fixed_set_state (rold, 4, FALSE);
 
   g_message ("Opening page <%s>", page);
 
@@ -406,6 +406,47 @@ list_scroll_end (GObject *emitter,
   track_scroller (view, FALSE, TRUE);
 }
 
+void
+screenshooter (void)
+{
+  GdkWindow * root;
+  GdkPixbuf * screenshot;
+  GFileIOStream * fios;
+  GFile * file;
+  gint x, y, width, height;
+  GDateTime * dt;
+  gchar *path, *file_name;
+
+  root = gdk_get_default_root_window ();
+  gdk_window_get_geometry (root, &x, &y, &width, &height);
+  screenshot = gdk_pixbuf_get_from_window (root, x, y, width, height);
+
+  dt = g_date_time_new_now_local ();
+  file_name = g_date_time_format (dt, "%y%m%d-%H%M%S.png");
+  path = g_build_path (G_DIR_SEPARATOR_S, global_ui.screenshot_dir, file_name, NULL);
+  file = g_file_new_for_path (path);
+  fios = g_file_create_readwrite (file, G_FILE_CREATE_NONE, NULL, NULL);
+
+  if (fios != NULL)
+    {
+      GOutputStream * ostream;
+      ostream = g_io_stream_get_output_stream (G_IO_STREAM (fios));
+      gdk_pixbuf_save_to_stream (screenshot, ostream, "png", NULL, NULL, NULL);
+      g_message ("Screenshot saved: %s", path);
+      g_object_unref (fios);
+    }
+  else
+    {
+      g_message ("Failed to save screenshot at %s", path);
+    }
+
+  g_date_time_unref (dt);
+  g_free (file_name);
+  g_free (path);
+  g_object_unref (screenshot);
+  g_object_unref (file);
+}
+
 //   #     #    #    ### #     #
 //   ##   ##   # #    #  ##    #
 //   # # # #  #   #   #  # #   #
@@ -418,7 +459,7 @@ list_scroll_end (GObject *emitter,
 gboolean
 build_interface (Global *global)
 {
-  AmeUI *ui = &global_ui;
+  FnnUI *ui = &global_ui;
   _global = global;
 
   GtkWidget *grid;
@@ -431,7 +472,7 @@ build_interface (Global *global)
   grid = gtk_grid_new ();
 
   /* Центральная зона: виджет с виджетами. Да. */
-  ui->acoustic = hyscan_gtk_ame_box_new ();
+  ui->acoustic = hyscan_gtk_fnn_box_new ();
 
   /* Слева у нас список галсов и меток. */
   ui->left_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
@@ -464,7 +505,7 @@ build_interface (Global *global)
     for (i = 0; i < 3; ++i)
       {
         GtkWidget *w;
-        AmePanel *panel = get_panel (global, order[i]);
+        FnnPanel *panel = get_panel (global, order[i]);
 
         /* Может и не получится найти панель. */
         if (panel == NULL)
@@ -475,7 +516,7 @@ build_interface (Global *global)
         g_object_set (w, "vexpand", TRUE, "valign", GTK_ALIGN_FILL,
                          "hexpand", TRUE, "halign", GTK_ALIGN_FILL, NULL);
 
-        hyscan_gtk_ame_box_pack (HYSCAN_GTK_AME_BOX (ui->acoustic), w, order[i],
+        hyscan_gtk_fnn_box_pack (HYSCAN_GTK_FNN_BOX (ui->acoustic), w, order[i],
                                  left[i], top[i], 1, height[i]);
       }
   }
@@ -502,7 +543,7 @@ build_interface (Global *global)
 
   /* Нижняя панель содержит виджет управления впередсмотрящим. */
   {
-    AmePanel *panel;
+    FnnPanel *panel;
     VisualFL *fl;
 
     panel = get_panel (global, X_FORWARDL);
@@ -597,12 +638,12 @@ ame_button_clicker (gpointer data)
       return G_SOURCE_REMOVE;
     }
   code %= 1000;
-  g_message ("AmeButton: %"G_GINT64_FORMAT" clicked <%s>(%i)",
+  g_message ("FnnButton: %"G_GINT64_FORMAT" clicked <%s>(%i)",
              g_get_monotonic_time(),
              gtk_stack_get_visible_child_name (GTK_STACK (stack)),
              code);
   fixed = gtk_stack_get_visible_child (GTK_STACK (stack));
-  hyscan_ame_fixed_activate (HYSCAN_AME_FIXED (fixed), code);
+  hyscan_fnn_fixed_activate (HYSCAN_FNN_FIXED (fixed), code);
 
   return G_SOURCE_REMOVE;
 }
@@ -670,7 +711,7 @@ ame_button_thread (void * data)
 
       /* нуль-терминируем. */
       buf[bytes] = '\0';
-      g_message ("AmeButton: %"G_GINT64_FORMAT" received <%s>", g_get_monotonic_time(), buf);
+      g_message ("FnnButton: %"G_GINT64_FORMAT" received <%s>", g_get_monotonic_time(), buf);
 
       for (pbuf = buf; bytes > 0 && pbuf < buf + 127; )
         {
@@ -716,6 +757,18 @@ kf_config (GKeyFile *kf)
       }
     g_message ("Depth export path: %s", depth_writer_path);
     global_ui.depth_writer_path = depth_writer_path;
+  }
+  /* Скриншоты. */
+  {
+    gchar * screenshot_dir =  keyfile_string_read_helper (kf, "ame", "screenshot_dir");
+
+    if (screenshot_dir == NULL)
+      {
+        g_warning ("Screenshot dir not set. Using default.");
+        screenshot_dir = g_strdup (g_get_tmp_dir ());
+      }
+    g_message ("Screenshot dir: %s", screenshot_dir);
+    global_ui.screenshot_dir = screenshot_dir;
   }
 
   source_specific = keyfile_bool_read_helper (kf, "ame", "source_specific");
