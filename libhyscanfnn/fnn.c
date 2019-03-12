@@ -792,26 +792,32 @@ get_projector (GHashTable       *locstores,
   /* Ищем проектор по источнику. */
   pj = g_hash_table_lookup (store->projectors, pj_key);
 
-  /* Если нашли, возвращаем. */
-  if (pj != NULL)
+  /* Если не нашли, создаем с помощью фабрики. */
+  if (pj == NULL)
     {
-      amp = g_hash_table_lookup (store->projectors, amp_key);
-      if (_amp != NULL)
-        *_amp = amp;
+      amp = hyscan_amplitude_factory_produce (store->factory, source);
 
-      return pj;
+      if (amp == NULL)
+        {
+          return NULL;
+        }
+
+      pj = hyscan_projector_new (amp);
+      if (pj == NULL)
+        {
+          g_object_unref (amp);
+          return NULL;
+        }
+
+      /* Закидываем проектор и амплитуддата в таблицу. */
+      g_hash_table_insert (store->projectors, pj_key, pj);
+      g_hash_table_insert (store->projectors, amp_key, amp);
     }
 
-  /* Если не нашли, создаем с помощью фабрики. */
-  amp = hyscan_amplitude_factory_produce (store->factory, source);
-  pj = hyscan_projector_new (amp);
+  amp = g_hash_table_lookup (store->projectors, amp_key);
 
-  if (pj == NULL)
-    return NULL;
-
-  /* Закидываем проектор и амплитуддата в таблицу. */
-  g_hash_table_insert (store->projectors, pj_key, pj);
-  g_hash_table_insert (store->projectors, amp_key, amp);
+  if (_amp != NULL)
+    *_amp = amp;
 
   return pj;
 }
@@ -2048,7 +2054,7 @@ brightness_set (Global  *global,
 
   panel = get_panel (global, panelx);
 
-  if (new_brightness < 1.0)
+  if (new_brightness < 0.0)
     return FALSE;
   if (new_brightness > 100.0)
     return FALSE;
@@ -2064,7 +2070,7 @@ brightness_set (Global  *global,
     {
     case FNN_PANEL_WATERFALL:
       b = 0;
-      w = 1 - new_brightness / 100.0;
+      w = 1 - 0.99 * new_brightness / 100.0;
       g = 1.25 - 0.5 * (new_brightness / 100.0);
 
       wf = (VisualWF*)panel->vis_gui;
@@ -2081,6 +2087,7 @@ brightness_set (Global  *global,
           g_message ("BBC error");
           return FALSE;
         }
+
 
       wf = (VisualWF*)panel->vis_gui;
       hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), b, g, w);
@@ -2149,7 +2156,7 @@ brightness_up (GtkWidget *widget,
 
   new_brightness = new_brightness + step;
   new_brightness = new_brightness - fmod (new_brightness, ABS(step));
-  new_brightness = CLAMP (new_brightness, 1.0, 100.0);
+  new_brightness = CLAMP (new_brightness, 0.0, 100.0);
 
   if (brightness_set (tglobal, new_brightness, panel->vis_current.black, panelx))
     panel->vis_current.brightness = new_brightness;
@@ -2200,7 +2207,7 @@ brightness_down (GtkWidget *widget,
 
   new_brightness = new_brightness + step;
   new_brightness = new_brightness - fmod (new_brightness, ABS(step));
-  new_brightness = CLAMP (new_brightness, 1.0, 100.0);
+  new_brightness = CLAMP (new_brightness, 0.0, 100.0);
 
   if (brightness_set (tglobal, new_brightness, panel->vis_current.black, panelx))
     panel->vis_current.brightness = new_brightness;
@@ -2251,7 +2258,7 @@ black_up (GtkWidget *widget,
 
   new_black = new_black + step;
   new_black = new_black - fmod (new_black, ABS(step));
-  new_black = CLAMP (new_black, 1.0, 100.0);
+  new_black = CLAMP (new_black, 0.0, 100.0);
 
   if (brightness_set (tglobal, panel->vis_current.brightness, new_black, panelx))
     panel->vis_current.black = new_black;
@@ -2302,7 +2309,7 @@ black_down (GtkWidget *widget,
 
   new_black = new_black + step;
   new_black = new_black - fmod (new_black, ABS(step));
-  new_black = CLAMP (new_black, 1.0, 100.0);
+  new_black = CLAMP (new_black, 0.0, 100.0);
 
   if (brightness_set (tglobal, panel->vis_current.brightness, new_black, panelx))
     panel->vis_current.black = new_black;
