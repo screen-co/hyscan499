@@ -256,7 +256,8 @@ hyscan_fnn_button_object_constructed (GObject *object)
   gtk_box_set_spacing (GTK_BOX (self), 2);
   gtk_widget_set_margin_start (GTK_WIDGET (self), 6);
   gtk_widget_set_margin_end (GTK_WIDGET (self), 6);
-  gtk_widget_set_size_request (GTK_WIDGET (self), -1, HYSCAN_FNN_BUTTON_HEIGHT_REQUEST);
+  gtk_widget_set_size_request (GTK_WIDGET (self), -1,
+                               hyscan_fnn_button_get_size_request());
 
   button_setup (self);
   text_box_setup (self);
@@ -278,6 +279,24 @@ hyscan_fnn_button_object_finalize (GObject *object)
   g_clear_object (&priv->image_off);
 
   G_OBJECT_CLASS (hyscan_fnn_button_parent_class)->finalize (object);
+}
+
+gint
+hyscan_fnn_button_get_size_request (void)
+{
+  gint size = 172; /* Default button size */
+  gchar ** env;
+  const gchar * param_set;
+
+  env = g_get_environ ();
+  param_set = g_environ_getenv (env, "FNN_BUTTON_SIZE");
+  if (param_set != NULL)
+    {
+      size = g_ascii_strtoll (param_set, NULL, 10);
+    }
+  g_strfreev (env);
+
+  return size;
 }
 
 /* .*/

@@ -13,8 +13,6 @@ G_BEGIN_DECLS
 #define HYSCAN_IS_FNN_BUTTON_CLASS(klass)  (G_TYPE_CHECK_CLASS_TYPE ((klass), HYSCAN_TYPE_FNN_BUTTON))
 #define HYSCAN_FNN_BUTTON_GET_CLASS(obj)   (G_TYPE_INSTANCE_GET_CLASS ((obj), HYSCAN_TYPE_FNN_BUTTON, HyScanFnnButtonClass))
 
-#define HYSCAN_FNN_BUTTON_HEIGHT_REQUEST 172
-
 typedef struct _HyScanFnnButton HyScanFnnButton;
 typedef struct _HyScanFnnButtonPrivate HyScanFnnButtonPrivate;
 typedef struct _HyScanFnnButtonClass HyScanFnnButtonClass;
@@ -32,6 +30,9 @@ struct _HyScanFnnButtonClass
 
 HYSCAN_API
 GType                    hyscan_fnn_button_get_type         (void);
+
+HYSCAN_API
+gint                     hyscan_fnn_button_get_size_request (void);
 
 HYSCAN_API
 GtkWidget               *hyscan_fnn_button_new              (const gchar     *icon_name,
