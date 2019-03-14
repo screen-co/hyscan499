@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-03-13 18:39+0300\n"
-"PO-Revision-Date: 2019-03-13 18:26+0300\n"
+"POT-Creation-Date: 2019-03-14 14:27+0300\n"
+"PO-Revision-Date: 2019-03-14 14:27+0300\n"
 "Last-Translator:  <dmitriev.a@debian.work>\n"
 "Language-Team: Russian\n"
 "Language: ru\n"
@@ -20,17 +20,17 @@ msgstr ""
 
 #: hyscan-gtk-mark-editor.ui.h:3 hyscan-gtk-nav-indicator.ui.h:2
 msgid "--"
-msgstr "--"
+msgstr ""
 
-#: fnn.c:154
+#: fnn.c:156
 msgid "Apply"
 msgstr "Применить"
 
-#: fnn.c:156 fnn.c:189
+#: fnn.c:158 fnn.c:191
 msgid "Close"
 msgstr "Закрыть"
 
-#: hyscan-fnn-project.c:466
+#: hyscan-fnn-project.c:467
 msgid "Create and open project"
 msgstr "Создать и открыть проект"
 
@@ -38,11 +38,11 @@ msgstr "Создать и открыть проект"
 msgid "Date"
 msgstr "Дата"
 
-#: hyscan-fnn-project.c:135 hyscan-fnn-project.c:143 hyscan-fnn-project.c:418
+#: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:419
 msgid "Delete project"
 msgstr "Удалить проект"
 
-#: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:437
+#: hyscan-fnn-project.c:137 hyscan-fnn-project.c:145 hyscan-fnn-project.c:438
 msgid "Delete track"
 msgstr "Удалить галс"
 
@@ -50,7 +50,7 @@ msgstr "Удалить галс"
 msgid "Depth"
 msgstr "Глубина"
 
-#: fnn.c:152
+#: fnn.c:154
 msgid "Hardware parameters"
 msgstr "Параметры оборудования"
 
@@ -66,19 +66,19 @@ msgstr "Долгота"
 msgid "Name"
 msgstr "Название"
 
-#: hyscan-fnn-project.c:421 hyscan-fnn-project.c:464
+#: hyscan-fnn-project.c:422 hyscan-fnn-project.c:465
 msgid "Open project"
 msgstr "Открыть проект"
 
-#: hyscan-fnn-project.c:162
+#: hyscan-fnn-project.c:163
 msgid "Projects"
 msgstr "Проекты"
 
-#: fnn.c:155
+#: fnn.c:157
 msgid "Reset"
 msgstr "Сбросить"
 
-#: fnn.c:187
+#: fnn.c:189
 msgid "Sonar info"
 msgstr "Информация о гидролокаторе"
 
@@ -98,7 +98,6 @@ msgstr "Название"
 msgid "Track"
 msgstr "Курс"
 
-#: hyscan-fnn-project.c:164
-#, fuzzy
+#: hyscan-fnn-project.c:165
 msgid "Tracks"
-msgstr "Курс"
+msgstr "Галсы"

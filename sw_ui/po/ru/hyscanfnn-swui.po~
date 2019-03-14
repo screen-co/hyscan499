@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-03-14 14:03+0300\n"
+"POT-Creation-Date: 2019-03-14 11:37+0300\n"
 "PO-Revision-Date: 2019-03-14 09:52+0300\n"
 "Last-Translator:  <dmitriev.a@debian.work>\n"
 "Language-Team: Russian\n"
@@ -42,11 +42,11 @@ msgstr "Дальность"
 msgid "Gain"
 msgstr "Усиление-Д"
 
-#: sw-ui.c:419 sw-ui.c:424
+#: sw-ui.c:419
 msgid "Hardware info"
 msgstr "Параметры оборудования"
 
-#: sw-ui.c:173 sw-ui.c:177
+#: sw-ui.c:173
 msgid "Hide other"
 msgstr "Скрыть остальные"
 
@@ -62,7 +62,7 @@ msgstr "Уровень"
 msgid "No beaming"
 msgstr "Без излучения"
 
-#: sw-ui.c:390 sw-ui.c:395
+#: sw-ui.c:390
 msgid "Project manager"
 msgstr "Менеджер проектов"
 

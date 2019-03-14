@@ -1,5 +1,7 @@
 #include "hyscan-gtk-nav-indicator.h"
 #include <hyscan-nmea-parser.h>
+#include <fnn-types-common.h>
+
 
 struct _HyScanGtkNavIndicatorPrivate
 {

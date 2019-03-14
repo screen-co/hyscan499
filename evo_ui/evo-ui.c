@@ -339,7 +339,6 @@ build_interface (Global *global)
 
     /* Проверяем размеры моего могучего списка панелей. */
     n = g_hash_table_size (global->panels);
-    // if (n > N_PANELS)
       g_warning ("Discovered %i panels. Please, check.", n);
 
     for (i = 0; i < N_PANELS; ++i)
@@ -465,24 +464,26 @@ build_interface (Global *global)
   }
 
   /* Настройки. */
-  {
-    GtkWidget *grid, * sensors, * offsets;
-    settings = evo_settings_new ();
-    grid = evo_settings_get_grid (EVO_SETTINGS (settings));
+  if (global->control != NULL)
+    {
+      GtkWidget *grid, * sensors, * offsets;
+      settings = evo_settings_new ();
+      grid = evo_settings_get_grid (EVO_SETTINGS (settings));
 
-    sensors = evo_sensors_new (global->control);
-    offsets = gtk_button_new_with_label ("Setup offsets");
-    g_signal_connect (offsets, "clicked", G_CALLBACK (run_offset_setup), global);
+      sensors = evo_sensors_new (global->control);
+      offsets = gtk_button_new_with_label ("Setup offsets");
+      g_signal_connect (offsets, "clicked", G_CALLBACK (run_offset_setup), global);
 
-    gtk_grid_attach (GTK_GRID (grid), gtk_label_new ("Sensors"), 0, 0, 1, 1);
-    gtk_grid_attach (GTK_GRID (grid), sensors, 0, 1, 1, 1);
-    gtk_grid_attach (GTK_GRID (grid), offsets, 0, 2, 1, 1);
-  }
+      gtk_grid_attach (GTK_GRID (grid), gtk_label_new ("Sensors"), 0, 0, 1, 1);
+      gtk_grid_attach (GTK_GRID (grid), sensors, 0, 1, 1, 1);
+      gtk_grid_attach (GTK_GRID (grid), offsets, 0, 2, 1, 1);
+    }
 
   /* Пакуем всё. */
   gtk_container_add (GTK_CONTAINER (global->gui.window), ui->grid);
   gtk_grid_attach (GTK_GRID (ui->grid), ui->switcher, 0, 0, 1, 1);
-  gtk_grid_attach (GTK_GRID (ui->grid), settings,     1, 0, 1, 1);
+  if (global->control != NULL)
+    gtk_grid_attach (GTK_GRID (ui->grid), settings,     1, 0, 1, 1);
   gtk_grid_attach (GTK_GRID (ui->grid), ui->area,     0, 1, 2, 1);
 
   return TRUE;

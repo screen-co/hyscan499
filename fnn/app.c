@@ -141,10 +141,18 @@ main (int argc, char **argv)
 
   gboolean status;
 
-  // setlocale (LC_ALL, "");
-  bindtextdomain (GETTEXT_PACKAGE, "./");
+  setlocale (LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale/");
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
   textdomain (GETTEXT_PACKAGE);
+
+  // bindtextdomain ("hyscanfnn-swui", "/usr/share/locale/");
+  // bind_textdomain_codeset ("hyscanfnn-swui", "UTF-8");
+  // textdomain ("hyscanfnn-swui");
+
+  // bindtextdomain ("libhyscanfnn", "/usr/share/locale/");
+  // bind_textdomain_codeset ("libhyscanfnn", "UTF-8");
+  // textdomain ("libhyscanfnn");
 
   gtk_init (&argc, &argv);
   init_triple (&global);
@@ -337,10 +345,9 @@ main (int argc, char **argv)
     else
       sonar_profile_name = hardware_profile_name;
 
-
     /* Првоеряем, что пути к драйверам и имя профиля на месте. */
     connector = hyscan_hw_connector_new ();
-    hyscan_hw_connector_set_driver_paths (connector, driver_paths);
+    hyscan_hw_connector_set_driver_paths (connector, (const gchar * const *)driver_paths);
 
     /* Читаем профиль. */
     if (!hyscan_hw_connector_read (connector, sonar_profile_name))
@@ -405,6 +412,7 @@ main (int argc, char **argv)
    */
 
   common_builder = gtk_builder_new_from_resource ("/org/triple/gtk/common.ui");
+  gtk_builder_set_translation_domain (common_builder, GETTEXT_PACKAGE);
 
   /* Основное окно программы. */
   global.gui.window = gtk_window_new (GTK_WINDOW_TOPLEVEL);

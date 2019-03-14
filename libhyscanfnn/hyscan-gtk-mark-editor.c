@@ -1,4 +1,5 @@
 #include "hyscan-gtk-mark-editor.h"
+#include <fnn-types-common.h>
 
 enum
 {

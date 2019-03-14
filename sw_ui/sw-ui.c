@@ -170,7 +170,11 @@ make_single_switcher (SwUI   *ui,
   if (g_hash_table_size (global->panels) < 2)
     return NULL;
 
-  sw = gtk_toggle_button_new_with_label ("Скрыть остальные");
+  g_message("%s %s %s", "hide other: ", _("Hide other"),
+
+            g_dgettext (GETTEXT_PACKAGE, "Hide other"));
+
+  sw = gtk_toggle_button_new_with_label (_("Hide other"));
   gtk_widget_set_margin_start (sw, 6);
   gtk_widget_set_margin_top (sw, 3);
   gtk_widget_set_margin_bottom (sw, 3);
@@ -191,6 +195,7 @@ make_record_control (Global *global,
     return NULL;
 
   b = gtk_builder_new_from_resource ("/org/sw/gtk/record.ui");
+  gtk_builder_set_translation_domain (b, GETTEXT_PACKAGE);
 
   w = g_object_ref (get_widget_from_builder (b, "record_control"));
   ui->starter.dry = g_object_ref (get_widget_from_builder (b, "start_stop_dry"));
