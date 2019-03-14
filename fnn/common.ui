@@ -73,7 +73,7 @@
         </child>
         <child>
           <object class="GtkTreeViewColumn" id="track_column">
-            <property name="title" translatable="yes">Галс</property>
+            <property name="title" translatable="yes">Track</property>
             <child>
               <object class="GtkCellRendererText" id="trackcellrenderer"/>
               <attributes>
@@ -84,7 +84,7 @@
         </child>
         <child>
           <object class="GtkTreeViewColumn" id="date_column">
-            <property name="title" translatable="yes">Дата</property>
+            <property name="title" translatable="yes">Date</property>
             <child>
               <object class="GtkCellRendererText" id="datecellrenderer"/>
               <attributes>

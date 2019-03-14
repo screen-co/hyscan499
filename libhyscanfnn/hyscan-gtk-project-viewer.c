@@ -9,6 +9,7 @@
  */
 
 #include "hyscan-gtk-project-viewer.h"
+#include <fnn-types-common.h>
 
 enum
 {

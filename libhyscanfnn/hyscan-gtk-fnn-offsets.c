@@ -172,7 +172,6 @@ fill_grid (HyScanGtkFnnOffsets *self,
   GtkWidget *list, *page;
   GList * keys;
 
-  priv->stack = GTK_STACK (gtk_stack_new ());
   list = gtk_list_box_new ();
 
   g_signal_connect (list, "row-activated", G_CALLBACK (row_activated), self);
@@ -267,7 +266,13 @@ constructed (GObject *object)
 
   priv->adjustments = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify)adjustments_free);
 
+  priv->stack = GTK_STACK (gtk_stack_new ());
   grid = gtk_grid_new ();
+  gtk_widget_set_vexpand (grid, TRUE);
+  gtk_widget_set_hexpand (grid, TRUE);
+  gtk_widget_set_vexpand (GTK_WIDGET (priv->stack), TRUE);
+  gtk_widget_set_hexpand (GTK_WIDGET (priv->stack), TRUE);
+  gtk_widget_set_halign (GTK_WIDGET (priv->stack), GTK_ALIGN_CENTER);
   fill_grid (self, GTK_GRID (grid));
 
   content = gtk_dialog_get_content_area (GTK_DIALOG (self));

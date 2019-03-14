@@ -300,7 +300,7 @@ widget_swap (GObject  *emitter,
         {
           hyscan_gtk_fnn_box_set_visible (abox, id);
           panel = get_panel (_global, id);
-          text = panel->name_ru;
+          text = panel->name_local;
         }
     }
 

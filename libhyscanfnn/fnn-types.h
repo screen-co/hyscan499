@@ -34,12 +34,7 @@
 #define hyscan_return_val_if_fail(expr,val) do {if (!(expr)) {g_warning("Failed at line %i", __LINE__); return (val);}} while (FALSE)
 #define hyscan_exit_if(expr,msg) do {if (!(expr)) break; g_message ((msg)); goto exit;} while (FALSE)
 #define hyscan_exit_if_w_param(expr,msg,param) do {if (!(expr)) break; g_message ((msg),(param)); goto exit;} while (FALSE)
-
-#define GETTEXT_PACKAGE "hyscan-4.99"
-
 #define WRONG_SELECTOR { g_message ("Wrong sonar selector @%i", __LINE__); }
-
-// #define GUI_TEST 0
 
 #define STARBOARD HYSCAN_SOURCE_SIDE_SCAN_STARBOARD
 #define PORTSIDE HYSCAN_SOURCE_SIDE_SCAN_PORT
@@ -63,6 +58,7 @@ enum
   X_PROFILER = 251539,
   X_FORWARDL = 356753,
   X_ECHOSOUND = 429878,
+  X_SIDE_LOW = 568351,
 };
 
 /* структура: локейшн + прожекторы */
@@ -177,8 +173,10 @@ typedef struct
 typedef struct 
 {
   gchar            *short_name;
-  gchar            *name_en;
-  gchar            *name_ru;
+  // gchar            *name_en;
+  gchar            *name;
+  // gchar            *name_ru;
+  gchar            *name_local;
   FnnPanelType      type;    /* тип панели: вф, фл, пф */
   HyScanSourceType *sources; /* Источники для панели */
 

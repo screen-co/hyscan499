@@ -1,0 +1,13 @@
+char *s = N_("Brightness");
+char *s = N_("<small><b>xx</b></small>");
+char *s = N_("Scale");
+char *s = N_("Autoscroll");
+char *s = N_("Level");
+char *s = N_("Layers");
+char *s = N_("Target mode");
+char *s = N_("Sensitivity");
+char *s = N_("Distance");
+char *s = N_("Signal");
+char *s = N_("Colormap");
+char *s = N_("Start gain");
+char *s = N_("Gain");

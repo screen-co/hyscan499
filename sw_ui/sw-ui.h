@@ -4,7 +4,6 @@
 #include <fnn-types.h>
 #include <hyscan-gtk-fnn-box.h>
 #include <gio/gio.h>
-#include <glib/gi18n-lib.h>
 
 typedef struct
 {

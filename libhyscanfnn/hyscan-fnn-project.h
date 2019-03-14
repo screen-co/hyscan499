@@ -5,6 +5,7 @@
 #include <hyscan-api.h>
 #include <gtk/gtk.h>
 
+
 G_BEGIN_DECLS
 
 #define HYSCAN_TYPE_FNN_PROJECT             (hyscan_fnn_project_get_type ())

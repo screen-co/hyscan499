@@ -12,7 +12,7 @@
       <object class="GtkLabel" id="sounding_label">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Без излучения</property>
+        <property name="label" translatable="yes">No beaming</property>
       </object>
       <packing>
         <property name="expand">False</property>
@@ -38,7 +38,7 @@
       <object class="GtkLabel" id="record_label">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="label" translatable="yes">Работа</property>
+        <property name="label" translatable="yes">Start</property>
       </object>
       <packing>
         <property name="expand">False</property>

@@ -16,14 +16,16 @@ struct _HyScanGtkNavIndicatorPrivate
 
   struct
   {
-    gchar            * latlon;
+    gchar            * lat;
+    gchar            * lon;
     gchar            * trk;
     gchar            * spd;
     gchar            * dpt;
     gchar            * tmd;
   } string;
 
-  GtkLabel           * latlon;
+  GtkLabel           * lat;
+  GtkLabel           * lon;
   GtkLabel           * trk;
   GtkLabel           * spd;
   GtkLabel           * dpt;
@@ -49,7 +51,8 @@ hyscan_gtk_nav_indicator_class_init (HyScanGtkNavIndicatorClass *klass)
   G_OBJECT_CLASS (klass)->finalize = hyscan_gtk_nav_indicator_finalize;
 
   gtk_widget_class_set_template_from_resource (widget_class, "/org/ame/gtk/hyscan-gtk-nav-indicator.ui");
-  gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, latlon);
+  gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, lat);
+  gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, lon);
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, trk);
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, spd);
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, dpt);
@@ -126,8 +129,10 @@ hyscan_gtk_nav_indicator_update (HyScanGtkNavIndicator *self)
 
   g_mutex_lock (&priv->lock);
 
-  if (priv->string.latlon != NULL)
-    gtk_label_set_text (priv->latlon, priv->string.latlon);
+  if (priv->string.lat != NULL)
+    gtk_label_set_text (priv->lat, priv->string.lat);
+  if (priv->string.lon != NULL)
+    gtk_label_set_text (priv->lon, priv->string.lon);
   if (priv->string.trk != NULL)
     gtk_label_set_text (priv->trk, priv->string.trk);
   if (priv->string.spd != NULL)
@@ -226,9 +231,8 @@ hyscan_gtk_nav_indicator_push (HyScanGtkNavIndicator *self,
     }
   if (ll_ok)
     {
-      nav_printer (&priv->string.latlon, "%f °%s, %f °%s",
-                   lat, lat > 0 ? "С.Ш." : "Ю.Ш.",
-                   lon, lon > 0 ? "В.Д." : "З.Д.");
+      nav_printer (&priv->string.lat, "%f °%s", lat, lat > 0 ? "С.Ш." : "Ю.Ш.");
+      nav_printer (&priv->string.lon, "%f °%s", lon, lon > 0 ? "В.Д." : "З.Д.");
     }
   if (trk_ok)
     {

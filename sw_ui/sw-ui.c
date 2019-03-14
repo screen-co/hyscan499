@@ -2,6 +2,9 @@
 #include <hyscan-gtk-area.h>
 #include "sw-ui.h"
 
+#define GETTEXT_PACKAGE "hyscanfnn-swui"
+#include <glib/gi18n-lib.h>
+
 SwUI global_ui = {0,};
 Global *_global = NULL;
 /***
@@ -348,11 +351,11 @@ build_interface (Global *global)
 
   /* Начнем с центра, добавим все отображаемые виджеты. */
   {
-    #define N_PANELS 4
-    gint order[N_PANELS]  = {X_SIDESCAN, X_PROFILER, X_FORWARDL, X_ECHOSOUND};
-    gint left[N_PANELS]   = {0, 1, 1, 1};
-    gint top[N_PANELS]    = {0, 0, 1, 2};
-    gint height[N_PANELS] = {3, 1, 1, 1};
+    #define N_PANELS 5
+    gint order[N_PANELS]  = {X_SIDESCAN, X_PROFILER, X_FORWARDL, X_ECHOSOUND, X_SIDE_LOW};
+    gint left[N_PANELS]   = {0, 1, 1, 1, 1};
+    gint top[N_PANELS]    = {0, 0, 1, 2, 3};
+    gint height[N_PANELS] = {4, 1, 1, 1, 1};
     gint i, n;
 
     /* Проверяем размеры моего могучего списка панелей. */
@@ -384,7 +387,7 @@ build_interface (Global *global)
     GtkWidget * tracks = GTK_WIDGET (global->gui.track.view);
     GtkWidget * mlist = GTK_WIDGET (global->gui.mark_view);
     GtkWidget * meditor = GTK_WIDGET (global->gui.meditor);
-    GtkWidget * manager = gtk_button_new_with_label (_("Менеджер проектов"));
+    GtkWidget * manager = gtk_button_new_with_label (_("Project manager"));
 
 
     gtk_widget_set_margin_end (lbox, 6);
@@ -413,7 +416,7 @@ build_interface (Global *global)
       param_set = g_environ_getenv (env, "HY_PARAM");
       if (param_set != NULL)
         {
-          prm = gtk_button_new_with_label ("Параметры оборудования");
+          prm = gtk_button_new_with_label (_("Hardware info"));
           g_signal_connect (prm, "clicked", G_CALLBACK (run_param), "/");
           gtk_box_pack_start (GTK_BOX (lbox), prm, FALSE, FALSE, 0);
         }
@@ -462,7 +465,7 @@ build_interface (Global *global)
         GtkWidget *packable;
 
         packable = make_page_for_panel (ui, panel, GPOINTER_TO_INT (k), global);
-        gtk_stack_add_titled (GTK_STACK (ui->stack), packable, panel->name_en, panel->name_ru);
+        gtk_stack_add_titled (GTK_STACK (ui->stack), packable, panel->name, panel->name_local);
       }
 
     st_switcher = make_stack_switcher (GTK_STACK (ui->stack), global);

@@ -1,12 +1,13 @@
 #include "fnn-types.h"
-#include "hyscan-fnn-splash.h"
+#include <fnn-types-common.h>
+#include <hyscan-fnn-splash.h>
 #include <hyscan-fnn-project.h>
 #include <hyscan-fnn-button.h>
 #include <hyscan-fnn-button.h>
 #include <hyscan-gtk-param-tree.h>
 #include <gmodule.h>
 #include <math.h>
-#include <glib/gi18n-lib.h>
+
 
 Global *tglobal;
 
@@ -28,8 +29,8 @@ fnn_panel_destroy (gpointer data)
   if (panel == NULL)
     return;
 
-  g_free (panel->name_en);
-  g_free (panel->name_ru);
+  g_free (panel->name);
+  g_free (panel->name_local);
   g_free (panel->sources);
 
   switch (panel->type)
@@ -88,7 +89,7 @@ get_panel_id_by_name (Global      *global,
 
   while (g_hash_table_iter_next (&iter, &k, (gpointer*)&panel))
     {
-      if (g_str_equal (panel->name_en, name))
+      if (g_str_equal (panel->name, name))
         return GPOINTER_TO_INT (k);
     }
 
@@ -150,11 +151,11 @@ run_param (GObject     *emitter,
   GtkWidget *dialog, *content, *tree;
   gint res;
 
-  dialog = gtk_dialog_new_with_buttons("Параметры оборудования",
+  dialog = gtk_dialog_new_with_buttons(_("Hardware parameters"),
                                        GTK_WINDOW (tglobal->gui.window), 0,
-                                       "Применить", GTK_RESPONSE_APPLY,
-                                       "Сбросить", GTK_RESPONSE_CANCEL,
-                                       "Закрыть", GTK_RESPONSE_CLOSE,
+                                       _("Apply"), GTK_RESPONSE_APPLY,
+                                       _("Reset"), GTK_RESPONSE_CANCEL,
+                                       _("Close"), GTK_RESPONSE_CLOSE,
                                        NULL);
   content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
   tree = hyscan_gtk_param_tree_new (HYSCAN_PARAM (tglobal->control), root, TRUE);
@@ -185,9 +186,9 @@ run_show_sonar_info (GObject     *emitter,
 {
   GtkWidget *dialog, *content, *tree;
 
-  dialog = gtk_dialog_new_with_buttons("Информация о гидролокаторе",
+  dialog = gtk_dialog_new_with_buttons(_("Sonar info"),
                                        GTK_WINDOW (tglobal->gui.window), 0,
-                                       "Закрыть", GTK_RESPONSE_CLOSE,
+                                       _("Close"), GTK_RESPONSE_CLOSE,
                                        NULL);
   content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
   tree = hyscan_gtk_param_tree_new (HYSCAN_PARAM (tglobal->control), root, TRUE);

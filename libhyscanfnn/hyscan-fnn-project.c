@@ -1,5 +1,6 @@
 #include "hyscan-fnn-project.h"
 #include <hyscan-gtk-project-viewer.h>
+#include <fnn-types-common.h>
 
 enum
 {
@@ -132,16 +133,16 @@ fill_grid (HyScanFnnProject *self,
   g_signal_connect (track_tree, "cursor-changed",
                     G_CALLBACK (track_selected), self);
 
-  del_project = gtk_button_new_with_label ("Удалить проект");
-  del_track = gtk_button_new_with_label ("Удалить галс");
+  del_project = gtk_button_new_with_label (_("Delete project"));
+  del_track = gtk_button_new_with_label (_("Delete track"));
 
   gtk_style_context_add_class (gtk_widget_get_style_context (del_project),
                                GTK_STYLE_CLASS_DESTRUCTIVE_ACTION);
   gtk_style_context_add_class (gtk_widget_get_style_context (del_track),
                                GTK_STYLE_CLASS_DESTRUCTIVE_ACTION);
 
-  set_button_text (GTK_BUTTON (del_project), "Удалить проект", NULL);
-  set_button_text (GTK_BUTTON (del_track), "Удалить галс", NULL);
+  set_button_text (GTK_BUTTON (del_project), _("Delete project"), NULL);
+  set_button_text (GTK_BUTTON (del_track), _("Delete track"), NULL);
 
   g_signal_connect_swapped (del_project, "clicked",
                             G_CALLBACK (delete_project), self);
@@ -159,9 +160,9 @@ fill_grid (HyScanFnnProject *self,
   gtk_action_bar_pack_end (GTK_ACTION_BAR (abar), del_track);
   gtk_action_bar_pack_end (GTK_ACTION_BAR (abar), del_project);
 
-  gtk_grid_attach (grid, gtk_label_new ("Проекты"),    0, -1, 1, 1);
+  gtk_grid_attach (grid, gtk_label_new (_("Projects")),    0, -1, 1, 1);
   gtk_grid_attach (grid, projects,    0, 0, 1, 1);
-  gtk_grid_attach (grid, gtk_label_new ("Галсы"),      1, -1, 1, 1);
+  gtk_grid_attach (grid, gtk_label_new (_("Tracks")),      1, -1, 1, 1);
   gtk_grid_attach (grid, tracks,      1, 0, 1, 1);
   gtk_grid_attach (grid, abar,        0, 1, 2, 1);
 }
@@ -415,10 +416,10 @@ project_selected (GtkTreeView      *tree,
   hyscan_gtk_project_viewer_clear (priv->tracks_pw);
   hyscan_db_info_set_project (priv->info, project);
 
-  set_button_text (priv->del_project, "Удалить проект", priv->project_name);
+  set_button_text (priv->del_project, _("Delete project"), priv->project_name);
 
   resp_widget = gtk_dialog_get_widget_for_response (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_OPEN);
-  set_button_text (GTK_BUTTON (resp_widget), "Открыть проект", priv->project_name);
+  set_button_text (GTK_BUTTON (resp_widget), _("Open project"), priv->project_name);
   g_free (project);
 }
 
@@ -434,7 +435,7 @@ track_selected (GtkTreeView      *tree,
   g_clear_pointer (&priv->track_name, g_free);
   priv->track_name = g_strdup (track);
 
-  set_button_text (priv->del_track, "Удалить галс", priv->track_name);
+  set_button_text (priv->del_track, _("Delete track"), priv->track_name);
 
   g_free (track);
 }
@@ -461,9 +462,9 @@ constructed (GObject *object)
   g_signal_connect (priv->info, "tracks-changed", G_CALLBACK (tracks_changed), self);
   projects_changed (priv->info, self);
 
-  button = gtk_dialog_add_button (GTK_DIALOG (self), "Открыть проект", HYSCAN_FNN_PROJECT_OPEN);
+  button = gtk_dialog_add_button (GTK_DIALOG (self), _("Open project"), HYSCAN_FNN_PROJECT_OPEN);
   gtk_style_context_add_class (gtk_widget_get_style_context (button), GTK_STYLE_CLASS_SUGGESTED_ACTION);
-  button = gtk_dialog_add_button (GTK_DIALOG (self), "Создать и открыть проект", HYSCAN_FNN_PROJECT_CREATE);
+  button = gtk_dialog_add_button (GTK_DIALOG (self), _("Create and open project"), HYSCAN_FNN_PROJECT_CREATE);
   gtk_style_context_add_class (gtk_widget_get_style_context (button), GTK_STYLE_CLASS_SUGGESTED_ACTION);
 
   gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_OPEN, FALSE);

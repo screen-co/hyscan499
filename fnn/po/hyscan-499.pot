@@ -1,0 +1,66 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-03-14 10:56+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: common.ui.h:2
+msgid "Date"
+msgstr ""
+
+#: app.c:606
+msgid "Echosounder"
+msgstr ""
+
+#: app.c:649
+msgid "ForwardLook"
+msgstr ""
+
+#: app.c:98
+msgid "Green"
+msgstr ""
+
+#: app.c:90
+msgid "Inverted"
+msgstr ""
+
+#: app.c:57 app.c:561
+msgid "Profiler"
+msgstr ""
+
+#: app.c:75
+msgid "Sepia"
+msgstr ""
+
+#: app.c:479
+msgid "SideScan"
+msgstr ""
+
+#: app.c:520
+msgid "SideScanLow"
+msgstr ""
+
+#: common.ui.h:1
+msgid "Track"
+msgstr ""
+
+#: app.c:82
+msgid "White"
+msgstr ""
+
+#: app.c:67
+msgid "Yellow"
+msgstr ""

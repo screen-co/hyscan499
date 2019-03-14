@@ -85,7 +85,7 @@
         <property name="halign">start</property>
         <property name="valign">center</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Яркость</property>
+        <property name="label" translatable="yes">Brightness</property>
         <property name="use_markup">True</property>
         <property name="justify">center</property>
       </object>
@@ -161,7 +161,7 @@
         <property name="halign">start</property>
         <property name="valign">center</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Масштаб</property>
+        <property name="label" translatable="yes">Scale</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -234,7 +234,7 @@
         <property name="halign">start</property>
         <property name="valign">center</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Автопросмотр</property>
+        <property name="label" translatable="yes">Autoscroll</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -263,7 +263,7 @@
         <property name="halign">start</property>
         <property name="valign">center</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Порог</property>
+        <property name="label" translatable="yes">Level</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -346,7 +346,7 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="halign">start</property>
-        <property name="label" translatable="yes">Спецобработка</property>
+        <property name="label" translatable="yes">Layers</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -393,7 +393,7 @@
         <property name="halign">start</property>
         <property name="valign">center</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Яркость</property>
+        <property name="label" translatable="yes">Brightness</property>
         <property name="justify">center</property>
       </object>
       <packing>
@@ -451,7 +451,7 @@
         <property name="halign">start</property>
         <property name="valign">center</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Масштаб</property>
+        <property name="label" translatable="yes">Scale</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -508,7 +508,7 @@
         <property name="halign">start</property>
         <property name="valign">center</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Режим "цель"</property>
+        <property name="label" translatable="yes">Target mode</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -523,7 +523,7 @@
         <property name="halign">start</property>
         <property name="valign">center</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Чувствительность</property>
+        <property name="label" translatable="yes">Sensitivity</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -658,7 +658,7 @@
         <property name="halign">start</property>
         <property name="valign">center</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Дистанция</property>
+        <property name="label" translatable="yes">Distance</property>
         <property name="justify">center</property>
       </object>
       <packing>
@@ -731,7 +731,7 @@
         <property name="halign">start</property>
         <property name="valign">center</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Сигнал</property>
+        <property name="label" translatable="yes">Signal</property>
         <property name="justify">center</property>
       </object>
       <packing>
@@ -834,7 +834,7 @@
         <property name="valign">center</property>
         <property name="margin_bottom">6</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">Яркость</property>
+        <property name="label" translatable="yes">Brightness</property>
         <property name="use_markup">True</property>
         <property name="justify">center</property>
       </object>
@@ -896,7 +896,7 @@
         <property name="halign">start</property>
         <property name="valign">center</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Масштаб</property>
+        <property name="label" translatable="yes">Scale</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -953,7 +953,7 @@
         <property name="halign">start</property>
         <property name="valign">center</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Автопросмотр</property>
+        <property name="label" translatable="yes">Autoscroll</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -968,7 +968,7 @@
         <property name="halign">start</property>
         <property name="valign">center</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Палитра</property>
+        <property name="label" translatable="yes">Colormap</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -1122,7 +1122,7 @@
         <property name="halign">start</property>
         <property name="valign">center</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Усиление-0</property>
+        <property name="label" translatable="yes">Start gain</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -1193,7 +1193,7 @@
         <property name="halign">start</property>
         <property name="valign">center</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Усиление-Д</property>
+        <property name="label" translatable="yes">Gain</property>
         <property name="justify">center</property>
       </object>
       <packing>
@@ -1290,7 +1290,7 @@
         <property name="can_focus">False</property>
         <property name="halign">start</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Чувствительность</property>
+        <property name="label" translatable="yes">Sensitivity</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -1357,7 +1357,7 @@
         <property name="can_focus">False</property>
         <property name="halign">start</property>
         <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Уровень</property>
+        <property name="label" translatable="yes">Level</property>
         <property name="ellipsize">end</property>
       </object>
       <packing>

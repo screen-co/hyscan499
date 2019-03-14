@@ -6,6 +6,9 @@
 #include "evo-ui.h"
 #include "evo-ui-overrides.h"
 
+#define GETTEXT_PACKAGE "libhyscanfnn-swui"
+#include <glib/gi18n-lib.h>
+
 EvoUI global_ui = {0,};
 Global *_global = NULL;
 /***
@@ -90,19 +93,8 @@ run_offset_setup (GObject *emitter,
                   Global  *global)
 {
   GtkWidget *dialog;
-  gint res;
 
-  dialog = hyscan_gtk_fnn_offsets_new (global->control, global->gui.window);
-  // dialog = gtk_dialog_new_with_buttons ("Параметры оборудования",
-  //                                       GTK_WINDOW (global->gui.window), 0,
-  //                                       "Done2", GTK_RESPONSE_OK,
-  //                                       NULL);
-  // content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
-  // tree = hyscan_gtk_param_tree_new (HYSCAN_PARAM (tglobal->control), root, TRUE);
-  // hyscan_gtk_param_set_watch_period (HYSCAN_GTK_PARAM (tree), 200);
-
-  // gtk_container_add (GTK_CONTAINER (content), tree);
-  // gtk_widget_set_size_request (dialog, 800, 600);
+  dialog = hyscan_gtk_fnn_offsets_new (global->control, GTK_WINDOW (global->gui.window));
   gtk_widget_show_all (dialog);
 
   gtk_dialog_run (GTK_DIALOG (dialog));
@@ -341,13 +333,13 @@ build_interface (Global *global)
 
   /* Начнем с центра, добавим все отображаемые виджеты. */
   {
-    #define N_PANELS 4
-    gint order[N_PANELS]  = {X_SIDESCAN, X_PROFILER, X_FORWARDL, X_ECHOSOUND};
+    #define N_PANELS 5
+    gint order[N_PANELS]  = {X_SIDESCAN, X_PROFILER, X_FORWARDL, X_ECHOSOUND, X_SIDE_LOW};
     gint i, n;
 
     /* Проверяем размеры моего могучего списка панелей. */
     n = g_hash_table_size (global->panels);
-    if (n > N_PANELS)
+    // if (n > N_PANELS)
       g_warning ("Discovered %i panels. Please, check.", n);
 
     for (i = 0; i < N_PANELS; ++i)
@@ -362,7 +354,7 @@ build_interface (Global *global)
         g_object_set (w, "vexpand", TRUE, "valign", GTK_ALIGN_FILL,
                          "hexpand", TRUE, "halign", GTK_ALIGN_FILL, NULL);
 
-        gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), w, panel->name_en, panel->name_en);
+        gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), w, panel->name, panel->name_local);
       }
 
     hyscan_gtk_area_set_central (HYSCAN_GTK_AREA (ui->area), ui->acoustic_stack);
@@ -381,7 +373,7 @@ build_interface (Global *global)
     GtkWidget * tracks = GTK_WIDGET (global->gui.track.view);
     GtkWidget * mlist = GTK_WIDGET (global->gui.mark_view);
     GtkWidget * meditor = GTK_WIDGET (global->gui.meditor);
-    GtkWidget * manager = gtk_button_new_with_label (_("Менеджер проектов"));
+    GtkWidget * manager = gtk_button_new_with_label (_("Project Manager"));
 
 
     gtk_widget_set_margin_end (lbox, 6);
@@ -410,7 +402,7 @@ build_interface (Global *global)
       param_set = g_environ_getenv (env, "HY_PARAM");
       if (param_set != NULL)
         {
-          prm = gtk_button_new_with_label ("Параметры оборудования");
+          prm = gtk_button_new_with_label ("Hardware info");
           g_signal_connect (prm, "clicked", G_CALLBACK (run_param), "/");
           gtk_box_pack_start (GTK_BOX (lbox), prm, FALSE, FALSE, 0);
         }
@@ -459,7 +451,7 @@ build_interface (Global *global)
         GtkWidget *packable;
 
         packable = make_page_for_panel (ui, panel, GPOINTER_TO_INT (k), global);
-        gtk_stack_add_titled (GTK_STACK (ui->control_stack), packable, panel->name_en, panel->name_en);
+        gtk_stack_add_titled (GTK_STACK (ui->control_stack), packable, panel->name, panel->name_local);
       }
 
     record = make_record_control (global, ui);

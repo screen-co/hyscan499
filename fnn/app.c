@@ -10,6 +10,7 @@
  #include <errno.h>
 #endif
 
+#define GETTEXT_PACKAGE "hyscan-499"
 #include <glib/gi18n.h>
 
 /* Вот он, наш жирненький красавчик. */
@@ -53,7 +54,7 @@ make_color_maps (gboolean profiler)
   if (profiler)
     {
       new_map = g_new (FnnColormap, 1);
-      new_map->name = g_strdup ("Причудливый Профилограф");
+      new_map->name = g_strdup (_("Profiler"));
       new_map->colors = hyscan_tile_color_compose_colormap_pf (&new_map->len);
       new_map->len = 256;
       new_map->bg = WHITE_BG;
@@ -63,7 +64,7 @@ make_color_maps (gboolean profiler)
     }
 
   new_map = g_new (FnnColormap, 1);
-  new_map->name = g_strdup ("Желтый");
+  new_map->name = g_strdup (_("Yellow"));
   kolors[0] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
   kolors[1] = hyscan_tile_color_converter_d2i (1.0, 1.0, 0.0, 1.0);
   new_map->colors = hyscan_tile_color_compose_colormap (kolors, 2, &new_map->len);
@@ -71,14 +72,14 @@ make_color_maps (gboolean profiler)
   g_array_append_vals (colormaps, &new_map, 1);
 
   new_map = g_new (FnnColormap, 1);
-  new_map->name = g_strdup ("Сепия");
+  new_map->name = g_strdup (_("Sepia"));
   new_map->colors = g_memdup (sepia, 256 * sizeof (guint32));
   new_map->len = 256;
   new_map->bg = BLACK_BG;
   g_array_append_vals (colormaps, &new_map, 1);
 
   new_map = g_new (FnnColormap, 1);
-  new_map->name = g_strdup ("Белый");
+  new_map->name = g_strdup (_("White"));
   kolors[0] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
   kolors[1] = hyscan_tile_color_converter_d2i (1.0, 1.0, 1.0, 1.0);
   new_map->colors = hyscan_tile_color_compose_colormap (kolors, 2, &new_map->len);
@@ -86,7 +87,7 @@ make_color_maps (gboolean profiler)
   g_array_append_vals (colormaps, &new_map, 1);
 
   new_map = g_new (FnnColormap, 1);
-  new_map->name = g_strdup ("Инверсия");
+  new_map->name = g_strdup (_("Inverted"));
   kolors[0] = hyscan_tile_color_converter_d2i (1.0, 1.0, 1.0, 1.0);
   kolors[1] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
   new_map->colors = hyscan_tile_color_compose_colormap (kolors, 2, &new_map->len);
@@ -94,7 +95,7 @@ make_color_maps (gboolean profiler)
   g_array_append_vals (colormaps, &new_map, 1);new_map = g_new (FnnColormap, 1);
 
   new_map = g_new (FnnColormap, 1);
-  new_map->name = g_strdup ("Зеленый");
+  new_map->name = g_strdup (_("Green"));
   kolors[0] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
   kolors[1] = hyscan_tile_color_converter_d2i (0.2, 1.0, 0.2, 1.0);
   new_map->colors = hyscan_tile_color_compose_colormap (kolors, 2, &new_map->len);
@@ -127,6 +128,7 @@ main (int argc, char **argv)
   ame_config         ui_config = NULL;
 
   gboolean           need_ss = FALSE;
+  gboolean           need_ss_lo = FALSE;
   gboolean           need_pf = FALSE;
   gboolean           need_es = FALSE;
   gboolean           need_fl = FALSE;
@@ -139,8 +141,8 @@ main (int argc, char **argv)
 
   gboolean status;
 
-  setlocale (LC_ALL, "");
-  bindtextdomain (GETTEXT_PACKAGE, "./locale");
+  // setlocale (LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, "./");
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
   textdomain (GETTEXT_PACKAGE);
 
@@ -162,6 +164,7 @@ main (int argc, char **argv)
         { "full-screen",     'f',   0, G_OPTION_ARG_NONE,    &full_screen,     "Full screen mode", NULL },
 
         { "ss",              0,     0, G_OPTION_ARG_NONE,    &need_ss,         "Enable ss panel", NULL },
+        { "ss-lo",           0,     0, G_OPTION_ARG_NONE,    &need_ss_lo,      "Enable ss-low panel", NULL },
         { "pf",              0,     0, G_OPTION_ARG_NONE,    &need_pf,         "Enable pf panel", NULL },
         { "fl",              0,     0, G_OPTION_ARG_NONE,    &need_fl,         "Enable fl panel", NULL },
         { "es",              0,     0, G_OPTION_ARG_NONE,    &need_es,         "Enable es panel", NULL },
@@ -471,8 +474,9 @@ main (int argc, char **argv)
       FnnPanel *panel = g_new0 (FnnPanel, 1);
       VisualWF *vwf = g_new0 (VisualWF, 1);
 
-      panel->name_ru = g_strdup ("ГБО");
-      panel->name_en = g_strdup ("SideScan");
+      // panel->name_ru = g_strdup ("ГБО");
+      panel->name = g_strdup ("SideScan");
+      panel->name_local = g_strdup (_("SideScan"));
       panel->short_name = g_strdup ("SS");
       panel->type = FNN_PANEL_WATERFALL;
 
@@ -505,14 +509,56 @@ main (int argc, char **argv)
       g_hash_table_insert (global.panels, GINT_TO_POINTER (X_SIDESCAN), panel);
     }
 
+  if (need_ss_lo)
+    { /* ГБО-ВЧ */
+      GtkWidget *main_widget;
+      FnnPanel *panel = g_new0 (FnnPanel, 1);
+      VisualWF *vwf = g_new0 (VisualWF, 1);
+
+      // panel->name_ru = g_strdup ("ГБО-НЧ");
+      panel->name = g_strdup ("SideScanLow");
+      panel->name_local = g_strdup (_("SideScanLow"));
+      panel->short_name = g_strdup ("SSLow");
+      panel->type = FNN_PANEL_WATERFALL;
+
+      panel->sources = g_new0 (HyScanSourceType, 3);
+      panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_LOW;
+      panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_PORT_LOW;
+      panel->sources[2] = HYSCAN_SOURCE_INVALID;
+
+      panel->vis_gui = (VisualCommon*)vwf;
+
+      vwf->colormaps = make_color_maps (FALSE);
+
+      vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global.cache));
+      gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
+
+      main_widget = make_overlay (vwf->wf,
+                                  &vwf->wf_grid, &vwf->wf_ctrl,
+                                  &vwf->wf_mark, &vwf->wf_metr,
+                                  global.marks.model);
+
+      g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), &global);
+      g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_SIDESCAN));
+
+      hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed);
+      hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
+      hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
+      hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
+
+      vwf->common.main = main_widget;
+      g_hash_table_insert (global.panels, GINT_TO_POINTER (X_SIDE_LOW), panel);
+    }
+
   if (need_pf)
     { /* ПФ */
       GtkWidget *main_widget;
       FnnPanel *panel = g_new0 (FnnPanel, 1);
       VisualWF *vwf = g_new0 (VisualWF, 1);
 
-      panel->name_ru = g_strdup ("Профилограф");
-      panel->name_en = g_strdup ("Profiler");
+      // panel->name_ru = g_strdup ("Профилограф");
+      panel->name = g_strdup ("Profiler");
+      panel->name_local = g_strdup (_("Profiler"));
       panel->short_name = g_strdup ("PF");
       panel->type = FNN_PANEL_ECHO;
 
@@ -555,8 +601,9 @@ main (int argc, char **argv)
       FnnPanel *panel = g_new0 (FnnPanel, 1);
       VisualWF *vwf = g_new0 (VisualWF, 1);
 
-      panel->name_ru = g_strdup ("Эхолот");
-      panel->name_en = g_strdup ("Echosounder");
+      // panel->name_ru = g_strdup ("Эхолот");
+      panel->name = g_strdup ("Echosounder");
+      panel->name_local = g_strdup (_("Echosounder"));
       panel->short_name = g_strdup ("ES");
       panel->type = FNN_PANEL_ECHO;
 
@@ -597,8 +644,9 @@ main (int argc, char **argv)
       FnnPanel *panel = g_new0 (FnnPanel, 1);
       VisualFL *vfl = g_new0 (VisualFL, 1);
 
-      panel->name_ru = g_strdup ("Курсовой");
-      panel->name_en = g_strdup ("ForwardLook");
+      // panel->name_ru = g_strdup ("Курсовой");
+      panel->name = g_strdup ("ForwardLook");
+      panel->name_local = g_strdup (_("ForwardLook"));
       panel->short_name = g_strdup ("FL");
       panel->type = FNN_PANEL_FORWARDLOOK;
 
@@ -654,17 +702,17 @@ main (int argc, char **argv)
       {
         gint panelx = GPOINTER_TO_INT (k);
         FnnPanel *panel = v;
-        panel->current.distance =    keyfile_double_read_helper (config, panel->name_en, "sonar.cur_distance", 50);
-        panel->current.signal =      keyfile_double_read_helper (config, panel->name_en, "sonar.cur_signal", 0);
-        panel->current.gain0 =       keyfile_double_read_helper (config, panel->name_en, "sonar.cur_gain0", 0);
-        panel->current.gain_step =   keyfile_double_read_helper (config, panel->name_en, "sonar.cur_gain_step", 10);
-        panel->current.level =       keyfile_double_read_helper (config, panel->name_en, "sonar.cur_level", 0.5);
-        panel->current.sensitivity = keyfile_double_read_helper (config, panel->name_en, "sonar.cur_sensitivity", 0.6);
+        panel->current.distance =    keyfile_double_read_helper (config, panel->name, "sonar.cur_distance", 50);
+        panel->current.signal =      keyfile_double_read_helper (config, panel->name, "sonar.cur_signal", 0);
+        panel->current.gain0 =       keyfile_double_read_helper (config, panel->name, "sonar.cur_gain0", 0);
+        panel->current.gain_step =   keyfile_double_read_helper (config, panel->name, "sonar.cur_gain_step", 10);
+        panel->current.level =       keyfile_double_read_helper (config, panel->name, "sonar.cur_level", 0.5);
+        panel->current.sensitivity = keyfile_double_read_helper (config, panel->name, "sonar.cur_sensitivity", 0.6);
 
-        panel->vis_current.brightness =  keyfile_double_read_helper (config, panel->name_en, "cur_brightness",   80.0);
-        panel->vis_current.colormap =    keyfile_double_read_helper (config, panel->name_en, "cur_color_map",    0);
-        panel->vis_current.black =       keyfile_double_read_helper (config, panel->name_en, "cur_black",        0);
-        panel->vis_current.sensitivity = keyfile_double_read_helper (config, panel->name_en, "cur_sensitivity",  8.0);
+        panel->vis_current.brightness =  keyfile_double_read_helper (config, panel->name, "cur_brightness",   80.0);
+        panel->vis_current.colormap =    keyfile_double_read_helper (config, panel->name, "cur_color_map",    0);
+        panel->vis_current.black =       keyfile_double_read_helper (config, panel->name, "cur_black",        0);
+        panel->vis_current.sensitivity = keyfile_double_read_helper (config, panel->name, "cur_sensitivity",  8.0);
 
         if (panel->type == FNN_PANEL_WATERFALL)
           color_map_set (&global, panel->vis_current.colormap, panelx);
@@ -731,17 +779,17 @@ main (int argc, char **argv)
       while (g_hash_table_iter_next (&iter, &k, &v))
         {
           FnnPanel *panel = v;
-          keyfile_double_write_helper (config, panel->name_en, "sonar.cur_distance", panel->current.distance);
-          keyfile_double_write_helper (config, panel->name_en, "sonar.cur_signal", panel->current.signal);
-          keyfile_double_write_helper (config, panel->name_en, "sonar.cur_gain0", panel->current.gain0);
-          keyfile_double_write_helper (config, panel->name_en, "sonar.cur_gain_step", panel->current.gain_step);
-          keyfile_double_write_helper (config, panel->name_en, "sonar.cur_level", panel->current.level);
-          keyfile_double_write_helper (config, panel->name_en, "sonar.cur_sensitivity", panel->current.sensitivity);
+          keyfile_double_write_helper (config, panel->name, "sonar.cur_distance", panel->current.distance);
+          keyfile_double_write_helper (config, panel->name, "sonar.cur_signal", panel->current.signal);
+          keyfile_double_write_helper (config, panel->name, "sonar.cur_gain0", panel->current.gain0);
+          keyfile_double_write_helper (config, panel->name, "sonar.cur_gain_step", panel->current.gain_step);
+          keyfile_double_write_helper (config, panel->name, "sonar.cur_level", panel->current.level);
+          keyfile_double_write_helper (config, panel->name, "sonar.cur_sensitivity", panel->current.sensitivity);
 
-          keyfile_double_write_helper (config, panel->name_en, "cur_brightness",          panel->vis_current.brightness);
-          keyfile_double_write_helper (config, panel->name_en, "cur_color_map",           panel->vis_current.colormap);
-          keyfile_double_write_helper (config, panel->name_en, "cur_black",               panel->vis_current.black);
-          keyfile_double_write_helper (config, panel->name_en, "cur_sensitivity",         panel->vis_current.sensitivity);
+          keyfile_double_write_helper (config, panel->name, "cur_brightness",          panel->vis_current.brightness);
+          keyfile_double_write_helper (config, panel->name, "cur_color_map",           panel->vis_current.colormap);
+          keyfile_double_write_helper (config, panel->name, "cur_black",               panel->vis_current.black);
+          keyfile_double_write_helper (config, panel->name, "cur_sensitivity",         panel->vis_current.sensitivity);
         }
 
       keyfile_string_write_helper (config, "common",  "project", global.project_name);
