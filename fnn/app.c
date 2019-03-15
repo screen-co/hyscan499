@@ -56,7 +56,6 @@ make_color_maps (gboolean profiler)
       new_map = g_new (FnnColormap, 1);
       new_map->name = g_strdup (_("Profiler"));
       new_map->colors = hyscan_tile_color_compose_colormap_pf (&new_map->len);
-      new_map->len = 256;
       new_map->bg = WHITE_BG;
       g_array_append_vals (colormaps, &new_map, 1);
 

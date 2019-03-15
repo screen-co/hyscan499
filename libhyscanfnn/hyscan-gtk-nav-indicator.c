@@ -55,8 +55,6 @@ hyscan_gtk_nav_indicator_class_init (HyScanGtkNavIndicatorClass *klass)
   G_OBJECT_CLASS (klass)->constructed = hyscan_gtk_nav_indicator_constructed;
   G_OBJECT_CLASS (klass)->finalize = hyscan_gtk_nav_indicator_finalize;
 
-  g_message ("    %s %s %s", g_dgettext (GETTEXT_PACKAGE, "Latitude"), "Latitude", GETTEXT_PACKAGE);
-
   gtk_widget_class_set_template_from_resource (widget_class, "/org/ame/gtk/hyscan-gtk-nav-indicator.ui");
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, lat);
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, lon);

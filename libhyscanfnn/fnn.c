@@ -1698,6 +1698,16 @@ tvg_set (Global  *global,
       HyScanSonarInfoSource *info;
       HyScanSourceType source = *iter;
 
+      if (source == HYSCAN_SOURCE_PROFILER_ECHO)
+        {
+          g_message ("Setting tvg for echo (10)");
+          status = hyscan_sonar_tvg_set_constant (global->control_s, source, 10);
+          if (!status)
+            return FALSE;
+
+          continue;
+        }
+
       g_message ("Setting tvg for %s", hyscan_source_get_name_by_type (source));
 
       /* Проверяем gain0. */
@@ -2079,9 +2089,15 @@ brightness_set (Global  *global,
       break;
 
     case FNN_PANEL_ECHO:
-      b = new_black / 250000;
-      w = b + (1 - 0.99 * new_brightness / 100.0) * (1 - b);
+      // b = new_black * 0.0000025;
+      // w = 1.0 - (new_brightness / 100.0) * 0.99;
+      // w *= w;
+      // g = 1;
+      b = new_black / 400000;
+      w = (1 - 0.99 * new_brightness / 100.0) * (1 - b);
+      w = b + w * w;
       g = 1;
+
       if (b >= w)
         {
           g_message ("BBC error");
