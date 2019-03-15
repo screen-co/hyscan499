@@ -87,6 +87,379 @@
     <property name="can_focus">False</property>
     <property name="icon_name">list-add-symbolic</property>
   </object>
+  <object class="GtkGrid" id="pf_view_control">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="valign">start</property>
+    <property name="margin_bottom">6</property>
+    <property name="hexpand">False</property>
+    <child>
+      <object class="GtkLabel" id="pf_brightness_label">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">start</property>
+        <property name="valign">center</property>
+        <property name="margin_bottom">6</property>
+        <property name="label" translatable="yes">Brightness</property>
+        <property name="use_markup">True</property>
+        <property name="justify">center</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">0</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="pf_brightness_down">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">pf_brightness_image_down</property>
+        <signal name="clicked" handler="brightness_down" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="pf_brightness_up">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">pf_brightness_image_up</property>
+        <signal name="clicked" handler="brightness_up" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="pf_brightness_value">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="valign">center</property>
+        <property name="margin_left">6</property>
+        <property name="margin_right">6</property>
+        <property name="hexpand">True</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="use_markup">True</property>
+        <property name="justify">center</property>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="pf_brightness_separator">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">6</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">2</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="pf_scale_label">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">start</property>
+        <property name="valign">center</property>
+        <property name="margin_bottom">6</property>
+        <property name="label" translatable="yes">Scale</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">6</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="pf_scale_down">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">pf_scale_image_down</property>
+        <signal name="clicked" handler="scale_down" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">7</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="pf_scale_up">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">pf_scale_image_up</property>
+        <signal name="clicked" handler="scale_up" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">7</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="pf_scale_value">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="valign">center</property>
+        <property name="margin_left">6</property>
+        <property name="margin_right">6</property>
+        <property name="hexpand">True</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="use_markup">True</property>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">7</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="pf_scale_separator">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">6</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">8</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="pf_live_view_label">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">start</property>
+        <property name="valign">center</property>
+        <property name="margin_bottom">6</property>
+        <property name="label" translatable="yes">Autoscroll</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">9</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSwitch" id="pf_live_view">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <signal name="state-set" handler="automove_switched" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">10</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="pf_black_label">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">start</property>
+        <property name="valign">center</property>
+        <property name="margin_bottom">6</property>
+        <property name="label" translatable="yes">Level</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">3</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="pf_black_separator">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">6</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">5</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="pf_black_down">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">pf_black_image_down</property>
+        <signal name="clicked" handler="black_down" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="pf_black_up">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">pf_black_image_up</property>
+        <signal name="clicked" handler="black_up" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="pf_black_value">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="valign">center</property>
+        <property name="margin_left">6</property>
+        <property name="margin_right">6</property>
+        <property name="hexpand">True</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="use_markup">True</property>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="pf_separator">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">6</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">11</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="pf_processing_label">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">start</property>
+        <property name="label" translatable="yes">Layers</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">12</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSwitch" id="pf_processing_switch">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <signal name="state-set" handler="pf_special" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">13</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkBox" id="pf_layers">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">center</property>
+        <property name="margin_top">6</property>
+        <child>
+          <object class="GtkRadioButton" id="pf_control_layer">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">False</property>
+            <property name="image">pf_control_layer_image</property>
+            <property name="xalign">0.5</property>
+            <property name="active">True</property>
+            <property name="draw_indicator">False</property>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkRadioButton" id="pf_marks_layer">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">False</property>
+            <property name="image">pf_marks_layer_image</property>
+            <property name="xalign">0.5</property>
+            <property name="draw_indicator">False</property>
+            <property name="group">pf_control_layer</property>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkRadioButton" id="pf_meter_layer">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">False</property>
+            <property name="image">pf_meter_layer_image</property>
+            <property name="xalign">0.5</property>
+            <property name="draw_indicator">False</property>
+            <property name="group">pf_marks_layer</property>
+          </object>
+          <packing>
+            <property name="expand">True</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <style>
+          <class name="linked"/>
+        </style>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">15</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="separator6">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">6</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">14</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+  </object>
   <object class="GtkImage" id="sensitivity_image_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -881,379 +1254,6 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">11</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-  </object>
-  <object class="GtkGrid" id="pf_view_control">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="valign">start</property>
-    <property name="margin_bottom">6</property>
-    <property name="hexpand">False</property>
-    <child>
-      <object class="GtkLabel" id="pf_brightness_label">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">start</property>
-        <property name="valign">center</property>
-        <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Brightness</property>
-        <property name="use_markup">True</property>
-        <property name="justify">center</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">0</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="pf_brightness_down">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">pf_brightness_image_down</property>
-        <signal name="clicked" handler="brightness_down" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">1</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="pf_brightness_up">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">pf_brightness_image_up</property>
-        <signal name="clicked" handler="brightness_up" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">1</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="pf_brightness_value">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="valign">center</property>
-        <property name="margin_left">6</property>
-        <property name="margin_right">6</property>
-        <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
-        <property name="use_markup">True</property>
-        <property name="justify">center</property>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">1</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkSeparator" id="pf_brightness_separator">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">2</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="pf_scale_label">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">start</property>
-        <property name="valign">center</property>
-        <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Scale</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">6</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="pf_scale_down">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">pf_scale_image_down</property>
-        <signal name="clicked" handler="scale_down" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">7</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="pf_scale_up">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">pf_scale_image_up</property>
-        <signal name="clicked" handler="scale_up" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">7</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="pf_scale_value">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="valign">center</property>
-        <property name="margin_left">6</property>
-        <property name="margin_right">6</property>
-        <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
-        <property name="use_markup">True</property>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">7</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkSeparator" id="pf_scale_separator">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">8</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="pf_live_view_label">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">start</property>
-        <property name="valign">center</property>
-        <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Autoscroll</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">9</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkSwitch" id="pf_live_view">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <signal name="state-set" handler="automove_switched" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">10</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="pf_black_label">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">start</property>
-        <property name="valign">center</property>
-        <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Level</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">3</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkSeparator" id="pf_black_separator">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">5</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="pf_black_down">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">pf_black_image_down</property>
-        <signal name="clicked" handler="black_down" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">4</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="pf_black_up">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">pf_black_image_up</property>
-        <signal name="clicked" handler="black_up" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">4</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="pf_black_value">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="valign">center</property>
-        <property name="margin_left">6</property>
-        <property name="margin_right">6</property>
-        <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
-        <property name="use_markup">True</property>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">4</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkSeparator" id="pf_separator">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">11</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="pf_processing_label">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">start</property>
-        <property name="label" translatable="yes">Layers</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">12</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkSwitch" id="pf_processing_switch">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <signal name="state-set" handler="pf_special" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">13</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkBox" id="pf_layers">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">center</property>
-        <property name="margin_top">6</property>
-        <child>
-          <object class="GtkRadioButton" id="pf_control_layer">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">False</property>
-            <property name="image">pf_control_layer_image</property>
-            <property name="xalign">0.5</property>
-            <property name="active">True</property>
-            <property name="draw_indicator">False</property>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkRadioButton" id="pf_marks_layer">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">False</property>
-            <property name="image">pf_marks_layer_image</property>
-            <property name="xalign">0.5</property>
-            <property name="draw_indicator">False</property>
-            <property name="group">ss_control_layer</property>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">1</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkRadioButton" id="pf_meter_layer">
-            <property name="visible">True</property>
-            <property name="can_focus">True</property>
-            <property name="receives_default">False</property>
-            <property name="image">pf_meter_layer_image</property>
-            <property name="xalign">0.5</property>
-            <property name="draw_indicator">False</property>
-            <property name="group">ss_marks_layer</property>
-          </object>
-          <packing>
-            <property name="expand">True</property>
-            <property name="fill">True</property>
-            <property name="position">2</property>
-          </packing>
-        </child>
-        <style>
-          <class name="linked"/>
-        </style>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">15</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkSeparator" id="separator6">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">14</property>
         <property name="width">3</property>
       </packing>
     </child>
