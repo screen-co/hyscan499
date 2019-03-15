@@ -12,7 +12,7 @@ enum
 enum
 {
   ID,
-  NFNN,
+  NAME,
   DATE,
   SORT,
   N_COLUMNS
@@ -171,17 +171,34 @@ static void
 delete_project (HyScanFnnProject *self)
 {
   HyScanFnnProjectPrivate *priv = self->priv;
-  gchar * project = priv->project_name;
-  priv->project_name = NULL;
+  GtkWidget *dialog;
 
-  if (project == NULL)
+  if (priv->project_name == NULL)
     return;
 
-  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_OPEN, FALSE);
-  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_CREATE, FALSE);
+  dialog = gtk_message_dialog_new (gtk_window_get_transient_for (GTK_WINDOW (self)),
+                                   GTK_DIALOG_MODAL,
+                                   GTK_MESSAGE_WARNING,
+                                   GTK_BUTTONS_YES_NO,
+                                   "%s %s?\n%s",
+                                   _("Do you really want to delete project"),
+                                   priv->project_name,
+                                   _("This can not be undone"));
 
-  hyscan_db_project_remove (priv->db, project);
-  g_free (project);
+  gtk_dialog_set_default_response (GTK_DIALOG (dialog), GTK_RESPONSE_NO);
+  gtk_widget_show_all (dialog);
+
+  if (GTK_RESPONSE_YES == gtk_dialog_run (GTK_DIALOG (dialog)))
+    {
+      gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_OPEN, FALSE);
+      gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_CREATE, FALSE);
+
+      hyscan_db_project_remove (priv->db, priv->project_name);
+
+      g_clear_pointer (&priv->project_name, g_free);
+    }
+
+  gtk_widget_destroy (dialog);
 }
 
 static void
@@ -245,10 +262,11 @@ projects_changed (HyScanDBInfo     *db_info,
       gtk_list_store_append (GTK_LIST_STORE (priv->project_ls), &tree_iter);
       gtk_list_store_set (GTK_LIST_STORE (priv->project_ls), &tree_iter,
                           ID,   pinfo->name,
-                          NFNN, pinfo->name,
+                          NAME, pinfo->name,
                           DATE, time_str,
                           SORT, sort,
                           -1);
+      g_free (time_str);
 
       /* Подсвечиваем текущий галс. */
       if (priv->project_name == NULL)
@@ -264,7 +282,6 @@ projects_changed (HyScanDBInfo     *db_info,
         }
 
       g_clear_pointer (&local, g_date_time_unref);
-      g_free (time_str);
     }
 
   g_hash_table_unref (projects);
@@ -287,14 +304,29 @@ tracks_changed (HyScanDBInfo     *db_info,
   while (g_hash_table_iter_next (&htiter, &key, &value))
     {
       HyScanTrackInfo *tinfo = value;
+      gchar *time_str;
+      gint64 sort;
+
+      if (tinfo->ctime != NULL)
+        {
+          time_str = g_date_time_format (tinfo->ctime, "%d.%m %H:%M");
+          sort = g_date_time_to_unix (tinfo->ctime);
+        }
+      else
+        {
+          time_str = g_strdup ("??");
+          sort = -1;
+        }
+
 
       gtk_list_store_append (GTK_LIST_STORE (priv->track_ls), &tree_iter);
       gtk_list_store_set (GTK_LIST_STORE (priv->track_ls), &tree_iter,
                           ID,   g_strdup (tinfo->name),
-                          NFNN, g_strdup (tinfo->name),
-                          DATE, g_date_time_format (tinfo->ctime, "%d.%m %H:%M"),
-                          SORT, g_date_time_to_unix (tinfo->ctime),
+                          NAME, g_strdup (tinfo->name),
+                          DATE, time_str,
+                          SORT, sort,
                           -1);
+      g_free (time_str);
 
       /* Подсвечиваем текущий галс. */
       if (priv->track_name == NULL)
@@ -396,7 +428,7 @@ get_selected (GtkTreeView *tree)
   if (!gtk_tree_model_get_iter (model, &iter, path))
     return NULL;
 
-  gtk_tree_model_get_value (model, &iter, NFNN, &value);
+  gtk_tree_model_get_value (model, &iter, NAME, &value);
   text = g_value_get_string (&value);
 
   g_message ("Selected item is <%s>", text);

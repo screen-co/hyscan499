@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-03-14 14:27+0300\n"
+"POT-Creation-Date: 2019-03-15 17:52+0300\n"
 "PO-Revision-Date: 2019-03-14 14:27+0300\n"
 "Last-Translator:  <dmitriev.a@debian.work>\n"
 "Language-Team: Russian\n"
@@ -22,15 +22,15 @@ msgstr ""
 msgid "--"
 msgstr ""
 
-#: fnn.c:156
+#: fnn.c:155
 msgid "Apply"
 msgstr "Применить"
 
-#: fnn.c:158 fnn.c:191
+#: fnn.c:157 fnn.c:190
 msgid "Close"
 msgstr "Закрыть"
 
-#: hyscan-fnn-project.c:467
+#: hyscan-fnn-project.c:509
 msgid "Create and open project"
 msgstr "Создать и открыть проект"
 
@@ -38,11 +38,11 @@ msgstr "Создать и открыть проект"
 msgid "Date"
 msgstr "Дата"
 
-#: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:419
+#: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:461
 msgid "Delete project"
 msgstr "Удалить проект"
 
-#: hyscan-fnn-project.c:137 hyscan-fnn-project.c:145 hyscan-fnn-project.c:438
+#: hyscan-fnn-project.c:137 hyscan-fnn-project.c:145 hyscan-fnn-project.c:480
 msgid "Delete track"
 msgstr "Удалить галс"
 
@@ -50,7 +50,11 @@ msgstr "Удалить галс"
 msgid "Depth"
 msgstr "Глубина"
 
-#: fnn.c:154
+#: hyscan-fnn-project.c:184
+msgid "Do you really want to delete project"
+msgstr "Вы действительно хотите удалить проект"
+
+#: fnn.c:153
 msgid "Hardware parameters"
 msgstr "Параметры оборудования"
 
@@ -66,7 +70,7 @@ msgstr "Долгота"
 msgid "Name"
 msgstr "Название"
 
-#: hyscan-fnn-project.c:422 hyscan-fnn-project.c:465
+#: hyscan-fnn-project.c:464 hyscan-fnn-project.c:507
 msgid "Open project"
 msgstr "Открыть проект"
 
@@ -74,17 +78,21 @@ msgstr "Открыть проект"
 msgid "Projects"
 msgstr "Проекты"
 
-#: fnn.c:157
+#: fnn.c:156
 msgid "Reset"
 msgstr "Сбросить"
 
-#: fnn.c:189
+#: fnn.c:188
 msgid "Sonar info"
 msgstr "Информация о гидролокаторе"
 
 #: hyscan-gtk-nav-indicator.ui.h:5
 msgid "Speed"
 msgstr "Скорость"
+
+#: hyscan-fnn-project.c:186
+msgid "This can not be undone"
+msgstr "Эту операцию нельзя отменить"
 
 #: hyscan-gtk-nav-indicator.ui.h:7
 msgid "Time"
