@@ -1,11 +1,17 @@
 #include "ame-ui.h"
 #include "ame-ui-definitions.h"
 
+#include "cheese-flash.h"
 #include <gmodule.h>
 
 FnnUI global_ui = {0,};
 Global *_global = NULL;
 ButtonReceive brec;
+
+#ifdef G_OS_UNIX
+  CheeseFlash * flash;
+#endif
+
 /***
  *     #     # ######     #    ######  ######  ####### ######   #####
  *     #  #  # #     #   # #   #     # #     # #       #     # #     #
@@ -434,6 +440,17 @@ screenshooter (void)
       gdk_pixbuf_save_to_stream (screenshot, ostream, "png", NULL, NULL, NULL);
       g_message ("Screenshot saved: %s", path);
       g_object_unref (fios);
+
+      #ifdef G_OS_UNIX
+      {
+        GdkRectangle rect;
+        rect.x = x;
+        rect.y = y;
+        rect.width = width;
+        rect.height = height;
+        cheese_flash_fire (flash, &rect);
+      }
+      #endif
     }
   else
     {
@@ -610,6 +627,10 @@ build_interface (Global *global)
 
   gtk_container_add (GTK_CONTAINER (global->gui.window), grid);
 
+  #ifdef G_OS_UNIX
+    flash = cheese_flash_new ();
+  #endif
+
   return TRUE;
 }
 
@@ -620,6 +641,10 @@ destroy_interface (void)
   g_clear_pointer (&brec.thread, g_thread_join);
   g_socket_close (brec.socket, NULL);
   g_clear_object (&brec.socket);
+
+  #ifdef G_OS_UNIX
+    g_object_unref (flash);
+  #endif
 }
 
 gboolean

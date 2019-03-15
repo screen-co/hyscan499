@@ -8,7 +8,6 @@
 #include <gmodule.h>
 #include <math.h>
 
-
 Global *tglobal;
 
 enum
@@ -2694,4 +2693,10 @@ void
 init_triple (Global *ext_global)
 {
   tglobal = ext_global;
+}
+
+void
+deinit_triple (Global *ext_global)
+{
+  tglobal = NULL;
 }

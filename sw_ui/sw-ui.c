@@ -170,9 +170,9 @@ make_single_switcher (SwUI   *ui,
   if (g_hash_table_size (global->panels) < 2)
     return NULL;
 
-  g_message("%s %s %s", "hide other: ", _("Hide other"),
+  g_message("%s %s %s %s", "hide other: ", _("Hide other"),
 
-            g_dgettext (GETTEXT_PACKAGE, "Hide other"));
+            g_dgettext (GETTEXT_PACKAGE, "Hide other"), GETTEXT_PACKAGE);
 
   sw = gtk_toggle_button_new_with_label (_("Hide other"));
   gtk_widget_set_margin_start (sw, 6);
@@ -195,7 +195,6 @@ make_record_control (Global *global,
     return NULL;
 
   b = gtk_builder_new_from_resource ("/org/sw/gtk/record.ui");
-  gtk_builder_set_translation_domain (b, GETTEXT_PACKAGE);
 
   w = g_object_ref (get_widget_from_builder (b, "record_control"));
   ui->starter.dry = g_object_ref (get_widget_from_builder (b, "start_stop_dry"));
@@ -223,7 +222,7 @@ get_builder_for_panel (SwUI * ui,
     return b;
 
   b = gtk_builder_new_from_resource ("/org/sw/gtk/sw.ui");
-  gtk_builder_set_translation_domain (b, GETTEXT_PACKAGE);
+
   g_hash_table_insert (ui->builders, k, b);
 
   return b;
@@ -239,6 +238,8 @@ make_page_for_panel (SwUI     *ui,
   GtkBuilder *b;
   GtkWidget *view = NULL, *sonar = NULL, *tvg = NULL;
   GtkWidget *box, *separ;
+  GtkWidget *l_ctrl, *l_mark, *l_meter;
+  VisualWF *wf;
 
   b = get_builder_for_panel (ui, panelx);
 
@@ -251,6 +252,15 @@ make_page_for_panel (SwUI     *ui,
       panel->vis_gui->scale_value       = get_label_from_builder (b, "ss_scale_value");
       panel->vis_gui->colormap_value    = get_label_from_builder (b, "ss_color_map_value");
       panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");
+
+      wf = (VisualWF*)panel->vis_gui;
+      l_ctrl = get_widget_from_builder (b, "ss_control_layer");
+      l_mark = get_widget_from_builder (b, "ss_marks_layer");
+      l_meter = get_widget_from_builder (b, "ss_meter_layer");
+
+      g_signal_connect_swapped (l_ctrl, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_ctrl);
+      g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_metr);
+      g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
 
       if (global->control_s == NULL)
         break;
@@ -271,6 +281,15 @@ make_page_for_panel (SwUI     *ui,
       panel->vis_gui->scale_value       = get_label_from_builder (b, "pf_scale_value");
       panel->vis_gui->black_value       = get_label_from_builder (b, "pf_black_value");
       panel->vis_gui->live_view         = get_widget_from_builder(b, "pf_live_view");
+
+      wf = (VisualWF*)panel->vis_gui;
+      l_ctrl = get_widget_from_builder (b, "pf_control_layer");
+      l_mark = get_widget_from_builder (b, "pf_marks_layer");
+      l_meter = get_widget_from_builder (b, "pf_meter_layer");
+
+      g_signal_connect_swapped (l_ctrl, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_ctrl);
+      g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_metr);
+      g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
 
       if (global->control_s == NULL)
         break;

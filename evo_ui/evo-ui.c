@@ -6,7 +6,7 @@
 #include "evo-ui.h"
 #include "evo-ui-overrides.h"
 
-#define GETTEXT_PACKAGE "libhyscanfnn-swui"
+#define GETTEXT_PACKAGE "libhyscanfnn-evoui"
 #include <glib/gi18n-lib.h>
 
 EvoUI global_ui = {0,};
@@ -79,8 +79,6 @@ widget_swap (GObject  *emitter,
   child = gtk_stack_get_visible_child_name (GTK_STACK (ui->acoustic_stack));
   if (child == NULL)
     return;
-
-  // gtk_stack_set_visible_child_name (GTK_STACK (ui->control_stack), child);
 
   /* Теперь всякие специальные случаи. */
   hyscan_gtk_area_set_bottom_visible (HYSCAN_GTK_AREA (ui->area),
@@ -168,12 +166,6 @@ make_record_control (Global *global,
   return w;
 }
 
-GtkWidget *
-make_settings (Global *global,
-               EvoUI   *ui)
-{
-
-}
 
 GtkBuilder *
 get_builder_for_panel (EvoUI * ui,
@@ -204,6 +196,8 @@ make_page_for_panel (EvoUI     *ui,
   GtkBuilder *b;
   GtkWidget *view = NULL, *sonar = NULL, *tvg = NULL;
   GtkWidget *box, *separ;
+  GtkWidget *l_ctrl, *l_mark, *l_meter;
+  VisualWF *wf;
 
   b = get_builder_for_panel (ui, panelx);
 
@@ -217,6 +211,15 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->scale_value       = get_label_from_builder (b, "ss_scale_value");
       panel->vis_gui->colormap_value    = get_label_from_builder (b, "ss_color_map_value");
       panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");
+
+      wf = (VisualWF*)panel->vis_gui;
+      l_ctrl = get_widget_from_builder (b, "ss_control_layer");
+      l_mark = get_widget_from_builder (b, "ss_marks_layer");
+      l_meter = get_widget_from_builder (b, "ss_meter_layer");
+
+      g_signal_connect_swapped (l_ctrl, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_ctrl);
+      g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_metr);
+      g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
 
       if (global->control_s == NULL)
           break;
@@ -237,6 +240,15 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->scale_value       = get_label_from_builder (b, "pf_scale_value");
       panel->vis_gui->black_value       = get_label_from_builder (b, "pf_black_value");
       panel->vis_gui->live_view         = get_widget_from_builder(b, "pf_live_view");
+
+      wf = (VisualWF*)panel->vis_gui;
+      l_ctrl = get_widget_from_builder (b, "pf_control_layer");
+      l_mark = get_widget_from_builder (b, "pf_marks_layer");
+      l_meter = get_widget_from_builder (b, "pf_meter_layer");
+
+      g_signal_connect_swapped (l_ctrl, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_ctrl);
+      g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_metr);
+      g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
 
       if (global->control_s == NULL)
           break;

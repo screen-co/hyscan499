@@ -9,7 +9,10 @@
  */
 
 #include "hyscan-gtk-project-viewer.h"
-#include <fnn-types-common.h>
+#define GETTEXT_PACKAGE "libhyscanfnn"
+#include <glib/gi18n-lib.h>
+// #include <fnn-types-common.h>
+// #pragma message (GETTEXT_PACKAGE)
 
 enum
 {
@@ -22,7 +25,7 @@ static guint hyscan_gtk_project_viewer_signals[SIGNAL_LAST] = {0};
 enum
 {
   COLUMN_ID,
-  COLUMN_NFNN,
+  COLUMN_NAME,
   COLUMN_DATE,
   COLUMN_SORT,
   COLUMN_COLOR,

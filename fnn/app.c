@@ -141,10 +141,6 @@ main (int argc, char **argv)
 
   gboolean status;
 
-  setlocale (LC_ALL, "");
-  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale/");
-  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-  textdomain (GETTEXT_PACKAGE);
 
   // bindtextdomain ("hyscanfnn-swui", "/usr/share/locale/");
   // bind_textdomain_codeset ("hyscanfnn-swui", "UTF-8");
@@ -155,8 +151,13 @@ main (int argc, char **argv)
   // textdomain ("libhyscanfnn");
 
   gtk_init (&argc, &argv);
-  init_triple (&global);
 
+  setlocale (LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale/");
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+  textdomain (GETTEXT_PACKAGE);
+
+  init_triple (&global);
   /* Разбор командной строки. */
   {
     gchar **args;
@@ -411,8 +412,9 @@ main (int argc, char **argv)
    *
    */
 
-  common_builder = gtk_builder_new_from_resource ("/org/triple/gtk/common.ui");
+  common_builder = gtk_builder_new ();
   gtk_builder_set_translation_domain (common_builder, GETTEXT_PACKAGE);
+  gtk_builder_add_from_resource(common_builder, "/org/triple/gtk/common.ui", NULL);
 
   /* Основное окно программы. */
   global.gui.window = gtk_window_new (GTK_WINDOW_TOPLEVEL);

@@ -670,4 +670,7 @@ make_overlay (HyScanGtkWaterfall          *wf,
 HYSCAN_API void
 init_triple (Global *ext_global);
 
+HYSCAN_API void
+deinit_triple (Global *ext_global);
+
 #endif /* __TRIPLE_TYPES_H__ */
