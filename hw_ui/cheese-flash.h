@@ -44,7 +44,7 @@ typedef struct
 GType        cheese_flash_get_type (void) G_GNUC_CONST;
 CheeseFlash *cheese_flash_new (void);
 
-void cheese_flash_fire (CheeseFlash *flash,
+void cheese_flash_fire (CheeseFlash  *flash,
                         GdkRectangle *rect);
 
 G_END_DECLS

@@ -14,4 +14,12 @@ if (UNIX)
 
 	set_target_properties (${AME_HW_UI} PROPERTIES PREFIX "")
 	set_target_properties (${AME_HW_UI} PROPERTIES SUFFIX ".ui")
+
+	add_executable (cheese-flash-test
+	                cheese-flash.c
+	                cheese-flash-test.c
+	                ${CMAKE_BINARY_DIR}/resources/hyscan499-resources.c)
+
+	target_link_libraries (cheese-flash-test ${GTK3_LIBRARIES})
+
 endif (UNIX)
