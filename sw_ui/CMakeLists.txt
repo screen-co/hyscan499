@@ -24,7 +24,7 @@ target_link_libraries (${UI_NAME}
                        ${GLIB2_LIBRARIES}
                        ${GTK3_LIBRARIES}
                        ${HYSCAN_LIBRARIES}
-                       ${HYSCAN_AME_LIBRARY}
+                       ${HYSCAN_FNN_LIBRARY}
                        ${MATH_LIBRARIES})
 
 set_target_properties (${UI_NAME} PROPERTIES PREFIX "")

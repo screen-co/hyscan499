@@ -64,10 +64,8 @@ struct _EvoSensorsClass
   GtkTreeViewClass parent_class;
 };
 
-HYSCAN_API
 GType                  evo_sensors_get_type         (void);
 
-HYSCAN_API
 GtkWidget *            evo_sensors_new              (HyScanControl *control);
 
 G_END_DECLS

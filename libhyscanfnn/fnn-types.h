@@ -230,6 +230,8 @@ struct _Global
 
       GHashTable      *current;  /* старый список*/
       GHashTable      *previous; /* новый список */
+
+      guint            request_update_tag;
     } marks;
 
   struct

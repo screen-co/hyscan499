@@ -876,12 +876,11 @@ mark_and_location_free (gpointer data)
   g_free (loc);
 }
 
-static uint request_mark_update_tag = 0;
 gboolean
 request_mark_update (Global *global)
 {
 
-  request_mark_update_tag = 0;
+  global->marks.request_update_tag = 0;
   mark_model_changed (global->marks.model, global);
   return G_SOURCE_REMOVE;
 }
@@ -910,8 +909,8 @@ get_mark_coords (GHashTable             * locstores,
       track_name = get_track_name_by_id (global->db_info, mark->track);
       if (track_name == NULL)
         {
-          if (request_mark_update_tag == 0)
-            request_mark_update_tag = g_timeout_add (1000, (GSourceFunc)request_mark_update, global);
+          if (global->marks.request_update_tag == 0)
+            global->marks.request_update_tag = g_timeout_add (1000, (GSourceFunc)request_mark_update, global);
           return NULL;
         }
 
@@ -919,8 +918,8 @@ get_mark_coords (GHashTable             * locstores,
 
       if (ls == NULL)
         {
-          if (request_mark_update_tag == 0)
-            request_mark_update_tag = g_timeout_add (1000, (GSourceFunc)request_mark_update, global);
+          if (global->marks.request_update_tag == 0)
+            global->marks.request_update_tag = g_timeout_add (1000, (GSourceFunc)request_mark_update, global);
           return NULL;
         }
 

@@ -160,14 +160,13 @@ main (int argc, char **argv)
   // bindtextdomain ("libhyscanfnn", "/usr/share/locale/");
   // bind_textdomain_codeset ("libhyscanfnn", "UTF-8");
   // textdomain ("libhyscanfnn");
-
   gtk_init (&argc, &argv);
 
   setlocale (LC_ALL, "");
   bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale/");
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
   textdomain (GETTEXT_PACKAGE);
-
+  
   init_triple (&global);
   /* Разбор командной строки. */
   {

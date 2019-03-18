@@ -72,7 +72,7 @@ evo_settings_init (EvoSettings *self)
 
   self->priv = priv;
 
-  priv->grid = gtk_grid_new ();
+  priv->grid = GTK_GRID (gtk_grid_new ());
   popover = gtk_popover_new (GTK_WIDGET (self));
   gtk_popover_set_modal (GTK_POPOVER (popover), TRUE);
 
@@ -154,5 +154,5 @@ evo_settings_get_grid (EvoSettings *self)
 {
   g_return_val_if_fail(EVO_IS_SETTINGS (self), NULL);
 
-  return self->priv->grid;
+  return GTK_WIDGET (self->priv->grid);
 }

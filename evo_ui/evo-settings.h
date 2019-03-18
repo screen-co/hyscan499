@@ -63,13 +63,10 @@ struct _EvoSettingsClass
   GtkToggleButtonClass parent_class;
 };
 
-HYSCAN_API
 GType                  evo_settings_get_type         (void);
 
-HYSCAN_API
 GtkWidget *            evo_settings_new              (void);
 
-HYSCAN_API
 GtkWidget *            evo_settings_get_grid         (EvoSettings    *self);
 
 G_END_DECLS
