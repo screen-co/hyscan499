@@ -178,7 +178,7 @@ static FnnPage pf_image_pages[] =
       {
         {L, 0, MENU,"Меню",         TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
         {L, 1, BACK,"Назад",        TOGGLE_NONE, CBK(switch_page),    UD("И_ПФ")},
-        {L, 4, DOT, "Слои",         TOGGLE_ON,   CBK(pf_special),     UD(XPF)},
+        {L, 4, DOT, "Слои",         TOGGLE_OFF,  CBK(pf_special),     UD(XPF)},
 
         {R, 0, MORE, "Сжатие диап", TOGGLE_NONE, CBK(brightness_up),  UD(XPF),
             VALUE_OFFSET(VisualCommon, brightness_value)},
