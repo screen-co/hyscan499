@@ -1,10 +1,10 @@
-#include "ame-ui.h"
-#include "ame-ui-definitions.h"
+#include "hw-ui.h"
+#include "hw-ui-definitions.h"
 
 #include "cheese-flash.h"
 #include <gmodule.h>
 
-FnnUI global_ui = {0,};
+HwuiGlobal global_ui = {0,};
 Global *_global = NULL;
 ButtonReceive brec;
 
@@ -28,7 +28,7 @@ start_stop_wrapper (HyScanFnnButton *button,
                     gboolean         state,
                     gpointer         user_data)
 {
-  FnnUI *ui = &global_ui;
+  HwuiGlobal *ui = &global_ui;
   gboolean status;
   gint i;
 
@@ -58,7 +58,7 @@ start_stop_dry_wrapper (HyScanFnnButton *button,
                         gboolean         state,
                         gpointer         user_data)
 {
-  FnnUI *ui = &global_ui;
+  HwuiGlobal *ui = &global_ui;
   gboolean status;
   gint i;
 
@@ -96,7 +96,7 @@ start_stop_dry_wrapper (HyScanFnnButton *button,
  */
 /* ф-ия делает 1 элемент. */
 GtkWidget *
-make_item (FnnPageItem  *item,
+make_item (HwuiPageItem  *item,
            GtkWidget   **value_widget)
 {
   gboolean is_toggle = item->toggle != TOGGLE_NONE;
@@ -129,9 +129,9 @@ make_item (FnnPageItem  *item,
 
 /* функция делает 1 страницу*/
 void
-build_page (FnnUI   *ui,
+build_page (HwuiGlobal   *ui,
             Global  *global,
-            FnnPage *page)
+            HwuiPage *page)
 {
   gint i;
   GtkWidget *left, *right;
@@ -168,7 +168,7 @@ build_page (FnnUI   *ui,
       const gchar *title;
       GtkWidget *button, *value;
       HyScanFnnFixed *fixed;
-      FnnPageItem *item = &page->items[i];
+      HwuiPageItem *item = &page->items[i];
 
       if (item->side == L)
         fixed = (HyScanFnnFixed*)left;
@@ -177,7 +177,7 @@ build_page (FnnUI   *ui,
       else if (item->side == END)
         break;
       else
-        g_error ("FnnUI: wrong item->side");
+        g_error ("HwuiGlobal: wrong item->side");
 
       button = make_item (item, &value);
       title = item->msg_id;
@@ -212,13 +212,13 @@ build_page (FnnUI   *ui,
               base = (gchar*)(panel->vis_gui);
               break;
 
-            case DEST_FNN_UI:
+            case DEST_HWUI_GLOBAL:
               base = (gchar*)ui;
               break;
 
             default:
               base = 0;
-              g_warning ("FnnUI: wrong page->destination_selector");
+              g_warning ("HwuiGlobal: wrong page->destination_selector");
             }
 
           /* Кстати, я там специально не проверяю на NULL, потому что криво
@@ -243,9 +243,9 @@ build_page (FnnUI   *ui,
 
 /* Функция делает массив переданных страниц. */
 void
-build_all (FnnUI   *ui,
+build_all (HwuiGlobal   *ui,
            Global  *global,
-           FnnPage *page)
+           HwuiPage *page)
 {
   for (; page->path != NULL; ++page)
     build_page (ui, global, page);
@@ -319,7 +319,7 @@ void
 switch_page (GObject     *emitter,
              const gchar *page)
 {
-  FnnUI *ui = &global_ui;
+  HwuiGlobal *ui = &global_ui;
   GtkStack * lstack = GTK_STACK (ui->lstack);
   GtkStack * rstack = GTK_STACK (ui->rstack);
   GtkRevealer * left = GTK_REVEALER (ui->left_revealer);
@@ -476,7 +476,7 @@ screenshooter (void)
 gboolean
 build_interface (Global *global)
 {
-  FnnUI *ui = &global_ui;
+  HwuiGlobal *ui = &global_ui;
   _global = global;
 
   GtkWidget *grid;

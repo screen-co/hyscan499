@@ -1,7 +1,7 @@
-#ifndef _FNN_UI_DEFINITIONS_H
-#define _FNN_UI_DEFINITIONS_H
+#ifndef _HW_UI_DEFINITIONS_H
+#define _HW_UI_DEFINITIONS_H
 
-#include "ame-ui.h"
+#include "hw-ui.h"
 
 #define XSS X_SIDESCAN
 #define XFL X_FORWARDL
@@ -35,16 +35,16 @@
 #define VALUE_DEFAULT(x) .value_default = ((gchar*)(x))
 #define BUTTON_OFFSET(x, y) .button_offset = offsetof(x,y)
 
-static FnnPage common_pages[] =
+static HwuiPage common_pages[] =
 {
   {
-    PATH("Меню"), DESTINATION_SELECTOR(DEST_FNN_UI),
+    PATH("Меню"), DESTINATION_SELECTOR(DEST_HWUI_GLOBAL),
     .items =
       {
         {L, 3, VMOR, "Галсы",       TOGGLE_NONE, CBK(switch_page), UD("ГАЛС")},
         {L, 4, VMOR, "Общее",       TOGGLE_NONE, CBK(switch_page), UD("Общее")},
         {R, 4, VMOR, "Вид",         TOGGLE_NONE, CBK(widget_swap), GINT_TO_POINTER (ROTATE),
-            VALUE_OFFSET(FnnUI, current_view), VALUE_DEFAULT("--")},
+            VALUE_OFFSET(HwuiGlobal, current_view), VALUE_DEFAULT("--")},
         {END}
       }
   },
@@ -79,10 +79,10 @@ static FnnPage common_pages[] =
   }
 };
 
-static FnnPage ss_image_pages[] = 
+static HwuiPage ss_image_pages[] = 
 {
   {
-    PATH("Меню"), DESTINATION_SELECTOR(DEST_FNN_UI),
+    PATH("Меню"), DESTINATION_SELECTOR(DEST_HWUI_GLOBAL),
     .items =
       {
         {R, 0, VMOR, "ГБО Изображение", TOGGLE_NONE, CBK(switch_page), UD("И_ГБО")},
@@ -142,10 +142,10 @@ static FnnPage ss_image_pages[] =
   { PATH ( NULL ) }
 };
 
-static FnnPage pf_image_pages[] =
+static HwuiPage pf_image_pages[] =
 {
   {
-    PATH("Меню"), DESTINATION_SELECTOR(DEST_FNN_UI),
+    PATH("Меню"), DESTINATION_SELECTOR(DEST_HWUI_GLOBAL),
     .items =
       {
         {R, 2, VMOR, "ПФ Изображение",  TOGGLE_NONE, CBK(switch_page), UD("И_ПФ")},
@@ -208,10 +208,10 @@ static FnnPage pf_image_pages[] =
   { PATH (NULL) }
 };
 
-static FnnPage fl_image_pages[] =
+static HwuiPage fl_image_pages[] =
 {
   {
-    PATH("Меню"), DESTINATION_SELECTOR(DEST_FNN_UI),
+    PATH("Меню"), DESTINATION_SELECTOR(DEST_HWUI_GLOBAL),
     .items =
       {
         {R, 1, VMOR, "ГК Изображение",  TOGGLE_NONE, CBK(switch_page), UD("И_ГК")},
@@ -257,16 +257,16 @@ static FnnPage fl_image_pages[] =
   { PATH (NULL) }
 };
 
-static FnnPage any_sonar_pages[] =
+static HwuiPage any_sonar_pages[] =
 {
   {
-    PATH("Общее"), DESTINATION_SELECTOR(DEST_FNN_UI),
+    PATH("Общее"), DESTINATION_SELECTOR(DEST_HWUI_GLOBAL),
     .items =
       {
         {L, 4, DOT,  "Сух. поверка", TOGGLE_OFF,  CBK(start_stop_dry_wrapper),
-          BUTTON_OFFSET(FnnUI, starter.dry)},
+          BUTTON_OFFSET(HwuiGlobal, starter.dry)},
         {L, 3, DOT,  "Работа",       TOGGLE_OFF,  CBK(start_stop_wrapper),
-          BUTTON_OFFSET(FnnUI, starter.all)},
+          BUTTON_OFFSET(HwuiGlobal, starter.all)},
         {R, 0, INFO, "Версия ГЛ",    TOGGLE_NONE, CBK(run_show_sonar_info),
           UD("/info"), },
         {END}
@@ -275,7 +275,7 @@ static FnnPage any_sonar_pages[] =
   { PATH(NULL) } /* Конец. */
 };
 
-static FnnPage ss_pages[] =
+static HwuiPage ss_pages[] =
 {
   {
     PATH("Меню"), DESTINATION_SELECTOR(DEST_UNSET),
@@ -306,18 +306,18 @@ static FnnPage ss_pages[] =
         {END}
       }
   },{
-    PATH("У_ГБО"), DESTINATION_SELECTOR(DEST_FNN_UI),
+    PATH("У_ГБО"), DESTINATION_SELECTOR(DEST_HWUI_GLOBAL),
     .items =
       {
         {R, 0, DOT,  "Работа",      TOGGLE_OFF,  CBK(start_stop_wrapper),
-            BUTTON_OFFSET(FnnUI, starter.panel[START_STOP_SIDESCAN])},
+            BUTTON_OFFSET(HwuiGlobal, starter.panel[START_STOP_SIDESCAN])},
         {END}
       }
   },
   { PATH(NULL) } /* Конец. */
 };
 
-static FnnPage pf_pages[] =
+static HwuiPage pf_pages[] =
 {
   {
     PATH("Меню"), DESTINATION_SELECTOR(DEST_UNSET),
@@ -348,18 +348,18 @@ static FnnPage pf_pages[] =
         {END}
       }
   },{
-    PATH("У_ПФ"), DESTINATION_SELECTOR(DEST_FNN_UI),
+    PATH("У_ПФ"), DESTINATION_SELECTOR(DEST_HWUI_GLOBAL),
     .items =
       {
         {R, 0, DOT,  "Работа",      TOGGLE_OFF,  CBK(start_stop_wrapper),
-            BUTTON_OFFSET(FnnUI, starter.panel[START_STOP_PROFILER])},
+            BUTTON_OFFSET(HwuiGlobal, starter.panel[START_STOP_PROFILER])},
         {END}
       }
   },
   { PATH(NULL) } /* Конец. */
 };
 
-static FnnPage fl_pages[] =
+static HwuiPage fl_pages[] =
 {
   {
     PATH("Меню"), DESTINATION_SELECTOR(DEST_UNSET),
@@ -390,11 +390,11 @@ static FnnPage fl_pages[] =
         {END}
       }
   },{
-    PATH("У_ГК"), DESTINATION_SELECTOR(DEST_FNN_UI),
+    PATH("У_ГК"), DESTINATION_SELECTOR(DEST_HWUI_GLOBAL),
     .items =
       {
         {R, 0, DOT,  "Работа",      TOGGLE_OFF,  CBK(start_stop_wrapper),
-            BUTTON_OFFSET(FnnUI, starter.panel[START_STOP_FORWARDL])},
+            BUTTON_OFFSET(HwuiGlobal, starter.panel[START_STOP_FORWARDL])},
         {END}
       }
   },

@@ -1,5 +1,5 @@
-#ifndef __FNN_UI_H__
-#define __FNN_UI_H__
+#ifndef __HW_UI_H__
+#define __HW_UI_H__
 
 #include <fnn-types.h>
 #include <hyscan-fnn-fixed.h>
@@ -23,14 +23,14 @@ typedef enum
   END,
   L,
   R
-} FnnSide;
+} HwuiSide;
 
 typedef enum
 {
   TOGGLE_NONE,
   TOGGLE_OFF,
   TOGGLE_ON
-} FnnToggle;
+} HwuiToggle;
 
 /*
  * Ща сложно будет. В странице есть destination_selector.
@@ -42,18 +42,18 @@ typedef enum
   DEST_UNSET,
   DEST_PANEL, // FnnPanel.gui + offt
   DEST_PANEL_SPEC,  // FnnPanel.vis_gui + offt
-  DEST_FNN_UI // FnnUI + offt
-} FnnPageDestination;
+  DEST_HWUI_GLOBAL // HwuiGlobal + offt
+} HwuiPageDestination;
 
 typedef struct
 {
-  FnnSide      side;
+  HwuiSide      side;
   gint         position;
 
   const gchar *icon_name;
   // const gchar *title;
   const gchar *msg_id;
-  FnnToggle    toggle;
+  HwuiToggle   toggle;
 
   gpointer     callback;
   gpointer     user_data; // либо юзердата, либо панелх.
@@ -62,14 +62,14 @@ typedef struct
   gsize        button_offset; // оффсет до места для самой кнопки.
 
   gchar       *value_default; 
-} FnnPageItem;
+} HwuiPageItem;
 
 typedef struct
 {
   gchar              *path;
-  FnnPageDestination  destination_selector; //
-  FnnPageItem         items[2 * FNN_N_BUTTONS + 1];
-} FnnPage;
+  HwuiPageDestination  destination_selector; //
+  HwuiPageItem         items[2 * FNN_N_BUTTONS + 1];
+} HwuiPage;
 
 enum
 {
@@ -104,7 +104,7 @@ typedef struct
 
   gchar * depth_writer_path;
   gchar * screenshot_dir;
-} FnnUI;
+} HwuiGlobal;
 
 enum
 {
@@ -128,16 +128,16 @@ void start_stop_dry_wrapper (HyScanFnnButton *button,
                          gpointer         user_data);
 
 /* Функции построения интерфейса. */
-GtkWidget * make_item (FnnPageItem  *item,
+GtkWidget * make_item (HwuiPageItem  *item,
                        GtkWidget   **value);
 
-void        build_page (FnnUI   *ui,
+void        build_page (HwuiGlobal   *ui,
                         Global  *global,
-                        FnnPage *page);
+                        HwuiPage *page);
 
-void        build_all (FnnUI   *ui,
+void        build_all (HwuiGlobal   *ui,
                        Global  *global,
-                       FnnPage *page);
+                       HwuiPage *page);
 
 void screenshooter (void);
 
@@ -177,4 +177,4 @@ list_scroll_end (GObject *emitter,
 void
 depth_writer (GObject *emitter);
 
-#endif /* __FNN_UI_H__ */
+#endif /* __HW_UI_H__ */
