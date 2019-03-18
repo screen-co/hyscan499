@@ -52,16 +52,23 @@ G_DEFINE_TYPE (CheeseFlash, cheese_flash, G_TYPE_OBJECT);
 
 typedef struct
 {
-  GtkWindow *window;
-  guint flash_timeout_tag;
-  guint fade_timeout_tag;
+  GtkWindow    *window;
+  guint         flash_timeout_tag;
+  guint         fade_timeout_tag;
+  GdkRectangle  rect;
 } CheeseFlashPrivate;
 
 static gboolean
 cheese_flash_window_draw_event_cb (GtkWidget *widget, cairo_t *cr, gpointer user_data)
 {
-  cairo_set_source_rgba(cr, 0.0, 1.0, 0.0, 1.0);
+  CheeseFlashPrivate *priv = user_data;
+  
+  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
+  cairo_rectangle (cr, priv->rect.x, priv->rect.y,
+                   priv->rect.width, priv->rect.height);
   cairo_fill (cr);
+  cairo_stroke(cr);
+  
   return TRUE;
 }
 
@@ -105,7 +112,7 @@ cheese_flash_init (CheeseFlash *self)
   gdk_window_input_shape_combine_region (gtk_widget_get_window (GTK_WIDGET (window)), input_region, 0, 0);
   cairo_region_destroy (input_region);
 
-  g_signal_connect (G_OBJECT (window), "draw", G_CALLBACK (cheese_flash_window_draw_event_cb), NULL);
+  g_signal_connect (G_OBJECT (window), "draw", G_CALLBACK (cheese_flash_window_draw_event_cb), priv);
   priv->window = window;
 }
 
@@ -200,11 +207,14 @@ cheese_flash_fire (CheeseFlash  *flash,
   if (flash_priv->fade_timeout_tag > 0)
     g_source_remove (flash_priv->fade_timeout_tag);
 
+  flash_priv->rect = *rect;
+  
   gtk_window_resize (flash_window, rect->width, rect->height);
   gtk_window_move (flash_window, rect->x, rect->y);
 
   gtk_widget_set_opacity (GTK_WIDGET (flash_window), 0.99);
   gtk_widget_show_all (GTK_WIDGET (flash_window));
+
   flash_priv->flash_timeout_tag =
     g_timeout_add_full (G_PRIORITY_DEFAULT,
                         FLASH_DURATION,
