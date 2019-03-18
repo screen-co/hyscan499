@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include <fnn-types.h>
 #include <hyscan-fnn-splash.h>
 #include <hyscan-fnn-project.h>
@@ -22,8 +23,19 @@ typedef gboolean (*ame_config) (GKeyFile *);
 /* Обработчик сигналов TERM и INT. */
 void shutdown_handler (gint signum)
 {
-  g_message ("term");
-  gtk_main_quit ();
+  static int shutdown_counter = 0;
+
+  shutdown_counter++;
+  if (shutdown_counter == 1)
+    {
+      g_message ("Soft exit.");
+      gtk_main_quit ();
+    }
+  if (shutdown_counter == 3)
+    {
+      g_message ("Hard exit.");
+      exit (-1);
+    }
 }
 
 GArray *

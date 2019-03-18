@@ -60,6 +60,7 @@ typedef struct
 static gboolean
 cheese_flash_window_draw_event_cb (GtkWidget *widget, cairo_t *cr, gpointer user_data)
 {
+  cairo_set_source_rgba(cr, 0.0, 1.0, 0.0, 1.0);
   cairo_fill (cr);
   return TRUE;
 }
