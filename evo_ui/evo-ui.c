@@ -233,7 +233,7 @@ make_page_for_panel (EvoUI     *ui,
 
       break;
 
-    case FNN_PANEL_ECHO:
+    case FNN_PANEL_PROFILER:
 
       view = get_widget_from_builder (b, "pf_view_control");
       panel->vis_gui->brightness_value  = get_label_from_builder (b, "pf_brightness_value");
@@ -245,6 +245,36 @@ make_page_for_panel (EvoUI     *ui,
       l_ctrl = get_widget_from_builder (b, "pf_control_layer");
       l_mark = get_widget_from_builder (b, "pf_marks_layer");
       l_meter = get_widget_from_builder (b, "pf_meter_layer");
+
+      g_signal_connect_swapped (l_ctrl, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_ctrl);
+      g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_metr);
+      g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
+
+      if (global->control_s == NULL)
+          break;
+
+      sonar = get_widget_from_builder (b, "sonar_control");
+      tvg = get_widget_from_builder (b, "lin_tvg_control");
+      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");
+      panel->gui.tvg_value              = get_label_from_builder  (b, "tvg_value");
+      panel->gui.tvg0_value             = get_label_from_builder  (b, "tvg0_value");
+      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");
+
+      break;
+
+    case FNN_PANEL_ECHO:
+
+      view = get_widget_from_builder (b, "ss_view_control");
+      panel->vis_gui->brightness_value  = get_label_from_builder (b, "ss_brightness_value");
+      panel->vis_gui->black_value       = get_label_from_builder (b, "ss_black_value");
+      panel->vis_gui->scale_value       = get_label_from_builder (b, "ss_scale_value");
+      panel->vis_gui->colormap_value    = get_label_from_builder (b, "ss_color_map_value");
+      panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");
+
+      wf = (VisualWF*)panel->vis_gui;
+      l_ctrl = get_widget_from_builder (b, "ss_control_layer");
+      l_mark = get_widget_from_builder (b, "ss_marks_layer");
+      l_meter = get_widget_from_builder (b, "ss_meter_layer");
 
       g_signal_connect_swapped (l_ctrl, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_ctrl);
       g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_metr);
@@ -351,12 +381,13 @@ build_interface (Global *global)
 
     /* Проверяем размеры моего могучего списка панелей. */
     n = g_hash_table_size (global->panels);
+    if (n > 5)
       g_warning ("Discovered %i panels. Please, check.", n);
 
     for (i = 0; i < N_PANELS; ++i)
       {
         GtkWidget *w;
-        FnnPanel *panel = get_panel (global, order[i]);
+        FnnPanel *panel = get_panel_quiet (global, order[i]);
         if (panel == NULL)
           continue;
 
@@ -433,12 +464,11 @@ build_interface (Global *global)
 
   /* Нижняя панель содержит виджет управления впередсмотрящим. */
   {
-    FnnPanel *panel = get_panel (global, X_FORWARDL);
-    VisualFL *fl;
+    FnnPanel *panel = get_panel_quiet (global, X_FORWARDL);
 
     if (panel != NULL)
       {
-        fl = (VisualFL*)panel->vis_gui;
+        VisualFL *fl = (VisualFL*)panel->vis_gui;
         hyscan_gtk_area_set_bottom (HYSCAN_GTK_AREA (ui->area), fl->play_control);
       }
   }

@@ -30,10 +30,10 @@ evo_brightness_set_override (Global  *global,
   switch (panel->type)
     {
     case FNN_PANEL_WATERFALL:
+    case FNN_PANEL_ECHO:
       w = 1 - 0.99 * new_brightness / 100.0;
       b = w * new_black / 100.0;
       g = 1.25 - 0.5 * (new_brightness / 100.0);
-      g_message ("%f %f", b, w);
 
       wf = (VisualWF*)panel->vis_gui;
       hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), b, g, w);
@@ -41,7 +41,7 @@ evo_brightness_set_override (Global  *global,
       gtk_label_set_markup (wf->common.black_value, text_black);
       break;
 
-    case FNN_PANEL_ECHO:
+    case FNN_PANEL_PROFILER:
       b = new_black / 250000;
       w = b + (1 - 0.99 * new_brightness / 100.0) * (1 - b);
       g = 1;

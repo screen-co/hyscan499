@@ -36,6 +36,7 @@ fnn_panel_destroy (gpointer data)
     {
     case FNN_PANEL_WATERFALL:
     case FNN_PANEL_ECHO:
+    case FNN_PANEL_PROFILER:
       wf = (VisualWF*)panel->vis_gui;
 
       g_array_unref (wf->colormaps);
@@ -239,8 +240,12 @@ turn_meter_helper (FnnPanel  *panel,
   VisualWF *wf;
 
   /* Только вотерфольные панели. */
-  if (panel->type != FNN_PANEL_WATERFALL && panel->type != FNN_PANEL_ECHO)
-    return;
+  if (panel->type != FNN_PANEL_WATERFALL &&
+      panel->type != FNN_PANEL_ECHO &&
+      panel->type != FNN_PANEL_PROFILER)
+      {
+        return;
+      }
 
   wf = (VisualWF*)panel->vis_gui;
 
@@ -279,8 +284,12 @@ turn_mark_helper (FnnPanel  *panel,
   VisualWF *wf;
 
   /* Только вотерфольные панели. */
-  if (panel->type != FNN_PANEL_WATERFALL && panel->type != FNN_PANEL_ECHO)
-    return;
+  if (panel->type != FNN_PANEL_WATERFALL &&
+      panel->type != FNN_PANEL_ECHO &&
+      panel->type != FNN_PANEL_PROFILER)
+    {
+      return;
+    }
 
   wf = (VisualWF*)panel->vis_gui;
 
@@ -318,7 +327,9 @@ hide_marks (GObject     *emitter,
       FnnPanel *panel = v;
       VisualWF *wf;
 
-      if (panel->type != FNN_PANEL_WATERFALL && panel->type != FNN_PANEL_ECHO)
+      if (panel->type != FNN_PANEL_WATERFALL &&
+          panel->type != FNN_PANEL_ECHO &&
+          panel->type != FNN_PANEL_PROFILER)
         return;
       wf = (VisualWF*)panel->vis_gui;
 
@@ -384,6 +395,7 @@ fname (GObject * emitter,                                                    \
   switch (panel->type)                                                       \
     {                                                                        \
       case FNN_PANEL_WATERFALL:                                              \
+      case FNN_PANEL_PROFILER:                                                   \
       case FNN_PANEL_ECHO:                                                   \
         wf = (VisualWF*)panel->vis_gui;                                      \
         widget = GTK_WIDGET (wf->wf);                                        \
@@ -1177,6 +1189,7 @@ track_changed (GtkTreeView *list,
         {
         case FNN_PANEL_WATERFALL:
         case FNN_PANEL_ECHO:
+        case FNN_PANEL_PROFILER:
           wf = (VisualWF*) (panel->vis_gui);
           hyscan_gtk_waterfall_state_set_track (HYSCAN_GTK_WATERFALL_STATE (wf->wf),
                                                 global->db, global->project_name, track_name);
@@ -1247,6 +1260,7 @@ zoom_changed (HyScanGtkWaterfall *wfall,
     {
     case FNN_PANEL_WATERFALL:
     case FNN_PANEL_ECHO:
+    case FNN_PANEL_PROFILER:
       break;
 
     case FNN_PANEL_FORWARDLOOK:
@@ -1279,6 +1293,7 @@ scale_set (Global   *global,
     {
     case FNN_PANEL_WATERFALL:
     case FNN_PANEL_ECHO:
+    case FNN_PANEL_PROFILER:
       wf = (VisualWF*)panel->vis_gui;
       hyscan_gtk_waterfall_control_zoom (wf->wf_ctrl, scale_up);
 
@@ -1389,7 +1404,9 @@ color_map_set (Global *global,
   FnnPanel *panel = get_panel (global, panelx);
 
   /* Проверяем тип панели. */
-  if (panel->type != FNN_PANEL_WATERFALL && panel->type != FNN_PANEL_ECHO)
+  if (panel->type != FNN_PANEL_WATERFALL &&
+      panel->type != FNN_PANEL_PROFILER &&
+      panel->type != FNN_PANEL_ECHO)
     {
       g_warning ("color_map_set: wrong panel type");
       return FALSE;
@@ -1455,7 +1472,9 @@ color_map_cyclic (GtkWidget *widget,
   VisualWF *wf;
   FnnPanel *panel = get_panel (tglobal, panelx);
 
-  if (panel->type != FNN_PANEL_WATERFALL && panel->type != FNN_PANEL_ECHO)
+  if (panel->type != FNN_PANEL_WATERFALL &&
+      panel->type != FNN_PANEL_PROFILER &&
+      panel->type != FNN_PANEL_ECHO)
     {
       g_warning ("color_map_cyclic: wrong panel type");
       return;
@@ -1589,9 +1608,15 @@ signal_set (Global *global,
 {
   HyScanSourceType *iter;
   const HyScanDataSchemaEnumValue *sig = NULL, *prev_sig = NULL;
-  FnnPanel *panel = get_panel (global, panelx);
+  FnnPanel *panel = get_panel_quiet (global, panelx);
 
-  g_message ("Signal_set: Sonar#%i, Signal %i", panelx, sig_num);
+  g_message ("signal_set: %s (%i), Signal %i", panel->name, panelx, sig_num);
+
+  if (panel == NULL)
+    {
+      g_warning ("  signal_set: panel %i not found!", panelx);
+      return FALSE;
+    }
 
   if (sig_num < 0)
     return FALSE;
@@ -1601,16 +1626,20 @@ signal_set (Global *global,
       gboolean status;
       HyScanSourceType source = *iter;
 
-      g_message ("Setting signal for %s", hyscan_source_get_name_by_type (source));
+      g_message ("  setting signal for %s", hyscan_source_get_name_by_type (source));
       if (source == HYSCAN_SOURCE_PROFILER_ECHO)
-        continue;
+        {
+          g_message ("  skipping %s", hyscan_source_get_name_by_type (source));
+          continue;
+        }
 
       sig = signal_finder (global, panel, source, sig_num);
       hyscan_return_val_if_fail (sig != NULL, FALSE);
 
       if (prev_sig != NULL && !g_str_equal (sig->name, prev_sig->name))
         {
-          g_warning ("Signal names not equal!");
+          g_warning ("  signal name not equal to previous!");
+          g_warning ("  current signal: <%s>, previous signal: <%s>", sig->name, prev_sig->name);
         }
 
       prev_sig = sig;
@@ -1618,7 +1647,10 @@ signal_set (Global *global,
       /* Устанавливаем. */
       status = hyscan_sonar_generator_set_preset (global->control_s, source, sig->value);
       if (!status)
-        return FALSE;
+        {
+          g_message ("  failure!");
+          return FALSE;
+        }
     }
 
   sync_sonar (global);
@@ -1626,6 +1658,7 @@ signal_set (Global *global,
   if (sig != NULL)
     signal_label (panel, sig->name);
 
+  g_message ("  success");
   return TRUE;
 }
 
@@ -1687,9 +1720,15 @@ tvg_set (Global  *global,
 {
   HyScanSourceType *iter;
 
-  FnnPanel *panel = get_panel (global, panelx);
+  FnnPanel *panel = get_panel_quiet (global, panelx);
 
-  g_message ("tvg_set: Sonar#%i, gain0 %f, step %f", panelx, *gain0, step);
+  g_message ("tvg_set: %s (%i), gain0 %f, step %f", panel->name, panelx, *gain0, step);
+
+  if (panel == NULL)
+    {
+      g_warning ("  tvg_set: panel %i not found!", panelx);
+      return FALSE;
+    }
 
   for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
     {
@@ -1699,15 +1738,18 @@ tvg_set (Global  *global,
 
       if (source == HYSCAN_SOURCE_PROFILER_ECHO)
         {
-          g_message ("Setting tvg for echo (10)");
+          g_message ("  setting TVG for profiler-echo (hardcoded 10)");
           status = hyscan_sonar_tvg_set_constant (global->control_s, source, 10);
           if (!status)
-            return FALSE;
+            {
+              g_message ("  failure!");
+              return FALSE;
+            }
 
           continue;
         }
 
-      g_message ("Setting tvg for %s", hyscan_source_get_name_by_type (source));
+      g_message ("  setting TVG for %s", hyscan_source_get_name_by_type (source));
 
       /* Проверяем gain0. */
       info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (source));
@@ -1716,12 +1758,16 @@ tvg_set (Global  *global,
 
       status = hyscan_sonar_tvg_set_linear_db (global->control_s, source, *gain0, step);
       if (!status)
-        return FALSE;
+        {
+          g_message ("  failure!");
+          return FALSE;
+        }
     }
 
   sync_sonar (global);
 
   tvg_label (panel, *gain0, step);
+  g_message ("  success");
   return TRUE;
 }
 
@@ -1819,24 +1865,34 @@ auto_tvg_set (Global   *global,
               gint      panelx)
 {
   gboolean status;
-  FnnPanel *panel = get_panel (global, panelx);
+  FnnPanel *panel = get_panel_quiet (global, panelx);
 
   HyScanSourceType *iter;
 
-  g_message ("auto_tvg_set: Sonar#%i, level %f, sensitivity %f", panelx, level, sensitivity);
+  g_message ("auto_tvg_set: %s (%i), level %f, sensitivity %f", panel->name, panelx, level, sensitivity);
+
+  if (panel == NULL)
+    {
+      g_warning ("  auto_tvg_set: panel %i not found!", panelx);
+      return FALSE;
+    }
 
   for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
     {
-      g_message ("Setting auto-tvg for %s", hyscan_source_get_name_by_type (*iter));
+      g_message ("  setting auto-tvg for %s", hyscan_source_get_name_by_type (*iter));
       status = hyscan_sonar_tvg_set_auto (global->control_s, *iter, level, sensitivity);
       if (!status)
-        return FALSE;
+        {
+          g_message ("  failure!");
+          return FALSE;
+        }
     }
 
   sync_sonar (global);
 
   /* Теперь печатаем что и куда надо. */
   auto_tvg_label (panel, level, sensitivity);
+  g_message ("  success");
   return TRUE;
 }
 
@@ -1926,28 +1982,39 @@ distance_set (Global  *global,
   gdouble receive_time, wait_time;
   gboolean status;
   HyScanSourceType *iter;
-  FnnPanel *panel = get_panel (global, panelx);
+  FnnPanel *panel = get_panel_quiet (global, panelx);
 
-  g_message ("Distance_set: Sonar#%i, distance %f", panelx, *meters);
+  g_message ("distance_set: %s (%i), distance %f", panel->name, panelx, *meters);
+
+  if (panel == NULL)
+    {
+      g_warning ("  distance_set: panel %i not found!", panelx);
+      return FALSE;
+    }
   if (*meters < 1.0)
-    return FALSE;
+    {
+      g_message ("  failure!");
+      return FALSE;
+    }
 
   receive_time = *meters / (global->sound_velocity / 2.0);
   for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
     {
       HyScanSonarInfoSource *info;
 
-      g_message ("  Setting distance for %s", hyscan_source_get_name_by_type (*iter));
+      g_message ("  setting distance for %s", hyscan_source_get_name_by_type (*iter));
       info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (*iter));
       hyscan_return_val_if_fail (info != NULL, FALSE);
 
       if (receive_time > info->receiver->max_time || receive_time < info->receiver->min_time)
         {
-          g_message ("  Receive time %f (%fm) out of range [%f; %f]",
+          g_message ("    receive time %f (%4.2fm) is out of range [%f; %f]",
                      receive_time, *meters,
                      info->receiver->min_time,
                      info->receiver->max_time);
-          return FALSE;
+          receive_time = CLAMP (receive_time, info->receiver->min_time, info->receiver->max_time);
+          *meters = receive_time * (global->sound_velocity/2.0);
+          g_message ("    receive time set to %f (%4.2fm)", receive_time, *meters);
         }
 
       wait_time = 0;
@@ -1969,7 +2036,7 @@ distance_set (Global  *global,
 
           if (ss != NULL || fl != NULL)
             {
-              g_message ("  distance: PF synced");
+              g_message ("    distance: PF synced");
               full_time = floor (0.333 / master_time) * master_time;
               receive_time = master_time / 3.0;
 
@@ -1983,7 +2050,7 @@ distance_set (Global  *global,
             }
           else
             {
-              g_message ("  distance: PF unsynced");
+              g_message ("    distance: PF unsynced");
               if (receive_time >= 0.333)
                 wait_time = receive_time;
               else
@@ -1991,17 +2058,21 @@ distance_set (Global  *global,
             }
         }
 
-      g_message ("  %s: %4.1f m, r/w time: %f %f",
+      g_message ("    %s: %4.1f m, r/w time: %f %f",
                  hyscan_source_get_name_by_type (*iter), *meters, receive_time, wait_time);
 
       status = hyscan_sonar_receiver_set_time (global->control_s, *iter, receive_time, wait_time);
       if (!status)
-        return FALSE;
+        {
+          g_message ("  failure!");
+          return FALSE;
+        }
     }
 
   /* Специальный случай. */
   sync_sonar (global);
   distance_label (panel, *meters);
+  g_message ("  success");
   return TRUE;
 }
 
@@ -2078,6 +2149,7 @@ brightness_set (Global  *global,
   switch (panel->type)
     {
     case FNN_PANEL_WATERFALL:
+    case FNN_PANEL_ECHO:
       b = 0;
       w = 1 - 0.99 * new_brightness / 100.0;
       g = 1.25 - 0.5 * (new_brightness / 100.0);
@@ -2087,7 +2159,7 @@ brightness_set (Global  *global,
       gtk_label_set_markup (wf->common.brightness_value, text_bright);
       break;
 
-    case FNN_PANEL_ECHO:
+    case FNN_PANEL_PROFILER:
       // b = new_black * 0.0000025;
       // w = 1.0 - (new_brightness / 100.0) * 0.99;
       // w *= w;
@@ -2140,6 +2212,7 @@ brightness_up (GtkWidget *widget,
   switch (panel->type)
     {
       case FNN_PANEL_WATERFALL:
+      case FNN_PANEL_PROFILER:
       case FNN_PANEL_ECHO:
         {
           if (new_brightness < 50.0)
@@ -2191,6 +2264,7 @@ brightness_down (GtkWidget *widget,
   switch (panel->type)
     {
       case FNN_PANEL_WATERFALL:
+      case FNN_PANEL_PROFILER:
       case FNN_PANEL_ECHO:
         {
           if (new_brightness > 90.0)
@@ -2242,6 +2316,7 @@ black_up (GtkWidget *widget,
   switch (panel->type)
     {
       case FNN_PANEL_WATERFALL:
+      case FNN_PANEL_PROFILER:
       case FNN_PANEL_ECHO:
         {
           if (new_black < 50.0)
@@ -2293,6 +2368,7 @@ black_down (GtkWidget *widget,
   switch (panel->type)
     {
       case FNN_PANEL_WATERFALL:
+      case FNN_PANEL_PROFILER:
       case FNN_PANEL_ECHO:
         {
           if (new_black > 90.0)
@@ -2381,7 +2457,7 @@ pf_special (GtkWidget  *widget,
   HyScanTileFlags flags = 0;
   FnnPanel *panel = get_panel (tglobal, panelx);
 
-  if (panel->type != FNN_PANEL_ECHO)
+  if (panel->type != FNN_PANEL_PROFILER)
     {
       g_message ("pf_special: wrong panel type!");
       return TRUE;
@@ -2414,6 +2490,7 @@ live_view (GtkWidget  *widget,
   switch (panel->type)
     {
     case FNN_PANEL_WATERFALL:
+    case FNN_PANEL_PROFILER:
     case FNN_PANEL_ECHO:
       wf = (VisualWF*)panel->vis_gui;
       current = hyscan_gtk_waterfall_automove (wf->wf, state);
@@ -2515,6 +2592,7 @@ start_stop (Global    *global,
             case FNN_PANEL_WATERFALL:
               status &= auto_tvg_set (global, panel->current.level, panel->current.sensitivity, panelx);
               break;
+            case FNN_PANEL_PROFILER:
             case FNN_PANEL_ECHO:
             case FNN_PANEL_FORWARDLOOK:
               status &= tvg_set (global, &panel->current.gain0, panel->current.gain_step, panelx);

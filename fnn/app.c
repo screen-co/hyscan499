@@ -14,7 +14,7 @@
 #ifdef G_OS_WIN32
     #include <direct.h>
     #define getcwd _getcwd /* https://stackoverflow.com/q/2868680 */
-#elif
+#else
     #include <unistd.h>
 #endif
 
@@ -644,7 +644,7 @@ main (int argc, char **argv)
 
       panel->vis_gui = (VisualCommon*)vwf;
 
-      vwf->colormaps = make_color_maps (TRUE);
+      vwf->colormaps = make_color_maps (FALSE);
 
       vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global.cache));
       gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
@@ -653,9 +653,6 @@ main (int argc, char **argv)
                                   &vwf->wf_grid, &vwf->wf_ctrl,
                                   &vwf->wf_mark, &vwf->wf_metr,
                                   global.marks.model);
-
-      hyscan_gtk_waterfall_grid_set_condence (vwf->wf_grid, 10.0);
-      hyscan_gtk_waterfall_grid_set_grid_color (vwf->wf_grid, hyscan_tile_color_converter_c2i (32, 32, 32, 255));
 
       g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), &global);
       g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_ECHOSOUND));

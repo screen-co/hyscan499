@@ -61,6 +61,7 @@ enum
   X_SIDE_LOW = 568351,
 };
 
+
 /* структура: локейшн + прожекторы */
 typedef struct
 {
@@ -92,6 +93,7 @@ typedef struct
 typedef enum 
 {
   FNN_PANEL_WATERFALL,
+  FNN_PANEL_PROFILER,
   FNN_PANEL_ECHO,
   FNN_PANEL_FORWARDLOOK,
 } FnnPanelType;
@@ -173,9 +175,7 @@ typedef struct
 typedef struct 
 {
   gchar            *short_name;
-  // gchar            *name_en;
   gchar            *name;
-  // gchar            *name_ru;
   gchar            *name_local;
   FnnPanelType      type;    /* тип панели: вф, фл, пф */
   HyScanSourceType *sources; /* Источники для панели */
