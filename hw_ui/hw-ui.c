@@ -182,7 +182,7 @@ build_page (HwuiGlobal   *ui,
       button = make_item (item, &value);
       title = item->msg_id;
       wname = g_strdup_printf ("%i: %s", item->position, title);
-      gtk_widget_set_name(button, wname);
+      gtk_widget_set_name (button, wname);
 
       /* Ща сложно будет. В странице есть destination_selector. Он определяет,
        * _куда_ надо класть, если надо вообще. Надо или нет определяется оффсетом.
@@ -385,7 +385,7 @@ void
 list_scroll_up (GObject *emitter,
                 gpointer udata)
 {
-  GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT(udata));
+  GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT (udata));
   track_scroller (view, TRUE, FALSE);
 }
 
@@ -393,7 +393,7 @@ void
 list_scroll_down (GObject *emitter,
                   gpointer udata)
 {
-  GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT(udata));
+  GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT (udata));
   track_scroller (view, FALSE, FALSE);
 }
 
@@ -401,14 +401,14 @@ void
 list_scroll_start (GObject *emitter,
                    gpointer udata)
 {
-  GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT(udata));
+  GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT (udata));
   track_scroller (view, TRUE, TRUE);
 }
 void
 list_scroll_end (GObject *emitter,
                  gpointer udata)
 {
-  GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT(udata));
+  GtkTreeView *view = list_scroll_tree_view_resolver (GPOINTER_TO_INT (udata));
   track_scroller (view, FALSE, TRUE);
 }
 
@@ -587,8 +587,8 @@ build_interface (Global *global)
       build_all (ui, global, any_sonar_pages);
 
     /* Виджеты по страницам. */
-    g_hash_table_iter_init(&iter, global->panels);
-    while (g_hash_table_iter_next(&iter, &key, &value))
+    g_hash_table_iter_init (&iter, global->panels);
+    while (g_hash_table_iter_next (&iter, &key, &value))
       {
         switch (GPOINTER_TO_INT (key))
           {
@@ -664,7 +664,7 @@ ame_button_clicker (gpointer data)
     }
   code %= 1000;
   g_message ("FnnButton: %"G_GINT64_FORMAT" clicked <%s>(%i)",
-             g_get_monotonic_time(),
+             g_get_monotonic_time (),
              gtk_stack_get_visible_child_name (GTK_STACK (stack)),
              code);
   fixed = gtk_stack_get_visible_child (GTK_STACK (stack));
@@ -736,7 +736,7 @@ ame_button_thread (void * data)
 
       /* нуль-терминируем. */
       buf[bytes] = '\0';
-      g_message ("FnnButton: %"G_GINT64_FORMAT" received <%s>", g_get_monotonic_time(), buf);
+      g_message ("FnnButton: %"G_GINT64_FORMAT" received <%s>", g_get_monotonic_time (), buf);
 
       for (pbuf = buf; bytes > 0 && pbuf < buf + 127; )
         {
@@ -799,11 +799,11 @@ kf_config (GKeyFile *kf)
   source_specific = keyfile_bool_read_helper (kf, "ame", "source_specific");
   mcast_addr =  keyfile_string_read_helper (kf, "ame", "button_addr");
   mcast_port =  keyfile_uint_read_helper (kf, "ame", "button_port", 9000);
-  g_return_val_if_fail(mcast_addr != NULL, FALSE);
+  g_return_val_if_fail (mcast_addr != NULL, FALSE);
 
   brec.socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, NULL);
   addr = g_inet_address_new_from_string (mcast_addr);
-  isocketadress = g_inet_socket_address_new(addr, mcast_port);
+  isocketadress = g_inet_socket_address_new (addr, mcast_port);
   g_message ("Buttons: %s %u", mcast_addr, mcast_port);
 
   g_socket_bind (brec.socket, isocketadress, TRUE, NULL);

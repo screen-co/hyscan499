@@ -31,9 +31,9 @@
 #define MID(x) .msg_id = (const gchar*)(x)
 #define CBK(x) .callback = (gpointer)(x)
 #define UD(x) .user_data = (gpointer)(x)
-#define VALUE_OFFSET(x, y) .value_offset = offsetof(x,y)
+#define VALUE_OFFSET(x, y) .value_offset = offsetof (x,y)
 #define VALUE_DEFAULT(x) .value_default = ((gchar*)(x))
-#define BUTTON_OFFSET(x, y) .button_offset = offsetof(x,y)
+#define BUTTON_OFFSET(x, y) .button_offset = offsetof (x,y)
 
 static HwuiPage common_pages[] =
 {

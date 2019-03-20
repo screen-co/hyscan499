@@ -170,10 +170,6 @@ make_single_switcher (SwUI   *ui,
   if (g_hash_table_size (global->panels) < 2)
     return NULL;
 
-  g_message("%s %s %s %s", "hide other: ", _("Hide other"),
-
-            g_dgettext (GETTEXT_PACKAGE, "Hide other"), GETTEXT_PACKAGE);
-
   sw = gtk_toggle_button_new_with_label (_("Hide other"));
   gtk_widget_set_margin_start (sw, 6);
   gtk_widget_set_margin_top (sw, 3);
@@ -267,10 +263,10 @@ make_page_for_panel (SwUI     *ui,
 
       sonar = get_widget_from_builder (b, "sonar_control");
       tvg = get_widget_from_builder (b, "auto_tvg_control");
-      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");
-      panel->gui.tvg_level_value        = get_label_from_builder  (b, "tvg_level_value");
-      panel->gui.tvg_sens_value         = get_label_from_builder  (b, "tvg_sens_value");
-      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");
+      panel->gui.distance_value         = get_label_from_builder (b, "distance_value");
+      panel->gui.tvg_level_value        = get_label_from_builder (b, "tvg_level_value");
+      panel->gui.tvg_sens_value         = get_label_from_builder (b, "tvg_sens_value");
+      panel->gui.signal_value           = get_label_from_builder (b, "signal_value");
 
       break;
 
@@ -296,10 +292,10 @@ make_page_for_panel (SwUI     *ui,
 
       sonar = get_widget_from_builder (b, "sonar_control");
       tvg = get_widget_from_builder (b, "lin_tvg_control");
-      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");
-      panel->gui.tvg_value              = get_label_from_builder  (b, "tvg_value");
-      panel->gui.tvg0_value             = get_label_from_builder  (b, "tvg0_value");
-      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");
+      panel->gui.distance_value         = get_label_from_builder (b, "distance_value");
+      panel->gui.tvg_value              = get_label_from_builder (b, "tvg_value");
+      panel->gui.tvg0_value             = get_label_from_builder (b, "tvg0_value");
+      panel->gui.signal_value           = get_label_from_builder (b, "signal_value");
 
       break;
 

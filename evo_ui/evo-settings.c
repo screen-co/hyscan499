@@ -152,7 +152,7 @@ evo_settings_new (void)
 GtkWidget *
 evo_settings_get_grid (EvoSettings *self)
 {
-  g_return_val_if_fail(EVO_IS_SETTINGS (self), NULL);
+  g_return_val_if_fail (EVO_IS_SETTINGS (self), NULL);
 
   return GTK_WIDGET (self->priv->grid);
 }

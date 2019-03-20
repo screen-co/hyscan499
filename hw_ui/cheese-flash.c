@@ -62,13 +62,13 @@ static gboolean
 cheese_flash_window_draw_event_cb (GtkWidget *widget, cairo_t *cr, gpointer user_data)
 {
   CheeseFlashPrivate *priv = user_data;
-  
-  cairo_set_source_rgba(cr, 1.0, 1.0, 1.0, 1.0);
+
+  cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
   cairo_rectangle (cr, priv->rect.x, priv->rect.y,
                    priv->rect.width, priv->rect.height);
   cairo_fill (cr);
-  cairo_stroke(cr);
-  
+  cairo_stroke (cr);
+
   return TRUE;
 }
 
@@ -208,7 +208,7 @@ cheese_flash_fire (CheeseFlash  *flash,
     g_source_remove (flash_priv->fade_timeout_tag);
 
   flash_priv->rect = *rect;
-  
+
   gtk_window_resize (flash_window, rect->width, rect->height);
   gtk_window_move (flash_window, rect->x, rect->y);
 

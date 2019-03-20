@@ -26,9 +26,9 @@ draw_h_lines (GtkWidget   *area,
   for (i = 0; i < height; i+=step)
     {
       cairo_move_to (cr, 0, i);
-      cairo_line_to(cr, line_width, i);
+      cairo_line_to (cr, line_width, i);
       cairo_move_to (cr, width, i);
-      cairo_line_to(cr, width-line_width, i);
+      cairo_line_to (cr, width-line_width, i);
     }
 
   gdk_cairo_set_source_rgba (cr, &color);
@@ -57,9 +57,9 @@ draw_v_lines (GtkWidget   *area,
   for (i = 0; i < width; i+=step)
     {
       cairo_move_to (cr, i, 0);
-      cairo_line_to(cr, i, line_height);
+      cairo_line_to (cr, i, line_height);
       cairo_move_to (cr, i, height);
-      cairo_line_to(cr, i, height-line_height);
+      cairo_line_to (cr, i, height-line_height);
     }
 
   gdk_cairo_set_source_rgba (cr, &color);

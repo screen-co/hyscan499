@@ -416,7 +416,7 @@ main (int argc, char **argv)
         if (info == NULL)
           continue;
 
-        g_print ("Source found: %s\n", hyscan_source_get_name_by_type(source[i]));
+        g_print ("Source found: %s\n", hyscan_source_get_name_by_type (source[i]));
         g_hash_table_insert (global.infos, GINT_TO_POINTER (source[i]), (void*)info);
       }
   }
@@ -435,7 +435,7 @@ main (int argc, char **argv)
 
   common_builder = gtk_builder_new ();
   gtk_builder_set_translation_domain (common_builder, GETTEXT_PACKAGE);
-  gtk_builder_add_from_resource(common_builder, "/org/triple/gtk/common.ui", NULL);
+  gtk_builder_add_from_resource (common_builder, "/org/triple/gtk/common.ui", NULL);
 
   /* Основное окно программы. */
   global.gui.window = gtk_window_new (GTK_WINDOW_TOPLEVEL);

@@ -72,9 +72,9 @@ hyscan_gtk_fnn_offsets_class_init (HyScanGtkFnnOffsetsClass *klass)
   object_class->finalize = finalize;
 
   g_object_class_install_property (object_class, PROP_CONTROL,
-    g_param_spec_object("control", "control", "HyScanControl",
-                        HYSCAN_TYPE_CONTROL,
-                        G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+    g_param_spec_object ("control", "control", "HyScanControl",
+                         HYSCAN_TYPE_CONTROL,
+                         G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
@@ -188,7 +188,7 @@ fill_grid (HyScanGtkFnnOffsets *self,
 
   gtk_grid_attach (grid, list,                     0, 0, 1, 1);
   gtk_grid_attach (grid, GTK_WIDGET (priv->stack), 1, 0, 3, 1);
-  gtk_grid_set_column_homogeneous(grid, TRUE);
+  gtk_grid_set_column_homogeneous (grid, TRUE);
   gtk_widget_set_hexpand (GTK_WIDGET (grid), TRUE);
   gtk_widget_set_vexpand (GTK_WIDGET (grid), TRUE);
 }

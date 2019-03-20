@@ -90,9 +90,9 @@ evo_sensors_class_init (EvoSensorsClass *klass)
   oclass->finalize = evo_sensors_object_finalize;
 
   g_object_class_install_property (oclass, PROP_CONTROL,
-    g_param_spec_object("control", "control", "HyScanControl",
-                        HYSCAN_TYPE_CONTROL,
-                        G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+    g_param_spec_object ("control", "control", "HyScanControl",
+                         HYSCAN_TYPE_CONTROL,
+                         G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void

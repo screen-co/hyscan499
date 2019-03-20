@@ -175,7 +175,7 @@ main (int argc, char **argv)
     GtkWidget *grid;
 
     grid = gtk_grid_new ();
-    label = gtk_label_new("No activity");
+    label = gtk_label_new ("No activity");
     gtk_grid_attach (GTK_GRID (grid), label, 0, -1, 2, 1);
 
     for (i = 1; i < 6; ++i)

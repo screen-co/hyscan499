@@ -75,7 +75,7 @@ hyscan_fnn_fixed_pack (HyScanFnnFixed *self,
 
   g_hash_table_insert (priv->widgets, key, g_object_ref (child));
 
-  y = position * hyscan_fnn_button_get_size_request() + HYSCAN_FNN_FIXED_SHIFT;
+  y = position * hyscan_fnn_button_get_size_request () + HYSCAN_FNN_FIXED_SHIFT;
   gtk_fixed_put (GTK_FIXED (self), child, 0, y);
 
 }

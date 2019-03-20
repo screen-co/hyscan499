@@ -31,7 +31,7 @@ keyfile_strv_read_helper (GKeyFile    *config,
   gchar ** keys;
 
   /* Список ключей. */
-  keys = g_key_file_get_string_list(config, group, key, NULL, &error);
+  keys = g_key_file_get_string_list (config, group, key, NULL, &error);
 
   if (error == NULL)
     return keys;

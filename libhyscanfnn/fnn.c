@@ -151,12 +151,12 @@ run_param (GObject     *emitter,
   GtkWidget *dialog, *content, *tree;
   gint res;
 
-  dialog = gtk_dialog_new_with_buttons(_("Hardware parameters"),
-                                       GTK_WINDOW (tglobal->gui.window), 0,
-                                       _("Apply"), GTK_RESPONSE_APPLY,
-                                       _("Reset"), GTK_RESPONSE_CANCEL,
-                                       _("Close"), GTK_RESPONSE_CLOSE,
-                                       NULL);
+  dialog = gtk_dialog_new_with_buttons (_("Hardware parameters"),
+                                        GTK_WINDOW (tglobal->gui.window), 0,
+                                        _("Apply"), GTK_RESPONSE_APPLY,
+                                        _("Reset"), GTK_RESPONSE_CANCEL,
+                                        _("Close"), GTK_RESPONSE_CLOSE,
+                                        NULL);
   content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
   tree = hyscan_gtk_param_tree_new (HYSCAN_PARAM (tglobal->control), root, TRUE);
   hyscan_gtk_param_set_watch_period (HYSCAN_GTK_PARAM (tree), 200);
@@ -186,10 +186,10 @@ run_show_sonar_info (GObject     *emitter,
 {
   GtkWidget *dialog, *content, *tree;
 
-  dialog = gtk_dialog_new_with_buttons(_("Sonar info"),
-                                       GTK_WINDOW (tglobal->gui.window), 0,
-                                       _("Close"), GTK_RESPONSE_CLOSE,
-                                       NULL);
+  dialog = gtk_dialog_new_with_buttons (_("Sonar info"),
+                                        GTK_WINDOW (tglobal->gui.window), 0,
+                                        _("Close"), GTK_RESPONSE_CLOSE,
+                                        NULL);
   content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
   tree = hyscan_gtk_param_tree_new (HYSCAN_PARAM (tglobal->control), root, TRUE);
   hyscan_gtk_param_set_watch_period (HYSCAN_GTK_PARAM (tree), 200);
@@ -622,7 +622,7 @@ active_mark_changed (HyScanGtkProjectViewer *marks_viewer,
 inline gboolean
 fnn_float_equal (gdouble a, gdouble b)
 {
-  return (ABS(a - b) < 1e-6);
+  return (ABS (a - b) < 1e-6);
 }
 
 gboolean
@@ -1240,7 +1240,7 @@ fl_current_scale (HyScanGtkForwardLook *fl)
 
   scale = 100.0 * (fabs (to_y - from_y) / fabs (max_y - min_y));
 
-  if (isnan(scale) || isinf(scale))
+  if (isnan (scale) || isinf (scale))
     return -1;
 
   return scale;
@@ -1375,16 +1375,11 @@ hyscan_tile_color_compose_colormap_pf (guint *length)
   for (i = 1; i < len; ++i)
     {
       out[i] = hyscan_tile_color_converter_c2i (r, g, b, 255);
-      DECR(r, incr_g);
-      INCR(g, decr_b);
-      DECR(b, incr_r);
-      INCR(r, decr_g);
-      DECR(g, decr_g);
-
-      // INCR (g, decr_b);
-      // DECR (b, incr_r);
-      // INCR (r, decr_g);
-      // DECR (g, decr_g);
+      DECR (r, incr_g);
+      INCR (g, decr_b);
+      DECR (b, incr_r);
+      INCR (r, decr_g);
+      DECR (g, decr_g);
     }
 
   if (length != NULL)
@@ -2041,7 +2036,7 @@ distance_set (Global  *global,
               receive_time = master_time / 3.0;
 
               receive_time = MIN (receive_time, requested_time);
-              receive_time = CLAMP(receive_time, info->receiver->min_time, info->receiver->max_time);
+              receive_time = CLAMP (receive_time, info->receiver->min_time, info->receiver->max_time);
 
               if (requested_time != receive_time)
                 *meters = receive_time * (global->sound_velocity/2.0);
@@ -2243,7 +2238,7 @@ brightness_up (GtkWidget *widget,
     }
 
   new_brightness = new_brightness + step;
-  new_brightness = new_brightness - fmod (new_brightness, ABS(step));
+  new_brightness = new_brightness - fmod (new_brightness, ABS (step));
   new_brightness = CLAMP (new_brightness, 0.0, 100.0);
 
   if (brightness_set (tglobal, new_brightness, panel->vis_current.black, panelx))
@@ -2295,7 +2290,7 @@ brightness_down (GtkWidget *widget,
     }
 
   new_brightness = new_brightness + step;
-  new_brightness = new_brightness - fmod (new_brightness, ABS(step));
+  new_brightness = new_brightness - fmod (new_brightness, ABS (step));
   new_brightness = CLAMP (new_brightness, 0.0, 100.0);
 
   if (brightness_set (tglobal, new_brightness, panel->vis_current.black, panelx))
@@ -2347,7 +2342,7 @@ black_up (GtkWidget *widget,
     }
 
   new_black = new_black + step;
-  new_black = new_black - fmod (new_black, ABS(step));
+  new_black = new_black - fmod (new_black, ABS (step));
   new_black = CLAMP (new_black, 0.0, 100.0);
 
   if (brightness_set (tglobal, panel->vis_current.brightness, new_black, panelx))
@@ -2399,7 +2394,7 @@ black_down (GtkWidget *widget,
     }
 
   new_black = new_black + step;
-  new_black = new_black - fmod (new_black, ABS(step));
+  new_black = new_black - fmod (new_black, ABS (step));
   new_black = CLAMP (new_black, 0.0, 100.0);
 
   if (brightness_set (tglobal, panel->vis_current.brightness, new_black, panelx))

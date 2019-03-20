@@ -90,7 +90,7 @@ hyscan_gtk_fnn_box_set_visible (HyScanGtkFnnBox *box,
   priv = box->priv;
 
   /* Ищем виджет в таблице. */
-  g_hash_table_iter_init(&iter, priv->ht);
+  g_hash_table_iter_init (&iter, priv->ht);
   while (g_hash_table_iter_next (&iter, &k, &v))
     {
       gboolean visible = GPOINTER_TO_INT (k) == id;
@@ -151,7 +151,7 @@ hyscan_gtk_fnn_box_show_all (HyScanGtkFnnBox *box)
   priv = box->priv;
 
   /* Всем виджетам ставим визибл по настройке. */
-  g_hash_table_iter_init(&iter, priv->ht);
+  g_hash_table_iter_init (&iter, priv->ht);
   while (g_hash_table_iter_next (&iter, &k, &v))
     gtk_widget_set_visible ((GtkWidget*)v, TRUE);
 

@@ -111,14 +111,14 @@ main (int argc, char **argv)
   grid = gtk_grid_new ();
   ame_fixed = hyscan_fnn_fixed_new ();
 
-  gtk_grid_attach(GTK_GRID (grid), ame_fixed, 0, 0, 1, 5);
-  gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("dir"), 1, -1, 1, 1);
-  gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("fix"), 2, -1, 1, 1);
-  gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("off"), 3, -1, 1, 1);
-  gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("on"), 4, -1, 1, 1);
-  gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("sens"), 5, -1, 1, 1);
-  gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("active"), 6, -1, 1, 1);
-  gtk_grid_attach(GTK_GRID (grid), gtk_label_new ("act. prop"), 7, -1, 1, 1);
+  gtk_grid_attach (GTK_GRID (grid), ame_fixed, 0, 0, 1, 5);
+  gtk_grid_attach (GTK_GRID (grid), gtk_label_new ("dir"), 1, -1, 1, 1);
+  gtk_grid_attach (GTK_GRID (grid), gtk_label_new ("fix"), 2, -1, 1, 1);
+  gtk_grid_attach (GTK_GRID (grid), gtk_label_new ("off"), 3, -1, 1, 1);
+  gtk_grid_attach (GTK_GRID (grid), gtk_label_new ("on"), 4, -1, 1, 1);
+  gtk_grid_attach (GTK_GRID (grid), gtk_label_new ("sens"), 5, -1, 1, 1);
+  gtk_grid_attach (GTK_GRID (grid), gtk_label_new ("active"), 6, -1, 1, 1);
+  gtk_grid_attach (GTK_GRID (grid), gtk_label_new ("act. prop"), 7, -1, 1, 1);
 
   for (i = 0; i < N_BUTTONS; ++i)
     {
@@ -126,8 +126,8 @@ main (int argc, char **argv)
       GtkWidget *b1, *b2, *b3, *b4, *b5, *b6, *b7;
 
       ame_button = hyscan_fnn_button_new (ICON_NFNN, texts[i], !!(i % 2), !!(i & 2));
-      g_signal_connect (ame_button, "fnn-activated", G_CALLBACK (clicked), GINT_TO_POINTER(i));
-      g_signal_connect (ame_button, "fnn-toggled", G_CALLBACK (toggled), GINT_TO_POINTER(i));
+      g_signal_connect (ame_button, "fnn-activated", G_CALLBACK (clicked), GINT_TO_POINTER (i));
+      g_signal_connect (ame_button, "fnn-toggled", G_CALLBACK (toggled), GINT_TO_POINTER (i));
 
       b1 = gtk_button_new_with_label (texts0[i]);
       b2 = gtk_button_new_with_label (texts1[i]);
@@ -151,15 +151,13 @@ main (int argc, char **argv)
       hyscan_fnn_button_create_value (HYSCAN_FNN_BUTTON (ame_button), "value");
 
       hyscan_fnn_fixed_pack (HYSCAN_FNN_FIXED (ame_fixed), i, ame_button);
-      gtk_grid_attach(GTK_GRID (grid), b1, 1, i, 1, 1);
-      gtk_grid_attach(GTK_GRID (grid), b2, 2, i, 1, 1);
-      gtk_grid_attach(GTK_GRID (grid), b3, 3, i, 1, 1);
-      gtk_grid_attach(GTK_GRID (grid), b4, 4, i, 1, 1);
-      gtk_grid_attach(GTK_GRID (grid), b5, 5, i, 1, 1);
-      gtk_grid_attach(GTK_GRID (grid), b6, 6, i, 1, 1);
-      gtk_grid_attach(GTK_GRID (grid), b7, 7, i, 1, 1);
-
-
+      gtk_grid_attach (GTK_GRID (grid), b1, 1, i, 1, 1);
+      gtk_grid_attach (GTK_GRID (grid), b2, 2, i, 1, 1);
+      gtk_grid_attach (GTK_GRID (grid), b3, 3, i, 1, 1);
+      gtk_grid_attach (GTK_GRID (grid), b4, 4, i, 1, 1);
+      gtk_grid_attach (GTK_GRID (grid), b5, 5, i, 1, 1);
+      gtk_grid_attach (GTK_GRID (grid), b6, 6, i, 1, 1);
+      gtk_grid_attach (GTK_GRID (grid), b7, 7, i, 1, 1);
     }
 
   g_signal_connect (G_OBJECT (window), "destroy", G_CALLBACK (gtk_main_quit), NULL);

@@ -257,7 +257,7 @@ hyscan_fnn_button_object_constructed (GObject *object)
   gtk_widget_set_margin_start (GTK_WIDGET (self), 6);
   gtk_widget_set_margin_end (GTK_WIDGET (self), 6);
   gtk_widget_set_size_request (GTK_WIDGET (self), -1,
-                               hyscan_fnn_button_get_size_request());
+                               hyscan_fnn_button_get_size_request ());
 
   button_setup (self);
   text_box_setup (self);

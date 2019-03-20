@@ -49,9 +49,9 @@ hyscan_fnn_offsets_class_init (HyScanFnnOffsetsClass *klass)
   oclass->finalize = hyscan_fnn_offsets_object_finalize;
 
   g_object_class_install_property (oclass, PROP_CONTROL,
-    g_param_spec_object("control", "control", "HyScanControl",
-                        HYSCAN_TYPE_CONTROL,
-                        G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+    g_param_spec_object ("control", "control", "HyScanControl",
+                         HYSCAN_TYPE_CONTROL,
+                         G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
