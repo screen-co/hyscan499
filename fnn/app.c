@@ -11,6 +11,13 @@
  #include <errno.h>
 #endif
 
+#ifdef G_OS_WIN32
+    #include <direct.h>
+    #define getcwd _getcwd /* https://stackoverflow.com/q/2868680 */
+#elif
+    #include <unistd.h>
+#endif
+
 #define GETTEXT_PACKAGE "hyscan-499"
 #include <glib/gi18n.h>
 
@@ -152,21 +159,25 @@ main (int argc, char **argv)
 
   gboolean status;
 
-
-  // bindtextdomain ("hyscanfnn-swui", "/usr/share/locale/");
-  // bind_textdomain_codeset ("hyscanfnn-swui", "UTF-8");
-  // textdomain ("hyscanfnn-swui");
-
-  // bindtextdomain ("libhyscanfnn", "/usr/share/locale/");
-  // bind_textdomain_codeset ("libhyscanfnn", "UTF-8");
-  // textdomain ("libhyscanfnn");
   gtk_init (&argc, &argv);
 
-  setlocale (LC_ALL, "");
-  bindtextdomain (GETTEXT_PACKAGE, "/usr/share/locale/");
-  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
-  textdomain (GETTEXT_PACKAGE);
-  
+  {
+    gchar directory[2048];
+    gchar *dir;
+    dir = getcwd (directory, sizeof (directory));
+
+    setlocale (LC_ALL, "");
+    bindtextdomain (GETTEXT_PACKAGE, dir);
+    bindtextdomain ("libhyscanfnn", dir);
+    bindtextdomain ("hyscanfnn-swui", dir);
+
+    bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+    bind_textdomain_codeset ("libhyscanfnn" , "UTF-8");
+    bind_textdomain_codeset ("hyscanfnn-swui", "UTF-8");
+
+    textdomain (GETTEXT_PACKAGE);
+  }
+
   init_triple (&global);
   /* Разбор командной строки. */
   {
