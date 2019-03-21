@@ -522,7 +522,7 @@ build_interface (Global *global)
     for (i = 0; i < 3; ++i)
       {
         GtkWidget *w;
-        FnnPanel *panel = get_panel (global, order[i]);
+        FnnPanel *panel = get_panel_quiet (global, order[i]);
 
         /* Может и не получится найти панель. */
         if (panel == NULL)
@@ -560,13 +560,10 @@ build_interface (Global *global)
 
   /* Нижняя панель содержит виджет управления впередсмотрящим. */
   {
-    FnnPanel *panel;
-    VisualFL *fl;
-
-    panel = get_panel (global, X_FORWARDL);
+    FnnPanel *panel = get_panel_quiet (global, X_FORWARDL);
     if (panel != NULL)
       {
-        fl = (VisualFL*)panel->vis_gui;
+        VisualFL *fl = (VisualFL*)panel->vis_gui;
 
         gtk_container_add (GTK_CONTAINER (ui->bott_revealer), fl->play_control);
         gtk_revealer_set_reveal_child (GTK_REVEALER (ui->bott_revealer), FALSE);

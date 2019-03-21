@@ -415,7 +415,7 @@ build_interface (Global *global)
     for (i = 0; i < N_PANELS; ++i)
       {
         GtkWidget *w;
-        FnnPanel *panel = get_panel (global, order[i]);
+        FnnPanel *panel = get_panel_quiet (global, order[i]);
         if (panel == NULL)
           continue;
 
@@ -485,12 +485,11 @@ build_interface (Global *global)
 
   /* Нижняя панель содержит виджет управления впередсмотрящим. */
   {
-    FnnPanel *panel = get_panel (global, X_FORWARDL);
-    VisualFL *fl;
+    FnnPanel *panel = get_panel_quiet (global, X_FORWARDL);
 
     if (panel != NULL)
       {
-        fl = (VisualFL*)panel->vis_gui;
+        VisualFL *fl = (VisualFL*)panel->vis_gui;
         hyscan_gtk_area_set_bottom (HYSCAN_GTK_AREA (ui->area), fl->play_control);
       }
   }

@@ -56,9 +56,7 @@ FnnPanel *
 get_panel (Global *global,
            gint    panelx)
 {
-  FnnPanel * panel;
-
-  panel = g_hash_table_lookup (global->panels, GINT_TO_POINTER (panelx));
+  FnnPanel * panel = get_panel_quiet (global, panelx);
 
   if (panel == NULL)
     g_warning ("Panel %i not found.", panelx);
@@ -70,9 +68,7 @@ FnnPanel *
 get_panel_quiet (Global *global,
                  gint    panelx)
 {
-  FnnPanel * panel;
-  panel = g_hash_table_lookup (global->panels, GINT_TO_POINTER (panelx));
-  return panel;
+  return g_hash_table_lookup (global->panels, GINT_TO_POINTER (panelx));
 }
 
 gint
@@ -1575,7 +1571,6 @@ signal_finder (Global           *global,
   /* Ищем сигнал. */
   link = g_list_nth (info->presets, n);
   if (link == NULL)
-    // link = info->presets;
     return NULL;
 
   return (HyScanDataSchemaEnumValue*) link->data;
