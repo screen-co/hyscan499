@@ -591,7 +591,7 @@ main (int argc, char **argv)
       panel->name = g_strdup ("Profiler");
       panel->name_local = g_strdup (_("Profiler"));
       panel->short_name = g_strdup ("PF");
-      panel->type = FNN_PANEL_ECHO;
+      panel->type = FNN_PANEL_PROFILER;
 
       panel->sources = g_new0 (HyScanSourceType, 3);
       panel->sources[0] = HYSCAN_SOURCE_PROFILER;
@@ -742,12 +742,16 @@ main (int argc, char **argv)
         panel->vis_current.black =       keyfile_double_read_helper (config, panel->name, "cur_black",        0);
         panel->vis_current.sensitivity = keyfile_double_read_helper (config, panel->name, "cur_sensitivity",  8.0);
 
-        if (panel->type == FNN_PANEL_WATERFALL)
-          color_map_set (&global, panel->vis_current.colormap, panelx);
-        else if (panel->type == FNN_PANEL_ECHO)
-          color_map_set (&global, panel->vis_current.colormap, panelx);
+        if (panel->type == FNN_PANEL_WATERFALL ||
+            panel->type == FNN_PANEL_ECHO ||
+            panel->type == FNN_PANEL_PROFILER)
+          {
+            color_map_set (&global, panel->vis_current.colormap, panelx);
+          }
         else if (panel->type == FNN_PANEL_FORWARDLOOK)
-          sensitivity_set (&global, panel->vis_current.sensitivity, panelx);
+          {
+            sensitivity_set (&global, panel->vis_current.sensitivity, panelx);
+          }
 
         brightness_set (&global, panel->vis_current.brightness, panel->vis_current.black, panelx);
         scale_set (&global, FALSE, panelx);
