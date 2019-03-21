@@ -531,6 +531,8 @@ main (int argc, char **argv)
       g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), &global);
       g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_SIDESCAN));
 
+      hyscan_gtk_waterfall_state_sidescan (HYSCAN_GTK_WATERFALL_STATE (vwf->wf),
+                                           HYSCAN_SOURCE_SIDE_SCAN_PORT, HYSCAN_SOURCE_SIDE_SCAN_STARBOARD);
       hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed);
       hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
       hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
@@ -572,6 +574,8 @@ main (int argc, char **argv)
       g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), &global);
       g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_SIDESCAN));
 
+      hyscan_gtk_waterfall_state_sidescan (HYSCAN_GTK_WATERFALL_STATE (vwf->wf),
+                                           HYSCAN_SOURCE_SIDE_SCAN_PORT_LOW, HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_LOW);
       hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ship_speed);
       hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
       hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
