@@ -132,7 +132,7 @@ main (int argc, char **argv)
   gchar             *project_name = NULL;      /* Название проекта. */
   gdouble            sound_velocity = 1500.0;  /* Скорость звука по умолчанию. */
   GArray            *svp;                      /* Профиль скорости звука. */
-  gdouble            ship_speed = 1.8;         /* Скорость движения судна. */
+  gdouble            ship_speed = 1.0;         /* Скорость движения судна. */
   gboolean           full_screen = FALSE;      /* Признак полноэкранного режима. */
 
   gchar             *config_file = NULL;       /* Название файла конфигурации. */
