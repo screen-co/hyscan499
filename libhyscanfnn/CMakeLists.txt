@@ -13,6 +13,7 @@ execute_process (COMMAND ${RESOURCE_COMPILER}
                  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
 add_library (${HYSCAN_FNN_LIBRARY} SHARED
+             fnn-param-proxy.c
              hyscan-fnn-offsets.c
              hyscan-fnn-button.c
              hyscan-fnn-fixed.c

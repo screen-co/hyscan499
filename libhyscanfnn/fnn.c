@@ -1,10 +1,13 @@
 #include "fnn-types.h"
 #include <fnn-types-common.h>
+#include <fnn-param-proxy.h>
 #include <hyscan-fnn-splash.h>
 #include <hyscan-fnn-project.h>
 #include <hyscan-fnn-button.h>
 #include <hyscan-fnn-button.h>
 #include <hyscan-gtk-param-tree.h>
+#include <hyscan-gtk-param-cc.h>
+#include <hyscan-data-schema-builder.h>
 #include <gmodule.h>
 #include <math.h>
 
@@ -180,22 +183,22 @@ void
 run_show_sonar_info (GObject     *emitter,
                      const gchar *root)
 {
-  GtkWidget *dialog, *content, *tree;
+  GtkWidget *dialog, *content, *cc;
 
   dialog = gtk_dialog_new_with_buttons (_("Sonar info"),
                                         GTK_WINDOW (tglobal->gui.window), 0,
                                         _("Close"), GTK_RESPONSE_CLOSE,
                                         NULL);
   content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
-  tree = hyscan_gtk_param_tree_new (HYSCAN_PARAM (tglobal->control), root, TRUE);
-  hyscan_gtk_param_set_watch_period (HYSCAN_GTK_PARAM (tree), 200);
+  cc = hyscan_gtk_param_cc_new (HYSCAN_PARAM (tglobal->control), root, TRUE);
+  hyscan_gtk_param_set_watch_period (HYSCAN_GTK_PARAM (cc), 200);
 
-  gtk_container_add (GTK_CONTAINER (content), tree);
+  gtk_container_add (GTK_CONTAINER (content), cc);
   gtk_widget_set_size_request (dialog, 800, 600);
   gtk_widget_show_all (dialog);
 
   gtk_dialog_run (GTK_DIALOG (dialog));
-  hyscan_gtk_param_discard (HYSCAN_GTK_PARAM (tree));
+  hyscan_gtk_param_discard (HYSCAN_GTK_PARAM (cc));
   gtk_widget_destroy (dialog);
 }
 

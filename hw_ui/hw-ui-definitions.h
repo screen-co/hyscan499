@@ -69,7 +69,7 @@ static HwuiPage common_pages[] =
       {
         {L, 0, MENU, "Меню",         TOGGLE_NONE, CBK(switch_page),    UD("Меню")},
         {L, 2, SHOT, "Скриншот",     TOGGLE_NONE, CBK(screenshooter),  NULL},
-        {R, 1, DOT,  "Выгр. глубины",TOGGLE_NONE, CBK(depth_writer),   NULL},
+        {R, 2, DOT,  "Выгр. глубины",TOGGLE_NONE, CBK(depth_writer),   NULL},
         {R, 4, EXIT, "Выход",        TOGGLE_NONE, CBK(gtk_main_quit),  NULL},
         {END}
       }
@@ -267,8 +267,10 @@ static HwuiPage any_sonar_pages[] =
           BUTTON_OFFSET(HwuiGlobal, starter.dry)},
         {L, 3, DOT,  "Работа",       TOGGLE_OFF,  CBK(start_stop_wrapper),
           BUTTON_OFFSET(HwuiGlobal, starter.all)},
-        {R, 0, INFO, "Версия ГЛ",    TOGGLE_NONE, CBK(run_show_sonar_info),
+        {R, 0, INFO, "Информация о ГЛ", TOGGLE_NONE, CBK(run_show_sonar_info),
           UD("/info"), },
+        {R, 1, INFO, "Параметры ГЛ",    TOGGLE_NONE, CBK(run_show_sonar_info),
+          UD("/params"), },
         {END}
       }
   },

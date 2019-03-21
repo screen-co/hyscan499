@@ -415,12 +415,11 @@ build_interface (Global *global)
     GtkWidget * tracks = GTK_WIDGET (global->gui.track.view);
     GtkWidget * mlist = GTK_WIDGET (global->gui.mark_view);
     GtkWidget * meditor = GTK_WIDGET (global->gui.meditor);
-    GtkWidget * manager = gtk_button_new_with_label (_("Project Manager"));
 
 
     gtk_widget_set_margin_end (lbox, 6);
-    gtk_widget_set_margin_top (lbox, 6);
-    gtk_widget_set_margin_bottom (lbox, 6);
+    gtk_widget_set_margin_top (lbox, 0);
+    gtk_widget_set_margin_bottom (lbox, 0);
 
     gtk_orientable_set_orientation (GTK_ORIENTABLE (global->gui.nav), GTK_ORIENTATION_VERTICAL);
 
@@ -433,7 +432,6 @@ build_interface (Global *global)
                          "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
     g_object_set (meditor, "vexpand", FALSE, "valign", GTK_ALIGN_END,
                            "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
-    g_signal_connect (manager, "clicked", G_CALLBACK (run_manager), NULL);
 
     {
       gchar ** env;
@@ -451,7 +449,6 @@ build_interface (Global *global)
       g_strfreev (env);
     }
 
-    gtk_box_pack_start (GTK_BOX (lbox), manager, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (lbox), tracks, TRUE, TRUE, 0);
     gtk_box_pack_start (GTK_BOX (lbox), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (lbox), mlist, TRUE, TRUE, 0);
@@ -483,8 +480,8 @@ build_interface (Global *global)
     gpointer k;
 
     gtk_widget_set_margin_start (rbox, 6);
-    gtk_widget_set_margin_top (rbox, 6);
-    gtk_widget_set_margin_bottom (rbox, 6);
+    gtk_widget_set_margin_top (rbox, 0);
+    gtk_widget_set_margin_bottom (rbox, 0);
 
     g_hash_table_iter_init (&iter, global->panels);
     while (g_hash_table_iter_next (&iter, &k, (gpointer*)&panel))
@@ -506,19 +503,34 @@ build_interface (Global *global)
   }
 
   /* Настройки. */
-  if (global->control != NULL)
     {
-      GtkWidget *grid, * sensors, * offsets;
+      GtkWidget *grid;
+      GtkWidget * manager;
+
       settings = evo_settings_new ();
       grid = evo_settings_get_grid (EVO_SETTINGS (settings));
 
-      sensors = evo_sensors_new (global->control);
-      offsets = gtk_button_new_with_label ("Setup offsets");
-      g_signal_connect (offsets, "clicked", G_CALLBACK (run_offset_setup), global);
+      manager = gtk_button_new_with_label (_("Project Manager"));
+      g_signal_connect (manager, "clicked", G_CALLBACK (run_manager), NULL);
+      gtk_grid_attach (GTK_GRID (grid), manager, 0, 0, 1, 1);
 
-      gtk_grid_attach (GTK_GRID (grid), gtk_label_new ("Sensors"), 0, 0, 1, 1);
-      gtk_grid_attach (GTK_GRID (grid), sensors, 0, 1, 1, 1);
-      gtk_grid_attach (GTK_GRID (grid), offsets, 0, 2, 1, 1);
+      if (global->control != NULL)
+        {
+          GtkWidget * sensors, * offsets, * info, * params;
+          sensors = evo_sensors_new (global->control);
+          offsets = gtk_button_new_with_label ("Setup offsets");
+          g_signal_connect (offsets, "clicked", G_CALLBACK (run_offset_setup), global);
+          info = gtk_button_new_with_label ("Show sonar info");
+          g_signal_connect (info, "clicked", G_CALLBACK (run_show_sonar_info), "/info");
+          params = gtk_button_new_with_label ("Show sonar params");
+          g_signal_connect (params, "clicked", G_CALLBACK (run_show_sonar_info), "/params");
+
+          gtk_grid_attach (GTK_GRID (grid), gtk_label_new ("Sensors"), 0, 2, 1, 1);
+          gtk_grid_attach (GTK_GRID (grid), sensors, 0, 2, 1, 1);
+          gtk_grid_attach (GTK_GRID (grid), offsets, 0, 3, 1, 1);
+          gtk_grid_attach (GTK_GRID (grid), info,    0, 4, 1, 1);
+          gtk_grid_attach (GTK_GRID (grid), params,  0, 5, 1, 1);
+        }
     }
 
   /* Пакуем всё. */
