@@ -376,7 +376,7 @@ build_interface (Global *global)
   /* Начнем с центра, добавим все отображаемые виджеты. */
   {
     #define N_PANELS 5
-    gint order[N_PANELS]  = {X_SIDESCAN, X_PROFILER, X_FORWARDL, X_ECHOSOUND, X_SIDE_LOW};
+    gint order[N_PANELS]  = {X_SIDE_LOW, X_SIDESCAN, X_ECHOSOUND, X_PROFILER, X_FORWARDL};
     gint i, n;
 
     /* Проверяем размеры моего могучего списка панелей. */
@@ -415,7 +415,6 @@ build_interface (Global *global)
     GtkWidget * tracks = GTK_WIDGET (global->gui.track.view);
     GtkWidget * mlist = GTK_WIDGET (global->gui.mark_view);
     GtkWidget * meditor = GTK_WIDGET (global->gui.meditor);
-
 
     gtk_widget_set_margin_end (lbox, 6);
     gtk_widget_set_margin_top (lbox, 0);
