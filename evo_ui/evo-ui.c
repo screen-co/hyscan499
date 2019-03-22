@@ -510,6 +510,7 @@ build_interface (Global *global)
       grid = evo_settings_get_grid (EVO_SETTINGS (settings));
 
       manager = gtk_button_new_with_label (_("Project Manager"));
+      gtk_widget_set_hexpand (manager, TRUE);
       g_signal_connect (manager, "clicked", G_CALLBACK (run_manager), NULL);
       gtk_grid_attach (GTK_GRID (grid), manager, 0, 0, 1, 1);
 
