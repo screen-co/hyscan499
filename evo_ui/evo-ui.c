@@ -535,8 +535,7 @@ build_interface (Global *global)
   /* Пакуем всё. */
   gtk_container_add (GTK_CONTAINER (global->gui.window), ui->grid);
   gtk_grid_attach (GTK_GRID (ui->grid), ui->switcher, 0, 0, 1, 1);
-  if (global->control != NULL)
-    gtk_grid_attach (GTK_GRID (ui->grid), settings,     1, 0, 1, 1);
+  gtk_grid_attach (GTK_GRID (ui->grid), settings,     1, 0, 1, 1);
   gtk_grid_attach (GTK_GRID (ui->grid), ui->area,     0, 1, 2, 1);
 
   return TRUE;
