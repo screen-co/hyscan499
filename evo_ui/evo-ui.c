@@ -508,8 +508,11 @@ build_interface (Global *global)
 
       settings = evo_settings_new ();
       grid = evo_settings_get_grid (EVO_SETTINGS (settings));
+      gtk_grid_set_row_spacing (GTK_GRID (grid), 6);
 
       manager = gtk_button_new_with_label (_("Project Manager"));
+      gtk_widget_set_hexpand(manager, TRUE);
+
       g_signal_connect (manager, "clicked", G_CALLBACK (run_manager), NULL);
       gtk_grid_attach (GTK_GRID (grid), manager, 0, 0, 1, 1);
 
@@ -525,10 +528,10 @@ build_interface (Global *global)
           g_signal_connect (params, "clicked", G_CALLBACK (run_show_sonar_info), "/params");
 
           gtk_grid_attach (GTK_GRID (grid), gtk_label_new ("Sensors"), 0, 2, 1, 1);
-          gtk_grid_attach (GTK_GRID (grid), sensors, 0, 2, 1, 1);
-          gtk_grid_attach (GTK_GRID (grid), offsets, 0, 3, 1, 1);
-          gtk_grid_attach (GTK_GRID (grid), info,    0, 4, 1, 1);
-          gtk_grid_attach (GTK_GRID (grid), params,  0, 5, 1, 1);
+          gtk_grid_attach (GTK_GRID (grid), sensors, 0, 3, 1, 1);
+          gtk_grid_attach (GTK_GRID (grid), offsets, 0, 4, 1, 1);
+          gtk_grid_attach (GTK_GRID (grid), info,    0, 5, 1, 1);
+          gtk_grid_attach (GTK_GRID (grid), params,  0, 6, 1, 1);
         }
     }
 
