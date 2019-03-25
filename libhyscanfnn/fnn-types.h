@@ -82,7 +82,7 @@ typedef struct
   gboolean             ok;
 } MarkAndLocation;
 
-typedef struct 
+typedef struct
 {
   guint32 * colors;
   guint     len;
@@ -90,7 +90,7 @@ typedef struct
   guint32   bg;
 } FnnColormap;
 
-typedef enum 
+typedef enum
 {
   FNN_PANEL_WATERFALL,
   FNN_PANEL_PROFILER,
@@ -127,8 +127,8 @@ typedef struct
           // scale;
 } VisualCurrent;
 
-/* !!! 
- * Вот эти структуры ниже не трогать, а то руки оторву нахуй. 
+/* !!!
+ * Вот эти структуры ниже не трогать, а то руки оторву нахуй.
  * !!! */
 typedef struct
 {
@@ -172,7 +172,7 @@ typedef struct
   GtkSwitch                     * mode_target;
 } VisualFL;
 
-typedef struct 
+typedef struct
 {
   gchar            *short_name;
   gchar            *name;
@@ -191,7 +191,7 @@ typedef struct
     VisualWF     wf;
     VisualFL     fl;
   } vis_gui; */
-  
+
 } FnnPanel;
 
 typedef struct _Global Global;
@@ -206,7 +206,7 @@ struct _Global
   gboolean                             dry;
 
   HyScanCache                         *cache;
-  
+
   gboolean                             full_screen;
   gdouble                              sound_velocity;
 
@@ -225,7 +225,7 @@ struct _Global
     {
       HyScanMarkModel *model; /* модель */
       HyScanMarkSync  *sync;  /* синхронизация */
-      
+
       GHashTable      *loc_storage;  /* хранилище локейшенов и проекторов */
 
       GHashTable      *current;  /* старый список*/
@@ -238,8 +238,8 @@ struct _Global
     {
       GtkWidget                           *window; // окно
       GtkWidget                           *grid;
-      
-      struct 
+
+      struct
         {
           GtkWidget                           *view;   // виджет целиком
           GtkTreeView                         *tree;   // tree view
@@ -253,7 +253,7 @@ struct _Global
       GtkWidget                           *meditor;
     } gui;
 
-  struct 
+  struct
   {
     gboolean (*brightness_set) (Global  *global,
                                 gdouble  brightness,
@@ -352,7 +352,7 @@ active_mark_changed (HyScanGtkProjectViewer *marks_viewer,
                      Global                 *global);
 
 gboolean
-ame_float_equal (gdouble a,
+fnn_float_equal (gdouble a,
                  gdouble b);
 
 gboolean
@@ -416,10 +416,10 @@ track_scroll (GtkWidget *widget,
               GdkEvent  *event,
                Global              *global);
 
-gchar * 
+gchar *
 get_active_track (HyScanDBInfo *db_info);
 
-gboolean 
+gboolean
 track_is_active (HyScanDBInfo *db_info,
                  const gchar  *name);
 
@@ -431,7 +431,7 @@ HYSCAN_API void
 position_changed (GtkAdjustment *range,
                   Global        *global);
 
-HYSCAN_API gboolean 
+HYSCAN_API gboolean
 brightness_set (Global  *global,
                 gdouble  cur_brightness,
                 gdouble  cur_black,
