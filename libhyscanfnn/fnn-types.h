@@ -491,9 +491,10 @@ sensitivity_set (Global  *global,
                  guint    panelx);
 
 HYSCAN_API gboolean
-signal_set (Global *global,
-            gint    cur_signal,
-            gint    selector);
+signal_set (Global   *global,
+            gint      cur_signal,
+            gint      selector,
+            gboolean  dry);
 
 HYSCAN_API gboolean
 tvg_set (Global  *global,

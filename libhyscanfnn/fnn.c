@@ -1595,9 +1595,10 @@ signal_label (FnnPanel    *panel,
 
 /* Функция устанавливает излучаемый сигнал. */
 gboolean
-signal_set (Global *global,
-            gint    sig_num,
-            gint    panelx)
+signal_set (Global   *global,
+            gint      sig_num,
+            gint      panelx,
+            gboolean  dry)
 {
   HyScanSourceType *iter;
   const HyScanDataSchemaEnumValue *sig = NULL, *prev_sig = NULL;
@@ -1638,7 +1639,11 @@ signal_set (Global *global,
       prev_sig = sig;
 
       /* Устанавливаем. */
-      status = hyscan_sonar_generator_set_preset (global->control_s, source, sig->value);
+      if (!dry)
+        status = hyscan_sonar_generator_set_preset (global->control_s, source, sig->value);
+      else
+        status = hyscan_sonar_generator_disable (global->control_s, source);
+
       if (!status)
         {
           g_message ("  failure!");
@@ -1663,7 +1668,7 @@ signal_up (GtkWidget *widget,
   FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired_signal = panel->current.signal + 1;
-  if (signal_set (tglobal, desired_signal, panelx))
+  if (signal_set (tglobal, desired_signal, panelx, FALSE))
     panel->current.signal = desired_signal;
   else
     g_warning ("signal_up failed");
@@ -1677,7 +1682,7 @@ signal_down (GtkWidget *widget,
   FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired_signal = panel->current.signal - 1;
-  if (signal_set (tglobal, desired_signal, panelx))
+  if (signal_set (tglobal, desired_signal, panelx, FALSE))
     panel->current.signal = desired_signal;
   else
     g_warning ("signal_down failed");
@@ -2570,8 +2575,7 @@ start_stop (Global    *global,
           gint panelx = GPOINTER_TO_INT (k);
 
           /* Излучение НЕ в режиме сух. пов. */
-          if (!global->dry)
-            status &= signal_set (global, panel->current.signal, panelx);
+          status &= signal_set (global, panel->current.signal, panelx, global->dry);
 
           /* Приемник. */
           status &= distance_set (global, &panel->current.distance, panelx);
