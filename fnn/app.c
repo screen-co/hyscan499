@@ -367,12 +367,15 @@ main (int argc, char **argv)
     else
       sonar_profile_name = hardware_profile_name;
 
-    /* Првоеряем, что пути к драйверам и имя профиля на месте. */
+    if (sonar_profile_name == NULL)
+      goto no_sonar;
+
+    /* Проверяем, что пути к драйверам и имя профиля на месте. */
     connector = hyscan_hw_connector_new ();
     hyscan_hw_connector_set_driver_paths (connector, (const gchar * const *)driver_paths);
 
     /* Читаем профиль. */
-    if (!hyscan_hw_connector_read (connector, sonar_profile_name))
+    if (!hyscan_hw_connector_load_profile (connector, sonar_profile_name))
       {
         g_message ("Profile read error");
         goto no_sonar;
@@ -441,7 +444,7 @@ main (int argc, char **argv)
   global.gui.window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   g_signal_connect_after (G_OBJECT (global.gui.window), "destroy", G_CALLBACK (gtk_main_quit), NULL);
   g_signal_connect (G_OBJECT (global.gui.window), "key-press-event", G_CALLBACK (key_press), &global);
-  gtk_window_set_title (GTK_WINDOW (global.gui.window), "ГБОГКПФ");
+  gtk_window_set_title (GTK_WINDOW (global.gui.window), "HyScan");
   gtk_window_set_default_size (GTK_WINDOW (global.gui.window), 1600, 900);
 
   /* Навигационные данные. */

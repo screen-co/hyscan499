@@ -290,9 +290,9 @@ hyscan_fnn_offsets_execute (HyScanFnnOffsets *self)
         info = hyscan_fnn_offsets_find_master (priv->antennas, key);
 
       if (info->sensor != NULL)
-        hyscan_control_sensor_set_offset (priv->control, info->sensor, &info->offset);
+        hyscan_sensor_antenna_set_offset (HYSCAN_SENSOR (priv->control), info->sensor, &info->offset);
       else
-        hyscan_control_source_set_offset (priv->control, info->source, &info->offset);
+        hyscan_sonar_antenna_set_offset (HYSCAN_SONAR (priv->control), info->source, &info->offset);
     }
 
   return TRUE;
