@@ -1593,18 +1593,53 @@ signal_label (FnnPanel    *panel,
     }
 }
 
+gboolean
+gen_disable (Global   *global,
+             gint      panelx)
+{
+  HyScanSourceType *iter;
+  FnnPanel *panel = get_panel_quiet (global, panelx);
+
+  g_message ("gen_disable: %s (%i)", panel->name, panelx);
+
+  for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
+    {
+      gboolean status;
+      HyScanSourceType source = *iter;
+
+      g_message ("  disabling generator for %s", hyscan_source_get_name_by_type (source));
+      status = hyscan_sonar_generator_disable (global->control_s, source);
+
+      if (!status)
+        {
+          g_message ("  failure!");
+          return FALSE;
+        }
+    }
+
+  sync_sonar (global);
+
+  g_message ("  success");
+  return TRUE;
+}
+
 /* Функция устанавливает излучаемый сигнал. */
 gboolean
-signal_set (Global   *global,
-            gint      sig_num,
-            gint      panelx,
-            gboolean  dry)
+signal_set (Global *global,
+            gint    sig_num,
+            gint    panelx)
 {
   HyScanSourceType *iter;
   const HyScanDataSchemaEnumValue *sig = NULL, *prev_sig = NULL;
   FnnPanel *panel = get_panel_quiet (global, panelx);
 
   g_message ("signal_set: %s (%i), Signal %i", panel->name, panelx, sig_num);
+
+  if (global->dry)
+    {
+      g_warning ("  signal_set: dry mode!");
+      return FALSE;
+    }
 
   if (panel == NULL)
     {
@@ -1639,10 +1674,7 @@ signal_set (Global   *global,
       prev_sig = sig;
 
       /* Устанавливаем. */
-      if (!dry)
-        status = hyscan_sonar_generator_set_preset (global->control_s, source, sig->value);
-      else
-        status = hyscan_sonar_generator_disable (global->control_s, source);
+      status = hyscan_sonar_generator_set_preset (global->control_s, source, sig->value);
 
       if (!status)
         {
@@ -1668,7 +1700,7 @@ signal_up (GtkWidget *widget,
   FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired_signal = panel->current.signal + 1;
-  if (signal_set (tglobal, desired_signal, panelx, FALSE))
+  if (signal_set (tglobal, desired_signal, panelx))
     panel->current.signal = desired_signal;
   else
     g_warning ("signal_up failed");
@@ -1682,7 +1714,7 @@ signal_down (GtkWidget *widget,
   FnnPanel *panel = get_panel (tglobal, panelx);
 
   desired_signal = panel->current.signal - 1;
-  if (signal_set (tglobal, desired_signal, panelx, FALSE))
+  if (signal_set (tglobal, desired_signal, panelx))
     panel->current.signal = desired_signal;
   else
     g_warning ("signal_down failed");
@@ -2575,7 +2607,10 @@ start_stop (Global    *global,
           gint panelx = GPOINTER_TO_INT (k);
 
           /* Излучение НЕ в режиме сух. пов. */
-          status &= signal_set (global, panel->current.signal, panelx, global->dry);
+          if (global->dry)
+            status &= gen_disable (global, panelx);
+          else
+            status &= signal_set (global, panel->current.signal, panelx);
 
           /* Приемник. */
           status &= distance_set (global, &panel->current.distance, panelx);

@@ -10,6 +10,23 @@ ButtonReceive brec;
 
 #ifdef G_OS_UNIX
   CheeseFlash * flash;
+
+  void flash_fire (const gchar *color)
+  {
+    GdkWindow * root;
+    gint x, y, width, height;
+    GdkRectangle rect;
+
+    root = gdk_get_default_root_window ();
+    gdk_window_get_geometry (root, &x, &y, &width, &height);
+
+    rect.x = x;
+    rect.y = y;
+    rect.width = width;
+    rect.height = height;
+
+    cheese_flash_fire_colored (flash, &rect, color);
+  }
 #endif
 
 /***
@@ -68,6 +85,7 @@ start_stop_dry_wrapper (HyScanFnnButton *button,
   if (!status)
     {
       hyscan_fnn_button_set_state (button, !state);
+      set_dry (_global, !state);
       return;
     }
 
@@ -442,14 +460,7 @@ screenshooter (void)
       g_object_unref (fios);
 
       #ifdef G_OS_UNIX
-      {
-        GdkRectangle rect;
-        rect.x = x;
-        rect.y = y;
-        rect.width = width;
-        rect.height = height;
-        cheese_flash_fire (flash, &rect);
-      }
+        flash_fire ("white");
       #endif
     }
   else
@@ -894,4 +905,8 @@ depth_writer (GObject *emitter)
     }
 
   g_free (words);
+
+  #ifdef G_OS_UNIX
+    flash_fire ("#00ff7f");
+  #endif
 }

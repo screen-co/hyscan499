@@ -56,14 +56,21 @@ typedef struct
   guint         flash_timeout_tag;
   guint         fade_timeout_tag;
   GdkRectangle  rect;
+  GdkRGBA       flash_color;
 } CheeseFlashPrivate;
 
 static gboolean
-cheese_flash_window_draw_event_cb (GtkWidget *widget, cairo_t *cr, gpointer user_data)
+cheese_flash_window_draw_event_cb (GtkWidget *widget,
+                                   cairo_t   *cr,
+                                   gpointer   user_data)
 {
   CheeseFlashPrivate *priv = user_data;
 
-  cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+  cairo_set_source_rgba (cr,
+                         priv->flash_color.red,
+                         priv->flash_color.green,
+                         priv->flash_color.blue,
+                         priv->flash_color.alpha);
   cairo_rectangle (cr, priv->rect.x, priv->rect.y,
                    priv->rect.width, priv->rect.height);
   cairo_fill (cr);
@@ -85,6 +92,9 @@ cheese_flash_init (CheeseFlash *self)
   priv->fade_timeout_tag  = 0;
 
   window = GTK_WINDOW (gtk_window_new (GTK_WINDOW_POPUP));
+
+  /* Цвет по умолчанию. */
+  gdk_rgba_parse (&priv->flash_color, "#ffffff");
 
   /* make it so it doesn't look like a window on the desktop (+fullscreen) */
   gtk_window_set_decorated (window, FALSE);
@@ -220,6 +230,17 @@ cheese_flash_fire (CheeseFlash  *flash,
                         FLASH_DURATION,
                         cheese_flash_start_fade,
                         g_object_ref (flash), g_object_unref);
+}
+
+void
+cheese_flash_fire_colored (CheeseFlash  *flash,
+                           GdkRectangle *rect,
+                           const gchar  *color)
+{
+  CheeseFlashPrivate *flash_priv = CHEESE_FLASH_GET_PRIVATE (flash);
+
+  gdk_rgba_parse (&flash_priv->flash_color, color);
+  cheese_flash_fire (flash, rect);
 }
 
 CheeseFlash *

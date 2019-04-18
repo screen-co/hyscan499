@@ -47,6 +47,12 @@ CheeseFlash *cheese_flash_new (void);
 void cheese_flash_fire (CheeseFlash  *flash,
                         GdkRectangle *rect);
 
+void
+cheese_flash_fire_colored (CheeseFlash  *flash,
+                           GdkRectangle *rect,
+                           const gchar  *color);
+
+
 G_END_DECLS
 
 #endif /* _CHEESE_FLASH_H_ */
