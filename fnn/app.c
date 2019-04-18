@@ -135,7 +135,9 @@ main (int argc, char **argv)
   gdouble            ship_speed = 1.0;         /* Скорость движения судна. */
   gboolean           full_screen = FALSE;      /* Признак полноэкранного режима. */
 
+  gchar             *settings_file = NULL;       /* Название файла с параметрами. */
   gchar             *config_file = NULL;       /* Название файла конфигурации. */
+  GKeyFile          *settings = NULL;
   GKeyFile          *config = NULL;
   GKeyFile          *hardware = NULL;
 
@@ -293,6 +295,14 @@ main (int argc, char **argv)
   /* SV. */
   global.sound_velocity = sound_velocity;
   svp = make_svp_from_velocity (sound_velocity);
+
+  /* Файл настроек ГЛ. */
+  settings_file = keyfile_string_read_helper (config, "common", "settings");
+  if (settings_file != NULL)
+    {
+      settings = g_key_file_new ();
+      g_key_file_load_from_file (settings, settings_file, G_KEY_FILE_NONE, NULL);
+    }
 
   /* Кэш. */
   cache_size = keyfile_uint_read_helper (config, "common", "cache", 2048);
@@ -729,63 +739,64 @@ main (int argc, char **argv)
  *
  * Начальные значения.
  */
-  {
-    GHashTableIter iter;
-    gpointer k, v;
-    g_hash_table_iter_init (&iter, global.panels);
-    while (g_hash_table_iter_next (&iter, &k, &v))
-      {
-        gint panelx = GPOINTER_TO_INT (k);
-        FnnPanel *panel = v;
-        panel->current.distance =    keyfile_double_read_helper (config, panel->name, "sonar.cur_distance", 50);
-        panel->current.signal =      keyfile_double_read_helper (config, panel->name, "sonar.cur_signal", 0);
-        panel->current.gain0 =       keyfile_double_read_helper (config, panel->name, "sonar.cur_gain0", 0);
-        panel->current.gain_step =   keyfile_double_read_helper (config, panel->name, "sonar.cur_gain_step", 10);
-        panel->current.level =       keyfile_double_read_helper (config, panel->name, "sonar.cur_level", 0.5);
-        panel->current.sensitivity = keyfile_double_read_helper (config, panel->name, "sonar.cur_sensitivity", 0.6);
-
-        panel->vis_current.brightness =  keyfile_double_read_helper (config, panel->name, "cur_brightness",   80.0);
-        panel->vis_current.colormap =    keyfile_double_read_helper (config, panel->name, "cur_color_map",    0);
-        panel->vis_current.black =       keyfile_double_read_helper (config, panel->name, "cur_black",        0);
-        panel->vis_current.sensitivity = keyfile_double_read_helper (config, panel->name, "cur_sensitivity",  8.0);
-
-        if (panel->type == FNN_PANEL_WATERFALL ||
-            panel->type == FNN_PANEL_ECHO ||
-            panel->type == FNN_PANEL_PROFILER)
-          {
-            color_map_set (&global, panel->vis_current.colormap, panelx);
-          }
-        else if (panel->type == FNN_PANEL_FORWARDLOOK)
-          {
-            sensitivity_set (&global, panel->vis_current.sensitivity, panelx);
-          }
-
-        brightness_set (&global, panel->vis_current.brightness, panel->vis_current.black, panelx);
-        scale_set (&global, FALSE, panelx);
-
-        /* Если нет локатора, нечего и задавать. */
-        if (global.control == NULL)
-          continue;
-
-        /* Для локаторов мы ничего не задаем, но лейблы всёрно надо проинициализировать. */
-        distance_label (panel, panel->current.distance);
-        tvg_label (panel, panel->current.gain0, panel->current.gain_step);
-        auto_tvg_label (panel, panel->current.level, panel->current.sensitivity);
-
-        /* С сигналом чуть сложней, т.к. надо найти сигнал и вытащить из него имя. */
+  if (settings != NULL)
+    {
+      GHashTableIter iter;
+      gpointer k, v;
+      g_hash_table_iter_init (&iter, global.panels);
+      while (g_hash_table_iter_next (&iter, &k, &v))
         {
-          const HyScanDataSchemaEnumValue * signal;
-          signal = signal_finder (&global, panel, *panel->sources, panel->current.signal);
-          if (signal == NULL)
+          gint panelx = GPOINTER_TO_INT (k);
+          FnnPanel *panel = v;
+          panel->current.distance =    keyfile_double_read_helper (settings, panel->name, "sonar.cur_distance", 50);
+          panel->current.signal =      keyfile_double_read_helper (settings, panel->name, "sonar.cur_signal", 0);
+          panel->current.gain0 =       keyfile_double_read_helper (settings, panel->name, "sonar.cur_gain0", 0);
+          panel->current.gain_step =   keyfile_double_read_helper (settings, panel->name, "sonar.cur_gain_step", 10);
+          panel->current.level =       keyfile_double_read_helper (settings, panel->name, "sonar.cur_level", 0.5);
+          panel->current.sensitivity = keyfile_double_read_helper (settings, panel->name, "sonar.cur_sensitivity", 0.6);
+
+          panel->vis_current.brightness =  keyfile_double_read_helper (settings, panel->name, "cur_brightness",   80.0);
+          panel->vis_current.colormap =    keyfile_double_read_helper (settings, panel->name, "cur_color_map",    0);
+          panel->vis_current.black =       keyfile_double_read_helper (settings, panel->name, "cur_black",        0);
+          panel->vis_current.sensitivity = keyfile_double_read_helper (settings, panel->name, "cur_sensitivity",  8.0);
+
+          if (panel->type == FNN_PANEL_WATERFALL ||
+              panel->type == FNN_PANEL_ECHO ||
+              panel->type == FNN_PANEL_PROFILER)
             {
-              panel->current.signal = 0;
-              signal = signal_finder (&global, panel, *panel->sources, panel->current.signal);
+              color_map_set (&global, panel->vis_current.colormap, panelx);
             }
-          if (signal != NULL)
-            signal_label (panel, signal->name);
+          else if (panel->type == FNN_PANEL_FORWARDLOOK)
+            {
+              sensitivity_set (&global, panel->vis_current.sensitivity, panelx);
+            }
+
+          brightness_set (&global, panel->vis_current.brightness, panel->vis_current.black, panelx);
+          scale_set (&global, FALSE, panelx);
+
+          /* Если нет локатора, нечего и задавать. */
+          if (global.control == NULL)
+            continue;
+
+          /* Для локаторов мы ничего не задаем, но лейблы всёрно надо проинициализировать. */
+          distance_label (panel, panel->current.distance);
+          tvg_label (panel, panel->current.gain0, panel->current.gain_step);
+          auto_tvg_label (panel, panel->current.level, panel->current.sensitivity);
+
+          /* С сигналом чуть сложней, т.к. надо найти сигнал и вытащить из него имя. */
+          {
+            const HyScanDataSchemaEnumValue * signal;
+            signal = signal_finder (&global, panel, *panel->sources, panel->current.signal);
+            if (signal == NULL)
+              {
+                panel->current.signal = 0;
+                signal = signal_finder (&global, panel, *panel->sources, panel->current.signal);
+              }
+            if (signal != NULL)
+              signal_label (panel, signal->name);
+          }
         }
-      }
-  }
+    }
 
   if (full_screen)
     gtk_window_fullscreen (GTK_WINDOW (global.gui.window));
@@ -810,7 +821,7 @@ main (int argc, char **argv)
    */
   ui_destroy (&global);
 
-  if (config != NULL)
+  if (settings != NULL)
     {
       GHashTableIter iter;
       gpointer k, v;
@@ -818,19 +829,25 @@ main (int argc, char **argv)
       while (g_hash_table_iter_next (&iter, &k, &v))
         {
           FnnPanel *panel = v;
-          keyfile_double_write_helper (config, panel->name, "sonar.cur_distance", panel->current.distance);
-          keyfile_double_write_helper (config, panel->name, "sonar.cur_signal", panel->current.signal);
-          keyfile_double_write_helper (config, panel->name, "sonar.cur_gain0", panel->current.gain0);
-          keyfile_double_write_helper (config, panel->name, "sonar.cur_gain_step", panel->current.gain_step);
-          keyfile_double_write_helper (config, panel->name, "sonar.cur_level", panel->current.level);
-          keyfile_double_write_helper (config, panel->name, "sonar.cur_sensitivity", panel->current.sensitivity);
+          keyfile_double_write_helper (settings, panel->name, "sonar.cur_distance", panel->current.distance);
+          keyfile_double_write_helper (settings, panel->name, "sonar.cur_signal", panel->current.signal);
+          keyfile_double_write_helper (settings, panel->name, "sonar.cur_gain0", panel->current.gain0);
+          keyfile_double_write_helper (settings, panel->name, "sonar.cur_gain_step", panel->current.gain_step);
+          keyfile_double_write_helper (settings, panel->name, "sonar.cur_level", panel->current.level);
+          keyfile_double_write_helper (settings, panel->name, "sonar.cur_sensitivity", panel->current.sensitivity);
 
-          keyfile_double_write_helper (config, panel->name, "cur_brightness",          panel->vis_current.brightness);
-          keyfile_double_write_helper (config, panel->name, "cur_color_map",           panel->vis_current.colormap);
-          keyfile_double_write_helper (config, panel->name, "cur_black",               panel->vis_current.black);
-          keyfile_double_write_helper (config, panel->name, "cur_sensitivity",         panel->vis_current.sensitivity);
+          keyfile_double_write_helper (settings, panel->name, "cur_brightness",          panel->vis_current.brightness);
+          keyfile_double_write_helper (settings, panel->name, "cur_color_map",           panel->vis_current.colormap);
+          keyfile_double_write_helper (settings, panel->name, "cur_black",               panel->vis_current.black);
+          keyfile_double_write_helper (settings, panel->name, "cur_sensitivity",         panel->vis_current.sensitivity);
         }
 
+      g_key_file_save_to_file (settings, settings_file, NULL);
+      g_key_file_unref (settings);
+    }
+
+  if (config != NULL)
+    {
       keyfile_string_write_helper (config, "common",  "project", global.project_name);
 
       g_key_file_save_to_file (config, config_file, NULL);
@@ -853,6 +870,7 @@ exit:
   g_free (db_uri);
   g_free (project_name);
   g_free (config_file);
+  g_free (settings_file);
 
   // g_clear_object (&splash);
 
