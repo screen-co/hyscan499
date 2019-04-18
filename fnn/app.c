@@ -298,11 +298,14 @@ main (int argc, char **argv)
 
   /* Файл настроек ГЛ. */
   settings_file = keyfile_string_read_helper (config, "common", "settings");
-  if (settings_file != NULL)
+  if (settings_file == NULL)
     {
-      settings = g_key_file_new ();
-      g_key_file_load_from_file (settings, settings_file, G_KEY_FILE_NONE, NULL);
+      settings_file = g_build_filename (g_get_user_config_dir (), "hyscan499-settings.ini", NULL);
+      g_message ("sett %s", settings_file);
     }
+
+  settings = g_key_file_new ();
+  g_key_file_load_from_file (settings, settings_file, G_KEY_FILE_NONE, NULL);
 
   /* Кэш. */
   cache_size = keyfile_uint_read_helper (config, "common", "cache", 2048);
