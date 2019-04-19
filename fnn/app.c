@@ -158,7 +158,7 @@ main (int argc, char **argv)
   // HyScanFnnSplash   *splash = NULL;
   guint              sensor_label_writer_tag = 0;
   gchar             *hardware_profile_name = NULL;
-  gchar            **driver_paths;               /* Путь к драйверам гидролокатора. */
+  gchar            **driver_paths = NULL;              /* Путь к драйверам гидролокатора. */
 
   gboolean status;
   GOptionContext *context;

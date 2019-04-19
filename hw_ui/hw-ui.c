@@ -765,10 +765,10 @@ ame_button_thread (void * data)
 gboolean
 kf_config (GKeyFile *kf)
 {
-  gchar * mcast_addr;
-  guint16 mcast_port;
+  gchar * butt_addr;
+  guint16 butt_port;
   GInetAddress *addr;
-  gboolean source_specific;
+  gboolean src_spec;
   GSocketAddress *isocketadress;
 
   /* Синхр. меток. */
@@ -814,24 +814,24 @@ kf_config (GKeyFile *kf)
     global_ui.screenshot_dir = screenshot_dir;
   }
 
-  source_specific = keyfile_bool_read_helper (kf, "ame", "source_specific");
-  mcast_addr =  keyfile_string_read_helper (kf, "ame", "button_addr");
-  mcast_port =  keyfile_uint_read_helper (kf, "ame", "button_port", 9000);
+  src_spec = keyfile_bool_read_helper (kf, "ame", "source_specific");
+  butt_addr =  keyfile_string_read_helper (kf, "ame", "button_addr");
+  butt_port =  keyfile_uint_read_helper (kf, "ame", "button_port", 9000);
 
-  if (mcast_addr != NULL)
+  if (butt_addr != NULL)
     {
       brec.socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, NULL);
-      addr = g_inet_address_new_from_string (mcast_addr);
-      isocketadress = g_inet_socket_address_new (addr, mcast_port);
-      g_message ("Buttons: %s %u", mcast_addr, mcast_port);
+      addr = g_inet_address_new_from_string (butt_addr);
+      isocketadress = g_inet_socket_address_new (addr, butt_port);
+      g_message ("Buttons: %s %u", butt_addr, butt_port);
 
       g_socket_bind (brec.socket, isocketadress, TRUE, NULL);
 
       brec.stop = FALSE;
       brec.thread = g_thread_new ("buttons", ame_button_thread, NULL);
-      g_socket_join_multicast_group (brec.socket, addr, source_specific, NULL, NULL);
+      g_socket_join_multicast_group (brec.socket, addr, src_spec, NULL, NULL);
 
-      g_free (mcast_addr);
+      g_free (butt_addr);
     }
   else
     {
