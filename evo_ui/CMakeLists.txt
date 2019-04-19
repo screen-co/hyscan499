@@ -19,7 +19,6 @@ add_custom_command (OUTPUT ${CMAKE_BINARY_DIR}/resources/${UI_NAME}-resources.c
 add_library (${UI_NAME} SHARED
              evo-settings.c
              evo-sensors.c
-             evo-ui-overrides.c
              evo-ui.c
              ${CMAKE_BINARY_DIR}/resources/${UI_NAME}-resources.c)
 

@@ -126,7 +126,7 @@ make_color_maps (gboolean profiler)
 int
 main (int argc, char **argv)
 {
-  gint               cache_size = 2048;        /* Размер кэша по умолчанию. */
+  gint               cache_size = 0;
 
   gchar             *db_uri = NULL;            /* Адрес базы данных. */
   gchar             *project_name = NULL;      /* Название проекта. */
@@ -158,8 +158,11 @@ main (int argc, char **argv)
   // HyScanFnnSplash   *splash = NULL;
   guint              sensor_label_writer_tag = 0;
   gchar             *hardware_profile_name = NULL;
+  gchar            **driver_paths;               /* Путь к драйверам гидролокатора. */
 
   gboolean status;
+  GOptionContext *context;
+
 
   gtk_init (&argc, &argv);
 
@@ -185,11 +188,11 @@ main (int argc, char **argv)
   {
     gchar **args;
     GError *error = NULL;
-    GOptionContext *context;
 
     GOptionEntry common_entries[] =
       {
-        { "db-uri",          'd',   0, G_OPTION_ARG_STRING,  &db_uri,          "HyScan DB uri", NULL },
+        { "db-uri",          'd',   0, G_OPTION_ARG_STRING,  &db_uri,          "* DB uri", NULL },
+        { "cache",           'c',   0, G_OPTION_ARG_INT,     &cache_size,      "* Cache size", NULL },
 
         { "sound-velocity",  'v',   0, G_OPTION_ARG_DOUBLE,  &sound_velocity,  "Sound velocity, m/s", NULL },
         { "ship-speed",      'e',   0, G_OPTION_ARG_DOUBLE,  &ship_speed,      "Ship speed, m/s", NULL },
@@ -201,8 +204,12 @@ main (int argc, char **argv)
         { "fl",              0,     0, G_OPTION_ARG_NONE,    &need_fl,         "Enable fl panel", NULL },
         { "es",              0,     0, G_OPTION_ARG_NONE,    &need_es,         "Enable es panel", NULL },
 
-        { "hardware-profile",'p',   0, G_OPTION_ARG_STRING,  &hardware_profile_name,     "Specify hardware profile name"
-                                                              ", otherwise it will be obtained from config-file.", NULL },
+        { "hardware",        'p',   0, G_OPTION_ARG_STRING,       &hardware_profile_name, "* Hardware profile name", NULL },
+        { "drivers",         'o',   0, G_OPTION_ARG_STRING_ARRAY, &driver_paths,          "* Path to directories with driver(s)", NULL},
+
+        { "config",          'k',   0, G_OPTION_ARG_STRING,  &config_file,     "Configuration file", NULL },
+        { "settings",        'l',   0, G_OPTION_ARG_STRING,  &settings_file,   "* Settings file", NULL },
+
         { "ui", 0,   G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &um_path,    "UI module", NULL },
         { NULL, }
       };
@@ -213,7 +220,10 @@ main (int argc, char **argv)
     args = g_strdupv (argv);
 #endif
 
-    context = g_option_context_new ("[config-file]");
+    context = g_option_context_new (NULL);
+    g_option_context_set_description (context, "The items marked with * can be "
+                                      "passed in config file in [common] group "
+                                      "and long parameter as name");
     g_option_context_set_help_enabled (context, TRUE);
     g_option_context_set_ignore_unknown_options (context, FALSE);
     g_option_context_add_main_entries (context, common_entries, NULL);
@@ -223,20 +233,6 @@ main (int argc, char **argv)
         return -1;
       }
 
-    if (db_uri == NULL)
-      {
-        g_print ("%s", g_option_context_get_help (context, FALSE, NULL));
-        return -1;
-      }
-
-    if (args[1] == NULL)
-      {
-        g_print ("%s", g_option_context_get_help (context, FALSE, NULL));
-        return -1;
-      }
-    config_file = g_strdup (args[1]);
-
-    g_option_context_free (context);
     g_strfreev (args);
   }
 
@@ -281,43 +277,60 @@ main (int argc, char **argv)
       }
   }
 
-  /* Открываем конфиг файл. */
+  /* конфигурационные файлы. */
+  /* Конфиг файл ИНТЕРФЕЙСА. */
   if (config_file != NULL)
     {
       config = g_key_file_new ();
-      status = g_key_file_load_from_file (config, config_file,
-                                          G_KEY_FILE_NONE, NULL);
+      status = g_key_file_load_from_file (config, config_file, G_KEY_FILE_NONE, NULL);
 
       if (!status)
-        g_message ("failed to load config file <%s>", config_file);
+        {
+          g_message ("failed to load config file <%s>", config_file);
+          g_clear_pointer (&config, g_key_file_unref);
+        }
+
+      /* Верифицируем и пытаемся считать значения из конфига. */
+      if (db_uri == NULL)
+        db_uri = keyfile_string_read_helper (config, "common", "db-uri");
+      if (cache_size == 0)
+        cache_size = keyfile_uint_read_helper (config, "common", "cache", 2048);
+      if (hardware_profile_name == NULL)
+        hardware_profile_name = keyfile_string_read_helper (config, "common", "hardware");
+      if (driver_paths == NULL)
+        driver_paths = keyfile_strv_read_helper (config, "common", "drivers");
+      if (settings_file == NULL)
+        settings_file = keyfile_string_read_helper (config, "common", "settings");
     }
+
+  /* Файл c настройками ГЛ. */
+  if (settings_file == NULL)
+    settings_file = g_build_filename (g_get_user_config_dir (), "hyscan499-settings.ini", NULL);
+
+  settings = g_key_file_new ();
+  g_key_file_load_from_file (settings, settings_file, G_KEY_FILE_NONE, NULL);
 
   /* SV. */
   global.sound_velocity = sound_velocity;
   svp = make_svp_from_velocity (sound_velocity);
 
-  /* Файл настроек ГЛ. */
-  settings_file = keyfile_string_read_helper (config, "common", "settings");
-  if (settings_file == NULL)
-    {
-      settings_file = g_build_filename (g_get_user_config_dir (), "hyscan499-settings.ini", NULL);
-      g_message ("sett %s", settings_file);
-    }
-
-  settings = g_key_file_new ();
-  g_key_file_load_from_file (settings, settings_file, G_KEY_FILE_NONE, NULL);
-
-  /* Кэш. */
-  cache_size = keyfile_uint_read_helper (config, "common", "cache", 2048);
-  cache_size = MAX (256, cache_size);
+  /* cache*/
+  if (cache_size == 0)
+   cache_size = 2048;
   global.cache = HYSCAN_CACHE (hyscan_cached_new (cache_size));
 
   /* Подключение к базе данных. */
+  if (db_uri == NULL)
+    {
+      g_print ("%s\n", "DB uri not set. Re-run with -h to get help.");
+      return -1;
+    }
+
   global.db = hyscan_db_new (db_uri);
   hyscan_exit_if_w_param (global.db == NULL, "can't connect to db '%s'", db_uri);
 
   /* Проект пытаемся считать из файла. */
-  project_name = keyfile_string_read_helper (config, "common", "project");
+  project_name = keyfile_string_read_helper (settings, "common", "project");
 
   if (project_name == NULL)
     {
@@ -364,8 +377,6 @@ main (int argc, char **argv)
 
   /* Пути к дровам и имя файла с профилем аппаратного обеспечения. */
   {
-    gchar *sonar_profile_name;
-    gchar **driver_paths;      /* Путь к драйверам гидролокатора. */
     HyScanHWConnector *connector;
     gboolean check;
     guint32 n_sources;
@@ -373,14 +384,8 @@ main (int argc, char **argv)
     const HyScanSourceType * source;
     guint32 i;
 
-    driver_paths = keyfile_strv_read_helper (config, "common", "paths");
     /* Если не задано название профиля, читаем его из конфига. */
     if (hardware_profile_name == NULL)
-      sonar_profile_name = keyfile_string_read_helper (config, "common", "hardware");
-    else
-      sonar_profile_name = hardware_profile_name;
-
-    if (sonar_profile_name == NULL)
       goto no_sonar;
 
     /* Проверяем, что пути к драйверам и имя профиля на месте. */
@@ -388,7 +393,7 @@ main (int argc, char **argv)
     hyscan_hw_connector_set_driver_paths (connector, (const gchar * const *)driver_paths);
 
     /* Читаем профиль. */
-    if (!hyscan_hw_connector_load_profile (connector, sonar_profile_name))
+    if (!hyscan_hw_connector_load_profile (connector, hardware_profile_name))
       {
         g_message ("Profile read error");
         goto no_sonar;
@@ -510,8 +515,8 @@ main (int argc, char **argv)
   /* Проверяем флаги на панели */
   if (!need_ss && !need_pf && !need_fl && !need_es)
     {
-      g_warning ("You must explicitly choose panels");
-      g_warning ("Enabling: SS, PF, FL");
+      g_warning ("You must explicitly choose panels\n"
+                 "Enabling: SS, PF, FL");
       need_ss = need_pf = need_fl = TRUE;
     }
 
@@ -845,19 +850,15 @@ main (int argc, char **argv)
           keyfile_double_write_helper (settings, panel->name, "cur_sensitivity",         panel->vis_current.sensitivity);
         }
 
+      keyfile_string_write_helper (settings, "common", "project", global.project_name);
+
       g_key_file_save_to_file (settings, settings_file, NULL);
-      g_key_file_unref (settings);
-    }
-
-  if (config != NULL)
-    {
-      keyfile_string_write_helper (config, "common",  "project", global.project_name);
-
-      g_key_file_save_to_file (config, config_file, NULL);
-      g_key_file_unref (config);
     }
 
 exit:
+
+  g_clear_pointer (&settings, g_key_file_unref);
+  g_clear_pointer (&config, g_key_file_unref);
 
   g_clear_pointer (&ui_module, g_module_close);
 
@@ -875,7 +876,8 @@ exit:
   g_free (config_file);
   g_free (settings_file);
 
-  // g_clear_object (&splash);
+  g_option_context_free (context);
+
 
   return 0;
 }

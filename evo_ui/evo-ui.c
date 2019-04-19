@@ -4,13 +4,110 @@
 #include "evo-settings.h"
 #include "evo-sensors.h"
 #include "evo-ui.h"
-#include "evo-ui-overrides.h"
 
 #define GETTEXT_PACKAGE "libhyscanfnn-evoui"
 #include <glib/gi18n-lib.h>
 
 EvoUI global_ui = {0,};
 Global *_global = NULL;
+
+/* OVERRIDES */
+gboolean
+evo_brightness_set_override (Global  *global,
+                             gdouble  new_brightness,
+                             gdouble  new_black,
+                             gint     panelx)
+{
+  VisualWF *wf;
+  VisualFL *fl;
+  gchar *text_bright;
+  gchar *text_black;
+  gdouble b, g, w;
+  FnnPanel *panel;
+
+  panel = get_panel (global, panelx);
+
+  if (new_brightness < 0.0)
+    return FALSE;
+  if (new_brightness > 100.0)
+    return FALSE;
+  if (new_black < 0.0)
+    return FALSE;
+  if (new_black > 100.0)
+    return FALSE;
+
+  text_bright = g_strdup_printf ("<small><b>%.0f%%</b></small>", new_brightness);
+  text_black = g_strdup_printf ("<small><b>%.0f%%</b></small>", new_black);
+
+  switch (panel->type)
+    {
+    case FNN_PANEL_WATERFALL:
+      {
+        EvoUI *ui = &global_ui;
+        HyScanSourceType lsource, rsource;
+        gdouble lw, rw;
+
+        w = 1 - 0.99 * new_brightness / 100.0;
+        b = w * 0.99 * new_black / 100.0;
+        g = 1.25 - 0.5 * (new_brightness / 100.0);
+
+        lw = ui->balance < 0 ? w * (1 - ABS (ui->balance)) : w;
+        rw = ui->balance > 0 ? w * (1 - ABS (ui->balance)) : w;
+
+        wf = (VisualWF*)panel->vis_gui;
+
+        hyscan_gtk_waterfall_state_get_sources (HYSCAN_GTK_WATERFALL_STATE (wf->wf), &lsource, &rsource);
+        hyscan_gtk_waterfall_set_levels (HYSCAN_GTK_WATERFALL (wf->wf), lsource, b, g, lw);
+        hyscan_gtk_waterfall_set_levels (HYSCAN_GTK_WATERFALL (wf->wf), rsource, b, g, rw);
+        gtk_label_set_markup (wf->common.brightness_value, text_bright);
+        gtk_label_set_markup (wf->common.black_value, text_black);
+        break;
+      }
+
+    case FNN_PANEL_ECHO:
+      w = 1 - 0.99 * new_brightness / 100.0;
+      b = w * new_black / 100.0;
+      g = 1.25 - 0.5 * (new_brightness / 100.0);
+
+      wf = (VisualWF*)panel->vis_gui;
+      hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), b, g, w);
+      gtk_label_set_markup (wf->common.brightness_value, text_bright);
+      gtk_label_set_markup (wf->common.black_value, text_black);
+      break;
+
+    case FNN_PANEL_PROFILER:
+      b = new_black / 250000;
+      w = b + (1 - 0.99 * new_brightness / 100.0) * (1 - b);
+      g = 1;
+      if (b >= w)
+        {
+          g_message ("BBC error");
+          return FALSE;
+        }
+
+      wf = (VisualWF*)panel->vis_gui;
+      hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), b, g, w);
+
+      gtk_label_set_markup (wf->common.brightness_value, text_bright);
+      gtk_label_set_markup (wf->common.black_value, text_black);
+      break;
+
+    case FNN_PANEL_FORWARDLOOK:
+      fl = (VisualFL*)panel->vis_gui;
+      hyscan_gtk_forward_look_set_brightness (fl->fl, new_brightness);
+      gtk_label_set_markup (fl->common.brightness_value, text_bright);
+      break;
+
+    default:
+      g_warning ("brightness_set: wrong panel type!");
+    }
+
+  g_free (text_bright);
+  g_free (text_black);
+
+  return TRUE;
+}
+
 /***
  *     #     # ######     #    ######  ######  ####### ######   #####
  *     #  #  # #     #   # #   #     # #     # #       #     # #     #
@@ -58,6 +155,19 @@ ui_start_stop_dry (GtkSwitch *button,
   gtk_widget_set_sensitive (ui->starter.all, !state);
 
   return FALSE;
+}
+
+void
+balance_changed (GtkAdjustment *adj,
+                 gpointer       udata)
+{
+  EvoUI *ui = &global_ui;
+  gint panelx = GPOINTER_TO_INT (udata);
+  FnnPanel *panel = get_panel (_global, panelx);
+
+  ui->balance = gtk_adjustment_get_value (adj);
+
+  brightness_set (_global, panel->vis_current.brightness, panel->vis_current.black, panelx);
 }
 
 //  #####  ####### #     # ####### ######  ####### #
@@ -169,7 +279,7 @@ make_record_control (Global *global,
 
 GtkBuilder *
 get_builder_for_panel (EvoUI * ui,
-                       gint   panelx)
+                       gint    panelx)
 {
   GtkBuilder * b;
   gpointer k = GINT_TO_POINTER (panelx);
@@ -197,6 +307,7 @@ make_page_for_panel (EvoUI     *ui,
   GtkWidget *view = NULL, *sonar = NULL, *tvg = NULL;
   GtkWidget *box, *separ;
   GtkWidget *l_ctrl, *l_mark, *l_meter;
+  GtkAdjustment *adj;
   VisualWF *wf;
 
   b = get_builder_for_panel (ui, panelx);
@@ -211,6 +322,11 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->scale_value       = get_label_from_builder (b, "ss_scale_value");
       panel->vis_gui->colormap_value    = get_label_from_builder (b, "ss_color_map_value");
       panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");
+
+      adj = GTK_ADJUSTMENT (gtk_builder_get_object (b, "ss_balance_adjustment"));
+      gtk_scale_add_mark (GTK_SCALE (gtk_builder_get_object (b, "ss_balance_scale")),
+                          0.0, GTK_POS_LEFT, NULL);
+      g_signal_connect (adj, "value-changed", G_CALLBACK (balance_changed), GINT_TO_POINTER (panelx));
 
       wf = (VisualWF*)panel->vis_gui;
       l_ctrl = get_widget_from_builder (b, "ss_control_layer");
@@ -542,8 +658,8 @@ build_interface (Global *global)
   gtk_grid_attach (GTK_GRID (ui->grid), ui->area,     0, 1, 2, 1);
 
   return TRUE;
-}
 
+}
 G_MODULE_EXPORT void
 destroy_interface (void)
 {

@@ -22,6 +22,8 @@ typedef struct
     } starter;
 
   GtkWidget  *more;
+
+  gdouble     balance;
 } EvoUI;
 
 /* Врапперы. */

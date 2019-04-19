@@ -4,9 +4,9 @@
 #include "cheese-flash.h"
 #include <gmodule.h>
 
-HwuiGlobal global_ui = {0,};
-Global *_global = NULL;
-ButtonReceive brec;
+static HwuiGlobal global_ui = {0,};
+static Global *_global = NULL;
+static ButtonReceive brec = {0,};
 
 #ifdef G_OS_UNIX
   CheeseFlash * flash;
@@ -647,8 +647,11 @@ destroy_interface (void)
 {
   g_atomic_int_set (&brec.stop, TRUE);
   g_clear_pointer (&brec.thread, g_thread_join);
-  g_socket_close (brec.socket, NULL);
-  g_clear_object (&brec.socket);
+  if (brec.socket != NULL)
+    {
+      g_socket_close (brec.socket, NULL);
+      g_clear_object (&brec.socket);
+    }
 
   #ifdef G_OS_UNIX
     g_object_unref (flash);
@@ -773,10 +776,17 @@ kf_config (GKeyFile *kf)
     gchar * mark_addr =  keyfile_string_read_helper (kf, "ame", "mark_addr");
     guint16 mark_port =  keyfile_uint_read_helper (kf, "ame", "mark_port", 10010);
 
-    _global->marks.sync = hyscan_mark_sync_new (mark_addr, mark_port);
+    if (mark_addr != NULL)
+      {
+        _global->marks.sync = hyscan_mark_sync_new (mark_addr, mark_port);
+        g_message ("Mark sync: %s %u", mark_addr, mark_port);
+        g_free (mark_addr);
+      }
+    else
+      {
+        g_message ("Mark sync: address not set");
+      }
 
-    g_message ("Mark sync: %s %u", mark_addr, mark_port);
-    g_free (mark_addr);
   }
 
   /* Выгрузка глубины. */
@@ -807,20 +817,26 @@ kf_config (GKeyFile *kf)
   source_specific = keyfile_bool_read_helper (kf, "ame", "source_specific");
   mcast_addr =  keyfile_string_read_helper (kf, "ame", "button_addr");
   mcast_port =  keyfile_uint_read_helper (kf, "ame", "button_port", 9000);
-  g_return_val_if_fail (mcast_addr != NULL, FALSE);
 
-  brec.socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, NULL);
-  addr = g_inet_address_new_from_string (mcast_addr);
-  isocketadress = g_inet_socket_address_new (addr, mcast_port);
-  g_message ("Buttons: %s %u", mcast_addr, mcast_port);
+  if (mcast_addr != NULL)
+    {
+      brec.socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, NULL);
+      addr = g_inet_address_new_from_string (mcast_addr);
+      isocketadress = g_inet_socket_address_new (addr, mcast_port);
+      g_message ("Buttons: %s %u", mcast_addr, mcast_port);
 
-  g_socket_bind (brec.socket, isocketadress, TRUE, NULL);
+      g_socket_bind (brec.socket, isocketadress, TRUE, NULL);
 
-  brec.stop = FALSE;
-  brec.thread = g_thread_new ("buttons", ame_button_thread, NULL);
-  g_socket_join_multicast_group (brec.socket, addr, source_specific, NULL, NULL);
+      brec.stop = FALSE;
+      brec.thread = g_thread_new ("buttons", ame_button_thread, NULL);
+      g_socket_join_multicast_group (brec.socket, addr, source_specific, NULL, NULL);
 
-  g_free (mcast_addr);
+      g_free (mcast_addr);
+    }
+  else
+    {
+      g_message ("Buttons: address not set");
+    }
 
   return TRUE;
 }
