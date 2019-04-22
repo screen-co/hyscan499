@@ -558,3 +558,13 @@ kf_config (GKeyFile *kf)
   return TRUE;
 }
 
+G_MODULE_EXPORT gboolean
+kf_setup (GKeyFile *kf)
+{
+  return TRUE;
+}
+G_MODULE_EXPORT gboolean
+kf_desetup (GKeyFile *kf)
+{
+  return TRUE;
+}

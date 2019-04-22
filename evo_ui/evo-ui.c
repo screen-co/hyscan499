@@ -45,17 +45,17 @@ evo_brightness_set_override (Global  *global,
       {
         EvoUI *ui = &global_ui;
         HyScanSourceType lsource, rsource;
-        gdouble lw, rw;
+        gdouble lw, rw, balance;
 
         w = 1 - 0.99 * new_brightness / 100.0;
         b = w * 0.99 * new_black / 100.0;
         g = 1.25 - 0.5 * (new_brightness / 100.0);
 
-        lw = ui->balance < 0 ? w * (1 - ABS (ui->balance)) : w;
-        rw = ui->balance > 0 ? w * (1 - ABS (ui->balance)) : w;
+        balance = gtk_adjustment_get_value (ui->balance_adj);
+        lw = balance < 0 ? b + (w - b) * (1 - 0.99 * ABS (balance)) : w;
+        rw = balance > 0 ? b + (w - b) * (1 - 0.99 * ABS (balance)) : w;
 
         wf = (VisualWF*)panel->vis_gui;
-
         hyscan_gtk_waterfall_state_get_sources (HYSCAN_GTK_WATERFALL_STATE (wf->wf), &lsource, &rsource);
         hyscan_gtk_waterfall_set_levels (HYSCAN_GTK_WATERFALL (wf->wf), lsource, b, g, lw);
         hyscan_gtk_waterfall_set_levels (HYSCAN_GTK_WATERFALL (wf->wf), rsource, b, g, rw);
@@ -161,11 +161,8 @@ void
 balance_changed (GtkAdjustment *adj,
                  gpointer       udata)
 {
-  EvoUI *ui = &global_ui;
   gint panelx = GPOINTER_TO_INT (udata);
   FnnPanel *panel = get_panel (_global, panelx);
-
-  ui->balance = gtk_adjustment_get_value (adj);
 
   brightness_set (_global, panel->vis_current.brightness, panel->vis_current.black, panelx);
 }
@@ -312,6 +309,7 @@ make_page_for_panel (EvoUI     *ui,
 
   b = get_builder_for_panel (ui, panelx);
 
+  box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
   switch (panel->type)
     {
     case FNN_PANEL_WATERFALL:
@@ -323,10 +321,16 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->colormap_value    = get_label_from_builder (b, "ss_color_map_value");
       panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");
 
-      adj = GTK_ADJUSTMENT (gtk_builder_get_object (b, "ss_balance_adjustment"));
-      gtk_scale_add_mark (GTK_SCALE (gtk_builder_get_object (b, "ss_balance_scale")),
-                          0.0, GTK_POS_LEFT, NULL);
-      g_signal_connect (adj, "value-changed", G_CALLBACK (balance_changed), GINT_TO_POINTER (panelx));
+      {
+        GtkWidget *balance = get_widget_from_builder (b, "ss_balance_control");
+
+        ui->balance_adj = GTK_ADJUSTMENT (gtk_builder_get_object (b, "ss_balance_adjustment"));
+        gtk_scale_add_mark (GTK_SCALE (gtk_builder_get_object (b, "ss_balance_scale")),
+                            0.0, GTK_POS_LEFT, NULL);
+        g_signal_connect (ui->balance_adj, "value-changed", G_CALLBACK (balance_changed), GINT_TO_POINTER (panelx));
+
+        gtk_box_pack_start (GTK_BOX (box), balance, FALSE, FALSE, 0);
+      }
 
       wf = (VisualWF*)panel->vis_gui;
       l_ctrl = get_widget_from_builder (b, "ss_control_layer");
@@ -432,8 +436,6 @@ make_page_for_panel (EvoUI     *ui,
     }
 
   gtk_builder_connect_signals (b, GINT_TO_POINTER (panelx));
-
-  box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
 
   gtk_box_pack_start (GTK_BOX (box), view, FALSE, FALSE, 0);
   if (sonar != NULL && tvg != NULL)
@@ -660,6 +662,7 @@ build_interface (Global *global)
   return TRUE;
 
 }
+
 G_MODULE_EXPORT void
 destroy_interface (void)
 {
@@ -678,3 +681,30 @@ kf_config (GKeyFile *kf)
   return TRUE;
 }
 
+G_MODULE_EXPORT gboolean
+kf_setup (GKeyFile *kf)
+{
+  EvoUI *ui = &global_ui;
+  gdouble balance;
+
+  if (ui->balance_adj != NULL)
+    {
+      balance = keyfile_double_read_helper (kf, "evo", "balance", 0.0);
+      gtk_adjustment_set_value (ui->balance_adj, balance);
+    }
+
+  return TRUE;
+}
+
+G_MODULE_EXPORT gboolean
+kf_desetup (GKeyFile *kf)
+{
+  EvoUI *ui = &global_ui;
+  if (ui->balance_adj != NULL)
+    {
+      gdouble balance = gtk_adjustment_get_value (ui->balance_adj);
+      keyfile_double_write_helper (kf, "evo", "balance", balance);
+    }
+
+  return TRUE;
+}

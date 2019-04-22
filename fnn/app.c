@@ -131,21 +131,23 @@ main (int argc, char **argv)
   gchar             *db_uri = NULL;            /* Адрес базы данных. */
   gchar             *project_name = NULL;      /* Название проекта. */
   gdouble            sound_velocity = 1500.0;  /* Скорость звука по умолчанию. */
-  GArray            *svp;                      /* Профиль скорости звука. */
+  GArray            *svp = NULL;               /* Профиль скорости звука. */
   gdouble            ship_speed = 1.0;         /* Скорость движения судна. */
   gboolean           full_screen = FALSE;      /* Признак полноэкранного режима. */
 
-  gchar             *settings_file = NULL;       /* Название файла с параметрами. */
+  gchar             *settings_file = NULL;     /* Название файла с параметрами. */
   gchar             *config_file = NULL;       /* Название файла конфигурации. */
   GKeyFile          *settings = NULL;
   GKeyFile          *config = NULL;
   GKeyFile          *hardware = NULL;
 
-  gchar             *um_path = "hardware.ui";       /* Модуль с интерфейсом. */
+  gchar             *um_path = "hardware.ui";  /* Модуль с интерфейсом. */
   GModule           *ui_module = NULL;
   ame_build          ui_build = NULL;
-  ame_build          ui_destroy = NULL;
   ame_config         ui_config = NULL;
+  ame_config         ui_setup = NULL;
+  ame_config         ui_desetup = NULL;
+  ame_build          ui_destroy = NULL;
 
   gboolean           need_ss = FALSE;
   gboolean           need_ss_lo = FALSE;
@@ -188,6 +190,7 @@ main (int argc, char **argv)
   {
     gchar **args;
     GError *error = NULL;
+    GOptionGroup * group;
 
     GOptionEntry common_entries[] =
       {
@@ -198,19 +201,22 @@ main (int argc, char **argv)
         { "ship-speed",      'e',   0, G_OPTION_ARG_DOUBLE,  &ship_speed,      "Ship speed, m/s", NULL },
         { "full-screen",     'f',   0, G_OPTION_ARG_NONE,    &full_screen,     "Full screen mode", NULL },
 
-        { "ss",              0,     0, G_OPTION_ARG_NONE,    &need_ss,         "Enable ss panel", NULL },
-        { "ss-lo",           0,     0, G_OPTION_ARG_NONE,    &need_ss_lo,      "Enable ss-low panel", NULL },
-        { "pf",              0,     0, G_OPTION_ARG_NONE,    &need_pf,         "Enable pf panel", NULL },
-        { "fl",              0,     0, G_OPTION_ARG_NONE,    &need_fl,         "Enable fl panel", NULL },
-        { "es",              0,     0, G_OPTION_ARG_NONE,    &need_es,         "Enable es panel", NULL },
-
         { "hardware",        'p',   0, G_OPTION_ARG_STRING,       &hardware_profile_name, "* Hardware profile name", NULL },
         { "drivers",         'o',   0, G_OPTION_ARG_STRING_ARRAY, &driver_paths,          "* Path to directories with driver(s)", NULL},
 
-        { "config",          'k',   0, G_OPTION_ARG_STRING,  &config_file,     "Configuration file", NULL },
         { "settings",        'l',   0, G_OPTION_ARG_STRING,  &settings_file,   "* Settings file", NULL },
+        { "config",          'k',   0, G_OPTION_ARG_STRING,  &config_file,     "Configuration file", NULL },
 
         { "ui", 0,   G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &um_path,    "UI module", NULL },
+        { NULL, }
+      };
+    GOptionEntry panel_entries[] =
+      {
+        { "ss",    0, 0, G_OPTION_ARG_NONE, &need_ss,    "ss", NULL },
+        { "ss-lo", 0, 0, G_OPTION_ARG_NONE, &need_ss_lo, "ss-low", NULL },
+        { "pf",    0, 0, G_OPTION_ARG_NONE, &need_pf,    "pf", NULL },
+        { "fl",    0, 0, G_OPTION_ARG_NONE, &need_fl,    "fl", NULL },
+        { "es",    0, 0, G_OPTION_ARG_NONE, &need_es,    "es", NULL },
         { NULL, }
       };
 
@@ -226,7 +232,15 @@ main (int argc, char **argv)
                                       "and long parameter as name");
     g_option_context_set_help_enabled (context, TRUE);
     g_option_context_set_ignore_unknown_options (context, FALSE);
-    g_option_context_add_main_entries (context, common_entries, NULL);
+
+    group = g_option_group_new ("common", "General parameters", "General parameters", NULL, NULL);
+    g_option_group_add_entries (group, common_entries);
+    g_option_context_add_group(context, group);
+
+    group = g_option_group_new ("panels", "Available panels", "Available panels", NULL, NULL);
+    g_option_group_add_entries (group, panel_entries);
+    g_option_context_add_group(context, group);
+
     if (!g_option_context_parse_strv (context, &args, &error))
       {
         g_print ("%s\n", error->message);
@@ -267,6 +281,8 @@ main (int argc, char **argv)
         g_module_symbol (ui_module, "build_interface", (gpointer *) &ui_build);
         g_module_symbol (ui_module, "destroy_interface", (gpointer *) &ui_destroy);
         g_module_symbol (ui_module, "kf_config", (gpointer *) &ui_config);
+        g_module_symbol (ui_module, "kf_setup", (gpointer *) &ui_setup);
+        g_module_symbol (ui_module, "kf_desetup", (gpointer *) &ui_desetup);
       }
 
     /* Если нет этих двух функций, то всё, суши вёсла. */
@@ -303,6 +319,17 @@ main (int argc, char **argv)
         settings_file = keyfile_string_read_helper (config, "common", "settings");
     }
 
+  if (db_uri == NULL)
+    {
+      g_print ("%s\n", "DB uri not set. Re-run with -h to get help.");
+      return -1;
+    }
+
+  if (cache_size == 0)
+    {
+      g_print ("%s\n", "Cache size not set. Default (2 Gb) may be too big.");
+    }
+
   /* Файл c настройками ГЛ. */
   if (settings_file == NULL)
     settings_file = g_build_filename (g_get_user_config_dir (), "hyscan499-settings.ini", NULL);
@@ -320,12 +347,6 @@ main (int argc, char **argv)
   global.cache = HYSCAN_CACHE (hyscan_cached_new (cache_size));
 
   /* Подключение к базе данных. */
-  if (db_uri == NULL)
-    {
-      g_print ("%s\n", "DB uri not set. Re-run with -h to get help.");
-      return -1;
-    }
-
   global.db = hyscan_db_new (db_uri);
   hyscan_exit_if_w_param (global.db == NULL, "can't connect to db '%s'", db_uri);
 
@@ -376,71 +397,72 @@ main (int argc, char **argv)
    */
 
   /* Пути к дровам и имя файла с профилем аппаратного обеспечения. */
-  {
-    HyScanHWConnector *connector;
-    gboolean check;
-    guint32 n_sources;
-    const gchar * const * sensors;
-    const HyScanSourceType * source;
-    guint32 i;
+  if (hardware_profile_name != NULL)
+    {
+      HyScanHWConnector *connector;
+      gboolean check;
+      guint32 n_sources;
+      const gchar * const * sensors;
+      const HyScanSourceType * source;
+      guint32 i;
 
-    /* Если не задано название профиля, читаем его из конфига. */
-    if (hardware_profile_name == NULL)
-      goto no_sonar;
+      if (driver_paths == NULL)
+        {
+          g_print ("Driver paths not set. Re-run with --help-all to get help.");
+          return -1;
+        }
 
-    /* Проверяем, что пути к драйверам и имя профиля на месте. */
-    connector = hyscan_hw_connector_new ();
-    hyscan_hw_connector_set_driver_paths (connector, (const gchar * const *)driver_paths);
+      /* Проверяем, что пути к драйверам и имя профиля на месте. */
+      connector = hyscan_hw_connector_new ();
+      hyscan_hw_connector_set_driver_paths (connector, (const gchar * const *)driver_paths);
 
-    /* Читаем профиль. */
-    if (!hyscan_hw_connector_load_profile (connector, hardware_profile_name))
-      {
-        g_message ("Profile read error");
+      /* Читаем профиль. */
+      if (!hyscan_hw_connector_load_profile (connector, hardware_profile_name))
+        {
+          g_message ("Profile read error");
+          goto no_sonar;
+        }
+
+      check = hyscan_hw_connector_check (connector);
+
+      if (check)
+        {
+          global.control = hyscan_hw_connector_connect (connector);
+          global.control_s = HYSCAN_SONAR (global.control);
+        }
+
+      g_strfreev (driver_paths);
+
+      if (!check || global.control == NULL)
         goto no_sonar;
-      }
 
-    check = hyscan_hw_connector_check (connector);
+      hyscan_control_writer_set_db (global.control, global.db);
 
-    if (check)
-      {
-        global.control = hyscan_hw_connector_connect (connector);
-        global.control_s = HYSCAN_SONAR (global.control);
-      }
+      global.infos = g_hash_table_new (g_direct_hash, g_direct_equal);
 
-    g_strfreev (driver_paths);
+      if (global.control != NULL)
+        g_signal_connect (global.control, "sensor-data", G_CALLBACK (sensor_cb), &global);
 
-    if (!check || global.control == NULL)
-      goto no_sonar;
+      sensors = hyscan_control_sensors_list (global.control);
+      for (; sensors != NULL && *sensors != NULL; ++sensors)
+        {
+          g_print ("Sensor found: %s\n", *sensors);
+          hyscan_sensor_set_enable (HYSCAN_SENSOR (global.control), *sensors, TRUE);
+        }
 
-    hyscan_control_writer_set_db (global.control, global.db);
+      source = hyscan_control_sources_list (global.control, &n_sources);
+      for (i = 0; i < n_sources; ++i)
+        {
+          const HyScanSonarInfoSource *info;
 
-    global.infos = g_hash_table_new (g_direct_hash, g_direct_equal);
+          info = hyscan_control_source_get_info (global.control, source[i]);
+          if (info == NULL)
+            continue;
 
-    if (global.control != NULL)
-      g_signal_connect (global.control, "sensor-data", G_CALLBACK (sensor_cb), &global);
-
-
-    sensors = hyscan_control_sensors_list (global.control);
-    for (; sensors != NULL && *sensors != NULL; ++sensors)
-      {
-        g_print ("Sensor found: %s\n", *sensors);
-        hyscan_sensor_set_enable (HYSCAN_SENSOR (global.control), *sensors, TRUE);
-      }
-
-
-    source = hyscan_control_sources_list (global.control, &n_sources);
-    for (i = 0; i < n_sources; ++i)
-      {
-        const HyScanSonarInfoSource *info;
-
-        info = hyscan_control_source_get_info (global.control, source[i]);
-        if (info == NULL)
-          continue;
-
-        g_print ("Source found: %s\n", hyscan_source_get_name_by_type (source[i]));
-        g_hash_table_insert (global.infos, GINT_TO_POINTER (source[i]), (void*)info);
-      }
-  }
+          g_print ("Source found: %s\n", hyscan_source_get_name_by_type (source[i]));
+          g_hash_table_insert (global.infos, GINT_TO_POINTER (source[i]), (void*)info);
+        }
+    }
 
   /* Закончили подключение к гидролокатору. */
   no_sonar:
@@ -737,6 +759,7 @@ main (int argc, char **argv)
   // Вызываем постройку билдера!
   ui_build (&global);
   ui_config (config);
+  ui_setup (settings);
 
 /***
  *     ___   ___   ___   ___               ___               ___               ___   ___
@@ -827,6 +850,7 @@ main (int argc, char **argv)
    *     ---   ---   ---               ---
    *
    */
+  ui_desetup (settings);
   ui_destroy (&global);
 
   if (settings != NULL)

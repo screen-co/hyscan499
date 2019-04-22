@@ -896,6 +896,58 @@
     <property name="step_increment">0.01</property>
     <property name="page_increment">0.10000000000000001</property>
   </object>
+  <object class="GtkBox" id="ss_balance_control">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="orientation">vertical</property>
+    <child>
+      <object class="GtkLabel" id="ss_balance_label">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">start</property>
+        <property name="valign">center</property>
+        <property name="margin_bottom">6</property>
+        <property name="label" translatable="yes">Balance</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkScale" id="ss_balance_scale">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="hexpand">False</property>
+        <property name="vexpand">False</property>
+        <property name="adjustment">ss_balance_adjustment</property>
+        <property name="restrict_to_fill_level">False</property>
+        <property name="fill_level">0</property>
+        <property name="round_digits">2</property>
+        <property name="digits">2</property>
+        <property name="has_origin">False</property>
+        <property name="value_pos">left</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">1</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="ss_brightness_separator">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">6</property>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">2</property>
+      </packing>
+    </child>
+  </object>
   <object class="GtkImage" id="ss_black_down_image">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -1022,7 +1074,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">9</property>
+        <property name="top_attach">6</property>
         <property name="width">3</property>
       </packing>
     </child>
@@ -1038,7 +1090,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">10</property>
+        <property name="top_attach">7</property>
       </packing>
     </child>
     <child>
@@ -1053,7 +1105,7 @@
       </object>
       <packing>
         <property name="left_attach">2</property>
-        <property name="top_attach">10</property>
+        <property name="top_attach">7</property>
       </packing>
     </child>
     <child>
@@ -1064,7 +1116,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">11</property>
+        <property name="top_attach">8</property>
         <property name="width">3</property>
       </packing>
     </child>
@@ -1079,7 +1131,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">15</property>
+        <property name="top_attach">12</property>
         <property name="width">3</property>
       </packing>
     </child>
@@ -1094,7 +1146,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">12</property>
+        <property name="top_attach">9</property>
         <property name="width">3</property>
       </packing>
     </child>
@@ -1106,7 +1158,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">14</property>
+        <property name="top_attach">11</property>
         <property name="width">3</property>
       </packing>
     </child>
@@ -1122,7 +1174,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">13</property>
+        <property name="top_attach">10</property>
       </packing>
     </child>
     <child>
@@ -1137,7 +1189,7 @@
       </object>
       <packing>
         <property name="left_attach">2</property>
-        <property name="top_attach">13</property>
+        <property name="top_attach">10</property>
       </packing>
     </child>
     <child>
@@ -1153,19 +1205,7 @@
       </object>
       <packing>
         <property name="left_attach">1</property>
-        <property name="top_attach">13</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkSeparator" id="ss_brightness_separator">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">5</property>
-        <property name="width">3</property>
+        <property name="top_attach">10</property>
       </packing>
     </child>
     <child>
@@ -1180,7 +1220,7 @@
       </object>
       <packing>
         <property name="left_attach">1</property>
-        <property name="top_attach">10</property>
+        <property name="top_attach">7</property>
       </packing>
     </child>
     <child>
@@ -1193,7 +1233,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">16</property>
+        <property name="top_attach">13</property>
         <property name="width">3</property>
       </packing>
     </child>
@@ -1329,7 +1369,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">18</property>
+        <property name="top_attach">15</property>
         <property name="width">3</property>
       </packing>
     </child>
@@ -1341,42 +1381,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">17</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="ss_balance_label">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">start</property>
-        <property name="valign">center</property>
-        <property name="margin_bottom">6</property>
-        <property name="label" translatable="yes">Balance</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">6</property>
-        <property name="width">3</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkScale" id="ss_balance_scale">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="hexpand">True</property>
-        <property name="vexpand">False</property>
-        <property name="adjustment">ss_balance_adjustment</property>
-        <property name="restrict_to_fill_level">False</property>
-        <property name="fill_level">0</property>
-        <property name="round_digits">2</property>
-        <property name="digits">2</property>
-        <property name="has_origin">False</property>
-        <property name="value_pos">left</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">7</property>
+        <property name="top_attach">14</property>
         <property name="width">3</property>
       </packing>
     </child>
@@ -1388,7 +1393,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">8</property>
+        <property name="top_attach">5</property>
         <property name="width">3</property>
       </packing>
     </child>

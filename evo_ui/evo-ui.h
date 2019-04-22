@@ -23,7 +23,7 @@ typedef struct
 
   GtkWidget  *more;
 
-  gdouble     balance;
+  GtkAdjustment *balance_adj;
 } EvoUI;
 
 /* Врапперы. */
@@ -35,10 +35,11 @@ void start_stop_dry_wrapper (GtkSwitch   *switcher,
                          gpointer         user_data);
 
 G_MODULE_EXPORT gboolean    build_interface (Global *global);
-
 G_MODULE_EXPORT void        destroy_interface (void);
 
 G_MODULE_EXPORT gboolean    kf_config    (GKeyFile *kf);
+G_MODULE_EXPORT gboolean    kf_setup     (GKeyFile *kf);
+G_MODULE_EXPORT gboolean    kf_desetup   (GKeyFile *kf);
 
 void        switch_page (GObject     *emitter,
                          const gchar *page);

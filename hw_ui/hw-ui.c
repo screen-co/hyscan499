@@ -926,3 +926,14 @@ depth_writer (GObject *emitter)
     flash_fire ("#00ff7f");
   #endif
 }
+
+G_MODULE_EXPORT gboolean
+kf_setup (GKeyFile *kf)
+{
+  return TRUE;
+}
+G_MODULE_EXPORT gboolean
+kf_desetup (GKeyFile *kf)
+{
+  return TRUE;
+}
