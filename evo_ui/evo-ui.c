@@ -44,6 +44,7 @@ evo_brightness_set_override (Global  *global,
     case FNN_PANEL_WATERFALL:
       {
         EvoUI *ui = &global_ui;
+        GtkAdjustment *balance_adj;
         HyScanSourceType lsource, rsource;
         gdouble lw, rw, balance;
 
@@ -51,7 +52,9 @@ evo_brightness_set_override (Global  *global,
         b = w * 0.99 * new_black / 100.0;
         g = 1.25 - 0.5 * (new_brightness / 100.0);
 
-        balance = gtk_adjustment_get_value (ui->balance_adj);
+
+        balance_adj = g_hash_table_lookup (ui->balance_table, GINT_TO_POINTER (panelx));
+        balance = gtk_adjustment_get_value (balance_adj);
         lw = balance < 0 ? b + (w - b) * (1 - 0.99 * ABS (balance)) : w;
         rw = balance > 0 ? b + (w - b) * (1 - 0.99 * ABS (balance)) : w;
 
@@ -304,7 +307,6 @@ make_page_for_panel (EvoUI     *ui,
   GtkWidget *view = NULL, *sonar = NULL, *tvg = NULL;
   GtkWidget *box, *separ;
   GtkWidget *l_ctrl, *l_mark, *l_meter;
-  GtkAdjustment *adj;
   VisualWF *wf;
 
   b = get_builder_for_panel (ui, panelx);
@@ -322,14 +324,17 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");
 
       {
+        GtkAdjustment *adj;
         GtkWidget *balance = get_widget_from_builder (b, "ss_balance_control");
 
-        ui->balance_adj = GTK_ADJUSTMENT (gtk_builder_get_object (b, "ss_balance_adjustment"));
+        adj = GTK_ADJUSTMENT (gtk_builder_get_object (b, "ss_balance_adjustment"));
         gtk_scale_add_mark (GTK_SCALE (gtk_builder_get_object (b, "ss_balance_scale")),
                             0.0, GTK_POS_LEFT, NULL);
-        g_signal_connect (ui->balance_adj, "value-changed", G_CALLBACK (balance_changed), GINT_TO_POINTER (panelx));
+        g_signal_connect (adj, "value-changed", G_CALLBACK (balance_changed), GINT_TO_POINTER (panelx));
 
         gtk_box_pack_start (GTK_BOX (box), balance, FALSE, FALSE, 0);
+
+        g_hash_table_insert (ui->balance_table, GINT_TO_POINTER (panelx), adj);
       }
 
       wf = (VisualWF*)panel->vis_gui;
@@ -590,6 +595,7 @@ build_interface (Global *global)
 
   /* Правая панель -- бокс с упр. записью и упр. локаторами. */
   /* Кстати, мои личные виджеты используются только в этом месте.  */
+  ui->balance_table = g_hash_table_new (g_direct_hash, g_direct_equal);
   {
     GtkWidget * record;
     GHashTableIter iter;
@@ -685,12 +691,23 @@ G_MODULE_EXPORT gboolean
 kf_setup (GKeyFile *kf)
 {
   EvoUI *ui = &global_ui;
+  Global *global = _global;
+  GHashTableIter iter;
   gdouble balance;
+  gpointer k, v;
 
-  if (ui->balance_adj != NULL)
+  g_hash_table_iter_init (&iter, global->panels);
+  while (g_hash_table_iter_next (&iter, &k, &v)) /* panelx, fnnpanel */
     {
-      balance = keyfile_double_read_helper (kf, "evo", "balance", 0.0);
-      gtk_adjustment_set_value (ui->balance_adj, balance);
+      FnnPanel *panel = v;
+      GtkAdjustment *adj;
+
+      if (panel->type != FNN_PANEL_WATERFALL)
+        continue;
+
+      balance = keyfile_double_read_helper (kf, panel->name, "evo.balance", 0.0);
+      adj = g_hash_table_lookup (ui->balance_table, k);
+      gtk_adjustment_set_value (adj, balance);
     }
 
   return TRUE;
@@ -700,10 +717,23 @@ G_MODULE_EXPORT gboolean
 kf_desetup (GKeyFile *kf)
 {
   EvoUI *ui = &global_ui;
-  if (ui->balance_adj != NULL)
+  Global *global = _global;
+  GHashTableIter iter;
+  gdouble balance;
+  gpointer k, v;
+
+  g_hash_table_iter_init (&iter, global->panels);
+  while (g_hash_table_iter_next (&iter, &k, &v)) /* panelx, fnnpanel */
     {
-      gdouble balance = gtk_adjustment_get_value (ui->balance_adj);
-      keyfile_double_write_helper (kf, "evo", "balance", balance);
+      FnnPanel *panel = v;
+      GtkAdjustment *adj;
+
+      if (panel->type != FNN_PANEL_WATERFALL)
+        continue;
+
+      adj = g_hash_table_lookup (ui->balance_table, k);
+      balance = gtk_adjustment_get_value (adj);
+      keyfile_double_write_helper (kf, panel->name, "evo.balance", balance);
     }
 
   return TRUE;

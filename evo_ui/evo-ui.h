@@ -23,7 +23,7 @@ typedef struct
 
   GtkWidget  *more;
 
-  GtkAdjustment *balance_adj;
+  GHashTable *balance_table; /* GtkAdjustment* */
 } EvoUI;
 
 /* Врапперы. */
