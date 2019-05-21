@@ -64,7 +64,7 @@ static void            hyscan_gtk_forward_look_range                   (HyScanFo
 static void            hyscan_gtk_forward_look_data                    (HyScanForwardLookPlayer          *player,
                                                                         HyScanForwardLookPlayerInfo      *info,
                                                                         HyScanAntennaOffset              *position,
-                                                                        HyScanForwardLookDOA             *doa,
+                                                                        HyScanDOA                        *doa,
                                                                         guint32                           n_doa,
                                                                         HyScanGtkForwardLook             *fl);
 
@@ -129,7 +129,7 @@ hyscan_gtk_forward_look_object_constructed (GObject *object)
   priv->adjustment = g_object_ref_sink (gtk_adjustment_new (0.0, 0.0, 0.0, 1.0, 1.0, 1.0));
 
   /* Буфер целей. */
-  priv->doa = g_array_new (FALSE, FALSE, sizeof (HyScanForwardLookDOA));
+  priv->doa = g_array_new (FALSE, FALSE, sizeof (HyScanDOA));
 
   /* Объект управления просмотром. */
   priv->player = hyscan_forward_look_player_new ();
@@ -268,7 +268,7 @@ static void
 hyscan_gtk_forward_look_data (HyScanForwardLookPlayer     *control,
                               HyScanForwardLookPlayerInfo *info,
                               HyScanAntennaOffset         *position,
-                              HyScanForwardLookDOA        *doa,
+                              HyScanDOA                   *doa,
                               guint32                      n_doa,
                               HyScanGtkForwardLook        *fl)
 {
@@ -297,7 +297,7 @@ hyscan_gtk_forward_look_data (HyScanForwardLookPlayer     *control,
         }
 
       g_array_set_size (priv->doa, n_doa);
-      memcpy (priv->doa->data, doa, n_doa * sizeof (HyScanForwardLookDOA));
+      memcpy (priv->doa->data, doa, n_doa * sizeof (HyScanDOA));
     }
 
   priv->self_changed = TRUE;
@@ -507,7 +507,7 @@ hyscan_gtk_forward_look_doa_draw (GtkWidget *widget,
   gdouble color_blue = priv->color.blue;
   gdouble brightness = priv->brightness;
   gdouble sensitivity = priv->sensitivity;
-  HyScanForwardLookDOA *doa = (gpointer)priv->doa->data;
+  HyScanDOA *doa = (gpointer)priv->doa->data;
   guint n_doa = priv->doa->len;
 
   gdouble amplitude;

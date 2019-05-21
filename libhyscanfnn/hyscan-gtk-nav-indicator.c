@@ -174,7 +174,7 @@ hyscan_gtk_nav_indicator_push (HyScanGtkNavIndicator *self,
   priv = self->priv;
 
   /* Вытаскиваем данные. */
-  raw_data = hyscan_buffer_get_data (data, &size);
+  raw_data = hyscan_buffer_get (data, NULL, &size);
   nmea = g_strsplit_set (raw_data, "\r\n", -1);
 
   /* Ищем строки РМЦ и ДПТ. */
