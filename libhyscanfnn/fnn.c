@@ -1607,7 +1607,7 @@ gen_disable (Global   *global,
       gboolean status;
       HyScanSourceType source = *iter;
 
-      g_message ("  disabling generator for %s", hyscan_source_get_name_by_type (source));
+      g_message ("  disabling generator for %s", hyscan_source_get_id_by_type (source));
       status = hyscan_sonar_generator_disable (global->control_s, source);
 
       if (!status)
@@ -1655,10 +1655,10 @@ signal_set (Global *global,
       gboolean status;
       HyScanSourceType source = *iter;
 
-      g_message ("  setting signal for %s", hyscan_source_get_name_by_type (source));
+      g_message ("  setting signal for %s", hyscan_source_get_id_by_type (source));
       if (source == HYSCAN_SOURCE_PROFILER_ECHO)
         {
-          g_message ("  skipping %s", hyscan_source_get_name_by_type (source));
+          g_message ("  skipping %s", hyscan_source_get_id_by_type (source));
           continue;
         }
 
@@ -1779,7 +1779,7 @@ tvg_set (Global  *global,
           continue;
         }
 
-      g_message ("  setting TVG for %s", hyscan_source_get_name_by_type (source));
+      g_message ("  setting TVG for %s", hyscan_source_get_id_by_type (source));
 
       /* Проверяем gain0. */
       info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (source));
@@ -1909,7 +1909,7 @@ auto_tvg_set (Global   *global,
 
   for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
     {
-      g_message ("  setting auto-tvg for %s", hyscan_source_get_name_by_type (*iter));
+      g_message ("  setting auto-tvg for %s", hyscan_source_get_id_by_type (*iter));
       status = hyscan_sonar_tvg_set_auto (global->control_s, *iter, level, sensitivity);
       if (!status)
         {
@@ -2032,7 +2032,7 @@ distance_set (Global  *global,
     {
       HyScanSonarInfoSource *info;
 
-      g_message ("  setting distance for %s", hyscan_source_get_name_by_type (*iter));
+      g_message ("  setting distance for %s", hyscan_source_get_id_by_type (*iter));
       info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (*iter));
       hyscan_return_val_if_fail (info != NULL, FALSE);
 
@@ -2089,7 +2089,7 @@ distance_set (Global  *global,
         }
 
       g_message ("    %s: %4.1f m, r/w time: %f %f",
-                 hyscan_source_get_name_by_type (*iter), *meters, receive_time, wait_time);
+                 hyscan_source_get_id_by_type (*iter), *meters, receive_time, wait_time);
 
       status = hyscan_sonar_receiver_set_time (global->control_s, *iter, receive_time, wait_time);
       if (!status)

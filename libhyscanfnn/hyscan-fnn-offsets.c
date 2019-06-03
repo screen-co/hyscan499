@@ -102,7 +102,7 @@ hyscan_fnn_offsets_object_constructed (GObject *object)
   for (i = 0; i < n_sources; ++i)
     {
       const gchar *name;
-      name = hyscan_source_get_name_by_type (sources[i]);
+      name = hyscan_source_get_id_by_type (sources[i]);
 
       info = g_new0 (HyScanFnnOffsetsInfo, 1);
       info->source = sources[i];
