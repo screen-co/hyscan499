@@ -3,7 +3,10 @@
 #include <hyscan-fnn-splash.h>
 #include <hyscan-fnn-project.h>
 #include <hyscan-fnn-button.h>
-#include <hyscan-hw-connector.h>
+#include <hyscan-gtk-connector.h>
+#include <hyscan-profile-hw.h>
+#include <hyscan-profile-offset.h>
+#include <hyscan-profile-db.h>
 #include <gmodule.h>
 
 #ifndef G_OS_WIN32 /* Ловим сигналы ОС. */
@@ -20,6 +23,12 @@
 
 #define GETTEXT_PACKAGE "hyscan-499"
 #include <glib/gi18n.h>
+
+enum
+{
+  CONNECTOR_CANCEL,
+  CONNECTOR_CLOSE,
+};
 
 /* Вот он, наш жирненький красавчик. */
 Global global = {0,};
@@ -128,6 +137,22 @@ make_color_maps (gboolean profiler)
   g_array_append_vals (colormaps, &new_map, 1);
 
   return colormaps;
+}
+
+void
+connector_cancel (GtkAssistant *ass,
+                  Global       *global)
+{
+  gtk_widget_destroy (GTK_WIDGET (ass));
+}
+
+void
+connector_close (GtkAssistant *ass,
+                 Global       *global)
+{
+  global->db = hyscan_gtk_connector_get_db (HYSCAN_GTK_CONNECTOR (ass));
+  global->control = hyscan_gtk_connector_get_control (HYSCAN_GTK_CONNECTOR (ass));
+  gtk_widget_destroy (GTK_WIDGET (ass));
 }
 
 int
@@ -326,11 +351,116 @@ main (int argc, char **argv)
         settings_file = keyfile_string_read_helper (config, "common", "settings");
     }
 
-  if (db_uri == NULL)
+
+
+  /***
+   *     ___   ___         ___         ___
+   *      | |   | |       |   | |\  |   | |       |   | |   |
+   *      + |   +-        |-+-| | + |   + |       |-+-| | + |
+   *      | |   | |       |   | |  \|   | |       |   | |/ \|
+   *     ---   ---                     ---
+   * Подключение к БД и локатору.
+   * - если заданы дб ИЛИ дб+гл, то просто подключаемся
+   * - если не задано ничего, то запускаем коннектор
+   */
+
+  if (db_uri != NULL)
     {
-      g_print ("%s\n", "DB uri not set. Re-run with -h to get help.");
-      return -1;
+      /* Подключение к базе данных. */
+      global.db = hyscan_db_new (db_uri);
+      hyscan_exit_if_w_param (global.db == NULL, "can't connect to db '%s'", db_uri);
+
+      /* Пути к дровам и имя файла с профилем аппаратного обеспечения. */
+      if (hardware_profile_name != NULL)
+        {
+          HyScanProfileHW *hw;
+          HyScanProfileOffset *offset;
+          gboolean check;
+
+          if (driver_paths == NULL)
+            {
+              g_print ("Driver paths not set. Re-run with --help-all to get help.");
+              return -1;
+            }
+
+          hw = hyscan_profile_hw_new (hardware_profile_name);
+          hyscan_profile_hw_set_driver_paths (hw, (gchar**)driver_paths);
+          if (!hyscan_profile_read (HYSCAN_PROFILE (hw)))
+            {
+              g_message ("Profile read error");
+              goto no_sonar;
+            }
+
+          check = hyscan_profile_hw_check (hw);
+
+          if (check)
+            {
+              global.control = hyscan_profile_hw_connect (hw);
+              global.control_s = HYSCAN_SONAR (global.control);
+            }
+
+          g_strfreev (driver_paths);
+        }
     }
+  else
+    {
+      /* Показываем гуй для подключения. */
+      GtkWidget *window = hyscan_gtk_connector_new ();
+      g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
+      g_signal_connect (window, "cancel", G_CALLBACK (connector_cancel), &global);
+      g_signal_connect (window, "close", G_CALLBACK (connector_close), &global);
+      gtk_widget_show_all (window);
+      gtk_main ();
+
+      if (global.db == NULL && global.control == NULL)
+          goto exit;
+    }
+
+  /* К этому моменту подвезли global.control и global.db. Настраиваю контрол. */
+  if (global.control != NULL)
+    {
+      guint32 n_sources;
+      const gchar * const * sensors;
+      const HyScanSourceType * source;
+      guint32 i;
+
+      hyscan_control_writer_set_db (global.control, global.db);
+
+      global.infos = g_hash_table_new (g_direct_hash, g_direct_equal);
+
+      if (global.control != NULL)
+        g_signal_connect (global.control, "sensor-data", G_CALLBACK (sensor_cb), &global);
+
+      sensors = hyscan_control_sensors_list (global.control);
+      for (; sensors != NULL && *sensors != NULL; ++sensors)
+        {
+          g_print ("Sensor found: %s\n", *sensors);
+          hyscan_sensor_set_enable (HYSCAN_SENSOR (global.control), *sensors, TRUE);
+        }
+
+      source = hyscan_control_sources_list (global.control, &n_sources);
+      for (i = 0; i < n_sources; ++i)
+        {
+          const HyScanSonarInfoSource *info;
+
+          info = hyscan_control_source_get_info (global.control, source[i]);
+          if (info == NULL)
+            continue;
+
+          g_print ("Source found: %s\n", hyscan_source_get_id_by_type (source[i]));
+          g_hash_table_insert (global.infos, GINT_TO_POINTER (source[i]), (void*)info);
+        }
+    }
+
+
+  /***
+   *     ___   ___   ___         ___   ___   ___         ___         ___         ___   ___   ___   ___
+   *    |   | |   | |   |     | |     |       |         |   | |\  |   | |         |   |   | |   | |     |  /
+   *    |-+-  |-+-  |   |     | |-+-  |       +         |-+-| | + |   + |         +   |-+-  |-+-| |     |-+
+   *    |     |  \  |   | |   | |     |       |         |   | |  \|   | |         |   |  \  |   | |     |  \
+   *                 ---   ---   ---   ---                           ---                           ---
+   *
+   */
 
   if (cache_size == 0)
     {
@@ -352,10 +482,6 @@ main (int argc, char **argv)
   if (cache_size == 0)
    cache_size = 2048;
   global.cache = HYSCAN_CACHE (hyscan_cached_new (cache_size));
-
-  /* Подключение к базе данных. */
-  global.db = hyscan_db_new (db_uri);
-  hyscan_exit_if_w_param (global.db == NULL, "can't connect to db '%s'", db_uri);
 
   /* Проект пытаемся считать из файла. */
   project_name = keyfile_string_read_helper (settings, "common", "project");
@@ -403,73 +529,7 @@ main (int argc, char **argv)
    * Подключение к гидролокатору.
    */
 
-  /* Пути к дровам и имя файла с профилем аппаратного обеспечения. */
-  if (hardware_profile_name != NULL)
-    {
-      HyScanHWConnector *connector;
-      gboolean check;
-      guint32 n_sources;
-      const gchar * const * sensors;
-      const HyScanSourceType * source;
-      guint32 i;
 
-      if (driver_paths == NULL)
-        {
-          g_print ("Driver paths not set. Re-run with --help-all to get help.");
-          return -1;
-        }
-
-      /* Проверяем, что пути к драйверам и имя профиля на месте. */
-      connector = hyscan_hw_connector_new ();
-      hyscan_hw_connector_set_driver_paths (connector, (const gchar * const *)driver_paths);
-
-      /* Читаем профиль. */
-      if (!hyscan_hw_connector_load_profile (connector, hardware_profile_name))
-        {
-          g_message ("Profile read error");
-          goto no_sonar;
-        }
-
-      check = hyscan_hw_connector_check (connector);
-
-      if (check)
-        {
-          global.control = hyscan_hw_connector_connect (connector);
-          global.control_s = HYSCAN_SONAR (global.control);
-        }
-
-      g_strfreev (driver_paths);
-
-      if (!check || global.control == NULL)
-        goto no_sonar;
-
-      hyscan_control_writer_set_db (global.control, global.db);
-
-      global.infos = g_hash_table_new (g_direct_hash, g_direct_equal);
-
-      if (global.control != NULL)
-        g_signal_connect (global.control, "sensor-data", G_CALLBACK (sensor_cb), &global);
-
-      sensors = hyscan_control_sensors_list (global.control);
-      for (; sensors != NULL && *sensors != NULL; ++sensors)
-        {
-          g_print ("Sensor found: %s\n", *sensors);
-          hyscan_sensor_set_enable (HYSCAN_SENSOR (global.control), *sensors, TRUE);
-        }
-
-      source = hyscan_control_sources_list (global.control, &n_sources);
-      for (i = 0; i < n_sources; ++i)
-        {
-          const HyScanSonarInfoSource *info;
-
-          info = hyscan_control_source_get_info (global.control, source[i]);
-          if (info == NULL)
-            continue;
-
-          g_print ("Source found: %s\n", hyscan_source_get_id_by_type (source[i]));
-          g_hash_table_insert (global.infos, GINT_TO_POINTER (source[i]), (void*)info);
-        }
-    }
 
   /* Закончили подключение к гидролокатору. */
   no_sonar:
@@ -899,7 +959,7 @@ exit:
   g_clear_object (&global.db_info);
   g_clear_object (&global.db);
 
-  g_hash_table_unref (global.panels);
+  g_clear_pointer (&global.panels, g_hash_table_unref);
 
   g_free (global.track_name);
   g_free (db_uri);

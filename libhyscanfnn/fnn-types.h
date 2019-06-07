@@ -2,7 +2,6 @@
 #define __TRIPLE_TYPES_H__
 
 #include <hyscan-gtk-area.h>
-#include <hyscan-hw-profile.h>
 #include <hyscan-control.h>
 #include <hyscan-forward-look-data.h>
 #include <hyscan-gtk-waterfall.h>

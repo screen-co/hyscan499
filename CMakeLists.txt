@@ -56,6 +56,7 @@ include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancache/hyscancache"
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancore/hyscancore")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscanmodel/hyscanmodel")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscangui/hyscangui")
+include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscangtk/hyscangtk")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/libhyscanfnn")
 
 
@@ -68,6 +69,7 @@ link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancache/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscancore/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscanmodel/bin")
 link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscangui/bin")
+link_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../libhyscangtk/bin")
 set (HYSCAN_LIBRARIES gtkcifroarea-3.1
                       hyscantypes-${HYSCAN_MAJOR_VERSION}
                       hyscandriver-${HYSCAN_MAJOR_VERSION}
@@ -76,6 +78,7 @@ set (HYSCAN_LIBRARIES gtkcifroarea-3.1
                       hyscancore-${HYSCAN_MAJOR_VERSION}
                       hyscanmodel-${HYSCAN_MAJOR_VERSION}
                       hyscangui-${HYSCAN_MAJOR_VERSION}
+                      hyscangtk-${HYSCAN_MAJOR_VERSION}
                       urpc)
 
 add_definitions (-DG_LOG_DOMAIN="Fnn")
