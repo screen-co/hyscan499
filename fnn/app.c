@@ -150,8 +150,11 @@ void
 connector_close (GtkAssistant *ass,
                  Global       *global)
 {
-  global->db = hyscan_gtk_connector_get_db (HYSCAN_GTK_CONNECTOR (ass));
-  global->control = hyscan_gtk_connector_get_control (HYSCAN_GTK_CONNECTOR (ass));
+  if (hyscan_gtk_connector_get_result (HYSCAN_GTK_CONNECTOR (ass)))
+    {
+      global->db = hyscan_gtk_connector_get_db (HYSCAN_GTK_CONNECTOR (ass));
+      global->control = hyscan_gtk_connector_get_control (HYSCAN_GTK_CONNECTOR (ass));
+    }
   gtk_widget_destroy (GTK_WIDGET (ass));
 }
 
@@ -413,7 +416,7 @@ main (int argc, char **argv)
       gtk_main ();
 
       if (global.db == NULL && global.control == NULL)
-          goto exit;
+        goto exit;
     }
 
   /* К этому моменту подвезли global.control и global.db. Настраиваю контрол. */
