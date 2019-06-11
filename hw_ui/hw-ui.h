@@ -147,7 +147,7 @@ G_MODULE_EXPORT void        destroy_interface (void);
 
 /* Для кнопочек. */
 G_MODULE_EXPORT gboolean    kf_config    (GKeyFile *kf);
-G_MODULE_EXPORT gboolean    kf_setup     (GKeyFile *kf);
+G_MODULE_EXPORT gboolean    kf_setting    (GKeyFile *kf);
 G_MODULE_EXPORT gboolean    kf_desetup   (GKeyFile *kf);
 
 /* Внутренние, для ожидания и получения кнопок. */

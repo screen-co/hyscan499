@@ -82,6 +82,7 @@ set (HYSCAN_LIBRARIES gtkcifroarea-3.1
                       urpc)
 
 add_definitions (-DG_LOG_DOMAIN="Fnn")
+add_definitions (-DFNN_DEFAULT_UI="evo.ui")
 add_subdirectory (libhyscanfnn)
 add_subdirectory (hw_ui)
 add_subdirectory (sw_ui)

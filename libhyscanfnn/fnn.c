@@ -22,6 +22,331 @@ enum
 };
 
 void
+source_informer (const gchar      *text,
+                 HyScanSourceType  source)
+{
+  g_message ("  %s for %s", text, hyscan_source_get_id_by_type (source));
+}
+
+GArray *
+make_svp_from_velocity (gdouble velocity)
+{
+  GArray *svp;
+  HyScanSoundVelocity svp_val;
+
+  svp = g_array_new (FALSE, FALSE, sizeof (HyScanSoundVelocity));
+  svp_val.depth = 0.0;
+  svp_val.velocity = velocity;
+  g_array_insert_val (svp, 0, svp_val);
+
+  return svp;
+}
+
+gboolean
+fnn_ensure_panel (gint    panelx,
+                  Global *global)
+{
+  GArray *svp;
+  FnnPanel *panel;
+
+  /* Вдруг панель уже есть? Тогда выходим вот отседова. */
+  if (g_hash_table_contains (tglobal->panels, GINT_TO_POINTER (panelx)))
+    return FALSE;
+
+  /* Ну, нет так нет, на нет и суда нет, как говорится. */
+  svp = make_svp_from_velocity (global->sound_velocity);
+
+  panel = g_new0 (FnnPanel, 1);
+  /* Создаем панель. */
+  if (panelx == X_SIDESCAN)
+    { /* ГБО */
+      GtkWidget *main_widget;
+      VisualWF *vwf = g_new0 (VisualWF, 1);
+
+      // panel->name_ru = g_strdup ("ГБО");
+      panel->name = g_strdup ("SideScan");
+      panel->name_local = g_strdup (_("SideScan"));
+      panel->short_name = g_strdup ("SS");
+      panel->type = FNN_PANEL_WATERFALL;
+
+      panel->sources = g_new0 (HyScanSourceType, 3);
+      panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD;
+      panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_PORT;
+      panel->sources[2] = HYSCAN_SOURCE_INVALID;
+
+      panel->vis_gui = (VisualCommon*)vwf;
+
+      vwf->colormaps = fnn_make_color_maps (FALSE);
+
+      vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global->cache));
+      gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
+
+      main_widget = make_overlay (vwf->wf,
+                                  &vwf->wf_grid, &vwf->wf_ctrl,
+                                  &vwf->wf_mark, &vwf->wf_metr,
+                                  global->marks.model);
+
+      g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), global);
+      g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_SIDESCAN));
+
+      hyscan_gtk_waterfall_state_sidescan (HYSCAN_GTK_WATERFALL_STATE (vwf->wf),
+                                           HYSCAN_SOURCE_SIDE_SCAN_PORT, HYSCAN_SOURCE_SIDE_SCAN_STARBOARD);
+      hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), global->ship_speed);
+      hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
+      hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
+      hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
+
+      vwf->common.main = main_widget;
+
+
+      gtk_widget_show_all (main_widget);
+    }
+
+  else if (panelx == X_SIDE_LOW)
+    { /* ГБО-ВЧ */
+      GtkWidget *main_widget;
+      VisualWF *vwf = g_new0 (VisualWF, 1);
+
+      // panel->name_ru = g_strdup ("ГБО-НЧ");
+      panel->name = g_strdup ("SideScanLow");
+      panel->name_local = g_strdup (_("SideScanLow"));
+      panel->short_name = g_strdup ("SSLow");
+      panel->type = FNN_PANEL_WATERFALL;
+
+      panel->sources = g_new0 (HyScanSourceType, 3);
+      panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_LOW;
+      panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_PORT_LOW;
+      panel->sources[2] = HYSCAN_SOURCE_INVALID;
+
+      panel->vis_gui = (VisualCommon*)vwf;
+
+      vwf->colormaps = fnn_make_color_maps (FALSE);
+
+      vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global->cache));
+      gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
+
+      main_widget = make_overlay (vwf->wf,
+                                  &vwf->wf_grid, &vwf->wf_ctrl,
+                                  &vwf->wf_mark, &vwf->wf_metr,
+                                  global->marks.model);
+
+      g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), global);
+      g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_SIDESCAN));
+
+      hyscan_gtk_waterfall_state_sidescan (HYSCAN_GTK_WATERFALL_STATE (vwf->wf),
+                                           HYSCAN_SOURCE_SIDE_SCAN_PORT_LOW, HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_LOW);
+      hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), global->ship_speed);
+      hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
+      hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
+      hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
+
+      vwf->common.main = main_widget;
+
+      gtk_widget_show_all (main_widget);
+    }
+
+  else if (/*need_pf*/ panelx == X_PROFILER)
+    { /* ПФ */
+      GtkWidget *main_widget;
+      VisualWF *vwf = g_new0 (VisualWF, 1);
+
+      // panel->name_ru = g_strdup ("Профилограф");
+      panel->name = g_strdup ("Profiler");
+      panel->name_local = g_strdup (_("Profiler"));
+      panel->short_name = g_strdup ("PF");
+      panel->type = FNN_PANEL_PROFILER;
+
+      panel->sources = g_new0 (HyScanSourceType, 3);
+      panel->sources[0] = HYSCAN_SOURCE_PROFILER;
+      panel->sources[1] = HYSCAN_SOURCE_PROFILER_ECHO;
+      panel->sources[2] = HYSCAN_SOURCE_INVALID;
+
+      panel->vis_gui = (VisualCommon*)vwf;
+
+      vwf->colormaps = fnn_make_color_maps (TRUE);
+
+      vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global->cache));
+      gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
+
+      main_widget = make_overlay (vwf->wf,
+                                  &vwf->wf_grid, &vwf->wf_ctrl,
+                                  &vwf->wf_mark, &vwf->wf_metr,
+                                  global->marks.model);
+
+      hyscan_gtk_waterfall_grid_set_condence (vwf->wf_grid, 10.0);
+      hyscan_gtk_waterfall_grid_set_grid_color (vwf->wf_grid, hyscan_tile_color_converter_c2i (32, 32, 32, 255));
+
+      g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), global);
+      g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_PROFILER));
+
+      hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), PROFILER);
+      hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), global->ship_speed / 10);
+      hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
+      hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
+      hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
+
+      vwf->common.main = main_widget;
+
+      gtk_widget_show_all (main_widget);
+    }
+
+  else if (/*need_es*/ panelx == X_ECHOSOUND)
+    { /* Эхолот */
+      GtkWidget *main_widget;
+      VisualWF *vwf = g_new0 (VisualWF, 1);
+
+      // panel->name_ru = g_strdup ("Эхолот");
+      panel->name = g_strdup ("Echosounder");
+      panel->name_local = g_strdup (_("Echosounder"));
+      panel->short_name = g_strdup ("ES");
+      panel->type = FNN_PANEL_ECHO;
+
+      panel->sources = g_new0 (HyScanSourceType, 2);
+      panel->sources[0] = HYSCAN_SOURCE_ECHOSOUNDER;
+      panel->sources[1] = HYSCAN_SOURCE_INVALID;
+
+      panel->vis_gui = (VisualCommon*)vwf;
+
+      vwf->colormaps = fnn_make_color_maps (FALSE);
+
+      vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global->cache));
+      gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
+
+      main_widget = make_overlay (vwf->wf,
+                                  &vwf->wf_grid, &vwf->wf_ctrl,
+                                  &vwf->wf_mark, &vwf->wf_metr,
+                                  global->marks.model);
+
+      g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), global);
+      g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_ECHOSOUND));
+
+      hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ECHOSOUNDER);
+      hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), global->ship_speed);
+      hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
+      hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
+      hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
+
+      vwf->common.main = main_widget;
+
+      gtk_widget_show_all (main_widget);
+    }
+
+  else if (/*need_fl*/ panelx == X_FORWARDL)
+    { /* ВСЛ */
+      GtkBuilder *fl_ui = gtk_builder_new ();
+      gtk_builder_set_translation_domain (fl_ui, GETTEXT_PACKAGE);
+      gtk_builder_add_from_resource (fl_ui, "/org/libhyscanfnn/gtk/hyscan-fnn-fl.ui", NULL);
+
+      VisualFL *vfl = g_new0 (VisualFL, 1);
+
+      // panel->name_ru = g_strdup ("Курсовой");
+      panel->name = g_strdup ("ForwardLook");
+      panel->name_local = g_strdup (_("ForwardLook"));
+      panel->short_name = g_strdup ("FL");
+      panel->type = FNN_PANEL_FORWARDLOOK;
+
+      panel->sources = g_new0 (HyScanSourceType, 2);
+      panel->sources[0] = HYSCAN_SOURCE_FORWARD_LOOK;
+      panel->sources[1] = HYSCAN_SOURCE_INVALID;
+
+      panel->vis_gui = (VisualCommon*)vfl;
+
+      vfl->fl = HYSCAN_GTK_FORWARD_LOOK (hyscan_gtk_forward_look_new ());
+      gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vfl->fl), TRUE);
+
+      vfl->player = hyscan_gtk_forward_look_get_player (vfl->fl);
+      vfl->coords = hyscan_fl_coords_new (vfl->fl, global->cache);
+
+      /* Управление воспроизведением FL. */
+      vfl->play_control = GTK_WIDGET (g_object_ref (gtk_builder_get_object (fl_ui, "fl_play_control")));
+      vfl->position = GTK_SCALE (g_object_ref (gtk_builder_get_object (fl_ui, "position")));
+      vfl->coords_label = GTK_LABEL (g_object_ref (gtk_builder_get_object (fl_ui, "fl_latlong")));
+
+      g_signal_connect (vfl->coords, "coords", G_CALLBACK (fl_coords_callback), vfl->coords_label);
+      gtk_builder_connect_signals (fl_ui, global);
+
+      vfl->position_range = hyscan_gtk_forward_look_get_adjustment (vfl->fl);
+      gtk_range_set_adjustment (GTK_RANGE (vfl->position), vfl->position_range);
+
+      hyscan_forward_look_player_set_sv (vfl->player, global->sound_velocity);
+
+      vfl->common.main = GTK_WIDGET (vfl->fl);
+
+      g_object_unref(fl_ui);
+
+      gtk_widget_show_all (GTK_WIDGET (vfl->fl));
+      gtk_widget_show_all (GTK_WIDGET (vfl->play_control));
+    }
+  else
+    {
+      g_warning ("Not implemented %i", __LINE__);
+      return TRUE;
+    }
+
+  g_hash_table_insert (global->panels, GINT_TO_POINTER (panelx), panel);
+  g_array_free (svp, TRUE);
+
+  /* Пакуем её в гуй. */
+  if (!global->ui.pack (panel, panelx))
+    return;
+
+  /* Преднастройки. */
+  if (global->settings != NULL)
+    {
+      panel->current.distance =    keyfile_double_read_helper (global->settings, panel->name, "sonar.cur_distance", 50);
+      panel->current.signal =      keyfile_double_read_helper (global->settings, panel->name, "sonar.cur_signal", 0);
+      panel->current.gain0 =       keyfile_double_read_helper (global->settings, panel->name, "sonar.cur_gain0", 0);
+      panel->current.gain_step =   keyfile_double_read_helper (global->settings, panel->name, "sonar.cur_gain_step", 10);
+      panel->current.level =       keyfile_double_read_helper (global->settings, panel->name, "sonar.cur_level", 0.5);
+      panel->current.sensitivity = keyfile_double_read_helper (global->settings, panel->name, "sonar.cur_sensitivity", 0.6);
+
+      panel->vis_current.brightness =  keyfile_double_read_helper (global->settings, panel->name, "cur_brightness",   80.0);
+      panel->vis_current.colormap =    keyfile_double_read_helper (global->settings, panel->name, "cur_color_map",    0);
+      panel->vis_current.black =       keyfile_double_read_helper (global->settings, panel->name, "cur_black",        0);
+      panel->vis_current.sensitivity = keyfile_double_read_helper (global->settings, panel->name, "cur_sensitivity",  8.0);
+
+      if (panel->type == FNN_PANEL_WATERFALL ||
+          panel->type == FNN_PANEL_ECHO ||
+          panel->type == FNN_PANEL_PROFILER)
+        {
+          color_map_set (global, panel->vis_current.colormap, panelx);
+        }
+      else if (panel->type == FNN_PANEL_FORWARDLOOK)
+        {
+          sensitivity_set (global, panel->vis_current.sensitivity, panelx);
+        }
+
+      brightness_set (global, panel->vis_current.brightness, panel->vis_current.black, panelx);
+      scale_set (global, FALSE, panelx);
+
+      /* Если нет локатора, нечего и задавать. */
+      // if (global->control != NULL)
+      if (panel_sources_are_in_sonar (global, panel))
+        {
+          /* Для локаторов мы ничего не задаем, но лейблы всёрно надо проинициализировать. */
+          distance_label (panel, panel->current.distance);
+          tvg_label (panel, panel->current.gain0, panel->current.gain_step);
+          auto_tvg_label (panel, panel->current.level, panel->current.sensitivity);
+
+          /* С сигналом чуть сложней, т.к. надо найти сигнал и вытащить из него имя. */
+          {
+            const HyScanDataSchemaEnumValue * signal;
+            signal = signal_finder (global, panel, *panel->sources, panel->current.signal);
+            if (signal == NULL)
+              {
+                panel->current.signal = 0;
+                signal = signal_finder (global, panel, *panel->sources, panel->current.signal);
+              }
+            if (signal != NULL)
+              signal_label (panel, signal->name);
+          }
+        }
+    }
+
+  return TRUE;
+}
+
+void
 fnn_panel_destroy (gpointer data)
 {
   FnnPanel *panel = data;
@@ -458,8 +783,9 @@ projects_changed (HyScanDBInfo *db_info,
   GHashTable *projects = hyscan_db_info_get_projects (db_info);
 
   /* Если рабочий проект есть в списке, мониторим его. */
-  if (g_hash_table_lookup (projects, global->project_name))
-    hyscan_db_info_set_project (db_info, global->project_name);
+  if (global->project_name != NULL)
+    if (g_hash_table_lookup (projects, global->project_name))
+      hyscan_db_info_set_project (db_info, global->project_name);
 
   g_hash_table_unref (projects);
 }
@@ -588,6 +914,8 @@ tracks_changed (HyScanDBInfo *db_info,
           GtkTreePath *tree_path = gtk_tree_model_get_path (global->gui.track.list, &tree_iter);
           gtk_tree_view_set_cursor (global->gui.track.tree, tree_path, NULL, FALSE);
           gtk_tree_path_free (tree_path);
+
+          update_panels (global, track_info);
         }
 
       g_free (time_str);
@@ -1158,7 +1486,6 @@ track_changed (GtkTreeView *list,
   gpointer k, v;
   gboolean on_air;
 
-
   /* Определяем название нового галса. */
   gtk_tree_view_get_cursor (list, &path, NULL);
   if (path == NULL)
@@ -1173,6 +1500,13 @@ track_changed (GtkTreeView *list,
   gtk_tree_model_get_value (global->gui.track.list, &iter, TRACK_COLUMN, &value);
   track_name = g_value_get_string (&value);
   global->track_name = g_strdup (track_name);
+
+  {
+    GHashTable *tracks = hyscan_db_info_get_tracks (global->db_info);
+    HyScanTrackInfo *info = g_hash_table_lookup(tracks, track_name);
+    update_panels (global, info);
+    g_hash_table_unref (tracks);
+  }
 
   /* Выясняем, ведется ли в него запись. */
   on_air = track_is_active (global->db_info, track_name);
@@ -1607,7 +1941,7 @@ gen_disable (Global   *global,
       gboolean status;
       HyScanSourceType source = *iter;
 
-      g_message ("  disabling generator for %s", hyscan_source_get_id_by_type (source));
+      source_informer ("  disabling generator", source);
       status = hyscan_sonar_generator_disable (global->control_s, source);
 
       if (!status)
@@ -1655,10 +1989,10 @@ signal_set (Global *global,
       gboolean status;
       HyScanSourceType source = *iter;
 
-      g_message ("  setting signal for %s", hyscan_source_get_id_by_type (source));
+      source_informer ("  setting signal", source);
       if (source == HYSCAN_SOURCE_PROFILER_ECHO)
         {
-          g_message ("  skipping %s", hyscan_source_get_id_by_type (source));
+          source_informer ("  skipping", source);
           continue;
         }
 
@@ -1779,7 +2113,7 @@ tvg_set (Global  *global,
           continue;
         }
 
-      g_message ("  setting TVG for %s", hyscan_source_get_id_by_type (source));
+      source_informer ("  setting TVG", source);
 
       /* Проверяем gain0. */
       info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (source));
@@ -1909,7 +2243,7 @@ auto_tvg_set (Global   *global,
 
   for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
     {
-      g_message ("  setting auto-tvg for %s", hyscan_source_get_id_by_type (*iter));
+      source_informer ("  setting auto-tvg", *iter);
       status = hyscan_sonar_tvg_set_auto (global->control_s, *iter, level, sensitivity);
       if (!status)
         {
@@ -2032,7 +2366,7 @@ distance_set (Global  *global,
     {
       HyScanSonarInfoSource *info;
 
-      g_message ("  setting distance for %s", hyscan_source_get_id_by_type (*iter));
+      source_informer ("  setting distance", *iter);
       info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (*iter));
       hyscan_return_val_if_fail (info != NULL, FALSE);
 
@@ -2606,6 +2940,10 @@ start_stop (Global    *global,
           FnnPanel *panel = v;
           gint panelx = GPOINTER_TO_INT (k);
 
+          /* Не настраиваем те панели, которых нет в ГЛ. */
+          if (!panel_sources_are_in_sonar (global, panel))
+            continue;
+
           /* Излучение НЕ в режиме сух. пов. */
           if (global->dry)
             status &= gen_disable (global, panelx);
@@ -2801,6 +3139,7 @@ make_overlay (HyScanGtkWaterfall          *wf,
   return GTK_WIDGET (container);
 }
 
+
 void
 fnn_colormap_free (gpointer data)
 {
@@ -2814,14 +3153,167 @@ fnn_colormap_free (gpointer data)
   g_free (cmap);
 }
 
+GArray *
+fnn_make_color_maps (gboolean profiler)
+{
+  guint32 kolors[2];
+  GArray * colormaps;
+  FnnColormap *new_map;
+  #include "colormaps.h"
+
+  colormaps = g_array_new (FALSE, TRUE, sizeof (FnnColormap*));
+  g_array_set_clear_func (colormaps, fnn_colormap_free);
+
+  if (profiler)
+    {
+      new_map = g_new (FnnColormap, 1);
+      new_map->name = g_strdup (_("Profiler"));
+      new_map->colors = hyscan_tile_color_compose_colormap_pf (&new_map->len);
+      new_map->bg = WHITE_BG;
+      g_array_append_vals (colormaps, &new_map, 1);
+
+      return colormaps;
+    }
+
+  new_map = g_new (FnnColormap, 1);
+  new_map->name = g_strdup (_("Yellow"));
+  kolors[0] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
+  kolors[1] = hyscan_tile_color_converter_d2i (1.0, 1.0, 0.0, 1.0);
+  new_map->colors = hyscan_tile_color_compose_colormap (kolors, 2, &new_map->len);
+  new_map->bg = BLACK_BG;
+  g_array_append_vals (colormaps, &new_map, 1);
+
+  new_map = g_new (FnnColormap, 1);
+  new_map->name = g_strdup (_("90's"));
+  new_map->colors = g_memdup (orange, 256 * sizeof (guint32));
+  new_map->len = 256;
+  new_map->bg = BLACK_BG;
+  g_array_append_vals (colormaps, &new_map, 1);
+
+  new_map = g_new (FnnColormap, 1);
+  new_map->name = g_strdup (_("Sepia"));
+  new_map->colors = g_memdup (sepia, 256 * sizeof (guint32));
+  new_map->len = 256;
+  new_map->bg = BLACK_BG;
+  g_array_append_vals (colormaps, &new_map, 1);
+
+  new_map = g_new (FnnColormap, 1);
+  new_map->name = g_strdup (_("White"));
+  kolors[0] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
+  kolors[1] = hyscan_tile_color_converter_d2i (1.0, 1.0, 1.0, 1.0);
+  new_map->colors = hyscan_tile_color_compose_colormap (kolors, 2, &new_map->len);
+  new_map->bg = BLACK_BG;
+  g_array_append_vals (colormaps, &new_map, 1);
+
+  new_map = g_new (FnnColormap, 1);
+  new_map->name = g_strdup (_("Inverted"));
+  kolors[0] = hyscan_tile_color_converter_d2i (1.0, 1.0, 1.0, 1.0);
+  kolors[1] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
+  new_map->colors = hyscan_tile_color_compose_colormap (kolors, 2, &new_map->len);
+  new_map->bg = BLACK_BG;
+  g_array_append_vals (colormaps, &new_map, 1);new_map = g_new (FnnColormap, 1);
+
+  new_map = g_new (FnnColormap, 1);
+  new_map->name = g_strdup (_("Green"));
+  kolors[0] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
+  kolors[1] = hyscan_tile_color_converter_d2i (0.2, 1.0, 0.2, 1.0);
+  new_map->colors = hyscan_tile_color_compose_colormap (kolors, 2, &new_map->len);
+  new_map->bg = BLACK_BG;
+  g_array_append_vals (colormaps, &new_map, 1);
+
+  return colormaps;
+}
+
 void
-init_triple (Global *ext_global)
+update_panels (Global          *global,
+               HyScanTrackInfo *track_info)
+{
+  guint i;
+  struct SrcToPan
+  {
+    HyScanSourceType source;
+    gint             panelx;
+  } src_to_pan[] =
+  {
+    {HYSCAN_SOURCE_SIDE_SCAN_STARBOARD,      X_SIDESCAN},
+    {HYSCAN_SOURCE_SIDE_SCAN_PORT,           X_SIDESCAN},
+    {HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_LOW,  X_SIDE_LOW},
+    {HYSCAN_SOURCE_SIDE_SCAN_PORT_LOW,       X_SIDE_LOW},
+    {HYSCAN_SOURCE_PROFILER,                 X_PROFILER},
+    {HYSCAN_SOURCE_PROFILER_ECHO,            X_PROFILER},
+    {HYSCAN_SOURCE_ECHOSOUNDER,              X_ECHOSOUND},
+    {HYSCAN_SOURCE_FORWARD_LOOK,             X_FORWARDL},
+  };
+
+  for (i = 0; i < G_N_ELEMENTS(src_to_pan); ++i)
+    {
+      struct SrcToPan s2p = src_to_pan[i];
+
+      /* ХайСканСорсТайп есть либо в галсе, либо в ГЛ.
+       * Либо его нет, но тогда и показывать нечего. */
+      if (track_info->sources[s2p.source])
+        fnn_ensure_panel(s2p.panelx, global);
+      else if (global->control != NULL && g_hash_table_lookup (global->infos, GINT_TO_POINTER (s2p.source)))
+        fnn_ensure_panel(s2p.panelx, global);
+    }
+
+  global->ui.adjust_visibility(track_info);
+}
+
+gboolean
+panel_sources_are_in_sonar (Global   *global,
+                            FnnPanel *panel)
+{
+  HyScanSourceType *i;
+
+  if (global->infos == NULL)
+    return FALSE;
+
+  /* Если в ГЛ нет хотя бы одного источника, который есть на панели,
+   * считаем, что всё пропало. */
+  for (i = panel->sources; *i != HYSCAN_SOURCE_INVALID; ++i)
+    {
+      if (!g_hash_table_contains (global->infos, GINT_TO_POINTER(*i)))
+        return FALSE;
+    }
+
+  return TRUE;
+}
+
+void
+fnn_init (Global *ext_global)
 {
   tglobal = ext_global;
 }
 
 void
-deinit_triple (Global *ext_global)
+fnn_deinit (Global *ext_global)
 {
+  GKeyFile *settings = ext_global->settings;
+
+  if (settings != NULL)
+    {
+      GHashTableIter iter;
+      gpointer k, v;
+      g_hash_table_iter_init (&iter, ext_global->panels);
+      while (g_hash_table_iter_next (&iter, &k, &v))
+        {
+          FnnPanel *panel = v;
+          keyfile_double_write_helper (settings, panel->name, "sonar.cur_distance", panel->current.distance);
+          keyfile_double_write_helper (settings, panel->name, "sonar.cur_signal", panel->current.signal);
+          keyfile_double_write_helper (settings, panel->name, "sonar.cur_gain0", panel->current.gain0);
+          keyfile_double_write_helper (settings, panel->name, "sonar.cur_gain_step", panel->current.gain_step);
+          keyfile_double_write_helper (settings, panel->name, "sonar.cur_level", panel->current.level);
+          keyfile_double_write_helper (settings, panel->name, "sonar.cur_sensitivity", panel->current.sensitivity);
+
+          keyfile_double_write_helper (settings, panel->name, "cur_brightness",          panel->vis_current.brightness);
+          keyfile_double_write_helper (settings, panel->name, "cur_color_map",           panel->vis_current.colormap);
+          keyfile_double_write_helper (settings, panel->name, "cur_black",               panel->vis_current.black);
+          keyfile_double_write_helper (settings, panel->name, "cur_sensitivity",         panel->vis_current.sensitivity);
+        }
+
+      keyfile_string_write_helper (settings, "common", "project", ext_global->project_name);
+    }
+
   tglobal = NULL;
 }

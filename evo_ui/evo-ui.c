@@ -8,6 +8,8 @@
 #define GETTEXT_PACKAGE "libhyscanfnn-evoui"
 #include <glib/gi18n-lib.h>
 
+#define EVO_EMPTY_PAGE "empty_page"
+
 EvoUI global_ui = {0,};
 Global *_global = NULL;
 
@@ -346,8 +348,9 @@ make_page_for_panel (EvoUI     *ui,
       g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_metr);
       g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
 
-      if (global->control_s == NULL)
-          break;
+      if (!panel_sources_are_in_sonar (global, panel))
+      // if (global->control_s == NULL)
+        break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
       tvg = get_widget_from_builder (b, "auto_tvg_control");
@@ -375,8 +378,9 @@ make_page_for_panel (EvoUI     *ui,
       g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_metr);
       g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
 
-      if (global->control_s == NULL)
-          break;
+      // if (global->control_s == NULL)
+      if (!panel_sources_are_in_sonar (global, panel))
+        break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
       tvg = get_widget_from_builder (b, "lin_tvg_control");
@@ -405,8 +409,9 @@ make_page_for_panel (EvoUI     *ui,
       g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_metr);
       g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
 
-      if (global->control_s == NULL)
-          break;
+      // if (global->control_s == NULL)
+      if (!panel_sources_are_in_sonar (global, panel))
+        break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
       tvg = get_widget_from_builder (b, "lin_tvg_control");
@@ -424,8 +429,9 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->scale_value       = get_label_from_builder (b, "fl_scale_value");
       panel->vis_gui->sensitivity_value = get_label_from_builder (b, "fl_sensitivity_value");
 
-      if (global->control_s == NULL)
-          break;
+      // if (global->control_s == NULL)
+      if (!panel_sources_are_in_sonar (global, panel))
+        break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
       tvg = get_widget_from_builder (b, "lin_tvg_control");
@@ -496,34 +502,14 @@ build_interface (Global *global)
 
   /* На данный момент все контейнеры готовы. Можно наполнять их. */
 
-  /* Начнем с центра, добавим все отображаемые виджеты. */
+  hyscan_gtk_area_set_central (HYSCAN_GTK_AREA (ui->area), ui->acoustic_stack);
+
+  /* EVO_EMPTY_PAGE для ui->acoustic_stack*/
   {
-    #define N_PANELS 5
-    gint order[N_PANELS]  = {X_SIDE_LOW, X_SIDESCAN, X_ECHOSOUND, X_PROFILER, X_FORWARDL};
-    gint i, n;
-
-    /* Проверяем размеры моего могучего списка панелей. */
-    n = g_hash_table_size (global->panels);
-    if (n > 5)
-      g_warning ("Discovered %i panels. Please, check.", n);
-
-    for (i = 0; i < N_PANELS; ++i)
-      {
-        GtkWidget *w;
-        FnnPanel *panel = get_panel_quiet (global, order[i]);
-        if (panel == NULL)
-          continue;
-
-        w = panel->vis_gui->main;
-
-        g_object_set (w, "vexpand", TRUE, "valign", GTK_ALIGN_FILL,
-                         "hexpand", TRUE, "halign", GTK_ALIGN_FILL, NULL);
-
-        gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), w, panel->name, panel->name_local);
-      }
-
-    hyscan_gtk_area_set_central (HYSCAN_GTK_AREA (ui->area), ui->acoustic_stack);
+    GtkWidget *label = gtk_label_new(_("Please select track"));
+    gtk_stack_add_named (GTK_STACK (ui->acoustic_stack), label, EVO_EMPTY_PAGE);
   }
+
 
   /* Stack switcher */
   {
@@ -581,39 +567,31 @@ build_interface (Global *global)
     hyscan_gtk_area_set_left (HYSCAN_GTK_AREA (ui->area), lbox);
   }
 
-  /* Нижняя панель содержит виджет управления впередсмотрящим. */
-  {
-    FnnPanel *panel = get_panel_quiet (global, X_FORWARDL);
-
-    if (panel != NULL)
-      {
-        VisualFL *fl = (VisualFL*)panel->vis_gui;
-        hyscan_gtk_area_set_bottom (HYSCAN_GTK_AREA (ui->area), fl->play_control);
-      }
-  }
-
-
   /* Правая панель -- бокс с упр. записью и упр. локаторами. */
   /* Кстати, мои личные виджеты используются только в этом месте.  */
   ui->balance_table = g_hash_table_new (g_direct_hash, g_direct_equal);
   {
     GtkWidget * record;
-    GHashTableIter iter;
-    FnnPanel *panel;
-    gpointer k;
+    // GHashTableIter iter;
+    // FnnPanel *panel;
+    // gpointer k;
 
     gtk_widget_set_margin_start (rbox, 6);
     gtk_widget_set_margin_top (rbox, 0);
     gtk_widget_set_margin_bottom (rbox, 0);
 
-    g_hash_table_iter_init (&iter, global->panels);
-    while (g_hash_table_iter_next (&iter, &k, (gpointer*)&panel))
+    // g_hash_table_iter_init (&iter, global->panels);
+    // while (g_hash_table_iter_next (&iter, &k, (gpointer*)&panel))
       {
-        GtkWidget *packable;
+        // GtkWidget *packable;
 
-        packable = make_page_for_panel (ui, panel, GPOINTER_TO_INT (k), global);
-        gtk_stack_add_titled (GTK_STACK (ui->control_stack), packable, panel->name, panel->name_local);
+        // packable = make_page_for_panel (ui, panel, GPOINTER_TO_INT (k), global);
+        // gtk_stack_add_titled (GTK_STACK (ui->control_stack), packable, panel->name, panel->name_local);
       }
+    {
+      GtkWidget *label = gtk_label_new(_("x"));
+      gtk_stack_add_named (GTK_STACK (ui->control_stack), label, EVO_EMPTY_PAGE);
+    }
 
     record = make_record_control (global, ui);
 
@@ -666,7 +644,6 @@ build_interface (Global *global)
   gtk_grid_attach (GTK_GRID (ui->grid), ui->area,     0, 1, 2, 1);
 
   return TRUE;
-
 }
 
 G_MODULE_EXPORT void
@@ -688,27 +665,10 @@ kf_config (GKeyFile *kf)
 }
 
 G_MODULE_EXPORT gboolean
-kf_setup (GKeyFile *kf)
+kf_setting (GKeyFile *kf)
 {
   EvoUI *ui = &global_ui;
-  Global *global = _global;
-  GHashTableIter iter;
-  gdouble balance;
-  gpointer k, v;
-
-  g_hash_table_iter_init (&iter, global->panels);
-  while (g_hash_table_iter_next (&iter, &k, &v)) /* panelx, fnnpanel */
-    {
-      FnnPanel *panel = v;
-      GtkAdjustment *adj;
-
-      if (panel->type != FNN_PANEL_WATERFALL)
-        continue;
-
-      balance = keyfile_double_read_helper (kf, panel->name, "evo.balance", 0.0);
-      adj = g_hash_table_lookup (ui->balance_table, k);
-      gtk_adjustment_set_value (adj, balance);
-    }
+  ui->settings = g_key_file_ref (kf);
 
   return TRUE;
 }
@@ -733,8 +693,165 @@ kf_desetup (GKeyFile *kf)
 
       adj = g_hash_table_lookup (ui->balance_table, k);
       balance = gtk_adjustment_get_value (adj);
-      keyfile_double_write_helper (kf, panel->name, "evo.balance", balance);
+      keyfile_double_write_helper (ui->settings, panel->name, "evo.balance", balance);
+    }
+
+  g_key_file_unref (ui->settings);
+  return TRUE;
+}
+
+void
+panel_show (gint     panelx,
+                  gboolean show)
+{
+  gboolean show_in_stack;
+  GtkWidget *w;
+  FnnPanel *panel = get_panel_quiet (_global, panelx);
+
+  if (panel == NULL)
+    {
+      if (show)
+        g_warning ("EvoUI: %i %i", __LINE__, panelx);
+      return;
+    }
+
+  show_in_stack = (0 == g_strcmp0 (panel->name, global_ui.restoreable));
+
+  w = gtk_stack_get_child_by_name (GTK_STACK (global_ui.acoustic_stack), panel->name);
+  gtk_widget_set_visible (w, show);
+  if (show_in_stack)
+    gtk_stack_set_visible_child (GTK_STACK (global_ui.acoustic_stack), w);
+
+  w = gtk_stack_get_child_by_name (GTK_STACK (global_ui.control_stack), panel->name);
+  if (w != NULL)
+    {
+      gtk_widget_set_visible (w, show);
+        if (show_in_stack)
+      gtk_stack_set_visible_child (GTK_STACK (global_ui.control_stack), w);
+    }
+}
+
+void
+panel_empty (gboolean show)
+{
+  GtkWidget *w;
+
+  w = gtk_stack_get_child_by_name (GTK_STACK (global_ui.acoustic_stack), EVO_EMPTY_PAGE);
+  gtk_widget_set_visible (w, show);
+  gtk_stack_set_visible_child (GTK_STACK (global_ui.acoustic_stack), w);
+
+  w = gtk_stack_get_child_by_name (GTK_STACK (global_ui.control_stack), EVO_EMPTY_PAGE);
+  gtk_widget_set_visible (w, show);
+  gtk_stack_set_visible_child (GTK_STACK (global_ui.control_stack), w);
+}
+
+G_MODULE_EXPORT gboolean
+panel_pack (FnnPanel *panel,
+            gint      panelx)
+{
+  EvoUI *ui = &global_ui;
+  Global *global = _global;
+  GtkWidget *control;
+  GtkWidget *visual;
+
+  visual = panel->vis_gui->main;
+  g_object_set (visual, "vexpand", TRUE, "valign", GTK_ALIGN_FILL,
+                        "hexpand", TRUE, "halign", GTK_ALIGN_FILL, NULL);
+
+  control = make_page_for_panel (ui, panel, GPOINTER_TO_INT (panelx), global);
+
+  gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), visual, panel->name, panel->name_local);
+  gtk_stack_add_titled (GTK_STACK (ui->control_stack), control, panel->name, panel->name_local);
+
+  /* Нижняя панель содержит виджет управления впередсмотрящим. */
+  if (panelx == X_FORWARDL)
+  {
+    VisualFL *fl = (VisualFL*)panel->vis_gui;
+    hyscan_gtk_area_set_bottom (HYSCAN_GTK_AREA (ui->area), fl->play_control);
+    gtk_widget_show_all(ui->area);
+  }
+
+  if (panel->type == FNN_PANEL_WATERFALL)
+    {
+      GtkAdjustment *adj;
+      gdouble balance;
+
+      balance = keyfile_double_read_helper (ui->settings, panel->name, "evo.balance", 0.0);
+      adj = g_hash_table_lookup (ui->balance_table, GINT_TO_POINTER (panelx));
+      gtk_adjustment_set_value (adj, balance);
     }
 
   return TRUE;
+}
+
+G_MODULE_EXPORT void
+panel_adjust_visibility (HyScanTrackInfo *track_info)
+{
+  gboolean sidescan_v = FALSE;
+  gboolean side_low_v = FALSE;
+  gboolean profiler_v = FALSE;
+  gboolean echosound_v = FALSE;
+  gboolean forwardl_v = FALSE;
+  gboolean nothing_visible = FALSE;
+  guint i;
+
+  const gchar *vchild = gtk_stack_get_visible_child_name (GTK_STACK (global_ui.acoustic_stack));
+  if (0 != g_strcmp0 (vchild, EVO_EMPTY_PAGE))
+    {
+      global_ui.restoreable = vchild;
+    }
+
+  for (i = 0; i < HYSCAN_SOURCE_LAST; ++i)
+    {
+      gboolean in_track_info = track_info != NULL && track_info->sources[i];
+      gboolean in_sonar = _global->control != NULL && g_hash_table_lookup (_global->infos, GINT_TO_POINTER (i));
+
+      if (!in_track_info && !in_sonar)
+        continue;
+
+      switch (i)
+      {
+        case HYSCAN_SOURCE_SIDE_SCAN_STARBOARD:      sidescan_v = TRUE; break;
+        case HYSCAN_SOURCE_SIDE_SCAN_PORT:           sidescan_v = TRUE; break;
+        case HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_LOW:  side_low_v = TRUE; break;
+        case HYSCAN_SOURCE_SIDE_SCAN_PORT_LOW:       side_low_v = TRUE; break;
+        case HYSCAN_SOURCE_PROFILER:                 profiler_v = TRUE; break;
+        case HYSCAN_SOURCE_PROFILER_ECHO:            profiler_v = TRUE; break;
+        case HYSCAN_SOURCE_ECHOSOUNDER:              echosound_v = TRUE; break;
+        case HYSCAN_SOURCE_FORWARD_LOOK:             forwardl_v = TRUE; break;
+      }
+    }
+
+  nothing_visible = ! (sidescan_v || side_low_v || profiler_v || echosound_v || forwardl_v);
+
+  /* показываем пустую страничку. */
+  if (nothing_visible)
+    panel_empty (TRUE);
+
+  /* Показываем активированные страницы. */
+  if (sidescan_v)
+    panel_show (X_SIDESCAN, TRUE);
+  if (side_low_v)
+    panel_show (X_SIDE_LOW, TRUE);
+  if (profiler_v)
+    panel_show (X_PROFILER, TRUE);
+  if (echosound_v)
+    panel_show (X_ECHOSOUND, TRUE);
+  if (forwardl_v)
+    panel_show (X_FORWARDL, TRUE);
+
+  /* Прячем неактивированные страницы. */
+  if (!sidescan_v)
+    panel_show (X_SIDESCAN, FALSE);
+  if (!side_low_v)
+    panel_show (X_SIDE_LOW, FALSE);
+  if (!profiler_v)
+    panel_show (X_PROFILER, FALSE);
+  if (!echosound_v)
+    panel_show (X_ECHOSOUND, FALSE);
+  if (!forwardl_v)
+    panel_show (X_FORWARDL, FALSE);
+
+  if (!nothing_visible)
+    panel_empty (FALSE);
 }

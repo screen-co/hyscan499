@@ -24,6 +24,10 @@ typedef struct
   GtkWidget  *more;
 
   GHashTable *balance_table; /* GtkAdjustment* */
+
+  const gchar *restoreable;
+
+  GKeyFile   *settings;
 } EvoUI;
 
 /* Врапперы. */
@@ -38,11 +42,15 @@ G_MODULE_EXPORT gboolean    build_interface (Global *global);
 G_MODULE_EXPORT void        destroy_interface (void);
 
 G_MODULE_EXPORT gboolean    kf_config    (GKeyFile *kf);
-G_MODULE_EXPORT gboolean    kf_setup     (GKeyFile *kf);
+G_MODULE_EXPORT gboolean    kf_seting    (GKeyFile *kf);
 G_MODULE_EXPORT gboolean    kf_desetup   (GKeyFile *kf);
 
-void        switch_page (GObject     *emitter,
-                         const gchar *page);
+G_MODULE_EXPORT gboolean    panel_pack        (FnnPanel *panel,
+                                               gint      panelx);
+
+G_MODULE_EXPORT void        panel_adjust_visibility (HyScanTrackInfo *track_info);
+// void        switch_page (GObject     *emitter,
+                         // const gchar *page);
 
 
 #endif /* __EVO_UI_H__ */

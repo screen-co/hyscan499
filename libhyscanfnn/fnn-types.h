@@ -60,6 +60,10 @@ enum
   X_SIDE_LOW = 568351,
 };
 
+typedef struct FnnPanel _FnnPanel;
+
+typedef gboolean (*ui_pack_fn) (_FnnPanel *, gint);
+typedef void (*ui_adjust_visibility_fn) (HyScanTrackInfo *);
 
 /* структура: локейшн + прожекторы */
 typedef struct
@@ -196,60 +200,63 @@ typedef struct
 typedef struct _Global Global;
 struct _Global
 {
-  HyScanDB                            *db;
-  HyScanDBInfo                        *db_info;
+  HyScanDB               *db;
+  HyScanDBInfo           *db_info;
 
-  gchar                               *project_name;
-  gchar                               *track_name;
+  gchar                  *project_name;
+  gchar                  *track_name;
 
-  gboolean                             dry;
+  gboolean                dry;
 
-  HyScanCache                         *cache;
+  HyScanCache            *cache;
 
-  gboolean                             full_screen;
-  gdouble                              sound_velocity;
+  gboolean                full_screen;
+  gdouble                 sound_velocity;
+  gdouble                 ship_speed;
 
-  gint                                 view_selector;
+  gint                    view_selector;
 
-  HyScanControl                       *control;
-  HyScanSonar                         *control_s;
-  gboolean                             on_air;
-  gint64                               last_click_time;
-  gboolean                             synced;
+  HyScanControl          *control;
+  HyScanSonar            *control_s;
+  gboolean                on_air;
+  gint64                  last_click_time;
+  gboolean                synced;
 
-  GHashTable                          *panels; /* FnnPanel, panelx as key */
-  GHashTable                          *infos; /* HyScanSonarInfoSource */
+  GKeyFile               *settings;
+
+  GHashTable             *panels; /* {panelx : FnnPanel} */
+  GHashTable             *infos; /* {HyScanSourceType : HyScanSonarInfoSource} */
 
   struct
     {
-      HyScanMarkModel *model; /* модель */
-      HyScanMarkSync  *sync;  /* синхронизация */
+      HyScanMarkModel    *model; /* модель */
+      HyScanMarkSync     *sync;  /* синхронизация */
 
-      GHashTable      *loc_storage;  /* хранилище локейшенов и проекторов */
+      GHashTable         *loc_storage;  /* хранилище локейшенов и проекторов */
 
-      GHashTable      *current;  /* старый список*/
-      GHashTable      *previous; /* новый список */
+      GHashTable         *current;  /* старый список*/
+      GHashTable         *previous; /* новый список */
 
-      guint            request_update_tag;
+      guint               request_update_tag;
     } marks;
 
   struct
     {
-      GtkWidget                           *window; // окно
-      GtkWidget                           *grid;
+      GtkWidget          *window; // окно
+      GtkWidget          *grid;
 
       struct
         {
-          GtkWidget                           *view;   // виджет целиком
-          GtkTreeView                         *tree;   // tree view
-          GtkTreeModel                        *list;   // list store
-          GtkAdjustment                       *scroll; // прокрутка
+          GtkWidget      *view;   // виджет целиком
+          GtkTreeView    *tree;   // tree view
+          GtkTreeModel   *list;   // list store
+          GtkAdjustment  *scroll; // прокрутка
         } track;
 
-      GtkWidget                           *nav;
+      GtkWidget          *nav;
 
-      GtkWidget                           *mark_view;
-      GtkWidget                           *meditor;
+      GtkWidget          *mark_view;
+      GtkWidget          *meditor;
     } gui;
 
   struct
@@ -259,10 +266,20 @@ struct _Global
                                 gdouble  black,
                                 gint     selector);
   } override;
+
+  struct 
+  {
+    ui_pack_fn              pack;
+    ui_adjust_visibility_fn adjust_visibility;
+  } ui;
+
+
 }; // Global
 
-HYSCAN_API void
-fnn_colormap_free (gpointer data);
+
+HYSCAN_API gboolean
+fnn_ensure_panel (gint panelx,
+                  Global *global);
 
 HYSCAN_API void
 fnn_panel_destroy (gpointer data);
@@ -673,9 +690,23 @@ make_overlay (HyScanGtkWaterfall          *wf,
               HyScanMarkModel             *mark_model);
 
 HYSCAN_API void
-init_triple (Global *ext_global);
+fnn_colormap_free (gpointer data);
+
+HYSCAN_API GArray *
+fnn_make_color_maps (gboolean profiler);
 
 HYSCAN_API void
-deinit_triple (Global *ext_global);
+update_panels (Global          *global,
+               HyScanTrackInfo *track_info);
+
+HYSCAN_API gboolean
+panel_sources_are_in_sonar (Global   *global,
+                            FnnPanel *panel);
+
+HYSCAN_API void
+fnn_init (Global *ext_global);
+
+HYSCAN_API void
+fnn_deinit (Global *ext_global);
 
 #endif /* __TRIPLE_TYPES_H__ */

@@ -2,44 +2,6 @@
 <!-- Generated with glade 3.18.3 -->
 <interface domain="hyscan-499">
   <requires lib="gtk+" version="3.12"/>
-  <object class="GtkBox" id="fl_play_control">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="valign">center</property>
-    <property name="margin_top">12</property>
-    <property name="hexpand">True</property>
-    <property name="orientation">vertical</property>
-    <child>
-      <object class="GtkScale" id="position">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="valign">center</property>
-        <property name="hexpand">True</property>
-        <property name="show_fill_level">True</property>
-        <property name="round_digits">0</property>
-        <property name="digits">0</property>
-        <property name="value_pos">right</property>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">True</property>
-        <property name="position">0</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="fl_latlong">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-      </object>
-      <packing>
-        <property name="expand">False</property>
-        <property name="fill">True</property>
-        <property name="position">1</property>
-      </packing>
-    </child>
-  </object>
   <object class="GtkListStore" id="track.list">
     <columns>
       <!-- column-name date_sort -->

@@ -296,9 +296,9 @@ widget_swap (GObject  *emitter,
 
   if (!HYSCAN_IS_GTK_FNN_BOX (global_ui.acoustic))
     {
-      g_warning ("fuck");
-
+      g_warning ("HwUI: %i", __LINE__);
     }
+
   if (selector == ALL)
     {
       hyscan_gtk_fnn_box_show_all (abox);
@@ -522,33 +522,6 @@ build_interface (Global *global)
 
   /* На данный момент все контейнеры готовы. Можно наполнять их. */
 
-  /* Начнем с центра, добавим все отображаемые виджеты. */
-  {
-    gint order[3]  = {X_SIDESCAN, X_PROFILER, X_FORWARDL};
-    gint left[3]   = {0, 1, 1};
-    gint top[3]    = {0, 0, 1};
-    gint height[3] = {2, 1, 1};
-    gint i;
-
-    for (i = 0; i < 3; ++i)
-      {
-        GtkWidget *w;
-        FnnPanel *panel = get_panel_quiet (global, order[i]);
-
-        /* Может и не получится найти панель. */
-        if (panel == NULL)
-          continue;
-
-        w = panel->vis_gui->main;
-
-        g_object_set (w, "vexpand", TRUE, "valign", GTK_ALIGN_FILL,
-                         "hexpand", TRUE, "halign", GTK_ALIGN_FILL, NULL);
-
-        hyscan_gtk_fnn_box_pack (HYSCAN_GTK_FNN_BOX (ui->acoustic), w, order[i],
-                                 left[i], top[i], 1, height[i]);
-      }
-  }
-
   /* Левая панель содержит список галсов, меток и редактор меток. */
   {
     GtkWidget * tracks = GTK_WIDGET (global->gui.track.view);
@@ -584,43 +557,9 @@ build_interface (Global *global)
   /* Строим интерфейсос. */
   build_all (ui, global, common_pages);
 
-
-  /* Определяем, страницы у нас вообще есть. */
-  {
-    GHashTableIter iter;
-    gpointer key, value;
-
-    /* Общие ГЛ-виджеты. */
-    if (global->control_s != NULL)
-      build_all (ui, global, any_sonar_pages);
-
-    /* Виджеты по страницам. */
-    g_hash_table_iter_init (&iter, global->panels);
-    while (g_hash_table_iter_next (&iter, &key, &value))
-      {
-        switch (GPOINTER_TO_INT (key))
-          {
-            case X_SIDESCAN:
-              g_message ("SIDESCAN page found");
-              build_all (ui, global, ss_image_pages);
-              if (global->control_s != NULL)
-                build_all (ui, global, ss_pages);
-              break;
-            case X_FORWARDL:
-              g_message ("FORWARDL page found");
-              build_all (ui, global, fl_image_pages);
-              if (global->control_s != NULL)
-                build_all (ui, global, fl_pages);
-              break;
-            case X_PROFILER:
-              g_message ("PROFILER page found");
-              build_all (ui, global, pf_image_pages);
-              if (global->control_s != NULL)
-                build_all (ui, global, pf_pages);
-              break;
-          }
-      }
-  }
+  /* Общие ГЛ-виджеты. */
+  if (global->control_s != NULL)
+    build_all (ui, global, any_sonar_pages);
 
   /* Инициализация значений. */
   widget_swap (NULL, GINT_TO_POINTER (ALL));
@@ -795,7 +734,7 @@ kf_config (GKeyFile *kf)
 
     if (depth_writer_path == NULL)
       {
-        g_warning ("Depth export path not set. Using default.");
+        g_message ("Depth export path not set. Using default.");
         depth_writer_path = g_strdup ("/srv/hyscan/lat-lon-depth.txt");
       }
     g_message ("Depth export path: %s", depth_writer_path);
@@ -807,7 +746,7 @@ kf_config (GKeyFile *kf)
 
     if (screenshot_dir == NULL)
       {
-        g_warning ("Screenshot dir not set. Using default.");
+        g_message ("Screenshot dir not set. Using default.");
         screenshot_dir = g_strdup (g_get_tmp_dir ());
       }
     g_message ("Screenshot dir: %s", screenshot_dir);
@@ -928,12 +867,61 @@ depth_writer (GObject *emitter)
 }
 
 G_MODULE_EXPORT gboolean
-kf_setup (GKeyFile *kf)
+kf_setting (GKeyFile *kf)
 {
   return TRUE;
 }
+
 G_MODULE_EXPORT gboolean
 kf_desetup (GKeyFile *kf)
 {
   return TRUE;
+}
+
+#define HW_N 3
+G_MODULE_EXPORT gboolean
+panel_pack (FnnPanel *panel,
+            gint      panelx)
+{
+  HwuiGlobal *ui = &global_ui;
+  GtkWidget *w;
+
+  gint order[HW_N]  = {X_SIDESCAN, X_PROFILER, X_FORWARDL};
+  gint left[HW_N]   = {0, 1, 1};
+  gint top[HW_N]    = {0, 0, 1};
+  gint height[HW_N] = {2, 1, 1};
+
+  HwuiPage *ipages[HW_N] = {ss_image_pages, pf_image_pages, fl_image_pages};
+  HwuiPage *spages[HW_N] = {ss_pages, pf_pages, fl_pages};
+  gint i;
+
+  for (i = 0; i < HW_N + 1; ++i)
+    {
+      if (i == HW_N)
+        return FALSE;
+
+      if (panelx == order[i])
+        break;
+    }
+
+
+  w = panel->vis_gui->main;
+
+  g_object_set (w, "vexpand", TRUE, "valign", GTK_ALIGN_FILL,
+                   "hexpand", TRUE, "halign", GTK_ALIGN_FILL, NULL);
+
+  hyscan_gtk_fnn_box_pack (HYSCAN_GTK_FNN_BOX (ui->acoustic), w, order[i],
+                           left[i], top[i], 1, height[i]);
+
+  build_all (ui, _global, ipages[i]);
+  if (panel_sources_are_in_sonar (_global, panel))
+    build_all (ui, _global, spages[i]);
+
+  return TRUE;
+}
+
+G_MODULE_EXPORT void
+panel_adjust_visibility (HyScanTrackInfo *track_info)
+{
+  return;
 }

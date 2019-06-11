@@ -44,7 +44,7 @@ hyscan_gtk_mark_editor_class_init (HyScanGtkMarkEditorClass *klass)
                   g_cclosure_marshal_VOID__VOID,
                   G_TYPE_NONE, 0);
 
-  gtk_widget_class_set_template_from_resource (widget_class, "/org/ame/gtk/hyscan-gtk-mark-editor.ui");
+  gtk_widget_class_set_template_from_resource (widget_class, "/org/libhyscanfnn/gtk/hyscan-gtk-mark-editor.ui");
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkMarkEditor, title_entrybuf);
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkMarkEditor, latitude);
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkMarkEditor, longitude);
