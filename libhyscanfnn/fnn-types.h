@@ -78,11 +78,11 @@ typedef struct
 /* структура метка + координаты. */
 typedef struct
 {
-  HyScanWaterfallMark *mark;
+  HyScanMark *mark;
 
-  gdouble              lat;
-  gdouble              lon;
-  gboolean             ok;
+  gdouble     lat;
+  gdouble     lon;
+  gboolean    ok;
 } MarkAndLocation;
 
 typedef struct
@@ -403,10 +403,10 @@ HYSCAN_API void
 loc_store_free (gpointer data);
 
 MarkAndLocation *
-mark_and_location_new (HyScanWaterfallMark *mark,
-                       gboolean             ok,
-                       gdouble              lat,
-                       gdouble              lon);
+mark_and_location_new (HyScanMark *mark,
+                       gboolean    ok,
+                       gdouble     lat,
+                       gdouble     lon);
 
 MarkAndLocation *
 mark_and_location_copy (gpointer data);
@@ -415,9 +415,9 @@ void
 mark_and_location_free (gpointer data);
 
 MarkAndLocation *
-get_mark_coords (GHashTable             * locstores,
-                 HyScanWaterfallMark    * mark,
-                 Global                 * global);
+get_mark_coords (GHashTable  * locstores,
+                 HyScanMark  * mark,
+                 Global      * global);
 
 HYSCAN_API void
 mark_model_changed (HyScanMarkModel   *mark_model,

@@ -316,7 +316,6 @@ main (int argc, char **argv)
       if (hardware_profile_name != NULL)
         {
           HyScanProfileHW *hw;
-          // HyScanProfileOffset *offset;
           gboolean check;
 
           if (driver_paths == NULL)
@@ -506,7 +505,7 @@ main (int argc, char **argv)
   gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (global.gui.track.list), 0, GTK_SORT_DESCENDING);
 
   /* Список меток. */
-  global.marks.model = hyscan_mark_model_new ();
+  global.marks.model = hyscan_mark_model_new (HYSCAN_MARK_WATERFALL);
   // TODO: перепроверить, что в ран-менеджере, что в трек-чейнджед, что здесь
   global.marks.loc_storage = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
                                                     (GDestroyNotify) loc_store_free);
