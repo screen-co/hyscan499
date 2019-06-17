@@ -3,6 +3,7 @@
 
 #include <fnn-types.h>
 #include <hyscan-gtk-fnn-box.h>
+#include "hyscan-gtk-map-kit.h"
 #include <gio/gio.h>
 
 typedef struct
@@ -13,6 +14,7 @@ typedef struct
   GtkWidget  *area;     // hyscan_gtk_area
   GtkWidget  *acoustic_stack; // центральная зона
   GtkWidget  *control_stack;    // стек упр-я локаторами
+  GtkWidget  *nav_stack;    // стек упр-я галсами и метками
   GtkWidget  *switcher;
 
   struct
@@ -28,6 +30,8 @@ typedef struct
   const gchar *restoreable;
 
   GKeyFile   *settings;
+
+  HyScanGtkMapKit *mapkit;
 } EvoUI;
 
 /* Врапперы. */

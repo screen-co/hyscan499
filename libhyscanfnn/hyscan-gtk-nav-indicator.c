@@ -5,6 +5,10 @@
 #include <glib/gi18n-lib.h>
 
 
+enum
+{
+  PROP_SENSOR = 1
+};
 
 struct _HyScanGtkNavIndicatorPrivate
 {
@@ -36,12 +40,32 @@ struct _HyScanGtkNavIndicatorPrivate
   GtkLabel           * dpt;
   GtkLabel           * tmd;
 
-  GMutex  lock;
-  guint   update_tag;
+  HyScanSensor       * sensor;
+  guint                update_tag;
+  guint                sensor_data_id;
+  GMutex               lock;
 };
+
+static void  hyscan_gtk_nav_indicator_set_property  (GObject           *object,
+                                                     guint              prop_id,
+                                                     const GValue      *value,
+                                                     GParamSpec        *pspec);
 
 static void  hyscan_gtk_nav_indicator_constructed (GObject               *object);
 static void  hyscan_gtk_nav_indicator_finalize    (GObject               *object);
+
+static void  hyscan_gtk_nav_indicator_sensor_data (HyScanSensor          *sensor,
+                                                   const gchar           *name,
+                                                   HyScanSourceType       source,
+                                                   gint64                 recv_time,
+                                                   HyScanBuffer          *buffer,
+                                                   HyScanGtkNavIndicator *self);
+static void  hyscan_gtk_nav_indicator_parse       (HyScanGtkNavIndicator *self,
+                                                   HyScanBuffer          *data);
+static void  hyscan_gtk_nav_indicator_printer     (gchar       **target,
+                                                   const gchar  *format,
+                                                   ...);
+
 static gboolean hyscan_gtk_nav_indicator_update   (HyScanGtkNavIndicator *self);
 
 
@@ -50,10 +74,12 @@ G_DEFINE_TYPE_WITH_PRIVATE (HyScanGtkNavIndicator, hyscan_gtk_nav_indicator, GTK
 static void
 hyscan_gtk_nav_indicator_class_init (HyScanGtkNavIndicatorClass *klass)
 {
+  GObjectClass *oclass = G_OBJECT_CLASS (klass);
   GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
 
-  G_OBJECT_CLASS (klass)->constructed = hyscan_gtk_nav_indicator_constructed;
-  G_OBJECT_CLASS (klass)->finalize = hyscan_gtk_nav_indicator_finalize;
+  oclass->set_property = hyscan_gtk_nav_indicator_set_property;
+  oclass->constructed = hyscan_gtk_nav_indicator_constructed;
+  oclass->finalize = hyscan_gtk_nav_indicator_finalize;
 
   gtk_widget_class_set_template_from_resource (widget_class, "/org/libhyscanfnn/gtk/hyscan-gtk-nav-indicator.ui");
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, lat);
@@ -62,6 +88,10 @@ hyscan_gtk_nav_indicator_class_init (HyScanGtkNavIndicatorClass *klass)
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, spd);
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, dpt);
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, tmd);
+
+  g_object_class_install_property (oclass, PROP_SENSOR,
+    g_param_spec_object("sensor", "sensor", "sensor", HYSCAN_TYPE_SENSOR,
+                        G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
 }
 
 static void
@@ -69,6 +99,20 @@ hyscan_gtk_nav_indicator_init (HyScanGtkNavIndicator *me)
 {
   me->priv = hyscan_gtk_nav_indicator_get_instance_private (me);
   gtk_widget_init_template (GTK_WIDGET (me));
+}
+
+static void
+hyscan_gtk_nav_indicator_set_property (GObject      *object,
+                                       guint         prop_id,
+                                       const GValue *value,
+                                       GParamSpec   *pspec)
+{
+  HyScanGtkNavIndicator *self = HYSCAN_GTK_NAV_INDICATOR (object);
+
+  if (prop_id == PROP_SENSOR)
+    self->priv->sensor = g_value_dup_object (value);
+  else
+    G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 }
 
 static void
@@ -88,6 +132,7 @@ hyscan_gtk_nav_indicator_constructed (GObject *object)
   priv->parser.dpt = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_DPT, HYSCAN_NMEA_FIELD_DEPTH);
 
   priv->update_tag = g_timeout_add (1000, (GSourceFunc)(hyscan_gtk_nav_indicator_update), self);
+  priv->sensor_data_id = g_signal_connect (priv->sensor, "sensor-data", G_CALLBACK (hyscan_gtk_nav_indicator_sensor_data), self);
 }
 
 static void
@@ -95,6 +140,10 @@ hyscan_gtk_nav_indicator_finalize (GObject *object)
 {
   HyScanGtkNavIndicator *self = HYSCAN_GTK_NAV_INDICATOR (object);
   HyScanGtkNavIndicatorPrivate *priv = self->priv;
+
+  g_signal_handler_disconnect (priv->sensor, priv->sensor_data_id);
+  priv->sensor_data_id = 0;
+  g_clear_object (&priv->sensor);
 
   g_object_unref (priv->parser.time);
   g_object_unref (priv->parser.date);
@@ -112,55 +161,20 @@ hyscan_gtk_nav_indicator_finalize (GObject *object)
   G_OBJECT_CLASS (hyscan_gtk_nav_indicator_parent_class)->finalize (object);
 }
 
-void
-nav_printer (gchar       **target,
-             const gchar  *format,
-             ...)
+static void
+hyscan_gtk_nav_indicator_sensor_data (HyScanSensor          *sensor,
+                                      const gchar           *name,
+                                      HyScanSourceType       source,
+                                      gint64                 recv_time,
+                                      HyScanBuffer          *buffer,
+                                      HyScanGtkNavIndicator *self)
 {
-  va_list args;
-
-  if (*target != NULL)
-    g_clear_pointer (target, g_free);
-
-  va_start (args, format);
-  *target = g_strdup_vprintf (format, args);
-  va_end (args);
+  hyscan_gtk_nav_indicator_parse (self, buffer);
 }
 
-static gboolean
-hyscan_gtk_nav_indicator_update (HyScanGtkNavIndicator *self)
-{
-  HyScanGtkNavIndicatorPrivate *priv = self->priv;
-
-  g_mutex_lock (&priv->lock);
-
-  if (priv->string.lat != NULL)
-    gtk_label_set_text (priv->lat, priv->string.lat);
-  if (priv->string.lon != NULL)
-    gtk_label_set_text (priv->lon, priv->string.lon);
-  if (priv->string.trk != NULL)
-    gtk_label_set_text (priv->trk, priv->string.trk);
-  if (priv->string.spd != NULL)
-    gtk_label_set_text (priv->spd, priv->string.spd);
-  if (priv->string.dpt != NULL)
-    gtk_label_set_text (priv->dpt, priv->string.dpt);
-  if (priv->string.tmd != NULL)
-    gtk_label_set_text (priv->tmd, priv->string.tmd);
-
-  g_mutex_unlock (&priv->lock);
-
-  return G_SOURCE_CONTINUE;
-}
-
-GtkWidget *
-hyscan_gtk_nav_indicator_new (void)
-{
-  return GTK_WIDGET (g_object_new (HYSCAN_TYPE_GTK_NAV_INDICATOR, NULL));
-}
-
-void
-hyscan_gtk_nav_indicator_push (HyScanGtkNavIndicator *self,
-                               HyScanBuffer          *data)
+static void
+hyscan_gtk_nav_indicator_parse (HyScanGtkNavIndicator *self,
+                                HyScanBuffer          *data)
 {
   HyScanGtkNavIndicatorPrivate *priv;
   const gchar * rmcs = NULL, *dpts = NULL, *raw_data;
@@ -219,39 +233,90 @@ hyscan_gtk_nav_indicator_push (HyScanGtkNavIndicator *self,
     {
       GTimeZone *tz;
       GDateTime *local, *utc;
-      gchar *dtstr;
+      gchar *dstr, *tstr;
 
       tz = g_time_zone_new ("+03:00");
       utc = g_date_time_new_from_unix_utc (date + time);
       local = g_date_time_to_timezone (utc, tz);
 
-      dtstr = g_date_time_format (local, "%d.%m.%y %H:%M:%S");
+      dstr = g_date_time_format (local, "%d.%m.%y");
+      tstr = g_date_time_format (local, "%H:%M:%S");
 
-      nav_printer (&priv->string.tmd, "%s", dtstr);
+      hyscan_gtk_nav_indicator_printer (&priv->string.tmd, "<b>%s</b> %s", tstr, dstr);
 
-      g_free (dtstr);
+      g_free (dstr);
+      g_free (tstr);
       g_date_time_unref (local);
       g_date_time_unref (utc);
       g_time_zone_unref (tz);
     }
   if (ll_ok)
     {
-      nav_printer (&priv->string.lat, "%f °%s", lat, lat > 0 ? "С.Ш." : "Ю.Ш.");
-      nav_printer (&priv->string.lon, "%f °%s", lon, lon > 0 ? "В.Д." : "З.Д.");
+      hyscan_gtk_nav_indicator_printer (&priv->string.lat, "<b>%f</b> °%s", lat, lat > 0 ? _("N") : _("S"));
+      hyscan_gtk_nav_indicator_printer (&priv->string.lon, "<b>%f</b> °%s", lon, lon > 0 ? _("E") : _("W"));
     }
   if (trk_ok)
     {
-      nav_printer (&priv->string.trk, "%f °", trk);
+      hyscan_gtk_nav_indicator_printer (&priv->string.trk, "<b>%f</b> °", trk);
     }
   if (spd_ok)
     {
-      nav_printer (&priv->string.spd, "%f м/с", spd * 0.514);
+      hyscan_gtk_nav_indicator_printer (&priv->string.spd, "<b>%f</b> м/с", spd * 0.514);
     }
   if (dpt_ok)
     {
-      nav_printer (&priv->string.dpt, "%f м", dpt);
+      hyscan_gtk_nav_indicator_printer (&priv->string.dpt, "<b>%f</b> м", dpt);
     }
 
   g_mutex_unlock (&priv->lock);
   g_strfreev (nmea);
 }
+
+
+static void
+hyscan_gtk_nav_indicator_printer (gchar       **target,
+                                  const gchar  *format,
+                                  ...)
+{
+  va_list args;
+
+  if (*target != NULL)
+    g_clear_pointer (target, g_free);
+
+  va_start (args, format);
+  *target = g_strdup_vprintf (format, args);
+  va_end (args);
+}
+
+static gboolean
+hyscan_gtk_nav_indicator_update (HyScanGtkNavIndicator *self)
+{
+  HyScanGtkNavIndicatorPrivate *priv = self->priv;
+
+  g_mutex_lock (&priv->lock);
+
+  if (priv->string.lat != NULL)
+    gtk_label_set_markup (priv->lat, priv->string.lat);
+  if (priv->string.lon != NULL)
+    gtk_label_set_markup (priv->lon, priv->string.lon);
+  if (priv->string.trk != NULL)
+    gtk_label_set_markup (priv->trk, priv->string.trk);
+  if (priv->string.spd != NULL)
+    gtk_label_set_markup (priv->spd, priv->string.spd);
+  if (priv->string.dpt != NULL)
+    gtk_label_set_markup (priv->dpt, priv->string.dpt);
+  if (priv->string.tmd != NULL)
+    gtk_label_set_markup (priv->tmd, priv->string.tmd);
+
+  g_mutex_unlock (&priv->lock);
+
+  return G_SOURCE_CONTINUE;
+}
+
+GtkWidget *
+hyscan_gtk_nav_indicator_new (HyScanSensor *sensor)
+{
+  return GTK_WIDGET (g_object_new (HYSCAN_TYPE_GTK_NAV_INDICATOR,
+                                   "sensor", sensor, NULL));
+}
+

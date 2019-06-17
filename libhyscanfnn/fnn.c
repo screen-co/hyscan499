@@ -1215,13 +1215,32 @@ mark_and_location_free (gpointer data)
   g_free (loc);
 }
 
-gboolean
-request_mark_update (Global *global)
+void
+remove_mark_update (Global *global)
 {
+  if (global->marks.request_update_tag == 0)
+    return;
 
+  g_source_remove (global->marks.request_update_tag);
   global->marks.request_update_tag = 0;
+}
+
+gboolean
+mark_update (Global *global)
+{
   mark_model_changed (global->marks.model, global);
+  global->marks.request_update_tag = 0;
   return G_SOURCE_REMOVE;
+}
+
+gboolean
+add_mark_update (Global *global)
+{
+  remove_mark_update (global);
+
+  global->marks.request_update_tag = g_timeout_add (1000, (GSourceFunc)mark_update, global);
+
+  return TRUE;
 }
 
 /* Функция определяет координаты метки. */
@@ -1248,8 +1267,7 @@ get_mark_coords (GHashTable * locstores,
       track_name = get_track_name_by_id (global->db_info, mark->waterfall.track);
       if (track_name == NULL)
         {
-          if (global->marks.request_update_tag == 0)
-            global->marks.request_update_tag = g_timeout_add (1000, (GSourceFunc)request_mark_update, global);
+          add_mark_update (global);
           return NULL;
         }
 
@@ -1257,8 +1275,7 @@ get_mark_coords (GHashTable * locstores,
 
       if (ls == NULL)
         {
-          if (global->marks.request_update_tag == 0)
-            global->marks.request_update_tag = g_timeout_add (1000, (GSourceFunc)request_mark_update, global);
+          add_mark_update (global);
           return NULL;
         }
 
@@ -3048,18 +3065,6 @@ set_dry (Global    *global,
   global->dry = state;
 
   return TRUE;
-}
-
-void
-sensor_cb (HyScanSensor     *sensor,
-           const gchar      *name,
-           HyScanSourceType  source,
-           gint64            recv_time,
-           HyScanBuffer     *buffer,
-           Global           *global)
-{
-  /* Напрямую загоняем их в виджет. */
-  hyscan_gtk_nav_indicator_push (HYSCAN_GTK_NAV_INDICATOR (global->gui.nav), buffer);
 }
 
 GtkWidget*

@@ -8,7 +8,14 @@
 #define GETTEXT_PACKAGE "libhyscanfnn-evoui"
 #include <glib/gi18n-lib.h>
 
-#define EVO_EMPTY_PAGE "empty_page"
+// #define EVO_EMPTY_PAGE "empty_page"
+#define EVO_NOT_MAP "evo-not-map"
+#define EVO_MAP "evo-map"
+#define EVO_MAP_CENTER_LAT "lat"
+#define EVO_MAP_CENTER_LON "lon"
+#define EVO_MAP_DIR "/tmp/"
+#define EVO_MAP_PROFILE "profile"
+
 
 EvoUI global_ui = {0,};
 Global *_global = NULL;
@@ -124,6 +131,20 @@ evo_brightness_set_override (Global  *global,
  *
  */
 
+void
+run_manager_wrapper (GObject *emitter,
+                     gpointer data)
+{
+  EvoUI *ui = &global_ui;
+  GtkToggleButton *tb = data;
+
+  run_manager (emitter);
+
+  hyscan_gtk_map_kit_set_project (ui->mapkit, _global->project_name);
+
+  gtk_toggle_button_set_active (tb, FALSE);
+}
+
 gboolean
 ui_start_stop (GtkSwitch *button,
                gboolean   state,
@@ -192,6 +213,12 @@ widget_swap (GObject  *emitter,
   if (child == NULL)
     return;
 
+  gtk_stack_set_visible_child_name (GTK_STACK (ui->control_stack), child);
+
+  if (g_str_equal (child, EVO_MAP))
+    gtk_stack_set_visible_child_name (GTK_STACK (ui->nav_stack), EVO_MAP);
+  else
+    gtk_stack_set_visible_child_name (GTK_STACK (ui->nav_stack), EVO_NOT_MAP);
   /* Теперь всякие специальные случаи. */
   hyscan_gtk_area_set_bottom_visible (HYSCAN_GTK_AREA (ui->area),
                                       g_str_equal (child, "ForwardLook"));
@@ -469,45 +496,58 @@ build_interface (Global *global)
   _global = global;
 
   GtkWidget *settings;
-  GtkWidget *lbox, *rbox;
+  GtkWidget *rbox;
 
   global->override.brightness_set = evo_brightness_set_override;
 
   /* EvoUi это грид, вверху стек-свитчер с кнопками панелей,
    * внизу HyScanGtkArea. Внутри арии:
    * Справа у нас управление локаторами и отображением,
-   * слева выезжает контроль над галсами и метками,
-   * снизу выезжает управление ВСЛ. */
+   * слева выезжает контроль над галсами и метками
+   * (причем там тоже стек, т.к. у карты упр-е своё),
+   * снизу выезжает управление ВСЛ.
+   * под арией навиндикатор. */
   ui->grid = gtk_grid_new ();
 
   ui->area = hyscan_gtk_area_new ();
 
   /* Центральная зона: виджет с виджетами. Да. */
+  ui->nav_stack = make_stack ();
   ui->acoustic_stack = make_stack ();
 
   g_signal_connect (ui->acoustic_stack, "notify::visible-child-name", G_CALLBACK (widget_swap), NULL);
 
-  /* Коробки и стек для управления локаторами. */
-  lbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
+  /* Cтек для управления локаторами. */
   rbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
   ui->control_stack = make_stack ();
 
   /* Связываем стеки. */
-  g_object_bind_property (ui->acoustic_stack, "visible-child-name",
-                          ui->control_stack, "visible-child-name",
-                          G_BINDING_DEFAULT);
+
+  // g_object_bind_property (ui->acoustic_stack, "visible-child-name",
+                          // ui->control_stack, "visible-child-name",
+                          // G_BINDING_DEFAULT);
 
   /* Особенности реализации: хеш-таблица билдеров.*/
   ui->builders = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_object_unref);
 
   /* На данный момент все контейнеры готовы. Можно наполнять их. */
 
-  hyscan_gtk_area_set_central (HYSCAN_GTK_AREA (ui->area), ui->acoustic_stack);
-
-  /* EVO_EMPTY_PAGE для ui->acoustic_stack*/
+  /* Карта всегда в наличии. */
   {
-    GtkWidget *label = gtk_label_new(_("Please select track"));
-    gtk_stack_add_named (GTK_STACK (ui->acoustic_stack), label, EVO_EMPTY_PAGE);
+    HyScanGeoGeodetic center = {0, 0};
+
+    ui->mapkit = hyscan_gtk_map_kit_new (&center, global->db, EVO_MAP_DIR);
+    hyscan_gtk_map_kit_set_project (ui->mapkit, global->project_name);
+    hyscan_gtk_map_kit_load_profiles (ui->mapkit, "./maps");
+    hyscan_gtk_map_kit_add_marks_wf (ui->mapkit);
+    hyscan_gtk_map_kit_add_marks_geo (ui->mapkit);
+
+    if (global->control != NULL)
+      hyscan_gtk_map_kit_add_nav (ui->mapkit, HYSCAN_SENSOR (global->control), "nmea", 0);
+
+    gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), ui->mapkit->map, EVO_MAP, _("Map"));
+    gtk_stack_add_named (GTK_STACK (ui->control_stack), ui->mapkit->control, EVO_MAP);
+    gtk_stack_add_named (GTK_STACK (ui->nav_stack), ui->mapkit->navigation, EVO_MAP);
   }
 
 
@@ -521,6 +561,7 @@ build_interface (Global *global)
 
   /* Левая панель содержит список галсов, меток и редактор меток. */
   {
+    GtkWidget * lbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
     GtkWidget * tracks = GTK_WIDGET (global->gui.track.view);
     GtkWidget * mlist = GTK_WIDGET (global->gui.mark_view);
     GtkWidget * meditor = GTK_WIDGET (global->gui.meditor);
@@ -528,11 +569,6 @@ build_interface (Global *global)
     gtk_widget_set_margin_end (lbox, 6);
     gtk_widget_set_margin_top (lbox, 0);
     gtk_widget_set_margin_bottom (lbox, 0);
-
-    gtk_orientable_set_orientation (GTK_ORIENTABLE (global->gui.nav), GTK_ORIENTATION_VERTICAL);
-
-    g_object_set (global->gui.nav, "vexpand", FALSE,  "valign", GTK_ALIGN_FILL,
-                          "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
 
     g_object_set (tracks, "vexpand", FALSE,  "valign", GTK_ALIGN_FILL,
                           "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
@@ -562,9 +598,8 @@ build_interface (Global *global)
     gtk_box_pack_start (GTK_BOX (lbox), mlist, TRUE, TRUE, 0);
     gtk_box_pack_start (GTK_BOX (lbox), meditor, FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (lbox), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
-    gtk_box_pack_start (GTK_BOX (lbox), global->gui.nav, FALSE, FALSE, 0);
 
-    hyscan_gtk_area_set_left (HYSCAN_GTK_AREA (ui->area), lbox);
+    gtk_stack_add_named (GTK_STACK (ui->nav_stack), lbox, EVO_NOT_MAP);
   }
 
   /* Правая панель -- бокс с упр. записью и упр. локаторами. */
@@ -572,26 +607,10 @@ build_interface (Global *global)
   ui->balance_table = g_hash_table_new (g_direct_hash, g_direct_equal);
   {
     GtkWidget * record;
-    // GHashTableIter iter;
-    // FnnPanel *panel;
-    // gpointer k;
 
     gtk_widget_set_margin_start (rbox, 6);
     gtk_widget_set_margin_top (rbox, 0);
     gtk_widget_set_margin_bottom (rbox, 0);
-
-    // g_hash_table_iter_init (&iter, global->panels);
-    // while (g_hash_table_iter_next (&iter, &k, (gpointer*)&panel))
-      {
-        // GtkWidget *packable;
-
-        // packable = make_page_for_panel (ui, panel, GPOINTER_TO_INT (k), global);
-        // gtk_stack_add_titled (GTK_STACK (ui->control_stack), packable, panel->name, panel->name_local);
-      }
-    {
-      GtkWidget *label = gtk_label_new(_("x"));
-      gtk_stack_add_named (GTK_STACK (ui->control_stack), label, EVO_EMPTY_PAGE);
-    }
 
     record = make_record_control (global, ui);
 
@@ -599,8 +618,6 @@ build_interface (Global *global)
     gtk_box_pack_start (GTK_BOX (rbox), ui->control_stack, TRUE, TRUE, 0);
     if (record != NULL)
       gtk_box_pack_start (GTK_BOX (rbox), record, FALSE, FALSE, 0);
-
-    hyscan_gtk_area_set_right (HYSCAN_GTK_AREA (ui->area), rbox);
   }
 
   /* Настройки. */
@@ -615,7 +632,7 @@ build_interface (Global *global)
       manager = gtk_button_new_with_label (_("Project Manager"));
       gtk_widget_set_hexpand(manager, TRUE);
 
-      g_signal_connect (manager, "clicked", G_CALLBACK (run_manager), NULL);
+      g_signal_connect (manager, "clicked", G_CALLBACK (run_manager), settings);
       gtk_grid_attach (GTK_GRID (grid), manager, 0, 0, 1, 1);
 
       if (global->control != NULL)
@@ -638,10 +655,23 @@ build_interface (Global *global)
     }
 
   /* Пакуем всё. */
+  hyscan_gtk_area_set_central (HYSCAN_GTK_AREA (ui->area), ui->acoustic_stack);
+  hyscan_gtk_area_set_left (HYSCAN_GTK_AREA (ui->area), ui->nav_stack);
+  hyscan_gtk_area_set_right (HYSCAN_GTK_AREA (ui->area), rbox);
+
   gtk_container_add (GTK_CONTAINER (global->gui.window), ui->grid);
   gtk_grid_attach (GTK_GRID (ui->grid), ui->switcher, 0, 0, 1, 1);
   gtk_grid_attach (GTK_GRID (ui->grid), settings,     1, 0, 1, 1);
   gtk_grid_attach (GTK_GRID (ui->grid), ui->area,     0, 1, 2, 1);
+
+  if (global->gui.nav != NULL)
+    {
+      gtk_orientable_set_orientation (GTK_ORIENTABLE (global->gui.nav), GTK_ORIENTATION_HORIZONTAL);
+      gtk_box_set_spacing (GTK_BOX (global->gui.nav), 10);
+      gtk_widget_set_halign (global->gui.nav, GTK_ALIGN_CENTER);
+
+      gtk_grid_attach (GTK_GRID (ui->grid), global->gui.nav, 0, 2, 1, 1);
+    }
 
   return TRUE;
 }
@@ -655,6 +685,8 @@ destroy_interface (void)
 
   g_clear_object (&ui->starter.all);
   g_clear_object (&ui->starter.dry);
+
+  g_clear_pointer (&ui->mapkit, hyscan_gtk_map_kit_free);
 }
 
 
@@ -667,8 +699,22 @@ kf_config (GKeyFile *kf)
 G_MODULE_EXPORT gboolean
 kf_setting (GKeyFile *kf)
 {
+  gchar *profile = NULL;
   EvoUI *ui = &global_ui;
   ui->settings = g_key_file_ref (kf);
+
+  /* Подгружаем центр карты. */
+  HyScanGeoGeodetic center;
+  center.lat = keyfile_double_read_helper (kf, EVO_MAP, EVO_MAP_CENTER_LAT, 0.0);
+  center.lon = keyfile_double_read_helper (kf, EVO_MAP, EVO_MAP_CENTER_LON, 0.0);
+  profile = keyfile_string_read_helper (kf, EVO_MAP, EVO_MAP_PROFILE);
+  hyscan_gtk_map_move_to (HYSCAN_GTK_MAP (ui->mapkit->map), center);
+
+  if (profile != NULL)
+    {
+      hyscan_gtk_map_kit_set_profile_name (ui->mapkit, profile);
+      g_free (profile);
+    }
 
   return TRUE;
 }
@@ -695,6 +741,26 @@ kf_desetup (GKeyFile *kf)
       balance = gtk_adjustment_get_value (adj);
       keyfile_double_write_helper (ui->settings, panel->name, "evo.balance", balance);
     }
+
+  /* Запоминаем карту. */
+  {
+    gchar *proifle;
+    HyScanGeoGeodetic geod;
+    HyScanGeoCartesian2D  c2d;
+    gdouble from_x, to_x, from_y, to_y;
+
+    gtk_cifro_area_get_view (GTK_CIFRO_AREA (ui->mapkit->map), &from_x, &to_x, &from_y, &to_y);
+    c2d.x = (to_x + from_x) / 2.0;
+    c2d.y = (to_y + from_y) / 2.0;
+    hyscan_gtk_map_value_to_geo (HYSCAN_GTK_MAP (ui->mapkit->map), &geod, c2d);
+
+    keyfile_double_write_helper (kf, EVO_MAP, EVO_MAP_CENTER_LAT, geod.lat);
+    keyfile_double_write_helper (kf, EVO_MAP, EVO_MAP_CENTER_LON, geod.lon);
+
+    proifle = hyscan_gtk_map_kit_get_profile_name (ui->mapkit);
+    keyfile_string_write_helper (kf, EVO_MAP, EVO_MAP_PROFILE, proifle);
+    g_free (proifle);
+  }
 
   g_key_file_unref (ui->settings);
   return TRUE;
@@ -731,19 +797,6 @@ panel_show (gint     panelx,
     }
 }
 
-void
-panel_empty (gboolean show)
-{
-  GtkWidget *w;
-
-  w = gtk_stack_get_child_by_name (GTK_STACK (global_ui.acoustic_stack), EVO_EMPTY_PAGE);
-  gtk_widget_set_visible (w, show);
-  gtk_stack_set_visible_child (GTK_STACK (global_ui.acoustic_stack), w);
-
-  w = gtk_stack_get_child_by_name (GTK_STACK (global_ui.control_stack), EVO_EMPTY_PAGE);
-  gtk_widget_set_visible (w, show);
-  gtk_stack_set_visible_child (GTK_STACK (global_ui.control_stack), w);
-}
 
 G_MODULE_EXPORT gboolean
 panel_pack (FnnPanel *panel,
@@ -760,8 +813,8 @@ panel_pack (FnnPanel *panel,
 
   control = make_page_for_panel (ui, panel, GPOINTER_TO_INT (panelx), global);
 
-  gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), visual, panel->name, panel->name_local);
   gtk_stack_add_titled (GTK_STACK (ui->control_stack), control, panel->name, panel->name_local);
+  gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), visual, panel->name, panel->name_local);
 
   /* Нижняя панель содержит виджет управления впередсмотрящим. */
   if (panelx == X_FORWARDL)
@@ -792,14 +845,7 @@ panel_adjust_visibility (HyScanTrackInfo *track_info)
   gboolean profiler_v = FALSE;
   gboolean echosound_v = FALSE;
   gboolean forwardl_v = FALSE;
-  gboolean nothing_visible = FALSE;
   guint i;
-
-  const gchar *vchild = gtk_stack_get_visible_child_name (GTK_STACK (global_ui.acoustic_stack));
-  if (0 != g_strcmp0 (vchild, EVO_EMPTY_PAGE))
-    {
-      global_ui.restoreable = vchild;
-    }
 
   for (i = 0; i < HYSCAN_SOURCE_LAST; ++i)
     {
@@ -821,12 +867,6 @@ panel_adjust_visibility (HyScanTrackInfo *track_info)
         case HYSCAN_SOURCE_FORWARD_LOOK:             forwardl_v = TRUE; break;
       }
     }
-
-  nothing_visible = ! (sidescan_v || side_low_v || profiler_v || echosound_v || forwardl_v);
-
-  /* показываем пустую страничку. */
-  if (nothing_visible)
-    panel_empty (TRUE);
 
   /* Показываем активированные страницы. */
   if (sidescan_v)
@@ -852,6 +892,4 @@ panel_adjust_visibility (HyScanTrackInfo *track_info)
   if (!forwardl_v)
     panel_show (X_FORWARDL, FALSE);
 
-  if (!nothing_visible)
-    panel_empty (FALSE);
 }

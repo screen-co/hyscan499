@@ -63,7 +63,7 @@ enum
 typedef struct FnnPanel _FnnPanel;
 
 typedef gboolean (*ui_pack_fn) (_FnnPanel *, gint);
-typedef void (*ui_adjust_visibility_fn) (HyScanTrackInfo *);
+typedef void (*ui_vadjust_fn) (HyScanTrackInfo *);
 
 /* структура: локейшн + прожекторы */
 typedef struct
@@ -269,8 +269,8 @@ struct _Global
 
   struct 
   {
-    ui_pack_fn              pack;
-    ui_adjust_visibility_fn adjust_visibility;
+    ui_pack_fn    pack;
+    ui_vadjust_fn adjust_visibility;
   } ui;
 
 
@@ -668,14 +668,6 @@ start_stop (Global    *global,
 HYSCAN_API gboolean
 set_dry (Global    *global,
          gboolean   state);
-
-HYSCAN_API void
-sensor_cb (HyScanSensor     *sensor,
-           const gchar      *name,
-           HyScanSourceType  source,
-           gint64            recv_time,
-           HyScanBuffer     *buffer,
-           Global           *global);
 
 HYSCAN_API void
 fl_coords_callback (HyScanFlCoords *coords,

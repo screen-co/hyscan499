@@ -36,6 +36,16 @@ Global global = {0,};
 typedef gboolean (*ui_build_fn) (Global *);
 typedef gboolean (*ui_config_fn) (GKeyFile *);
 
+/* Функции уя. */
+ui_build_fn        ui_build = NULL;
+ui_config_fn       ui_config = NULL;
+ui_config_fn       ui_setting = NULL;
+ui_config_fn       ui_desetup = NULL;
+ui_build_fn        ui_destroy = NULL;
+ui_pack_fn         ui_pack = NULL;
+ui_vadjust_fn      ui_adj_vis = NULL;
+
+
 gboolean module_loader_helper (GModule     *module,
                                const gchar *name,
                                gpointer    *dst)
@@ -52,7 +62,8 @@ gboolean module_loader_helper (GModule     *module,
 }
 
 /* Обработчик сигналов TERM и INT. */
-void shutdown_handler (gint signum)
+void
+shutdown_handler (gint signum)
 {
   static int shutdown_counter = 0;
 
@@ -67,6 +78,14 @@ void shutdown_handler (gint signum)
       g_message ("Hard exit.");
       exit (-1);
     }
+}
+
+void
+destroy_cb (GtkWidget *w)
+{
+  ui_desetup (global.settings);
+  // ui_destroy (&global);
+  g_message ("destr");
 }
 
 void
@@ -106,15 +125,6 @@ main (int argc, char **argv)
 
   gchar             *um_path = FNN_DEFAULT_UI;  /* Модуль с интерфейсом. */
   GModule           *ui_module = NULL;
-  ui_build_fn       ui_build = NULL;
-  ui_config_fn      ui_config = NULL;
-  ui_config_fn      ui_setting = NULL;
-  ui_config_fn      ui_desetup = NULL;
-  ui_build_fn       ui_destroy = NULL;
-  ui_pack_fn        ui_pack = NULL;
-  ui_adjust_visibility_fn          ui_adj_vis = NULL;
-
-
 
   gboolean           need_ss = FALSE;
   gboolean           need_ss_lo = FALSE;
@@ -126,7 +136,7 @@ main (int argc, char **argv)
 
   // HyScanFnnSplash   *splash = NULL;
   guint              sensor_label_writer_tag = 0;
-  gchar             *hardware_profile_name = NULL;
+  gchar             *hardware_profile = NULL;
   gchar            **driver_paths = NULL;              /* Путь к драйверам гидролокатора. */
 
   gboolean status;
@@ -167,7 +177,7 @@ main (int argc, char **argv)
         { "ship-speed",      'e',   0, G_OPTION_ARG_DOUBLE,  &ship_speed,      "Ship speed, m/s", NULL },
         { "full-screen",     'f',   0, G_OPTION_ARG_NONE,    &full_screen,     "Full screen mode", NULL },
 
-        { "hardware",        'p',   0, G_OPTION_ARG_STRING,       &hardware_profile_name, "* Hardware profile name", NULL },
+        { "hardware",        'p',   0, G_OPTION_ARG_STRING,       &hardware_profile, "* Hardware profile name", NULL },
         { "drivers",         'o',   0, G_OPTION_ARG_STRING_ARRAY, &driver_paths,          "* Path to directories with driver(s)", NULL},
 
         { "settings",        'l',   0, G_OPTION_ARG_STRING,  &settings_file,   "* Settings file", NULL },
@@ -285,8 +295,8 @@ main (int argc, char **argv)
         db_uri = keyfile_string_read_helper (config, "common", "db-uri");
       if (cache_size == 0)
         cache_size = keyfile_uint_read_helper (config, "common", "cache", 2048);
-      if (hardware_profile_name == NULL)
-        hardware_profile_name = keyfile_string_read_helper (config, "common", "hardware");
+      if (hardware_profile == NULL)
+        hardware_profile = keyfile_string_read_helper (config, "common", "hardware");
       if (driver_paths == NULL)
         driver_paths = keyfile_strv_read_helper (config, "common", "drivers");
       if (settings_file == NULL)
@@ -313,10 +323,9 @@ main (int argc, char **argv)
       hyscan_exit_if_w_param (global.db == NULL, "can't connect to db '%s'", db_uri);
 
       /* Пути к дровам и имя файла с профилем аппаратного обеспечения. */
-      if (hardware_profile_name != NULL)
+      if (hardware_profile != NULL)
         {
           HyScanProfileHW *hw;
-          gboolean check;
 
           if (driver_paths == NULL)
             {
@@ -324,24 +333,24 @@ main (int argc, char **argv)
               return -1;
             }
 
-          hw = hyscan_profile_hw_new (hardware_profile_name);
+          hw = hyscan_profile_hw_new (hardware_profile);
           hyscan_profile_hw_set_driver_paths (hw, (gchar**)driver_paths);
           g_strfreev (driver_paths);
 
           if (!hyscan_profile_read (HYSCAN_PROFILE (hw)))
             {
               g_message ("Profile read error");
+              g_clear_object (&hw);
               goto no_sonar;
             }
 
-          check = hyscan_profile_hw_check (hw);
-
-          if (check)
+          if (hyscan_profile_hw_check (hw))
             {
               global.control = hyscan_profile_hw_connect (hw);
               global.control_s = HYSCAN_SONAR (global.control);
             }
 
+          g_clear_object (&hw);
         }
     }
   else
@@ -370,9 +379,6 @@ main (int argc, char **argv)
       hyscan_control_writer_set_db (global.control, global.db);
 
       global.infos = g_hash_table_new (g_direct_hash, g_direct_equal);
-
-      if (global.control != NULL)
-        g_signal_connect (global.control, "sensor-data", G_CALLBACK (sensor_cb), &global);
 
       sensors = hyscan_control_sensors_list (global.control);
       for (; sensors != NULL && *sensors != NULL; ++sensors)
@@ -485,8 +491,8 @@ main (int argc, char **argv)
   gtk_window_set_default_size (GTK_WINDOW (global.gui.window), 1600, 900);
 
   /* Навигационные данные. */
-  global.gui.nav = hyscan_gtk_nav_indicator_new ();
-  gtk_orientable_set_orientation (GTK_ORIENTABLE (global.gui.nav), GTK_ORIENTATION_HORIZONTAL);
+  if (global.control != NULL)
+    global.gui.nav = hyscan_gtk_nav_indicator_new (HYSCAN_SENSOR (global.control));
 
   /* Галсы. */
   global.gui.track.view = GTK_WIDGET (gtk_builder_get_object (common_builder, "track.view"));
@@ -540,18 +546,6 @@ main (int argc, char **argv)
     }
 
   ui_build (&global);
-
-  if (need_ss)
-    fnn_ensure_panel (X_SIDESCAN, &global);
-  if (need_ss_lo)
-    fnn_ensure_panel (X_SIDE_LOW, &global);
-  if (need_pf)
-    fnn_ensure_panel (X_PROFILER, &global);
-  if (need_fl)
-    fnn_ensure_panel (X_FORWARDL, &global);
-  if (need_es)
-    fnn_ensure_panel (X_ECHOSOUND, &global);
-
   g_key_file_unref (hardware);
 
 
@@ -559,26 +553,14 @@ main (int argc, char **argv)
   ui_config (config);
   ui_setting (global.settings);
 
-
-  // {
-  //   if (get_panel_quiet(&global, X_SIDESCAN))
-  //     ui_pack (get_panel_quiet(&global, X_SIDESCAN), X_SIDESCAN);
-  //   if (get_panel_quiet(&global, X_SIDE_LOW))
-  //     ui_pack (get_panel_quiet(&global, X_SIDE_LOW), X_SIDE_LOW);
-  //   if (get_panel_quiet(&global, X_PROFILER))
-  //     ui_pack (get_panel_quiet(&global, X_PROFILER), X_PROFILER);
-  //   if (get_panel_quiet(&global, X_FORWARDL))
-  //     ui_pack (get_panel_quiet(&global, X_FORWARDL), X_FORWARDL);
-  //   if (get_panel_quiet(&global, X_ECHOSOUND))
-  //     ui_pack (get_panel_quiet(&global, X_ECHOSOUND), X_ECHOSOUND);
-  // }
-
-
   if (full_screen)
     gtk_window_fullscreen (GTK_WINDOW (global.gui.window));
 
+  g_signal_connect (global.gui.window, "destroy", G_CALLBACK (destroy_cb), NULL);
   gtk_widget_show_all (global.gui.window);
   gtk_main ();
+
+  g_message ("post-main");
 
   if (sensor_label_writer_tag > 0)
     g_source_remove (sensor_label_writer_tag);
@@ -595,7 +577,7 @@ main (int argc, char **argv)
    *     ---   ---   ---               ---
    *
    */
-  ui_desetup (global.settings);
+  // ui_desetup (global.settings);
   ui_destroy (&global);
 
 
