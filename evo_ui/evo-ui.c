@@ -11,6 +11,7 @@
 // #define EVO_EMPTY_PAGE "empty_page"
 #define EVO_NOT_MAP "evo-not-map"
 #define EVO_MAP "evo-map"
+#define EVO "evo"
 #define EVO_MAP_CENTER_LAT "lat"
 #define EVO_MAP_CENTER_LON "lon"
 #define EVO_MAP_DIR "/tmp/"
@@ -536,9 +537,9 @@ build_interface (Global *global)
   {
     HyScanGeoGeodetic center = {0, 0};
 
-    ui->mapkit = hyscan_gtk_map_kit_new (&center, global->db, EVO_MAP_DIR);
+    ui->mapkit = hyscan_gtk_map_kit_new (&center, global->db, ui->tile_cache);
     hyscan_gtk_map_kit_set_project (ui->mapkit, global->project_name);
-    hyscan_gtk_map_kit_load_profiles (ui->mapkit, "./maps");
+    hyscan_gtk_map_kit_load_profiles (ui->mapkit, ui->profile_dir);
     hyscan_gtk_map_kit_add_marks_wf (ui->mapkit);
     hyscan_gtk_map_kit_add_marks_geo (ui->mapkit);
 
@@ -693,6 +694,20 @@ destroy_interface (void)
 G_MODULE_EXPORT gboolean
 kf_config (GKeyFile *kf)
 {
+  gchar *tile_cache_dir;
+  gchar *profile_dir;
+
+  profile_dir = keyfile_string_read_helper (kf, EVO, "profile_dir");
+  if (profile_dir == NULL)
+    profile_dir = g_strdup ("./maps");
+
+  tile_cache_dir = keyfile_string_read_helper (kf, EVO, "tile_cache_dir");
+  if (tile_cache_dir == NULL)
+    tile_cache_dir = g_build_filename (g_get_tmp_dir(), "hyscan499", NULL);
+
+  global_ui.tile_cache = tile_cache_dir;
+  global_ui.profile_dir = profile_dir;
+
   return TRUE;
 }
 

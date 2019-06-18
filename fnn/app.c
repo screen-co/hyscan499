@@ -84,8 +84,6 @@ void
 destroy_cb (GtkWidget *w)
 {
   ui_desetup (global.settings);
-  // ui_destroy (&global);
-  g_message ("destr");
 }
 
 void
@@ -545,12 +543,11 @@ main (int argc, char **argv)
       need_ss = need_pf = need_fl = TRUE;
     }
 
+  ui_config (config);
+  // Вызываем постройку билдера!
   ui_build (&global);
   g_key_file_unref (hardware);
 
-
-  // Вызываем постройку билдера!
-  ui_config (config);
   ui_setting (global.settings);
 
   if (full_screen)
@@ -559,8 +556,6 @@ main (int argc, char **argv)
   g_signal_connect (global.gui.window, "destroy", G_CALLBACK (destroy_cb), NULL);
   gtk_widget_show_all (global.gui.window);
   gtk_main ();
-
-  g_message ("post-main");
 
   if (sensor_label_writer_tag > 0)
     g_source_remove (sensor_label_writer_tag);

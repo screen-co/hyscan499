@@ -1,10 +1,9 @@
 #include "fnn-types.h"
-#include <fnn-types-common.h>
-#include <fnn-param-proxy.h>
-#include <hyscan-fnn-splash.h>
-#include <hyscan-fnn-project.h>
-#include <hyscan-fnn-button.h>
-#include <hyscan-fnn-button.h>
+#include "fnn-types-common.h"
+#include "hyscan-fnn-splash.h"
+#include "hyscan-fnn-project.h"
+#include "hyscan-fnn-button.h"
+#include "hyscan-fnn-button.h"
 #include <hyscan-gtk-param-tree.h>
 #include <hyscan-gtk-param-cc.h>
 #include <hyscan-data-schema-builder.h>
