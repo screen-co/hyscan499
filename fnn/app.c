@@ -106,18 +106,23 @@ connector_close (GtkAssistant *ass,
 }
 
 gchar **
-va_to_strv (int n, va_list args)
+va_to_strv (int           n,
+            const gchar * first,
+            va_list       args)
 {
   gchar ** strv = NULL;
   const gchar * str = NULL;
   int count = 0;
 
+  strv = g_realloc (strv, (sizeof (gchar*)) * (count + 1));
+  strv[count] = g_strdup (first);
+  ++count;
+
   do
     {
-      str = va_arg(args, gchar*);
+      str = va_arg (args, gchar*);
       strv = g_realloc (strv, (sizeof (gchar*)) * (count + 1));
       strv[count] = g_strdup (str);
-      g_message ("%s %i", str, count);
       ++count;
     }
   while (str != NULL);
@@ -130,8 +135,8 @@ gchar *
 win32_build_path (int n, ...)
 {
   static gchar *exec_dir = NULL;
-  gchar *locale_dir = NULL;
-  gchar *utf8_locale_dir;
+  gchar *path = NULL;
+  gchar *utf8_path;
   va_list args;
   gchar ** args_str;
 
@@ -145,17 +150,20 @@ win32_build_path (int n, ...)
           g_warning ("Something is totally wrong");
           return NULL;
         }
+
+      g_message("installation dir: %s", exec_dir);
     }
 
   va_start (args, n);
-  args_str = va_to_strv (n, args);
+  args_str = va_to_strv (n, exec_dir, args);
   va_end (args);
 
-  utf8_locale_dir = g_build_filenamev (exec_dir, args_str);
-  locale_dir = g_win32_locale_filename_from_utf8 (utf8_locale_dir);
+  utf8_path = g_build_filenamev (args_str);
+  path = g_win32_locale_filename_from_utf8 (utf8_path);
 
-  g_free (utf8_locale_dir);
-  return locale_dir;
+  g_message ("Path: %s", path);
+  g_free (utf8_path);
+  return path;
 }
 #endif
 
@@ -165,7 +173,7 @@ get_locale_dir (void)
   #ifdef G_OS_WIN32
     static gchar *locale_dir = NULL;
     if (locale_dir == NULL)
-      locale_dir = win32_build_path (2, "share", "locale");
+      locale_dir = win32_build_path(2, "share", "locale", NULL);
     return locale_dir;
 
   #else
@@ -179,7 +187,7 @@ get_profile_dir (void)
   #ifdef G_OS_WIN32
     static gchar *profile_dir = NULL;
     if (profile_dir == NULL)
-      profile_dir = win32_build_path (1, "share");
+      profile_dir = win32_build_path (1, "share", NULL);
     return profile_dir;
 
   #else
