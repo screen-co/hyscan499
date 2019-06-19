@@ -12,14 +12,6 @@
 
 Global *tglobal;
 
-enum
-{
-  DATE_SORT_COLUMN,
-  TRACK_COLUMN,
-  DATE_COLUMN,
-  N_COLUMNS
-};
-
 void
 source_informer (const gchar      *text,
                  HyScanSourceType  source)
@@ -287,7 +279,7 @@ fnn_ensure_panel (gint    panelx,
 
   /* Пакуем её в гуй. */
   if (!global->ui.pack (panel, panelx))
-    return;
+    return FALSE;
 
   /* Преднастройки. */
   if (global->settings != NULL)
@@ -902,9 +894,9 @@ tracks_changed (HyScanDBInfo *db_info,
 
       gtk_list_store_append (GTK_LIST_STORE (global->gui.track.list), &tree_iter);
       gtk_list_store_set (GTK_LIST_STORE (global->gui.track.list), &tree_iter,
-                          DATE_SORT_COLUMN, g_date_time_to_unix (track_info->ctime),
-                          TRACK_COLUMN, track_info->name,
-                          DATE_COLUMN, time_str,
+                          FNN_DATE_SORT_COLUMN, g_date_time_to_unix (track_info->ctime),
+                          FNN_TRACK_COLUMN, track_info->name,
+                          FNN_DATE_COLUMN, time_str,
                           -1);
 
       /* Подсвечиваем текущий галс. */
@@ -1513,7 +1505,7 @@ track_changed (GtkTreeView *list,
   g_clear_pointer (&global->track_name, g_free);
 
   /* Открываем новый галс. */
-  gtk_tree_model_get_value (global->gui.track.list, &iter, TRACK_COLUMN, &value);
+  gtk_tree_model_get_value (global->gui.track.list, &iter, FNN_TRACK_COLUMN, &value);
   track_name = g_value_get_string (&value);
   global->track_name = g_strdup (track_name);
 

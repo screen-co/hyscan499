@@ -194,6 +194,78 @@ balance_changed (GtkAdjustment *adj,
   brightness_set (_global, panel->vis_current.brightness, panel->vis_current.black, panelx);
 }
 
+void
+remove_track_select (void)
+{
+  guint tag = global_ui.track_select_tag;
+
+  global_ui.track_select_tag = 0;
+  if (tag != 0)
+    g_source_remove (tag);
+}
+
+gboolean
+track_select (Global *global)
+{
+  EvoUI *ui = &global_ui;
+  GtkTreePath *path = NULL, *path2 = NULL;
+  GtkTreeIter iter;
+  gchar *track_name = NULL;
+  gint track_col;
+  GtkTreeView *map_tv = hyscan_gtk_map_kit_get_track_view (ui->mapkit, &track_col);
+  GtkTreeModel *map_md = gtk_tree_view_get_model(map_tv);
+
+  /* Определяем название нового галса. */
+  gtk_tree_view_get_cursor (map_tv, &path, NULL);
+  if (path == NULL)
+    goto exit;
+
+  if (!gtk_tree_model_get_iter (map_md, &iter, path))
+    goto exit;
+
+  gtk_tree_model_get (map_md, &iter, track_col, &track_name, -1);
+
+  if (track_name == NULL)
+    goto exit;
+
+  if (!gtk_tree_model_get_iter_first (global->gui.track.list, &iter))
+    goto exit;
+
+  do
+    {
+      gchar *track;
+      gtk_tree_model_get (global->gui.track.list, &iter, FNN_TRACK_COLUMN, &track, -1);
+
+      if (0 != g_strcmp0 (track, track_name))
+        continue;
+
+
+      path2 = gtk_tree_model_get_path (global->gui.track.list, &iter);
+      gtk_tree_view_set_cursor (global->gui.track.tree, path2, NULL, FALSE);
+    }
+  while (gtk_tree_model_iter_next (global->gui.track.list, &iter));
+
+
+
+
+
+exit:
+  g_free (track_name);
+  gtk_tree_path_free (path);
+  gtk_tree_path_free (path2);
+  global_ui.track_select_tag = 0;
+  return G_SOURCE_REMOVE;
+}
+
+gboolean
+add_track_select (Global *global)
+{
+  remove_track_select ();
+
+  global_ui.track_select_tag = g_timeout_add (100, (GSourceFunc)track_select, global);
+
+  return TRUE;
+}
 //  #####  ####### #     # ####### ######  ####### #
 // #     # #     # ##    #    #    #     # #     # #
 // #       #     # # #   #    #    #     # #     # #
@@ -377,7 +449,6 @@ make_page_for_panel (EvoUI     *ui,
       g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
 
       if (!panel_sources_are_in_sonar (global, panel))
-      // if (global->control_s == NULL)
         break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
@@ -406,7 +477,6 @@ make_page_for_panel (EvoUI     *ui,
       g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_metr);
       g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
 
-      // if (global->control_s == NULL)
       if (!panel_sources_are_in_sonar (global, panel))
         break;
 
@@ -437,7 +507,6 @@ make_page_for_panel (EvoUI     *ui,
       g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_metr);
       g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
 
-      // if (global->control_s == NULL)
       if (!panel_sources_are_in_sonar (global, panel))
         break;
 
@@ -457,7 +526,6 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->scale_value       = get_label_from_builder (b, "fl_scale_value");
       panel->vis_gui->sensitivity_value = get_label_from_builder (b, "fl_sensitivity_value");
 
-      // if (global->control_s == NULL)
       if (!panel_sources_are_in_sonar (global, panel))
         break;
 
@@ -516,17 +584,12 @@ build_interface (Global *global)
   ui->nav_stack = make_stack ();
   ui->acoustic_stack = make_stack ();
 
+  /* Связываем стеки. */
   g_signal_connect (ui->acoustic_stack, "notify::visible-child-name", G_CALLBACK (widget_swap), NULL);
 
   /* Cтек для управления локаторами. */
   rbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
   ui->control_stack = make_stack ();
-
-  /* Связываем стеки. */
-
-  // g_object_bind_property (ui->acoustic_stack, "visible-child-name",
-                          // ui->control_stack, "visible-child-name",
-                          // G_BINDING_DEFAULT);
 
   /* Особенности реализации: хеш-таблица билдеров.*/
   ui->builders = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_object_unref);
@@ -535,6 +598,7 @@ build_interface (Global *global)
 
   /* Карта всегда в наличии. */
   {
+    GtkTreeView * tv;
     gchar *profile_dir = g_build_filename (g_get_user_config_dir (), "hyscan", "map-profiles", NULL);
     gchar *cache_dir = g_build_filename (g_get_user_cache_dir (), "hyscan", NULL);
     HyScanGeoGeodetic center = {0, 0};
@@ -552,6 +616,8 @@ build_interface (Global *global)
     gtk_stack_add_named (GTK_STACK (ui->control_stack), ui->mapkit->control, EVO_MAP);
     gtk_stack_add_named (GTK_STACK (ui->nav_stack), ui->mapkit->navigation, EVO_MAP);
 
+    tv = hyscan_gtk_map_kit_get_track_view (ui->mapkit, NULL);
+    g_signal_connect_swapped (tv, "cursor-changed", G_CALLBACK (add_track_select), global);
     g_free (profile_dir);
     g_free (cache_dir);
   }

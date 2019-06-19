@@ -32,6 +32,7 @@ typedef struct
   GKeyFile   *settings;
 
   HyScanGtkMapKit *mapkit;
+  guint    track_select_tag;
 } EvoUI;
 
 /* Врапперы. */

@@ -223,6 +223,8 @@ main (int argc, char **argv)
   gboolean status;
   GOptionContext *context;
 
+  global.canary = 123456789;
+
 
   gtk_init (&argc, &argv);
 

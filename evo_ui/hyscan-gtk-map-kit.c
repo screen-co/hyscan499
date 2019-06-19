@@ -590,6 +590,8 @@ create_track_tree_view (HyScanGtkMapKit *kit,
   gtk_tree_view_append_column (tree_view, track_column);
   gtk_tree_view_append_column (tree_view, date_column);
 
+  gtk_tree_view_set_grid_lines (tree_view, GTK_TREE_VIEW_GRID_LINES_BOTH);
+
   return tree_view;
 }
 
@@ -625,6 +627,8 @@ create_mark_tree_view (HyScanGtkMapKit *kit,
   gtk_tree_view_append_column (tree_view, type_column);
   gtk_tree_view_append_column (tree_view, name_column);
   gtk_tree_view_append_column (tree_view, date_column);
+
+  gtk_tree_view_set_grid_lines (tree_view, GTK_TREE_VIEW_GRID_LINES_HORIZONTAL);
 
   return tree_view;
 }
@@ -983,7 +987,7 @@ create_wfmark_toolbox (HyScanGtkMapKit *kit)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
   GtkWidget *box;
-  GtkWidget *label;
+  // GtkWidget *label;
   GtkWidget *scrolled_window;
 
   /* Невозможно создать виджет, т.к. */
@@ -1010,9 +1014,9 @@ create_wfmark_toolbox (HyScanGtkMapKit *kit)
   box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 5);
 
   /* Название проекта. */
-  label = gtk_label_new (_("Marks"));
-  gtk_label_set_max_width_chars (GTK_LABEL (label), 1);
-  gtk_label_set_ellipsize (GTK_LABEL (label), PANGO_ELLIPSIZE_END);
+  // label = gtk_label_new (_("Marks"));
+  // gtk_label_set_max_width_chars (GTK_LABEL (label), 1);
+  // gtk_label_set_ellipsize (GTK_LABEL (label), PANGO_ELLIPSIZE_END);
 
   /* Область прокрутки со списком галсов. */
   scrolled_window = gtk_scrolled_window_new (NULL, NULL);
@@ -1022,12 +1026,12 @@ create_wfmark_toolbox (HyScanGtkMapKit *kit)
   gtk_container_add (GTK_CONTAINER (scrolled_window), GTK_WIDGET (priv->mark_tree));
 
   /* Пакуем всё вместе. */
-  gtk_box_pack_start (GTK_BOX (box), label, FALSE, FALSE, 0);
-  gtk_box_pack_start (GTK_BOX (box), scrolled_window, FALSE, FALSE, 0);
+  // gtk_box_pack_start (GTK_BOX (box), label, FALSE, FALSE, 0);
+  gtk_box_pack_start (GTK_BOX (box), scrolled_window, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (box), priv->mark_editor, FALSE, FALSE, 0);
 
   /* Помещаем в панель навигации. */
-  gtk_container_add (GTK_CONTAINER (kit->navigation), box);
+  gtk_box_pack_start (GTK_BOX (kit->navigation), box, TRUE, TRUE, 0);
 }
 
 /* Выбор галсов проекта. */
@@ -1036,7 +1040,7 @@ create_track_box (HyScanGtkMapKit *kit)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
   GtkWidget *box;
-  GtkWidget *label;
+  // GtkWidget *label;
   GtkWidget *scrolled_window;
 
   if (priv->db == NULL)
@@ -1061,9 +1065,9 @@ create_track_box (HyScanGtkMapKit *kit)
   box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 5);
 
   /* Название проекта. */
-  label = gtk_label_new (_("Tracks"));
-  gtk_label_set_max_width_chars (GTK_LABEL (label), 1);
-  gtk_label_set_ellipsize (GTK_LABEL (label), PANGO_ELLIPSIZE_END);
+  // label = gtk_label_new (_("Tracks"));
+  // gtk_label_set_max_width_chars (GTK_LABEL (label), 1);
+  // gtk_label_set_ellipsize (GTK_LABEL (label), PANGO_ELLIPSIZE_END);
 
   /* Область прокрутки со списком галсов. */
   scrolled_window = gtk_scrolled_window_new (NULL, NULL);
@@ -1074,8 +1078,8 @@ create_track_box (HyScanGtkMapKit *kit)
 
 
   /* Пакуем всё вместе. */
-  gtk_box_pack_start (GTK_BOX (box), label, FALSE, FALSE, 0);
-  gtk_box_pack_start (GTK_BOX (box), scrolled_window, FALSE, FALSE, 0);
+  // gtk_box_pack_start (GTK_BOX (box), label, FALSE, FALSE, 0);
+  gtk_box_pack_start (GTK_BOX (box), scrolled_window, TRUE, TRUE, 0);
 
   return box;
 }
@@ -1269,7 +1273,7 @@ create_navigation_box (HyScanGtkMapKit *kit)
 
   item = create_track_box (kit);
   if (item != NULL)
-    gtk_container_add (GTK_CONTAINER (ctrl_box), item);
+    gtk_box_pack_start (GTK_BOX (ctrl_box), item, TRUE, TRUE, 0);
 
   gtk_widget_set_size_request (ctrl_box, 200, -1);
 
@@ -1838,4 +1842,14 @@ hyscan_gtk_map_kit_free (HyScanGtkMapKit *kit)
   g_free (priv);
 
   g_free (kit);
+}
+
+
+GtkTreeView *
+hyscan_gtk_map_kit_get_track_view (HyScanGtkMapKit *kit,
+                                   gint            *track_col)
+{
+  if (track_col != NULL)
+    *track_col = TRACK_COLUMN;
+  return kit->priv->track_tree;
 }

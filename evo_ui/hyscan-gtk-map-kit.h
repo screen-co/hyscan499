@@ -58,4 +58,8 @@ void              hyscan_gtk_map_kit_add_marks_geo    (HyScanGtkMapKit   *kit);
 HYSCAN_API
 void              hyscan_gtk_map_kit_free             (HyScanGtkMapKit   *kit);
 
+HYSCAN_API
+GtkTreeView *     hyscan_gtk_map_kit_get_track_view   (HyScanGtkMapKit   *kit,
+                                                       gint              *track_col);
+
 #endif /* __HYSCAN_GTK_MAP_KIT_H__ */

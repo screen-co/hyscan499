@@ -51,6 +51,15 @@
 
 #define DRY_TRACK_SUFFIX                "-dry"
 
+
+enum
+{
+  FNN_DATE_SORT_COLUMN,
+  FNN_TRACK_COLUMN,
+  FNN_DATE_COLUMN,
+  FNN_N_COLUMNS
+};
+
 enum
 {
   X_SIDESCAN = 155642,
@@ -200,6 +209,7 @@ typedef struct
 typedef struct _Global Global;
 struct _Global
 {
+  gint32                  canary;
   HyScanDB               *db;
   HyScanDBInfo           *db_info;
 
