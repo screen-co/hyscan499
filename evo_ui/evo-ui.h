@@ -32,8 +32,6 @@ typedef struct
   GKeyFile   *settings;
 
   HyScanGtkMapKit *mapkit;
-  gchar *tile_cache;
-  gchar *profile_dir;
 } EvoUI;
 
 /* Врапперы. */

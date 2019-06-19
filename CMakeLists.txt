@@ -83,6 +83,8 @@ set (HYSCAN_LIBRARIES gtkcifroarea-3.1
 
 add_definitions (-DG_LOG_DOMAIN="Fnn")
 add_definitions (-DFNN_DEFAULT_UI="evo.ui")
+add_definitions (-DFNN_LOCALE_DIR="/usr/share/locale")
+add_definitions (-DFNN_PROFILE_DIR="/usr/share/")
 add_subdirectory (libhyscanfnn)
 add_subdirectory (hw_ui)
 # add_subdirectory (sw_ui)

@@ -105,6 +105,89 @@ connector_close (GtkAssistant *ass,
   gtk_widget_destroy (GTK_WIDGET (ass));
 }
 
+gchar **
+va_to_strv (int n, va_list args)
+{
+  gchar ** strv = NULL;
+  const gchar * str = NULL;
+  int count = 0;
+
+  do
+    {
+      str = va_arg(args, gchar*);
+      strv = g_realloc (strv, (sizeof (gchar*)) * (count + 1));
+      strv[count] = g_strdup (str);
+      g_message ("%s %i", str, count);
+      ++count;
+    }
+  while (str != NULL);
+
+  return strv;
+}
+
+#ifdef G_OS_WIN32
+gchar *
+win32_build_path (int n, ...)
+{
+  static gchar *exec_dir = NULL;
+  gchar *locale_dir = NULL;
+  gchar *utf8_locale_dir;
+  va_list args;
+  gchar ** args_str;
+
+  /* ... If that directory's last component is "bin" or "lib",
+   * its parent directory is returned, otherwise the directory itself. */
+  if (exec_dir == NULL)
+    {
+      exec_dir = g_win32_get_package_installation_directory_of_module (NULL);
+      if (exec_dir == NULL)
+        {
+          g_warning ("Something is totally wrong");
+          return NULL;
+        }
+    }
+
+  va_start (args, n);
+  args_str = va_to_strv (n, args);
+  va_end (args);
+
+  utf8_locale_dir = g_build_filenamev (exec_dir, args_str);
+  locale_dir = g_win32_locale_filename_from_utf8 (utf8_locale_dir);
+
+  g_free (utf8_locale_dir);
+  return locale_dir;
+}
+#endif
+
+static const gchar *
+get_locale_dir (void)
+{
+  #ifdef G_OS_WIN32
+    static gchar *locale_dir = NULL;
+    if (locale_dir == NULL)
+      locale_dir = win32_build_path (2, "share", "locale");
+    return locale_dir;
+
+  #else
+    return FNN_LOCALE_DIR;
+  #endif
+}
+
+static const gchar *
+get_profile_dir (void)
+{
+  #ifdef G_OS_WIN32
+    static gchar *profile_dir = NULL;
+    if (profile_dir == NULL)
+      profile_dir = win32_build_path (1, "share");
+    return profile_dir;
+
+  #else
+    return FNN_PROFILE_DIR;
+  #endif
+}
+
+
 int
 main (int argc, char **argv)
 {
@@ -144,18 +227,16 @@ main (int argc, char **argv)
   gtk_init (&argc, &argv);
 
   {
-    gchar directory[2048];
-    gchar *dir;
-    dir = getcwd (directory, sizeof (directory));
-
     setlocale (LC_ALL, "");
-    bindtextdomain (GETTEXT_PACKAGE, dir);
-    bindtextdomain ("libhyscanfnn", dir);
-    bindtextdomain ("hyscanfnn-swui", dir);
+    bindtextdomain (GETTEXT_PACKAGE, get_locale_dir());
+    bindtextdomain ("libhyscanfnn", get_locale_dir());
+    bindtextdomain ("hyscanfnn-swui", get_locale_dir());
+    bindtextdomain ("hyscanfnn-evoui", get_locale_dir());
 
     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
     bind_textdomain_codeset ("libhyscanfnn" , "UTF-8");
     bind_textdomain_codeset ("hyscanfnn-swui", "UTF-8");
+    bind_textdomain_codeset ("hyscanfnn-evoui", "UTF-8");
 
     textdomain (GETTEXT_PACKAGE);
   }
@@ -176,7 +257,7 @@ main (int argc, char **argv)
         { "full-screen",     'f',   0, G_OPTION_ARG_NONE,    &full_screen,     "Full screen mode", NULL },
 
         { "hardware",        'p',   0, G_OPTION_ARG_STRING,       &hardware_profile, "* Hardware profile name", NULL },
-        { "drivers",         'o',   0, G_OPTION_ARG_STRING_ARRAY, &driver_paths,          "* Path to directories with driver(s)", NULL},
+        { "drivers",         'o',   0, G_OPTION_ARG_STRING_ARRAY, &driver_paths,     "* Path to directories with driver(s)", NULL},
 
         { "settings",        'l',   0, G_OPTION_ARG_STRING,  &settings_file,   "* Settings file", NULL },
         { "config",          'k',   0, G_OPTION_ARG_STRING,  &config_file,     "Configuration file", NULL },
@@ -354,7 +435,7 @@ main (int argc, char **argv)
   else
     {
       /* Показываем гуй для подключения. */
-      GtkWidget *window = hyscan_gtk_connector_new ();
+      GtkWidget *window = hyscan_gtk_connector_new (get_profile_dir(), driver_paths);
       g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
       g_signal_connect (window, "cancel", G_CALLBACK (connector_cancel), &global);
       g_signal_connect (window, "close", G_CALLBACK (connector_close), &global);
@@ -503,7 +584,6 @@ main (int argc, char **argv)
                   "incorrect track control ui");
   gtk_builder_add_callback_symbol (common_builder, "track_scroll", G_CALLBACK (track_scroll));
   gtk_builder_add_callback_symbol (common_builder, "track_changed", G_CALLBACK (track_changed));
-  gtk_builder_add_callback_symbol (common_builder, "position_changed", G_CALLBACK (position_changed));
 
   /* Сортировка списка галсов. */
   gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (global.gui.track.list), 0, GTK_SORT_DESCENDING);

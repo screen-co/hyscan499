@@ -5,7 +5,7 @@
 #include "evo-sensors.h"
 #include "evo-ui.h"
 
-#define GETTEXT_PACKAGE "libhyscanfnn-evoui"
+#define GETTEXT_PACKAGE "hyscanfnn-evoui"
 #include <glib/gi18n-lib.h>
 
 // #define EVO_EMPTY_PAGE "empty_page"
@@ -535,11 +535,13 @@ build_interface (Global *global)
 
   /* Карта всегда в наличии. */
   {
+    gchar *profile_dir = g_build_filename (g_get_user_config_dir (), "hyscan", "map-profiles", NULL);
+    gchar *cache_dir = g_build_filename (g_get_user_cache_dir (), "hyscan", NULL);
     HyScanGeoGeodetic center = {0, 0};
 
-    ui->mapkit = hyscan_gtk_map_kit_new (&center, global->db, ui->tile_cache);
+    ui->mapkit = hyscan_gtk_map_kit_new (&center, global->db, cache_dir);
     hyscan_gtk_map_kit_set_project (ui->mapkit, global->project_name);
-    hyscan_gtk_map_kit_load_profiles (ui->mapkit, ui->profile_dir);
+    hyscan_gtk_map_kit_load_profiles (ui->mapkit, profile_dir);
     hyscan_gtk_map_kit_add_marks_wf (ui->mapkit);
     hyscan_gtk_map_kit_add_marks_geo (ui->mapkit);
 
@@ -549,6 +551,9 @@ build_interface (Global *global)
     gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), ui->mapkit->map, EVO_MAP, _("Map"));
     gtk_stack_add_named (GTK_STACK (ui->control_stack), ui->mapkit->control, EVO_MAP);
     gtk_stack_add_named (GTK_STACK (ui->nav_stack), ui->mapkit->navigation, EVO_MAP);
+
+    g_free (profile_dir);
+    g_free (cache_dir);
   }
 
 
@@ -694,20 +699,6 @@ destroy_interface (void)
 G_MODULE_EXPORT gboolean
 kf_config (GKeyFile *kf)
 {
-  gchar *tile_cache_dir;
-  gchar *profile_dir;
-
-  profile_dir = keyfile_string_read_helper (kf, EVO, "profile_dir");
-  if (profile_dir == NULL)
-    profile_dir = g_strdup ("./maps");
-
-  tile_cache_dir = keyfile_string_read_helper (kf, EVO, "tile_cache_dir");
-  if (tile_cache_dir == NULL)
-    tile_cache_dir = g_build_filename (g_get_tmp_dir(), "hyscan499", NULL);
-
-  global_ui.tile_cache = tile_cache_dir;
-  global_ui.profile_dir = profile_dir;
-
   return TRUE;
 }
 

@@ -443,10 +443,6 @@ HYSCAN_API  void
 track_changed (GtkTreeView *list,
                Global      *global);
 
-HYSCAN_API void
-position_changed (GtkAdjustment *range,
-                  Global        *global);
-
 HYSCAN_API gboolean
 brightness_set (Global  *global,
                 gdouble  cur_brightness,

@@ -1566,13 +1566,6 @@ track_changed (GtkTreeView *list,
   g_value_unset (&value);
 }
 
-/* Функция обрабатывает данные для текущего индекса. */
-void
-position_changed (GtkAdjustment *range,
-                  Global        *global)
-{
-}
-
 gdouble
 fl_current_scale (HyScanGtkForwardLook *fl)
 {
