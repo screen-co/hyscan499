@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <fnn-types.h>
+#include <hyscan-fnn-flog.h>
 #include <hyscan-fnn-splash.h>
 #include <hyscan-fnn-project.h>
 #include <hyscan-fnn-button.h>
@@ -237,6 +238,8 @@ main (int argc, char **argv)
 
   global.canary = 123456789;
 
+  /* Перенаправление логов в файл. */
+  hyscan_fnn_flog_open ("hyscan", 1000000);
 
   gtk_init (&argc, &argv);
 
@@ -675,6 +678,8 @@ exit:
   fnn_deinit (&global);
   if (global.settings != NULL)
     g_key_file_save_to_file (global.settings, settings_file, NULL);
+
+  hyscan_fnn_flog_close ();
 
   g_clear_pointer (&config, g_key_file_unref);
 
