@@ -439,6 +439,10 @@ main (int argc, char **argv)
               global.control = hyscan_profile_hw_connect (hw);
               global.control_s = HYSCAN_SONAR (global.control);
             }
+          else
+            {
+              g_message ("Profile check error");
+            }
 
           g_clear_object (&hw);
         }
@@ -635,6 +639,8 @@ main (int argc, char **argv)
   g_key_file_unref (hardware);
 
   ui_setting (global.settings);
+
+  update_panels (&global, NULL);
 
   if (full_screen)
     gtk_window_fullscreen (GTK_WINDOW (global.gui.window));

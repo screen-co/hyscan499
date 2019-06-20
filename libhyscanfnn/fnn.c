@@ -3240,7 +3240,7 @@ update_panels (Global          *global,
 
       /* ХайСканСорсТайп есть либо в галсе, либо в ГЛ.
        * Либо его нет, но тогда и показывать нечего. */
-      if (track_info->sources[s2p.source])
+      if (track_info != NULL && track_info->sources[s2p.source])
         fnn_ensure_panel(s2p.panelx, global);
       else if (global->control != NULL && g_hash_table_lookup (global->infos, GINT_TO_POINTER (s2p.source)))
         fnn_ensure_panel(s2p.panelx, global);
