@@ -17,8 +17,10 @@
 #include <hyscan-list-model.h>
 #include <hyscan-mark-model.h>
 #include <hyscan-gtk-map-planner.h>
-#include <glib/gi18n.h>
 #include <hyscan-gtk-map-geomark-layer.h>
+
+#define GETTEXT_PACKAGE "hyscanfnn-evoui"
+#include <glib/gi18n-lib.h>
 
 #define DEFAULT_PROFILE_NAME "default"    /* Имя профиля карты по умолчанию. */
 #define PRELOAD_STATE_DONE   1000         /* Статус кэширования тайлов 0 "Загрузка завершена". */
@@ -114,6 +116,7 @@ struct _HyScanGtkMapKitPrivate
 static GtkWidget *
 create_map (HyScanGtkMapKit *kit)
 {
+  g_message ("Map: %s// %s", GETTEXT_PACKAGE, g_dgettext(GETTEXT_PACKAGE, "Balance"));
   HyScanGtkMapKitPrivate *priv = kit->priv;
   HyScanGtkMap *map;
   gdouble *scales;
@@ -565,13 +568,6 @@ create_track_tree_view (HyScanGtkMapKit *kit,
   GtkTreeViewColumn *visible_column, *track_column, *date_column;
   GtkTreeView *tree_view;
 
-  /* Галочка с признаком видимости галса. */
-  renderer = gtk_cell_renderer_toggle_new ();
-  g_signal_connect (renderer, "toggled", G_CALLBACK (on_enable_track), kit);
-  visible_column = gtk_tree_view_column_new_with_attributes (_("Show"), renderer,
-                                                             "active", VISIBLE_COLUMN, NULL);
-  gtk_tree_view_column_set_sort_column_id (visible_column, VISIBLE_COLUMN);
-
   /* Название галса. */
   renderer = gtk_cell_renderer_text_new ();
   track_column = gtk_tree_view_column_new_with_attributes (_("Track"), renderer,
@@ -584,11 +580,17 @@ create_track_tree_view (HyScanGtkMapKit *kit,
                                                           "text", DATE_COLUMN, NULL);
   gtk_tree_view_column_set_sort_column_id (date_column, DATE_SORT_COLUMN);
 
+  /* Галочка с признаком видимости галса. */
+  renderer = gtk_cell_renderer_toggle_new ();
+  g_signal_connect (renderer, "toggled", G_CALLBACK (on_enable_track), kit);
+  visible_column = gtk_tree_view_column_new_with_attributes (_("Show"), renderer,
+                                                             "active", VISIBLE_COLUMN, NULL);
+
   tree_view = GTK_TREE_VIEW (gtk_tree_view_new_with_model (tree_model));
   gtk_tree_view_set_search_column (tree_view, TRACK_COLUMN);
-  gtk_tree_view_append_column (tree_view, visible_column);
   gtk_tree_view_append_column (tree_view, track_column);
   gtk_tree_view_append_column (tree_view, date_column);
+  gtk_tree_view_append_column (tree_view, visible_column);
 
   gtk_tree_view_set_grid_lines (tree_view, GTK_TREE_VIEW_GRID_LINES_BOTH);
 
@@ -1391,7 +1393,7 @@ create_layer_tree_view (HyScanGtkMapKit *kit,
   /* Галочка с признаком видимости галса. */
   renderer = gtk_cell_renderer_toggle_new ();
   g_signal_connect (renderer, "toggled", G_CALLBACK (on_enable_layer), kit);
-  visible_column = gtk_tree_view_column_new_with_attributes (_("Visible"), renderer,
+  visible_column = gtk_tree_view_column_new_with_attributes (_("Show"), renderer,
                                                              "active", LAYER_VISIBLE_COLUMN, NULL);
 
   /* Название галса. */
@@ -1400,8 +1402,8 @@ create_layer_tree_view (HyScanGtkMapKit *kit,
                                                            "text", LAYER_TITLE_COLUMN, NULL);
 
   tree_view = gtk_tree_view_new_with_model (tree_model);
-  gtk_tree_view_append_column (GTK_TREE_VIEW (tree_view), visible_column);
   gtk_tree_view_append_column (GTK_TREE_VIEW (tree_view), track_column);
+  gtk_tree_view_append_column (GTK_TREE_VIEW (tree_view), visible_column);
 
   selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (tree_view));
   g_signal_connect (selection, "changed", G_CALLBACK (layer_changed), kit);
@@ -1806,7 +1808,7 @@ hyscan_gtk_map_kit_add_marks_geo (HyScanGtkMapKit   *kit)
 
   /* Слой с геометками. */
   priv->geomark_layer = hyscan_gtk_map_geomark_layer_new (priv->mark_geo_model);
-  add_layer_row (kit, priv->geomark_layer, "wfmark", _("Geo Marks"));
+  add_layer_row (kit, priv->geomark_layer, "geomark", _("Geo Marks"));
 
   /* Виджет навигации по меткам. */
   create_wfmark_toolbox (kit);

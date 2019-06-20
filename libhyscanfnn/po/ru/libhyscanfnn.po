@@ -1,15 +1,15 @@
-# Russian translations for PACKAGE package.
-# Copyright (C) 2019 THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-#  <dmitriev.a@debian.work>, 2019.
+# Russian translations for hyscan package.
+# Copyright (C) 2019 THE hyscan'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the hyscan package.
+#  <m1n7@yandex.ru>, 2019.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-03-15 17:52+0300\n"
-"PO-Revision-Date: 2019-03-14 14:27+0300\n"
-"Last-Translator:  <dmitriev.a@debian.work>\n"
+"POT-Creation-Date: 2019-06-20 10:48+0300\n"
+"PO-Revision-Date: 2019-06-20 10:38+0300\n"
+"Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
@@ -18,25 +18,69 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: hyscan-gtk-mark-editor.ui.h:3 hyscan-gtk-nav-indicator.ui.h:2
-msgid "--"
-msgstr ""
+#: fnn.c:59
+msgid "SideScan"
+msgstr "ГБО"
 
-#: fnn.c:155
+#: fnn.c:103
+msgid "SideScanLow"
+msgstr "ГБО-НЧ"
+
+#: fnn.c:146 fnn.c:3159
+msgid "Profiler"
+msgstr "Профилограф"
+
+#: fnn.c:191
+msgid "Echosounder"
+msgstr "Эхолот"
+
+#: fnn.c:235
+msgid "ForwardLook"
+msgstr "Впередсмотрящий"
+
+#: fnn.c:469
+msgid "Hardware parameters"
+msgstr "Параметры оборудования"
+
+#: fnn.c:471
 msgid "Apply"
 msgstr "Применить"
 
-#: fnn.c:157 fnn.c:190
+#: fnn.c:472
+msgid "Reset"
+msgstr "Сбросить"
+
+#: fnn.c:473 fnn.c:506
 msgid "Close"
 msgstr "Закрыть"
 
-#: hyscan-fnn-project.c:509
-msgid "Create and open project"
-msgstr "Создать и открыть проект"
+#: fnn.c:504
+msgid "Sonar info"
+msgstr "Информация о ГЛ"
 
-#: hyscan-gtk-project-viewer.ui.h:2
-msgid "Date"
-msgstr "Дата"
+#: fnn.c:3168
+msgid "Yellow"
+msgstr "Желтый"
+
+#: fnn.c:3176
+msgid "90's"
+msgstr "Оранжевый"
+
+#: fnn.c:3183
+msgid "Sepia"
+msgstr "Сепия"
+
+#: fnn.c:3190
+msgid "White"
+msgstr "Белый"
+
+#: fnn.c:3198
+msgid "Inverted"
+msgstr "Инверсия"
+
+#: fnn.c:3206
+msgid "Green"
+msgstr "Зеленый"
 
 #: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:461
 msgid "Delete project"
@@ -46,66 +90,82 @@ msgstr "Удалить проект"
 msgid "Delete track"
 msgstr "Удалить галс"
 
-#: hyscan-gtk-nav-indicator.ui.h:6
-msgid "Depth"
-msgstr "Глубина"
+#: hyscan-fnn-project.c:163
+msgid "Projects"
+msgstr "Проекты"
+
+#: hyscan-fnn-project.c:165
+msgid "Tracks"
+msgstr "Галсы"
 
 #: hyscan-fnn-project.c:184
 msgid "Do you really want to delete project"
 msgstr "Вы действительно хотите удалить проект"
 
-#: fnn.c:153
-msgid "Hardware parameters"
-msgstr "Параметры оборудования"
-
-#: hyscan-gtk-mark-editor.ui.h:2 hyscan-gtk-nav-indicator.ui.h:1
-msgid "Latitude"
-msgstr "Широта"
-
-#: hyscan-gtk-mark-editor.ui.h:4 hyscan-gtk-nav-indicator.ui.h:3
-msgid "Longitude"
-msgstr "Долгота"
-
-#: hyscan-gtk-project-viewer.ui.h:1
-msgid "Name"
-msgstr "Название"
+#: hyscan-fnn-project.c:186
+msgid "This can not be undone"
+msgstr "Это нельзя отменить"
 
 #: hyscan-fnn-project.c:464 hyscan-fnn-project.c:507
 msgid "Open project"
 msgstr "Открыть проект"
 
-#: hyscan-fnn-project.c:163
-msgid "Projects"
-msgstr "Проекты"
+#: hyscan-fnn-project.c:509
+msgid "Create and open project"
+msgstr "Создать и открыть проект"
 
-#: fnn.c:156
-msgid "Reset"
-msgstr "Сбросить"
+#: hyscan-gtk-nav-indicator.c:255
+msgid "N"
+msgstr "С.Ш."
 
-#: fnn.c:188
-msgid "Sonar info"
-msgstr "Информация о гидролокаторе"
+#: hyscan-gtk-nav-indicator.c:255
+msgid "S"
+msgstr "Ю.Ш."
 
-#: hyscan-gtk-nav-indicator.ui.h:5
-msgid "Speed"
-msgstr "Скорость"
+#: hyscan-gtk-nav-indicator.c:256
+msgid "E"
+msgstr "В.Д."
 
-#: hyscan-fnn-project.c:186
-msgid "This can not be undone"
-msgstr "Эту операцию нельзя отменить"
+#: hyscan-gtk-nav-indicator.c:256
+msgid "W"
+msgstr "З.Д."
 
-#: hyscan-gtk-nav-indicator.ui.h:7
-msgid "Time"
-msgstr "Время"
-
-#: hyscan-gtk-mark-editor.ui.h:1
+#: tmp/hyscan-gtk-mark-editor.ui.h:1
 msgid "Title"
 msgstr "Название"
 
-#: hyscan-gtk-nav-indicator.ui.h:4
+#: tmp/hyscan-gtk-mark-editor.ui.h:2 tmp/hyscan-gtk-nav-indicator.ui.h:1
+msgid "Latitude"
+msgstr "Широта"
+
+#: tmp/hyscan-gtk-mark-editor.ui.h:3 tmp/hyscan-gtk-nav-indicator.ui.h:2
+msgid "--"
+msgstr "-"
+
+#: tmp/hyscan-gtk-mark-editor.ui.h:4 tmp/hyscan-gtk-nav-indicator.ui.h:3
+msgid "Longitude"
+msgstr "Долгота"
+
+#: tmp/hyscan-gtk-nav-indicator.ui.h:4
 msgid "Track"
 msgstr "Курс"
 
-#: hyscan-fnn-project.c:165
-msgid "Tracks"
-msgstr "Галсы"
+#: tmp/hyscan-gtk-nav-indicator.ui.h:5
+msgid "Speed"
+msgstr "Скорость"
+
+#: tmp/hyscan-gtk-nav-indicator.ui.h:6
+msgid "Depth"
+msgstr "Глубина"
+
+#: tmp/hyscan-gtk-nav-indicator.ui.h:7
+msgid "Time"
+msgstr "Время"
+
+#: tmp/hyscan-gtk-project-viewer.ui.h:1
+msgid "Name"
+msgstr "Имя"
+
+#: tmp/hyscan-gtk-project-viewer.ui.h:2
+msgid "Date"
+msgstr "Дата"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-03-15 17:52+0300\n"
+"POT-Creation-Date: 2019-06-20 10:48+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,24 +17,68 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: hyscan-gtk-mark-editor.ui.h:3 hyscan-gtk-nav-indicator.ui.h:2
-msgid "--"
+#: fnn.c:59
+msgid "SideScan"
 msgstr ""
 
-#: fnn.c:155
+#: fnn.c:103
+msgid "SideScanLow"
+msgstr ""
+
+#: fnn.c:146 fnn.c:3159
+msgid "Profiler"
+msgstr ""
+
+#: fnn.c:191
+msgid "Echosounder"
+msgstr ""
+
+#: fnn.c:235
+msgid "ForwardLook"
+msgstr ""
+
+#: fnn.c:469
+msgid "Hardware parameters"
+msgstr ""
+
+#: fnn.c:471
 msgid "Apply"
 msgstr ""
 
-#: fnn.c:157 fnn.c:190
+#: fnn.c:472
+msgid "Reset"
+msgstr ""
+
+#: fnn.c:473 fnn.c:506
 msgid "Close"
 msgstr ""
 
-#: hyscan-fnn-project.c:509
-msgid "Create and open project"
+#: fnn.c:504
+msgid "Sonar info"
 msgstr ""
 
-#: hyscan-gtk-project-viewer.ui.h:2
-msgid "Date"
+#: fnn.c:3168
+msgid "Yellow"
+msgstr ""
+
+#: fnn.c:3176
+msgid "90's"
+msgstr ""
+
+#: fnn.c:3183
+msgid "Sepia"
+msgstr ""
+
+#: fnn.c:3190
+msgid "White"
+msgstr ""
+
+#: fnn.c:3198
+msgid "Inverted"
+msgstr ""
+
+#: fnn.c:3206
+msgid "Green"
 msgstr ""
 
 #: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:461
@@ -45,66 +89,82 @@ msgstr ""
 msgid "Delete track"
 msgstr ""
 
-#: hyscan-gtk-nav-indicator.ui.h:6
-msgid "Depth"
+#: hyscan-fnn-project.c:163
+msgid "Projects"
+msgstr ""
+
+#: hyscan-fnn-project.c:165
+msgid "Tracks"
 msgstr ""
 
 #: hyscan-fnn-project.c:184
 msgid "Do you really want to delete project"
 msgstr ""
 
-#: fnn.c:153
-msgid "Hardware parameters"
-msgstr ""
-
-#: hyscan-gtk-mark-editor.ui.h:2 hyscan-gtk-nav-indicator.ui.h:1
-msgid "Latitude"
-msgstr ""
-
-#: hyscan-gtk-mark-editor.ui.h:4 hyscan-gtk-nav-indicator.ui.h:3
-msgid "Longitude"
-msgstr ""
-
-#: hyscan-gtk-project-viewer.ui.h:1
-msgid "Name"
+#: hyscan-fnn-project.c:186
+msgid "This can not be undone"
 msgstr ""
 
 #: hyscan-fnn-project.c:464 hyscan-fnn-project.c:507
 msgid "Open project"
 msgstr ""
 
-#: hyscan-fnn-project.c:163
-msgid "Projects"
+#: hyscan-fnn-project.c:509
+msgid "Create and open project"
 msgstr ""
 
-#: fnn.c:156
-msgid "Reset"
+#: hyscan-gtk-nav-indicator.c:255
+msgid "N"
 msgstr ""
 
-#: fnn.c:188
-msgid "Sonar info"
+#: hyscan-gtk-nav-indicator.c:255
+msgid "S"
 msgstr ""
 
-#: hyscan-gtk-nav-indicator.ui.h:5
-msgid "Speed"
+#: hyscan-gtk-nav-indicator.c:256
+msgid "E"
 msgstr ""
 
-#: hyscan-fnn-project.c:186
-msgid "This can not be undone"
+#: hyscan-gtk-nav-indicator.c:256
+msgid "W"
 msgstr ""
 
-#: hyscan-gtk-nav-indicator.ui.h:7
-msgid "Time"
-msgstr ""
-
-#: hyscan-gtk-mark-editor.ui.h:1
+#: tmp/hyscan-gtk-mark-editor.ui.h:1
 msgid "Title"
 msgstr ""
 
-#: hyscan-gtk-nav-indicator.ui.h:4
+#: tmp/hyscan-gtk-mark-editor.ui.h:2 tmp/hyscan-gtk-nav-indicator.ui.h:1
+msgid "Latitude"
+msgstr ""
+
+#: tmp/hyscan-gtk-mark-editor.ui.h:3 tmp/hyscan-gtk-nav-indicator.ui.h:2
+msgid "--"
+msgstr ""
+
+#: tmp/hyscan-gtk-mark-editor.ui.h:4 tmp/hyscan-gtk-nav-indicator.ui.h:3
+msgid "Longitude"
+msgstr ""
+
+#: tmp/hyscan-gtk-nav-indicator.ui.h:4
 msgid "Track"
 msgstr ""
 
-#: hyscan-fnn-project.c:165
-msgid "Tracks"
+#: tmp/hyscan-gtk-nav-indicator.ui.h:5
+msgid "Speed"
+msgstr ""
+
+#: tmp/hyscan-gtk-nav-indicator.ui.h:6
+msgid "Depth"
+msgstr ""
+
+#: tmp/hyscan-gtk-nav-indicator.ui.h:7
+msgid "Time"
+msgstr ""
+
+#: tmp/hyscan-gtk-project-viewer.ui.h:1
+msgid "Name"
+msgstr ""
+
+#: tmp/hyscan-gtk-project-viewer.ui.h:2
+msgid "Date"
 msgstr ""

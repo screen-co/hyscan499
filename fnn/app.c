@@ -170,15 +170,16 @@ win32_build_path (int n, ...)
 static const gchar *
 get_locale_dir (void)
 {
+  static gchar *locale_dir = NULL;
   #ifdef G_OS_WIN32
-    static gchar *locale_dir = NULL;
     if (locale_dir == NULL)
       locale_dir = win32_build_path(2, "share", "locale", NULL);
-    return locale_dir;
-
   #else
-    return FNN_LOCALE_DIR;
+    locale_dir = FNN_LOCALE_DIR;
   #endif
+
+  g_message ("locale: %s", locale_dir);
+  return locale_dir;
 }
 
 static const gchar *
@@ -501,11 +502,6 @@ main (int argc, char **argv)
    *                 ---   ---   ---   ---                           ---                           ---
    * проект, галс, настройки
    */
-
-  if (cache_size == 0)
-    {
-      g_print ("%s\n", "Cache size not set. Default (2 Gb) may be too big.");
-    }
 
   /* Файл c настройками ГЛ. */
   if (settings_file == NULL)

@@ -1,0 +1,227 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-06-20 15:00+0300\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: evo-ui.c:615
+msgid "Map"
+msgstr ""
+
+#: evo-ui.c:704
+msgid "Project Manager"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:418
+msgid "OK"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:419
+msgid "Cancel"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:420
+msgid "Restore"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:421
+msgid "Apply"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:483 hyscan-gtk-map-kit.c:650
+msgid "Track settings"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:573
+msgid "Track"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:579
+msgid "Date"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:586 hyscan-gtk-map-kit.c:1396
+msgid "Show"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:617
+msgid "Mark"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:623
+msgid "Last upd."
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:645
+msgid "Find track on the map"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1156
+msgid "Done!"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1158
+#, c-format
+msgid "Done! Failed to load %d tiles"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1162 hyscan-gtk-map-kit.c:1323
+msgid "Start download"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1222
+msgid "Stop download"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1295
+msgid "My location"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1304
+msgid "Go"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1308
+msgid "Coordinates (lat, lon)"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1401
+msgid "Layer"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1431
+msgid "Enable editing"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1444 tmp/evo.ui.h:6
+msgid "Layers"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1457
+msgid "Remove ruler"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1461
+msgid "Remove all pins"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1474
+msgid "Go to"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1478
+msgid "Offline"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1537
+msgid "Tracks"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1538
+msgid "Ruler"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1539
+msgid "Pin"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1540
+msgid "Grid"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1733
+msgid "Planner"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1765
+msgid "Navigation"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1784
+msgid "Waterfall Marks"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1811
+msgid "Geo Marks"
+msgstr ""
+
+#: tmp/evo.ui.h:1
+msgid "Brightness"
+msgstr ""
+
+#: tmp/evo.ui.h:2
+msgid "<small><b>xx</b></small>"
+msgstr ""
+
+#: tmp/evo.ui.h:3
+msgid "Scale"
+msgstr ""
+
+#: tmp/evo.ui.h:4
+msgid "Autoscroll"
+msgstr ""
+
+#: tmp/evo.ui.h:5
+msgid "Black"
+msgstr ""
+
+#: tmp/evo.ui.h:7
+msgid "Target mode"
+msgstr ""
+
+#: tmp/evo.ui.h:8
+msgid "Sensitivity"
+msgstr ""
+
+#: tmp/evo.ui.h:9
+msgid "Distance"
+msgstr ""
+
+#: tmp/evo.ui.h:10
+msgid "Signal"
+msgstr ""
+
+#: tmp/evo.ui.h:11
+msgid "Balance"
+msgstr ""
+
+#: tmp/evo.ui.h:12
+msgid "White"
+msgstr ""
+
+#: tmp/evo.ui.h:13
+msgid "Color"
+msgstr ""
+
+#: tmp/evo.ui.h:14
+msgid "Start gain"
+msgstr ""
+
+#: tmp/evo.ui.h:15
+msgid "Gain"
+msgstr ""
+
+#: tmp/evo.ui.h:16
+msgid "Level"
+msgstr ""
+
+#: tmp/record.ui.h:1
+msgid "No beaming"
+msgstr ""
+
+#: tmp/record.ui.h:2
+msgid "Start"
+msgstr ""

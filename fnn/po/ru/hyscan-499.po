@@ -1,15 +1,15 @@
-# Russian translations for PACKAGE package.
-# Copyright (C) 2019 THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-#  <dmitriev.a@debian.work>, 2019.
+# Russian translations for hyscan package.
+# Copyright (C) 2019 THE hyscan'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the hyscan package.
+#  <m1n7@yandex.ru>, 2019.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: PACKAGE VERSION\n"
+"Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-03-14 10:56+0300\n"
-"PO-Revision-Date: 2019-03-13 18:47+0300\n"
-"Last-Translator:  <dmitriev.a@debian.work>\n"
+"POT-Creation-Date: 2019-06-20 11:30+0300\n"
+"PO-Revision-Date: 2019-06-20 11:30+0300\n"
+"Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
 "Language: ru\n"
 "MIME-Version: 1.0\n"
@@ -18,50 +18,10 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: common.ui.h:2
-msgid "Date"
-msgstr "Дата"
-
-#: app.c:606
-msgid "Echosounder"
-msgstr "Эхолот"
-
-#: app.c:649
-msgid "ForwardLook"
-msgstr "ВСЛ"
-
-#: app.c:98
-msgid "Green"
-msgstr "Зеленый"
-
-#: app.c:90
-msgid "Inverted"
-msgstr "Инверсия"
-
-#: app.c:57 app.c:561
-msgid "Profiler"
-msgstr "ПФ"
-
-#: app.c:75
-msgid "Sepia"
-msgstr "Сепия"
-
-#: app.c:479
-msgid "SideScan"
-msgstr "ГБО"
-
-#: app.c:520
-msgid "SideScanLow"
-msgstr "ГБО-НЧ"
-
-#: common.ui.h:1
+#: common.ui.h:1 tmp/common.ui.h:1
 msgid "Track"
 msgstr "Галс"
 
-#: app.c:82
-msgid "White"
-msgstr "Белый"
-
-#: app.c:67
-msgid "Yellow"
-msgstr "Жёлтый"
+#: common.ui.h:2 tmp/common.ui.h:2
+msgid "Date"
+msgstr "Дата"
