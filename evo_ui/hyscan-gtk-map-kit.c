@@ -1285,8 +1285,9 @@ create_navigation_box (HyScanGtkMapKit *kit)
 /* Текстовые поля для ввода координат. */
 static void
 create_nav_input (HyScanGtkMapKit *kit,
-                  GtkContainer    *container)
+                  GtkGrid         *grid)
 {
+  gint t=0;
   HyScanGtkMapKitPrivate *priv = kit->priv;
   GtkWidget *move_button;
 
@@ -1304,11 +1305,12 @@ create_nav_input (HyScanGtkMapKit *kit,
   move_button = gtk_button_new_with_label (_("Go"));
   g_signal_connect_swapped (move_button, "clicked", G_CALLBACK (on_move_to_click), kit);
 
-  gtk_container_add (container, priv->locate_button);
-  gtk_container_add (container, gtk_label_new (_("Coordinates (lat, lon)")));
-  gtk_container_add (container, priv->lat_spin);
-  gtk_container_add (container, priv->lon_spin);
-  gtk_container_add (container, move_button);
+  gtk_grid_attach (grid, gtk_label_new (_("Lat")), 0, ++t, 1, 1);
+  gtk_grid_attach (grid, priv->lat_spin, 1, t, 1, 1);
+  gtk_grid_attach (grid, gtk_label_new (_("Lon")), 0, ++t, 1, 1);
+  gtk_grid_attach (grid, priv->lon_spin, 1, t, 1, 1);
+  gtk_grid_attach (grid, move_button, 0, ++t, 2, 1);
+  gtk_grid_attach (grid, priv->locate_button, 0, ++t, 2, 1);
 }
 
 /* Загрузка тайлов. */
@@ -1415,34 +1417,41 @@ create_layer_tree_view (HyScanGtkMapKit *kit,
 static GtkWidget *
 create_control_box (HyScanGtkMapKit *kit)
 {
+  gint t = 0;
   HyScanGtkMapKitPrivate *priv = kit->priv;
   GtkWidget *ctrl_box;
   GtkWidget *ctrl_widget;
 
-  ctrl_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 5);
+  ctrl_box = gtk_grid_new ();
 
   /* Выпадающий список с профилями. */
   priv->profiles_box = gtk_combo_box_text_new ();
   g_signal_connect_swapped (priv->profiles_box , "changed", G_CALLBACK (on_profile_change), kit);
-  gtk_container_add (GTK_CONTAINER (ctrl_box), priv->profiles_box);
+  // gtk_container_add (GTK_CONTAINER (ctrl_box), priv->profiles_box);
+  gtk_grid_attach (GTK_GRID (ctrl_box), priv->profiles_box, 0, ++t, 2, 1);
 
   /* Блокировка редактирования. */
   {
-    gtk_container_add (GTK_CONTAINER (ctrl_box), gtk_label_new (_("Enable editing")));
+    gint l = 0;
+    // gtk_container_add (GTK_CONTAINER (ctrl_box), );
+    gtk_grid_attach (GTK_GRID (ctrl_box), gtk_label_new (_("Enable editing")), l, ++t, 1, 1);
 
     ctrl_widget = gtk_switch_new ();
     gtk_switch_set_active (GTK_SWITCH (ctrl_widget),
                            hyscan_gtk_layer_container_get_changes_allowed (HYSCAN_GTK_LAYER_CONTAINER (kit->map)));
-    gtk_container_add (GTK_CONTAINER (ctrl_box), ctrl_widget);
+    gtk_grid_attach (GTK_GRID (ctrl_box), ctrl_widget, ++l, t, 1, 1);
     g_signal_connect (ctrl_widget, "notify::active", G_CALLBACK (on_editable_switch), kit->map);
   }
 
   gtk_container_add (GTK_CONTAINER (ctrl_box), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL));
+  gtk_grid_attach (GTK_GRID (ctrl_box), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), 0, ++t, 2, 1);
 
   /* Переключение слоёв. */
   {
-    gtk_container_add (GTK_CONTAINER (ctrl_box), gtk_label_new (_("Layers")));
-    gtk_container_add (GTK_CONTAINER (ctrl_box), create_layer_tree_view (kit, GTK_TREE_MODEL (priv->layer_store)));
+    // gtk_container_add (GTK_CONTAINER (ctrl_box), gtk_label_new (_("Layers")));
+    gtk_grid_attach (GTK_GRID (ctrl_box), gtk_label_new (_("Layers")), 0, ++t, 2, 1);
+    // gtk_container_add (GTK_CONTAINER (ctrl_box), create_layer_tree_view (kit, GTK_TREE_MODEL (priv->layer_store)));
+    gtk_grid_attach (GTK_GRID (ctrl_box), create_layer_tree_view (kit, GTK_TREE_MODEL (priv->layer_store)), 0, ++t, 2, 1);
   }
 
   /* Контейнер для панели инструментов каждого слоя. */
@@ -1451,7 +1460,8 @@ create_control_box (HyScanGtkMapKit *kit)
 
     priv->layer_tool_stack = gtk_stack_new ();
     gtk_stack_set_homogeneous (GTK_STACK (priv->layer_tool_stack), FALSE);
-    gtk_container_add (GTK_CONTAINER (ctrl_box), GTK_WIDGET (priv->layer_tool_stack));
+    // gtk_container_add (GTK_CONTAINER (ctrl_box), GTK_WIDGET (priv->layer_tool_stack));
+    gtk_grid_attach (GTK_GRID (ctrl_box), GTK_WIDGET (priv->layer_tool_stack), 0, ++t, 2, 1);
 
     /* Устаналиваем виджеты с инструментами для каждого слоя. */
     layer_tools = create_ruler_toolbox (priv->ruler, _("Remove ruler"));
@@ -1469,11 +1479,23 @@ create_control_box (HyScanGtkMapKit *kit)
 
     stack = gtk_stack_new ();
 
-    stack_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 5);
-    create_nav_input (kit, GTK_CONTAINER (stack_box));
+    stack_box = gtk_grid_new ();
+    g_object_set (stack_box,
+                  "margin", 6,
+                  "row-spacing", 2,
+                  "column-spacing", 6,
+                  "halign", GTK_ALIGN_CENTER,
+                  NULL);
+    gtk_grid_set_column_spacing (GTK_GRID (stack_box), 2);
+    gtk_grid_set_row_spacing (GTK_GRID (stack_box), 2);
+    create_nav_input (kit, GTK_GRID (stack_box));
     gtk_stack_add_titled (GTK_STACK (stack), stack_box, "navigate", _("Go to"));
 
-    stack_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 5);
+    stack_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
+    g_object_set (stack_box,
+                  "margin", 6,
+                  "halign", GTK_ALIGN_CENTER,
+                  NULL);
     create_preloader (kit, GTK_CONTAINER (stack_box));
     gtk_stack_add_titled (GTK_STACK (stack), stack_box, "cache", _("Offline"));
 
@@ -1482,8 +1504,10 @@ create_control_box (HyScanGtkMapKit *kit)
     gtk_widget_set_margin_top (stack_switcher, 5);
     gtk_stack_switcher_set_stack (GTK_STACK_SWITCHER (stack_switcher), GTK_STACK (stack));
 
-    gtk_container_add (GTK_CONTAINER (ctrl_box), stack_switcher);
-    gtk_container_add (GTK_CONTAINER (ctrl_box), stack);
+    // gtk_container_add (GTK_CONTAINER (ctrl_box), stack_switcher);
+    gtk_grid_attach (GTK_GRID (ctrl_box), stack_switcher, 0, ++t, 2, 1);
+    // gtk_container_add (GTK_CONTAINER (ctrl_box), stack);
+    gtk_grid_attach (GTK_GRID (ctrl_box), stack, 0, ++t, 2, 1);
   }
 
   return ctrl_box;

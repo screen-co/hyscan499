@@ -398,6 +398,15 @@ get_builder_for_panel (EvoUI * ui,
   return b;
 }
 
+void
+add_to_sg (GtkSizeGroup *sg,
+           GtkBuilder   *b,
+           const gchar  *item)
+{
+  GtkWidget *w = get_widget_from_builder (b, item);
+  gtk_size_group_add_widget (sg, w);
+}
+
 /* Ядро всего уйца. Подключает сигналы, достает виджеты. */
 GtkWidget *
 make_page_for_panel (EvoUI     *ui,
@@ -410,7 +419,10 @@ make_page_for_panel (EvoUI     *ui,
   GtkWidget *box, *separ;
   GtkWidget *l_ctrl, *l_mark, *l_meter;
   VisualWF *wf;
+  GtkSizeGroup * sg;
 
+
+  sg = gtk_size_group_new (GTK_SIZE_GROUP_HORIZONTAL);
   b = get_builder_for_panel (ui, panelx);
 
   box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
@@ -419,19 +431,17 @@ make_page_for_panel (EvoUI     *ui,
     case FNN_PANEL_WATERFALL:
 
       view = get_widget_from_builder (b, "ss_view_control");
-      panel->vis_gui->brightness_value  = get_label_from_builder (b, "ss_brightness_value");
-      panel->vis_gui->black_value       = get_label_from_builder (b, "ss_black_value");
-      panel->vis_gui->scale_value       = get_label_from_builder (b, "ss_scale_value");
-      panel->vis_gui->colormap_value    = get_label_from_builder (b, "ss_color_map_value");
-      panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");
+      panel->vis_gui->brightness_value  = get_label_from_builder (b, "ss_brightness_value");  add_to_sg (sg, b, "ss_brightness_label");
+      panel->vis_gui->black_value       = get_label_from_builder (b, "ss_black_value");       add_to_sg (sg, b, "ss_black_label");
+      panel->vis_gui->scale_value       = get_label_from_builder (b, "ss_scale_value");       add_to_sg (sg, b, "ss_scale_label");
+      panel->vis_gui->colormap_value    = get_label_from_builder (b, "ss_color_map_value");   add_to_sg (sg, b, "ss_color_map_label");
+      panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");         add_to_sg (sg, b, "ss_live_view");
 
       {
         GtkAdjustment *adj;
-        GtkWidget *balance = get_widget_from_builder (b, "ss_balance_control");
+        GtkWidget *balance = get_widget_from_builder (b, "ss_balance_control");               add_to_sg (sg, b, "ss_balance_label");
 
         adj = GTK_ADJUSTMENT (gtk_builder_get_object (b, "ss_balance_adjustment"));
-        gtk_scale_add_mark (GTK_SCALE (gtk_builder_get_object (b, "ss_balance_scale")),
-                            0.0, GTK_POS_LEFT, NULL);
         g_signal_connect (adj, "value-changed", G_CALLBACK (balance_changed), GINT_TO_POINTER (panelx));
 
         gtk_box_pack_start (GTK_BOX (box), balance, FALSE, FALSE, 0);
@@ -440,7 +450,7 @@ make_page_for_panel (EvoUI     *ui,
       }
 
       wf = (VisualWF*)panel->vis_gui;
-      l_ctrl = get_widget_from_builder (b, "ss_control_layer");
+      l_ctrl = get_widget_from_builder (b, "ss_control_layer");                               add_to_sg (sg, b, "ss_layers_label");
       l_mark = get_widget_from_builder (b, "ss_marks_layer");
       l_meter = get_widget_from_builder (b, "ss_meter_layer");
 
@@ -453,24 +463,24 @@ make_page_for_panel (EvoUI     *ui,
 
       sonar = get_widget_from_builder (b, "sonar_control");
       tvg = get_widget_from_builder (b, "auto_tvg_control");
-      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");
-      panel->gui.tvg_level_value        = get_label_from_builder  (b, "tvg_level_value");
-      panel->gui.tvg_sens_value         = get_label_from_builder  (b, "tvg_sens_value");
-      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");
+      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");      add_to_sg (sg, b, "distance_label");
+      panel->gui.tvg_level_value        = get_label_from_builder  (b, "tvg_level_value");     add_to_sg (sg, b, "tvg_level_label");
+      panel->gui.tvg_sens_value         = get_label_from_builder  (b, "tvg_sens_value");      add_to_sg (sg, b, "tvg_sensitivity_label");
+      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");        add_to_sg (sg, b, "signal_label");
 
       break;
 
     case FNN_PANEL_PROFILER:
 
       view = get_widget_from_builder (b, "pf_view_control");
-      panel->vis_gui->brightness_value  = get_label_from_builder (b, "pf_brightness_value");
-      panel->vis_gui->scale_value       = get_label_from_builder (b, "pf_scale_value");
-      panel->vis_gui->black_value       = get_label_from_builder (b, "pf_black_value");
-      panel->vis_gui->live_view         = get_widget_from_builder(b, "pf_live_view");
+      panel->vis_gui->brightness_value  = get_label_from_builder (b, "pf_brightness_value");  add_to_sg (sg, b, "pf_brightness_label");
+      panel->vis_gui->scale_value       = get_label_from_builder (b, "pf_scale_value");       add_to_sg (sg, b, "pf_scale_label");
+      panel->vis_gui->black_value       = get_label_from_builder (b, "pf_black_value");       add_to_sg (sg, b, "pf_black_label");
+      panel->vis_gui->live_view         = get_widget_from_builder(b, "pf_live_view");         add_to_sg (sg, b, "pf_live_view_label");
 
       wf = (VisualWF*)panel->vis_gui;
-      l_ctrl = get_widget_from_builder (b, "pf_control_layer");
-      l_mark = get_widget_from_builder (b, "pf_marks_layer");
+      l_ctrl = get_widget_from_builder (b, "pf_control_layer");                               add_to_sg (sg, b, "pf_layers_label");
+      l_mark = get_widget_from_builder (b, "pf_marks_layer");                                 add_to_sg (sg, b, "pf_processing_label");
       l_meter = get_widget_from_builder (b, "pf_meter_layer");
 
       g_signal_connect_swapped (l_ctrl, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_ctrl);
@@ -482,24 +492,24 @@ make_page_for_panel (EvoUI     *ui,
 
       sonar = get_widget_from_builder (b, "sonar_control");
       tvg = get_widget_from_builder (b, "lin_tvg_control");
-      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");
-      panel->gui.tvg_value              = get_label_from_builder  (b, "tvg_value");
-      panel->gui.tvg0_value             = get_label_from_builder  (b, "tvg0_value");
-      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");
+      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");     add_to_sg (sg, b, "distance_label");
+      panel->gui.tvg_value              = get_label_from_builder  (b, "tvg_value");          add_to_sg (sg, b, "tvg_label");
+      panel->gui.tvg0_value             = get_label_from_builder  (b, "tvg0_value");         add_to_sg (sg, b, "tvg0_label");
+      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");       add_to_sg (sg, b, "signal_label");
 
       break;
 
     case FNN_PANEL_ECHO:
 
       view = get_widget_from_builder (b, "ss_view_control");
-      panel->vis_gui->brightness_value  = get_label_from_builder (b, "ss_brightness_value");
-      panel->vis_gui->black_value       = get_label_from_builder (b, "ss_black_value");
-      panel->vis_gui->scale_value       = get_label_from_builder (b, "ss_scale_value");
-      panel->vis_gui->colormap_value    = get_label_from_builder (b, "ss_color_map_value");
-      panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");
+      panel->vis_gui->brightness_value  = get_label_from_builder (b, "ss_brightness_value");  add_to_sg (sg, b, "ss_brightness_label");
+      panel->vis_gui->black_value       = get_label_from_builder (b, "ss_black_value");       add_to_sg (sg, b, "ss_black_label");
+      panel->vis_gui->scale_value       = get_label_from_builder (b, "ss_scale_value");       add_to_sg (sg, b, "ss_scale_label");
+      panel->vis_gui->colormap_value    = get_label_from_builder (b, "ss_color_map_value");   add_to_sg (sg, b, "ss_color_map_label");
+      panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");         add_to_sg (sg, b, "ss_live_view");
 
       wf = (VisualWF*)panel->vis_gui;
-      l_ctrl = get_widget_from_builder (b, "ss_control_layer");
+      l_ctrl = get_widget_from_builder (b, "ss_control_layer");                               add_to_sg (sg, b, "ss_layers_label");
       l_mark = get_widget_from_builder (b, "ss_marks_layer");
       l_meter = get_widget_from_builder (b, "ss_meter_layer");
 
@@ -512,29 +522,29 @@ make_page_for_panel (EvoUI     *ui,
 
       sonar = get_widget_from_builder (b, "sonar_control");
       tvg = get_widget_from_builder (b, "lin_tvg_control");
-      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");
-      panel->gui.tvg_value              = get_label_from_builder  (b, "tvg_value");
-      panel->gui.tvg0_value             = get_label_from_builder  (b, "tvg0_value");
-      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");
+      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");      add_to_sg (sg, b, "distance_label");
+      panel->gui.tvg_value              = get_label_from_builder  (b, "tvg_value");           add_to_sg (sg, b, "tvg_label");
+      panel->gui.tvg0_value             = get_label_from_builder  (b, "tvg0_value");          add_to_sg (sg, b, "tvg0_label");
+      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");        add_to_sg (sg, b, "signal_label");
 
       break;
 
     case FNN_PANEL_FORWARDLOOK:
 
       view = get_widget_from_builder (b, "fl_view_control");
-      panel->vis_gui->brightness_value  = get_label_from_builder (b, "fl_brightness_value");
-      panel->vis_gui->scale_value       = get_label_from_builder (b, "fl_scale_value");
-      panel->vis_gui->sensitivity_value = get_label_from_builder (b, "fl_sensitivity_value");
+      panel->vis_gui->brightness_value  = get_label_from_builder (b, "fl_brightness_value");  add_to_sg (sg, b, "fl_brightness_label");
+      panel->vis_gui->scale_value       = get_label_from_builder (b, "fl_scale_value");       add_to_sg (sg, b, "fl_scale_label");
+      panel->vis_gui->sensitivity_value = get_label_from_builder (b, "fl_sensitivity_value"); add_to_sg (sg, b, "fl_sensitivity_label");
 
       if (!panel_sources_are_in_sonar (global, panel))
         break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
       tvg = get_widget_from_builder (b, "lin_tvg_control");
-      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");
-      panel->gui.tvg_value              = get_label_from_builder  (b, "tvg_value");
-      panel->gui.tvg0_value             = get_label_from_builder  (b, "tvg0_value");
-      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");
+      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");       add_to_sg (sg, b, "distance_label");
+      panel->gui.tvg_value              = get_label_from_builder  (b, "tvg_value");            add_to_sg (sg, b, "tvg_label");
+      panel->gui.tvg0_value             = get_label_from_builder  (b, "tvg0_value");           add_to_sg (sg, b, "tvg0_label");
+      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");         add_to_sg (sg, b, "signal_label");
 
       break;
 
