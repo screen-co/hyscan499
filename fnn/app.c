@@ -9,6 +9,10 @@
 #include <hyscan-profile-db.h>
 #include <gmodule.h>
 
+#ifdef G_OS_WIN32 /* Входная точка для GUI wWinMain. */
+  #include <Windows.h>
+#endif
+
 #ifndef G_OS_WIN32 /* Ловим сигналы ОС. */
  #include <signal.h>
  #include <errno.h>
@@ -696,3 +700,27 @@ exit:
 
   return 0;
 }
+
+#ifdef G_OS_WIN32
+/* Точка входа в приложение для Windows. */
+int WINAPI
+wWinMain (HINSTANCE hInst,
+          HINSTANCE hPreInst,
+          LPSTR     lpCmdLine,
+          int       nCmdShow)
+{
+  int argc;
+  char **argv;
+
+  gint result;
+
+  argv = g_win32_get_command_line ();
+  argc = g_strv_length (argv);
+
+  result = main (argc, argv);
+
+  g_strfreev (argv);
+
+  return result;
+}
+#endif

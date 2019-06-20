@@ -22,5 +22,9 @@ add_executable (hyscan499
                 app.c
                 ${CMAKE_BINARY_DIR}/resources/hyscan499-resources.c)
 
+if (${CMAKE_C_COMPILER_ID} STREQUAL MSVC AND ${CMAKE_BUILD_TYPE} STREQUAL "Release")
+  set_property (TARGET hyscan499 PROPERTY WIN32_EXECUTABLE true)
+endif()
+
 target_link_libraries (hyscan499 ${TRIPLE_LIBS})
 
