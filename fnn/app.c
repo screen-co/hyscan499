@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <fnn-types.h>
+#include <hyscan-fnn-flog.h>
 #include <hyscan-fnn-splash.h>
 #include <hyscan-fnn-project.h>
 #include <hyscan-fnn-button.h>
@@ -8,6 +9,10 @@
 #include <hyscan-profile-offset.h>
 #include <hyscan-profile-db.h>
 #include <gmodule.h>
+
+#ifdef G_OS_WIN32 /* Входная точка для GUI wWinMain. */
+  #include <Windows.h>
+#endif
 
 #ifndef G_OS_WIN32 /* Ловим сигналы ОС. */
  #include <signal.h>
@@ -234,6 +239,8 @@ main (int argc, char **argv)
 
   global.canary = 123456789;
 
+  /* Перенаправление логов в файл. */
+  hyscan_fnn_flog_open ("hyscan", 1000000);
 
   gtk_init (&argc, &argv);
 
@@ -674,6 +681,8 @@ exit:
   if (global.settings != NULL)
     g_key_file_save_to_file (global.settings, settings_file, NULL);
 
+  hyscan_fnn_flog_close ();
+
   g_clear_pointer (&config, g_key_file_unref);
 
   g_clear_pointer (&ui_module, g_module_close);
@@ -698,3 +707,27 @@ exit:
 
   return 0;
 }
+
+#ifdef G_OS_WIN32
+/* Точка входа в приложение для Windows. */
+int WINAPI
+wWinMain (HINSTANCE hInst,
+          HINSTANCE hPreInst,
+          LPSTR     lpCmdLine,
+          int       nCmdShow)
+{
+  int argc;
+  char **argv;
+
+  gint result;
+
+  argv = g_win32_get_command_line ();
+  argc = g_strv_length (argv);
+
+  result = main (argc, argv);
+
+  g_strfreev (argv);
+
+  return result;
+}
+#endif
