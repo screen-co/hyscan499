@@ -613,22 +613,21 @@ create_mark_tree_view (HyScanGtkMapKit *kit,
 
   /* Название метки. */
   renderer = gtk_cell_renderer_text_new ();
-  // g_object_set (renderer, "editable", TRUE, NULL);
-  name_column = gtk_tree_view_column_new_with_attributes (_("Mark"), renderer,
+  name_column = gtk_tree_view_column_new_with_attributes (_("Name"), renderer,
                                                           "text", MARK_NAME_COLUMN, NULL);
   gtk_tree_view_column_set_sort_column_id (name_column, MARK_NAME_COLUMN);
 
   /* Время последнего изменения метки. */
   renderer = gtk_cell_renderer_text_new ();
-  date_column = gtk_tree_view_column_new_with_attributes (_("Last upd."), renderer,
+  date_column = gtk_tree_view_column_new_with_attributes (_("Date"), renderer,
                                                           "text", MARK_MTIME_COLUMN, NULL);
   gtk_tree_view_column_set_sort_column_id (date_column, MARK_MTIME_SORT_COLUMN);
 
   tree_view = GTK_TREE_VIEW (gtk_tree_view_new_with_model (tree_model));
   gtk_tree_view_set_search_column (tree_view, MARK_NAME_COLUMN);
-  gtk_tree_view_append_column (tree_view, type_column);
   gtk_tree_view_append_column (tree_view, name_column);
   gtk_tree_view_append_column (tree_view, date_column);
+  gtk_tree_view_append_column (tree_view, type_column);
 
   gtk_tree_view_set_grid_lines (tree_view, GTK_TREE_VIEW_GRID_LINES_HORIZONTAL);
 
@@ -988,8 +987,6 @@ static void
 create_wfmark_toolbox (HyScanGtkMapKit *kit)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
-  GtkWidget *box;
-  // GtkWidget *label;
   GtkWidget *scrolled_window;
 
   /* Невозможно создать виджет, т.к. */
@@ -1013,40 +1010,34 @@ create_wfmark_toolbox (HyScanGtkMapKit *kit)
 
   g_signal_connect (priv->mark_tree, "row-activated", G_CALLBACK (on_marks_activated), kit);
 
-  box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 5);
-
-  /* Название проекта. */
-  // label = gtk_label_new (_("Marks"));
-  // gtk_label_set_max_width_chars (GTK_LABEL (label), 1);
-  // gtk_label_set_ellipsize (GTK_LABEL (label), PANGO_ELLIPSIZE_END);
-
-  /* Область прокрутки со списком галсов. */
+  /* Область прокрутки со списком меток. */
   scrolled_window = gtk_scrolled_window_new (NULL, NULL);
+  gtk_widget_set_hexpand (scrolled_window, FALSE);
+  gtk_widget_set_vexpand (scrolled_window, FALSE);
+  gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (scrolled_window), GTK_SHADOW_IN);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (scrolled_window), 200);
+  gtk_scrolled_window_set_min_content_width (GTK_SCROLLED_WINDOW (scrolled_window), 150);
+  gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (scrolled_window), 120);
   gtk_container_add (GTK_CONTAINER (scrolled_window), GTK_WIDGET (priv->mark_tree));
 
-  /* Пакуем всё вместе. */
-  // gtk_box_pack_start (GTK_BOX (box), label, FALSE, FALSE, 0);
-  gtk_box_pack_start (GTK_BOX (box), scrolled_window, TRUE, TRUE, 0);
-  gtk_box_pack_start (GTK_BOX (box), priv->mark_editor, FALSE, FALSE, 0);
-
   /* Помещаем в панель навигации. */
-  gtk_box_pack_start (GTK_BOX (kit->navigation), box, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (kit->navigation), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
+  gtk_box_pack_start (GTK_BOX (kit->navigation), scrolled_window, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (kit->navigation), priv->mark_editor, FALSE, FALSE, 0);
+  gtk_box_pack_start (GTK_BOX (kit->navigation), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
 }
 
 /* Выбор галсов проекта. */
-static GtkWidget *
-create_track_box (HyScanGtkMapKit *kit)
+static void
+create_track_box (HyScanGtkMapKit *kit,
+                  GtkBox          *box)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
-  GtkWidget *box;
-  // GtkWidget *label;
   GtkWidget *scrolled_window;
 
   if (priv->db == NULL)
-    return NULL;
+    return;
 
   priv->track_store = gtk_list_store_new (4,
                                           G_TYPE_BOOLEAN, /* VISIBLE_COLUMN   */
@@ -1064,26 +1055,19 @@ create_track_box (HyScanGtkMapKit *kit)
   g_signal_connect (priv->db_info, "tracks-changed", G_CALLBACK (tracks_changed), kit);
   g_signal_connect (priv->list_model, "changed", G_CALLBACK (on_active_track_changed), kit);
 
-  box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 5);
-
-  /* Название проекта. */
-  // label = gtk_label_new (_("Tracks"));
-  // gtk_label_set_max_width_chars (GTK_LABEL (label), 1);
-  // gtk_label_set_ellipsize (GTK_LABEL (label), PANGO_ELLIPSIZE_END);
 
   /* Область прокрутки со списком галсов. */
   scrolled_window = gtk_scrolled_window_new (NULL, NULL);
+  gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (scrolled_window), GTK_SHADOW_IN);
+  gtk_widget_set_hexpand (scrolled_window, FALSE);
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_window),
                                   GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
-  gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (scrolled_window), 200);
+  // gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (scrolled_window), 200);
   gtk_container_add (GTK_CONTAINER (scrolled_window), GTK_WIDGET (priv->track_tree));
 
 
-  /* Пакуем всё вместе. */
-  // gtk_box_pack_start (GTK_BOX (box), label, FALSE, FALSE, 0);
-  gtk_box_pack_start (GTK_BOX (box), scrolled_window, TRUE, TRUE, 0);
-
-  return box;
+  /* Помещаем в панель навигации. */
+  gtk_box_pack_start (box, scrolled_window, TRUE, TRUE, 0);
 }
 
 static void
@@ -1269,15 +1253,12 @@ create_ruler_toolbox (HyScanGtkLayer *layer,
 static GtkWidget *
 create_navigation_box (HyScanGtkMapKit *kit)
 {
-  GtkWidget *ctrl_box, *item;
+  GtkWidget *ctrl_box;
 
-  ctrl_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 5);
+  ctrl_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
+  gtk_widget_set_margin_end (ctrl_box, 6);
 
-  item = create_track_box (kit);
-  if (item != NULL)
-    gtk_box_pack_start (GTK_BOX (ctrl_box), item, TRUE, TRUE, 0);
-
-  gtk_widget_set_size_request (ctrl_box, 200, -1);
+  create_track_box (kit, GTK_BOX (ctrl_box));
 
   return ctrl_box;
 }
@@ -1423,6 +1404,7 @@ create_control_box (HyScanGtkMapKit *kit)
   GtkWidget *ctrl_widget;
 
   ctrl_box = gtk_grid_new ();
+  gtk_grid_set_row_spacing (GTK_GRID (ctrl_box), 3);
 
   /* Выпадающий список с профилями. */
   priv->profiles_box = gtk_combo_box_text_new ();
