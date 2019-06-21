@@ -8,7 +8,7 @@ G_BEGIN_DECLS
 
 HYSCAN_API
 gboolean        hyscan_fnn_flog_open               (const gchar *component,
-                                                    guint        file_size);
+                                                    gsize        file_size);
 
 HYSCAN_API
 void            hyscan_fnn_flog_close              (void);

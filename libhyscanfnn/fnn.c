@@ -1287,7 +1287,8 @@ get_mark_coords (GHashTable * locstores,
   if (mark->waterfall.source0 == HYSCAN_SOURCE_SIDE_SCAN_PORT)
     across *= -1;
 
-  hyscan_mloc_get (mloc, time, &apos, 0, across, 0, &position);
+  if (!hyscan_mloc_get (mloc, time, &apos, 0, across, 0, &position))
+    return NULL;
 
   return mark_and_location_new (mark, TRUE, position.lat, position.lon);
 }
