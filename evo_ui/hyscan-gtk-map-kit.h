@@ -56,6 +56,13 @@ HYSCAN_API
 void              hyscan_gtk_map_kit_add_marks_geo    (HyScanGtkMapKit   *kit);
 
 HYSCAN_API
+gboolean          hyscan_gtk_map_kit_get_offline      (HyScanGtkMapKit   *kit);
+
+HYSCAN_API
+void              hyscan_gtk_map_kit_set_offline      (HyScanGtkMapKit   *kit,
+                                                       gboolean           offline);
+
+HYSCAN_API
 void              hyscan_gtk_map_kit_free             (HyScanGtkMapKit   *kit);
 
 HYSCAN_API
