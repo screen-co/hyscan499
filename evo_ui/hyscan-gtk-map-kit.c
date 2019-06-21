@@ -116,7 +116,6 @@ struct _HyScanGtkMapKitPrivate
 static GtkWidget *
 create_map (HyScanGtkMapKit *kit)
 {
-  g_message ("Map: %s// %s", GETTEXT_PACKAGE, g_dgettext(GETTEXT_PACKAGE, "Balance"));
   HyScanGtkMapKitPrivate *priv = kit->priv;
   HyScanGtkMap *map;
   gdouble *scales;
@@ -564,6 +563,7 @@ static GtkTreeView *
 create_track_tree_view (HyScanGtkMapKit *kit,
                         GtkTreeModel    *tree_model)
 {
+  GtkWidget *image;
   GtkCellRenderer *renderer;
   GtkTreeViewColumn *visible_column, *track_column, *date_column;
   GtkTreeView *tree_view;
@@ -573,6 +573,9 @@ create_track_tree_view (HyScanGtkMapKit *kit,
   track_column = gtk_tree_view_column_new_with_attributes (_("Track"), renderer,
                                                            "text", TRACK_COLUMN, NULL);
   gtk_tree_view_column_set_sort_column_id (track_column, TRACK_COLUMN);
+  gtk_tree_view_column_set_expand (track_column, TRUE);
+  gtk_tree_view_column_set_resizable (track_column, TRUE);
+  g_object_set (renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
 
   /* Дата создания галса. */
   renderer = gtk_cell_renderer_text_new ();
@@ -585,6 +588,9 @@ create_track_tree_view (HyScanGtkMapKit *kit,
   g_signal_connect (renderer, "toggled", G_CALLBACK (on_enable_track), kit);
   visible_column = gtk_tree_view_column_new_with_attributes (_("Show"), renderer,
                                                              "active", VISIBLE_COLUMN, NULL);
+  image = gtk_image_new_from_icon_name ("object-select-symbolic", GTK_ICON_SIZE_MENU);
+  gtk_widget_show (image);
+  gtk_tree_view_column_set_widget (visible_column, image);
 
   tree_view = GTK_TREE_VIEW (gtk_tree_view_new_with_model (tree_model));
   gtk_tree_view_set_search_column (tree_view, TRACK_COLUMN);
@@ -616,6 +622,10 @@ create_mark_tree_view (HyScanGtkMapKit *kit,
   name_column = gtk_tree_view_column_new_with_attributes (_("Name"), renderer,
                                                           "text", MARK_NAME_COLUMN, NULL);
   gtk_tree_view_column_set_sort_column_id (name_column, MARK_NAME_COLUMN);
+  gtk_tree_view_column_set_expand (name_column, TRUE);
+  gtk_tree_view_column_set_expand (name_column, TRUE);
+  gtk_tree_view_column_set_resizable (name_column, TRUE);
+  g_object_set (renderer, "ellipsize", PANGO_ELLIPSIZE_END, NULL);
 
   /* Время последнего изменения метки. */
   renderer = gtk_cell_renderer_text_new ();
@@ -1369,7 +1379,7 @@ create_layer_tree_view (HyScanGtkMapKit *kit,
                         GtkTreeModel    *tree_model)
 {
   GtkCellRenderer *renderer;
-  GtkTreeViewColumn *visible_column, *track_column;
+  GtkTreeViewColumn *visible_column, *layer_column;
   GtkWidget *tree_view;
   GtkTreeSelection *selection;
 
@@ -1381,11 +1391,12 @@ create_layer_tree_view (HyScanGtkMapKit *kit,
 
   /* Название галса. */
   renderer = gtk_cell_renderer_text_new ();
-  track_column = gtk_tree_view_column_new_with_attributes (_("Layer"), renderer,
+  layer_column = gtk_tree_view_column_new_with_attributes (_("Layer"), renderer,
                                                            "text", LAYER_TITLE_COLUMN, NULL);
+  gtk_tree_view_column_set_expand (layer_column, TRUE);
 
   tree_view = gtk_tree_view_new_with_model (tree_model);
-  gtk_tree_view_append_column (GTK_TREE_VIEW (tree_view), track_column);
+  gtk_tree_view_append_column (GTK_TREE_VIEW (tree_view), layer_column);
   gtk_tree_view_append_column (GTK_TREE_VIEW (tree_view), visible_column);
 
   selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (tree_view));
@@ -1404,7 +1415,7 @@ create_control_box (HyScanGtkMapKit *kit)
   GtkWidget *ctrl_widget;
 
   ctrl_box = gtk_grid_new ();
-  gtk_grid_set_row_spacing (GTK_GRID (ctrl_box), 3);
+  gtk_grid_set_row_spacing (GTK_GRID (ctrl_box), 6);
 
   /* Выпадающий список с профилями. */
   priv->profiles_box = gtk_combo_box_text_new ();
@@ -1453,6 +1464,8 @@ create_control_box (HyScanGtkMapKit *kit)
     layer_tools = create_ruler_toolbox (priv->pin_layer, _("Remove all pins"));
     g_object_set_data (G_OBJECT (priv->pin_layer), "toolbox-cb", "pin");
     gtk_stack_add_titled (GTK_STACK (priv->layer_tool_stack), layer_tools, "pin", "Pin");
+
+    gtk_grid_attach (GTK_GRID (ctrl_box), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), 0, ++t, 2, 1);
   }
 
   /* Стек с инструментами. */
@@ -1464,7 +1477,7 @@ create_control_box (HyScanGtkMapKit *kit)
     stack_box = gtk_grid_new ();
     g_object_set (stack_box,
                   "margin", 6,
-                  "row-spacing", 2,
+                  "row-spacing", 6,
                   "column-spacing", 6,
                   "halign", GTK_ALIGN_CENTER,
                   NULL);
@@ -1490,6 +1503,7 @@ create_control_box (HyScanGtkMapKit *kit)
     gtk_grid_attach (GTK_GRID (ctrl_box), stack_switcher, 0, ++t, 2, 1);
     // gtk_container_add (GTK_CONTAINER (ctrl_box), stack);
     gtk_grid_attach (GTK_GRID (ctrl_box), stack, 0, ++t, 2, 1);
+    gtk_grid_attach (GTK_GRID (ctrl_box), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), 0, ++t, 2, 1);
   }
 
   return ctrl_box;

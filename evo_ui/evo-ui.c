@@ -275,22 +275,24 @@ add_track_select (Global *global)
 
 /* функция переключает виджеты. */
 void
-widget_swap (GObject  *emitter,
-             gpointer  user_data)
+widget_swap (GObject     *emitter,
+             GParamSpec  *pspec,
+             const gchar *child)
 {
   EvoUI *ui = &global_ui;
-  const gchar *child;
 
-  child = gtk_stack_get_visible_child_name (GTK_STACK (ui->acoustic_stack));
+  g_message ("you shoukd know that: %s", gtk_stack_get_visible_child_name (GTK_STACK (ui->acoustic_stack)));
+  if (child == NULL)
+    child = gtk_stack_get_visible_child_name (GTK_STACK (ui->acoustic_stack));
   if (child == NULL)
     return;
-
-  gtk_stack_set_visible_child_name (GTK_STACK (ui->control_stack), child);
 
   if (g_str_equal (child, EVO_MAP))
     gtk_stack_set_visible_child_name (GTK_STACK (ui->nav_stack), EVO_MAP);
   else
     gtk_stack_set_visible_child_name (GTK_STACK (ui->nav_stack), EVO_NOT_MAP);
+
+  gtk_stack_set_visible_child_name (GTK_STACK (ui->control_stack), child); // fixme!11;
   /* Теперь всякие специальные случаи. */
   hyscan_gtk_area_set_bottom_visible (HYSCAN_GTK_AREA (ui->area),
                                       g_str_equal (child, "ForwardLook"));
@@ -631,9 +633,10 @@ build_interface (Global *global)
     if (global->control != NULL)
       hyscan_gtk_map_kit_add_nav (ui->mapkit, HYSCAN_SENSOR (global->control), "nmea", 0);
 
-    gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), ui->mapkit->map, EVO_MAP, _("Map"));
     gtk_stack_add_named (GTK_STACK (ui->control_stack), ui->mapkit->control, EVO_MAP);
     gtk_stack_add_named (GTK_STACK (ui->nav_stack), ui->mapkit->navigation, EVO_MAP);
+    gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), ui->mapkit->map, EVO_MAP, _("Map"));
+    gtk_stack_set_visible_child_name(GTK_STACK (ui->acoustic_stack), EVO_MAP);
 
     tv = hyscan_gtk_map_kit_get_track_view (ui->mapkit, NULL);
     g_signal_connect_swapped (tv, "cursor-changed", G_CALLBACK (add_track_select), global);
@@ -763,6 +766,9 @@ build_interface (Global *global)
 
       gtk_grid_attach (GTK_GRID (ui->grid), global->gui.nav, 0, 2, 1, 1);
     }
+
+  gtk_stack_set_visible_child_name (GTK_STACK (ui->acoustic_stack), EVO_MAP);
+  widget_swap (NULL, NULL, EVO_MAP);
 
   return TRUE;
 }
@@ -897,6 +903,7 @@ panel_pack (FnnPanel *panel,
   Global *global = _global;
   GtkWidget *control;
   GtkWidget *visual;
+  const gchar *child_name;
 
   visual = panel->vis_gui->main;
   g_object_set (visual, "vexpand", TRUE, "valign", GTK_ALIGN_FILL,
@@ -904,8 +911,11 @@ panel_pack (FnnPanel *panel,
 
   control = make_page_for_panel (ui, panel, GPOINTER_TO_INT (panelx), global);
 
+  child_name = gtk_stack_get_visible_child_name (GTK_STACK (ui->acoustic_stack));
   gtk_stack_add_titled (GTK_STACK (ui->control_stack), control, panel->name, panel->name_local);
   gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), visual, panel->name, panel->name_local);
+  g_message ("%s %s", __FUNCTION__, child_name);
+  widget_swap (NULL, NULL, child_name);
 
   /* Нижняя панель содержит виджет управления впередсмотрящим. */
   if (panelx == X_FORWARDL)

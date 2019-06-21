@@ -56,14 +56,13 @@
             </child>
             <child>
               <object class="GtkTreeViewColumn" id="name_column">
-                <property name="sizing">autosize</property>
                 <property name="resizable">True</property>
+                <property name="sizing">autosize</property>
                 <property name="min_width">50</property>
                 <property name="title" translatable="yes">Name</property>
                 <property name="expand">True</property>
                 <child>
                   <object class="GtkCellRendererText" id="name_cellrenderertext">
-                    <property name="ellipsize">end</property>
                     <property name="width_chars">20</property>
                   </object>
                   <attributes>

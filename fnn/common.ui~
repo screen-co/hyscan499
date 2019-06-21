@@ -34,10 +34,10 @@
         </child>
         <child>
           <object class="GtkTreeViewColumn" id="track_column">
-            <property name="title" translatable="yes">Track</property>
-            <property name="sizing">autosize</property>
             <property name="resizable">True</property>
+            <property name="sizing">autosize</property>
             <property name="min_width">50</property>
+            <property name="title" translatable="yes">Trackч</property>
             <property name="expand">True</property>
             <child>
               <object class="GtkCellRendererText" id="trackcellrenderer">
