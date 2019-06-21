@@ -11,11 +11,10 @@
 // #define EVO_EMPTY_PAGE "empty_page"
 #define EVO_NOT_MAP "evo-not-map"
 #define EVO_MAP "evo-map"
-#define EVO "evo"
 #define EVO_MAP_CENTER_LAT "lat"
 #define EVO_MAP_CENTER_LON "lon"
-#define EVO_MAP_DIR "/tmp/"
-#define EVO_MAP_PROFILE "profile"
+#define EVO_MAP_PROFILE "profile"    /* для настроек, ключ профиля. */
+#define EVO_ENABLE_EXTRAS "HY_PARAM"
 
 
 EvoUI global_ui = {0,};
@@ -373,6 +372,19 @@ make_record_control (Global *global,
   gtk_builder_add_callback_symbol (b, "ui_start_stop_dry", G_CALLBACK (ui_start_stop_dry));
   gtk_builder_connect_signals (b, global);
 
+  {
+    gchar ** env;
+    const gchar * param_set;
+
+    env = g_get_environ ();
+    param_set = g_environ_getenv (env, EVO_ENABLE_EXTRAS);
+    if (param_set != NULL)
+      {
+        gtk_widget_set_visible (ui->starter.dry, TRUE);
+      }
+    g_strfreev (env);
+  }
+
   g_object_unref (b);
 
   return w;
@@ -416,7 +428,7 @@ make_page_for_panel (EvoUI     *ui,
 {
   GtkBuilder *b;
   GtkWidget *view = NULL, *sonar = NULL, *tvg = NULL;
-  GtkWidget *box, *separ;
+  GtkWidget *box;
   GtkWidget *l_ctrl, *l_mark, *l_meter;
   VisualWF *wf;
   GtkSizeGroup * sg;
@@ -435,7 +447,7 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->black_value       = get_label_from_builder (b, "ss_black_value");       add_to_sg (sg, b, "ss_black_label");
       panel->vis_gui->scale_value       = get_label_from_builder (b, "ss_scale_value");       add_to_sg (sg, b, "ss_scale_label");
       panel->vis_gui->colormap_value    = get_label_from_builder (b, "ss_color_map_value");   add_to_sg (sg, b, "ss_color_map_label");
-      panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");         add_to_sg (sg, b, "ss_live_view");
+      panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");         add_to_sg (sg, b, "ss_live_view_label");
 
       {
         GtkAdjustment *adj;
@@ -506,7 +518,7 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->black_value       = get_label_from_builder (b, "ss_black_value");       add_to_sg (sg, b, "ss_black_label");
       panel->vis_gui->scale_value       = get_label_from_builder (b, "ss_scale_value");       add_to_sg (sg, b, "ss_scale_label");
       panel->vis_gui->colormap_value    = get_label_from_builder (b, "ss_color_map_value");   add_to_sg (sg, b, "ss_color_map_label");
-      panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");         add_to_sg (sg, b, "ss_live_view");
+      panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");         add_to_sg (sg, b, "ss_live_view_label");
 
       wf = (VisualWF*)panel->vis_gui;
       l_ctrl = get_widget_from_builder (b, "ss_control_layer");                               add_to_sg (sg, b, "ss_layers_label");
@@ -557,9 +569,6 @@ make_page_for_panel (EvoUI     *ui,
   gtk_box_pack_start (GTK_BOX (box), view, FALSE, FALSE, 0);
   if (sonar != NULL && tvg != NULL)
     {
-      separ = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
-
-      gtk_box_pack_start (GTK_BOX (box), separ, FALSE, FALSE, 0);
       gtk_box_pack_end (GTK_BOX (box), tvg, FALSE, FALSE, 0);
       gtk_box_pack_end (GTK_BOX (box), sonar, FALSE, TRUE, 0);
     }
@@ -665,7 +674,7 @@ build_interface (Global *global)
       GtkWidget * prm;
 
       env = g_get_environ ();
-      param_set = g_environ_getenv (env, "HY_PARAM");
+      param_set = g_environ_getenv (env, EVO_ENABLE_EXTRAS);
       if (param_set != NULL)
         {
           prm = gtk_button_new_with_label ("Hardware info");

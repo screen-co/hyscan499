@@ -91,7 +91,6 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="valign">start</property>
-    <property name="margin_bottom">6</property>
     <property name="hexpand">False</property>
     <child>
       <object class="GtkLabel" id="pf_brightness_label">
@@ -159,7 +158,8 @@
       <object class="GtkSeparator" id="pf_brightness_separator">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -230,7 +230,8 @@
       <object class="GtkSeparator" id="pf_scale_separator">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -282,7 +283,8 @@
       <object class="GtkSeparator" id="pf_black_separator">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -340,7 +342,8 @@
       <object class="GtkSeparator" id="pf_separator">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -379,7 +382,8 @@
       <object class="GtkSeparator" id="separator6">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -392,7 +396,7 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="halign">center</property>
-        <property name="margin_top">6</property>
+        <property name="valign">center</property>
         <child>
           <object class="GtkRadioButton" id="pf_control_layer">
             <property name="visible">True</property>
@@ -464,6 +468,19 @@
         <property name="top_attach">10</property>
       </packing>
     </child>
+    <child>
+      <object class="GtkSeparator" id="separator10">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">11</property>
+        <property name="width">4</property>
+      </packing>
+    </child>
   </object>
   <object class="GtkImage" id="sensitivity_image_down">
     <property name="visible">True</property>
@@ -479,7 +496,6 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="valign">start</property>
-    <property name="margin_bottom">6</property>
     <property name="hexpand">False</property>
     <property name="column_spacing">1</property>
     <child>
@@ -530,7 +546,8 @@
       <object class="GtkSeparator" id="fl_brightness_separator">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -585,7 +602,8 @@
       <object class="GtkSeparator" id="fl_scale_separator">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -623,7 +641,8 @@
       <object class="GtkSeparator" id="fl_sensitivity_separator">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -723,6 +742,19 @@
         <property name="width">3</property>
       </packing>
     </child>
+    <child>
+      <object class="GtkSeparator" id="separator11">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">7</property>
+        <property name="width">4</property>
+      </packing>
+    </child>
   </object>
   <object class="GtkImage" id="signal_image_down">
     <property name="visible">True</property>
@@ -803,7 +835,8 @@
       <object class="GtkSeparator" id="distance_separator">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -890,9 +923,25 @@
     <property name="step_increment">0.01</property>
     <property name="page_increment">0.10000000000000001</property>
   </object>
-  <object class="GtkBox" id="ss_balance_control">
+  <object class="GtkGrid" id="ss_balance_control">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <child>
+      <object class="GtkSpinButton" id="ss_balance_scale">
+        <property name="width_request">150</property>
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="valign">center</property>
+        <property name="hexpand">False</property>
+        <property name="text" translatable="yes">0.00</property>
+        <property name="adjustment">ss_balance_adjustment</property>
+        <property name="digits">2</property>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">0</property>
+      </packing>
+    </child>
     <child>
       <object class="GtkLabel" id="ss_balance_label">
         <property name="visible">True</property>
@@ -902,34 +951,21 @@
         <property name="label" translatable="yes">Balance</property>
       </object>
       <packing>
-        <property name="expand">False</property>
-        <property name="fill">True</property>
-        <property name="position">0</property>
+        <property name="left_attach">0</property>
+        <property name="top_attach">0</property>
       </packing>
     </child>
     <child>
-      <object class="GtkSpinButton" id="ss_balance_scale">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="adjustment">ss_balance_adjustment</property>
-        <property name="digits">2</property>
-      </object>
-      <packing>
-        <property name="expand">True</property>
-        <property name="fill">True</property>
-        <property name="position">1</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkSeparator" id="ss_brightness_separator">
+      <object class="GtkSeparator" id="separator8">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
-        <property name="expand">False</property>
-        <property name="fill">True</property>
-        <property name="position">2</property>
+        <property name="left_attach">0</property>
+        <property name="top_attach">1</property>
+        <property name="width">2</property>
       </packing>
     </child>
   </object>
@@ -983,7 +1019,6 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="valign">start</property>
-    <property name="margin_bottom">6</property>
     <property name="hexpand">False</property>
     <property name="column_spacing">1</property>
     <child>
@@ -1094,7 +1129,8 @@
       <object class="GtkSeparator" id="ss_scale_separator">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -1119,7 +1155,8 @@
       <object class="GtkSeparator" id="ss_color_map_separator">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -1263,7 +1300,7 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="halign">center</property>
-        <property name="margin_top">6</property>
+        <property name="valign">center</property>
         <child>
           <object class="GtkRadioButton" id="ss_control_layer">
             <property name="visible">True</property>
@@ -1326,7 +1363,8 @@
       <object class="GtkSeparator" id="separator7">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -1338,7 +1376,8 @@
       <object class="GtkSeparator" id="ss_balance_separator">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -1376,11 +1415,25 @@
       <object class="GtkSeparator" id="separator5">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">1</property>
+        <property name="width">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="separator9">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">11</property>
         <property name="width">4</property>
       </packing>
     </child>
@@ -1470,7 +1523,8 @@
       <object class="GtkSeparator" id="tvg0_separator">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -1541,8 +1595,8 @@
       <object class="GtkSeparator" id="separator3">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
-        <property name="margin_bottom">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -1632,7 +1686,8 @@
       <object class="GtkSeparator" id="separator1">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -1697,8 +1752,8 @@
       <object class="GtkSeparator" id="separator4">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="margin_top">6</property>
-        <property name="margin_bottom">6</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
