@@ -35,6 +35,7 @@
         <property name="vexpand">True</property>
         <property name="vadjustment">range_adj</property>
         <property name="hscrollbar_policy">never</property>
+        <property name="shadow_type">in</property>
         <property name="min_content_width">150</property>
         <property name="min_content_height">120</property>
         <child>
