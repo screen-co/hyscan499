@@ -1200,7 +1200,7 @@
         <property name="can_focus">False</property>
         <property name="valign">center</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;Оранжевый&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
         <property name="justify">center</property>
       </object>

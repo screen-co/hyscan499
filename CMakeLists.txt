@@ -81,6 +81,10 @@ set (HYSCAN_LIBRARIES gtkcifroarea-3.1
                       hyscangtk-${HYSCAN_MAJOR_VERSION}
                       urpc)
 
+if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
+  add_definitions (-DFNN_LOGGING=1)
+endif ()
+
 add_definitions (-DG_LOG_DOMAIN="Fnn")
 add_definitions (-DFNN_DEFAULT_UI="evo.ui")
 add_definitions (-DFNN_LOCALE_DIR="/usr/share/locale")

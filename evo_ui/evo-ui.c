@@ -281,7 +281,6 @@ widget_swap (GObject     *emitter,
 {
   EvoUI *ui = &global_ui;
 
-  g_message ("you shoukd know that: %s", gtk_stack_get_visible_child_name (GTK_STACK (ui->acoustic_stack)));
   if (child == NULL)
     child = gtk_stack_get_visible_child_name (GTK_STACK (ui->acoustic_stack));
   if (child == NULL)

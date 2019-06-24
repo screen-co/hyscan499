@@ -79,6 +79,7 @@ hyscan_fnn_flog_open (const gchar *component,
 
   /* Создаём папку для записи логов. */
   log_dir = g_build_path (G_DIR_SEPARATOR_S, data_dir, "hyscan", "log", NULL);
+  g_message ("%s,, %s,", data_dir, log_dir);
   g_mkdir_with_parents (log_dir, 0755);
 
   /* Открываем файл. */

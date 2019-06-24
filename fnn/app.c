@@ -106,6 +106,7 @@ connector_close (GtkAssistant *ass,
     {
       global->db = hyscan_gtk_connector_get_db (HYSCAN_GTK_CONNECTOR (ass));
       global->control = hyscan_gtk_connector_get_control (HYSCAN_GTK_CONNECTOR (ass));
+      global->control_s = HYSCAN_SONAR (global->control);
     }
   gtk_widget_destroy (GTK_WIDGET (ass));
 }
@@ -240,7 +241,10 @@ main (int argc, char **argv)
   global.canary = 123456789;
 
   /* Перенаправление логов в файл. */
+  #ifdef FNN_LOGGING
+  g_message ("fuck!");
   hyscan_fnn_flog_open ("hyscan", 1000000);
+  #endif
 
   gtk_init (&argc, &argv);
 
@@ -445,6 +449,7 @@ main (int argc, char **argv)
             {
               global.control = hyscan_profile_hw_connect (hw);
               global.control_s = HYSCAN_SONAR (global.control);
+              hyscan_control_device_bind (global.control);
             }
           else
             {
@@ -476,7 +481,7 @@ main (int argc, char **argv)
       const HyScanSourceType * source;
       guint32 i;
 
-      hyscan_control_device_bind (global.control);
+      // hyscan_control_device_bind (global.control);
       hyscan_control_writer_set_db (global.control, global.db);
 
       global.infos = g_hash_table_new (g_direct_hash, g_direct_equal);
@@ -647,13 +652,12 @@ main (int argc, char **argv)
 
   ui_setting (global.settings);
 
-  update_panels (&global, NULL);
-
   if (full_screen)
     gtk_window_fullscreen (GTK_WINDOW (global.gui.window));
 
   g_signal_connect (global.gui.window, "destroy", G_CALLBACK (destroy_cb), NULL);
   gtk_widget_show_all (global.gui.window);
+  update_panels (&global, NULL);
   gtk_main ();
 
   if (sensor_label_writer_tag > 0)
@@ -681,7 +685,9 @@ exit:
   if (global.settings != NULL)
     g_key_file_save_to_file (global.settings, settings_file, NULL);
 
+  #ifdef FNN_LOGGING
   hyscan_fnn_flog_close ();
+  #endif
 
   g_clear_pointer (&config, g_key_file_unref);
 
