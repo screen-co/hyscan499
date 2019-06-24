@@ -70,6 +70,7 @@ struct _HyScanGtkMapKitPrivate
 
   GHashTable            *profiles;         /* Хэш-таблица профилей карты. */
   gchar                 *profile_active;   /* Ключ активного профиля. */
+  gboolean               profile_offline;  /* Признак оффлайн-профиля карты. */
   gchar                 *tile_cache_dir;   /* Путь к директории, в которой хранятся тайлы. */
 
   HyScanGeoGeodetic      center;           /* Географические координаты для виджета навигации. */
@@ -1672,6 +1673,7 @@ hyscan_gtk_map_kit_set_profile_name (HyScanGtkMapKit *kit,
 
   g_free (priv->profile_active);
   priv->profile_active = g_strdup (profile_name);
+  hyscan_map_profile_set_offline (profile, priv->profile_offline);
   hyscan_map_profile_apply (profile, map);
 
   g_signal_handlers_block_by_func (priv->profiles_box, on_profile_change, kit);
@@ -1835,6 +1837,40 @@ hyscan_gtk_map_kit_add_marks_geo (HyScanGtkMapKit   *kit)
 
   if (priv->project_name != NULL)
     hyscan_mark_model_set_project (priv->mark_geo_model, priv->db, priv->project_name);
+}
+
+/**
+ * hyscan_gtk_map_kit_get_offline:
+ * @kit: указатель на #HyScanGtkMapKit
+ *
+ * Returns: признак режима работы оффлайн
+ */
+gboolean
+hyscan_gtk_map_kit_get_offline (HyScanGtkMapKit *kit)
+{
+  return kit->priv->profile_offline;
+}
+
+/**
+ * hyscan_gtk_map_kit_set_offline:
+ * @kit: указатель на #HyScanGtkMapKit
+ * @offline: признак режима работы оффлайн
+ *
+ * Устанавливает режим работы @offline и применяет текущий профиль в этом режиме
+ */
+void
+hyscan_gtk_map_kit_set_offline (HyScanGtkMapKit   *kit,
+                                gboolean           offline)
+{
+  HyScanGtkMapKitPrivate *priv = kit->priv;
+  gchar *profile_name;
+
+  profile_name = g_strdup (priv->profile_active);
+
+  priv->profile_offline = offline;
+  hyscan_gtk_map_kit_set_profile_name (kit, profile_name);
+
+  g_free (profile_name);
 }
 
 /**
