@@ -130,3 +130,16 @@ keyfile_double_write_helper (GKeyFile    *config,
   g_key_file_set_double (config, group, key, value);
 
 }
+
+void
+keyfile_bool_write_helper (GKeyFile    *config,
+                           const gchar *group,
+                           const gchar *key,
+                           gboolean     setting)
+{
+  if (config == NULL)
+    return;
+
+  g_key_file_set_boolean (config, group, key, setting);
+
+}

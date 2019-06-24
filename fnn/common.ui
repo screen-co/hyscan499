@@ -34,11 +34,12 @@
         </child>
         <child>
           <object class="GtkTreeViewColumn" id="track_column">
-            <property name="title" translatable="yes">Track</property>
-            <property name="sizing">autosize</property>
             <property name="resizable">True</property>
+            <property name="sizing">autosize</property>
             <property name="min_width">50</property>
+            <property name="title" translatable="yes">Track</property>
             <property name="expand">True</property>
+            <property name="sort_column_id">1</property>
             <child>
               <object class="GtkCellRendererText" id="trackcellrenderer">
                 <property name="ellipsize">end</property>
@@ -52,6 +53,7 @@
         <child>
           <object class="GtkTreeViewColumn" id="date_column">
             <property name="title" translatable="yes">Date</property>
+            <property name="sort_column_id">2</property>
             <child>
               <object class="GtkCellRendererText" id="datecellrenderer"/>
               <attributes>

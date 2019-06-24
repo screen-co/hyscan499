@@ -14,6 +14,7 @@
 #define EVO_MAP_CENTER_LAT "lat"
 #define EVO_MAP_CENTER_LON "lon"
 #define EVO_MAP_PROFILE "profile"    /* для настроек, ключ профиля. */
+#define EVO_MAP_OFFLINE "offline"    /* для настроек, офлаен-режим. */
 #define EVO_ENABLE_EXTRAS "HY_PARAM"
 
 
@@ -132,17 +133,28 @@ evo_brightness_set_override (Global  *global,
  */
 
 void
-run_manager_wrapper (GObject *emitter,
-                     gpointer data)
+map_offline_wrapper (GObject *emitter,
+                     HyScanGtkMapKit *map)
 {
-  EvoUI *ui = &global_ui;
-  GtkToggleButton *tb = data;
+  hyscan_gtk_map_kit_set_offline (map, gtk_check_menu_item_get_active (emitter));
+}
 
-  run_manager (emitter);
+static void
+sensor_toggle_wrapper (GtkCheckMenuItem *mitem,
+                       const gchar      *name)
+{
+  gboolean active = gtk_check_menu_item_get_active (mitem);
 
-  hyscan_gtk_map_kit_set_project (ui->mapkit, _global->project_name);
-
-  gtk_toggle_button_set_active (tb, FALSE);
+  if (hyscan_sensor_set_enable (HYSCAN_SENSOR (_global->control), name, active))
+    {
+      g_message ("Sensor %s is now %s", name, active ? "ON" : "OFF");
+      gtk_check_menu_item_set_active (mitem, active);
+    }
+  else
+    {
+      g_message ("Couldn't turn sensor %s %s", name, active ? "ON" : "OFF");
+      gtk_check_menu_item_set_active (mitem, !active);
+    }
 }
 
 gboolean
@@ -381,6 +393,7 @@ make_record_control (Global *global,
     param_set = g_environ_getenv (env, EVO_ENABLE_EXTRAS);
     if (param_set != NULL)
       {
+        gtk_widget_set_visible (get_widget_from_builder (b, "dry_label"), TRUE);
         gtk_widget_set_visible (ui->starter.dry, TRUE);
       }
     g_strfreev (env);
@@ -670,22 +683,6 @@ build_interface (Global *global)
     g_object_set (meditor, "vexpand", FALSE, "valign", GTK_ALIGN_END,
                            "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
 
-    {
-      gchar ** env;
-      const gchar * param_set;
-      GtkWidget * prm;
-
-      env = g_get_environ ();
-      param_set = g_environ_getenv (env, EVO_ENABLE_EXTRAS);
-      if (param_set != NULL)
-        {
-          prm = gtk_button_new_with_label ("Hardware info");
-          g_signal_connect (prm, "clicked", G_CALLBACK (run_param), "/");
-          gtk_box_pack_start (GTK_BOX (lbox), prm, FALSE, FALSE, 0);
-        }
-      g_strfreev (env);
-    }
-
     gtk_box_pack_start (GTK_BOX (lbox), tracks, TRUE, TRUE, 0);
     gtk_box_pack_start (GTK_BOX (lbox), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (lbox), mlist, TRUE, TRUE, 0);
@@ -713,39 +710,93 @@ build_interface (Global *global)
       gtk_box_pack_start (GTK_BOX (rbox), record, FALSE, FALSE, 0);
   }
 
-  /* Настройки. */
-    {
-      GtkWidget *grid;
-      GtkWidget * manager;
+  /* Настройки 2.0. */
+  {
+    gint t = 0;
+    GtkWidget *mitem;
+    GtkWidget *menu = gtk_menu_new ();
+    settings = gtk_menu_button_new ();
 
-      settings = evo_settings_new ();
-      grid = evo_settings_get_grid (EVO_SETTINGS (settings));
-      gtk_grid_set_row_spacing (GTK_GRID (grid), 6);
+    gtk_container_add (GTK_CONTAINER (settings),
+                       gtk_image_new_from_icon_name ("open-menu-symbolic",
+                                                     GTK_ICON_SIZE_MENU));
+    gtk_menu_button_set_popup (GTK_MENU_BUTTON (settings), menu);
+    g_object_set (settings, "margin", 6, NULL);
 
-      manager = gtk_button_new_with_label (_("Project Manager"));
-      gtk_widget_set_hexpand(manager, TRUE);
+    /* менеджер проектов */
+    mitem = gtk_menu_item_new_with_label (_("Project Manager"));
+    g_signal_connect (mitem, "activate", G_CALLBACK (run_manager), NULL);
+    gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
-      g_signal_connect (manager, "clicked", G_CALLBACK (run_manager), settings);
-      gtk_grid_attach (GTK_GRID (grid), manager, 0, 0, 1, 1);
+    /* офлайн-карта */
+    mitem = gtk_check_menu_item_new_with_label (_("Map offline mode"));
+    ui->map_offline = g_object_ref (mitem);
+    g_signal_connect (mitem, "toggled", G_CALLBACK (map_offline_wrapper), ui->mapkit);
+    gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
       if (global->control != NULL)
         {
-          GtkWidget * sensors, * offsets, * info, * params;
-          sensors = evo_sensors_new (global->control);
-          offsets = gtk_button_new_with_label ("Setup offsets");
-          g_signal_connect (offsets, "clicked", G_CALLBACK (run_offset_setup), global);
-          info = gtk_button_new_with_label ("Show sonar info");
-          g_signal_connect (info, "clicked", G_CALLBACK (run_show_sonar_info), "/info");
-          params = gtk_button_new_with_label ("Show sonar params");
-          g_signal_connect (params, "clicked", G_CALLBACK (run_show_sonar_info), "/params");
+          /* SENSORS */
+          {
+            gint subt = 0;
+            GtkWidget *submenu = gtk_menu_new ();
+            const gchar * const * sensors;
 
-          gtk_grid_attach (GTK_GRID (grid), gtk_label_new ("Sensors"), 0, 2, 1, 1);
-          gtk_grid_attach (GTK_GRID (grid), sensors, 0, 3, 1, 1);
-          gtk_grid_attach (GTK_GRID (grid), offsets, 0, 4, 1, 1);
-          gtk_grid_attach (GTK_GRID (grid), info,    0, 5, 1, 1);
-          gtk_grid_attach (GTK_GRID (grid), params,  0, 6, 1, 1);
+            sensors = hyscan_control_sensors_list (global->control);
+
+            for (; *sensors != NULL; ++sensors)
+              {
+                mitem = gtk_check_menu_item_new_with_label (*sensors);
+                gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (mitem), TRUE);
+                g_signal_connect (mitem, "toggled", G_CALLBACK (sensor_toggle_wrapper), *sensors);
+                gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+              }
+
+            mitem = gtk_menu_item_new_with_label (_("Sensors"));
+            gtk_menu_item_set_submenu (GTK_MENU_ITEM (mitem), submenu);
+            gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
+          }
+
+          /* SONAR */
+          {
+            gint subt = 0;
+            GtkWidget *submenu = gtk_menu_new ();
+            submenu = gtk_menu_new ();
+            subt = 0;
+
+            mitem = gtk_menu_item_new_with_label (_("Info"));
+            g_signal_connect (mitem, "activate", G_CALLBACK (run_show_sonar_info), "/info");
+            gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
+            mitem = gtk_menu_item_new_with_label (_("Params"));
+            g_signal_connect (mitem, "activate", G_CALLBACK (run_show_sonar_info), "/params");
+            gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
+            mitem = gtk_menu_item_new_with_label (_("Sonar"));
+            gtk_menu_item_set_submenu (GTK_MENU_ITEM (mitem), submenu);
+            gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
+          }
+
+          {
+            gchar ** env;
+            const gchar * param_set;
+            GtkWidget * prm;
+
+            env = g_get_environ ();
+            param_set = g_environ_getenv (env, EVO_ENABLE_EXTRAS);
+            if (param_set != NULL)
+              {
+                mitem = gtk_menu_item_new_with_label (_("Hardware info"));
+                g_signal_connect (mitem, "activate", G_CALLBACK (run_param), "/");
+                gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
+              }
+            g_strfreev (env);
+          }
         }
-    }
+
+    gtk_widget_show_all (settings);
+    gtk_widget_show_all (menu);
+  }
 
   /* Пакуем всё. */
   hyscan_gtk_area_set_central (HYSCAN_GTK_AREA (ui->area), ui->acoustic_stack);
@@ -812,6 +863,11 @@ kf_setting (GKeyFile *kf)
       g_free (profile);
     }
 
+  gtk_check_menu_item_set_active (ui->map_offline,
+                                  keyfile_bool_read_helper (kf, EVO_MAP,
+                                                            EVO_MAP_OFFLINE));
+
+
   return TRUE;
 }
 
@@ -856,6 +912,9 @@ kf_desetup (GKeyFile *kf)
     proifle = hyscan_gtk_map_kit_get_profile_name (ui->mapkit);
     keyfile_string_write_helper (kf, EVO_MAP, EVO_MAP_PROFILE, proifle);
     g_free (proifle);
+
+    keyfile_bool_write_helper (kf, EVO_MAP, EVO_MAP_OFFLINE,
+                               gtk_check_menu_item_get_active(ui->map_offline));
   }
 
   g_key_file_unref (ui->settings);

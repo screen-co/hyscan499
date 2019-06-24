@@ -33,6 +33,7 @@ typedef struct
 
   HyScanGtkMapKit *mapkit;
   guint    track_select_tag;
+  GtkCheckMenuItem *map_offline;
 } EvoUI;
 
 /* Врапперы. */

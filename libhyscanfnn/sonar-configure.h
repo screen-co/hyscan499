@@ -40,4 +40,10 @@ void          keyfile_double_write_helper   (GKeyFile                      *conf
                                              const gchar                   *group,
                                              const gchar                   *key,
                                              gdouble                        value);
+
+HYSCAN_API
+void          keyfile_bool_write_helper     (GKeyFile                *config,
+                                             const gchar             *group,
+                                             const gchar             *key,
+                                             gboolean                 setting);
 #endif /* __SENSORS_H__ */
