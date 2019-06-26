@@ -66,7 +66,7 @@ configurator_mkdir (const gchar *subdir)
   gchar *profile_dir;
 
   profile_dir = configurator_get_dir (subdir);
-  g_mkdir_with_parents (subdir, 0755);
+  g_mkdir_with_parents (profile_dir, 0755);
   g_free (profile_dir);
 }
 
@@ -204,7 +204,6 @@ int
 main (int argc, char **argv)
 {
   Configurator *configurator;
-  gint result = -1;
 
   gtk_init (&argc, &argv);
 
@@ -223,7 +222,7 @@ main (int argc, char **argv)
   g_free (configurator->config.name);
   g_free (configurator->config.dir);
 
-  return result;
+  return 0;
 }
 
 #ifdef G_OS_WIN32
