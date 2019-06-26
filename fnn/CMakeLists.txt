@@ -33,6 +33,10 @@ if (${CMAKE_C_COMPILER_ID} STREQUAL MSVC)
 
   target_sources (hyscan499 PRIVATE app.rc icon.ico)
   target_sources (configurator PRIVATE app.rc icon.ico)
+
+  add_executable (launcher launcher.c launcher.rc)
+  target_link_libraries (launcher Shlwapi)
+  set_property (TARGET launcher PROPERTY WIN32_EXECUTABLE true)
 endif()
 
 target_link_libraries (hyscan499 ${TRIPLE_LIBS})
