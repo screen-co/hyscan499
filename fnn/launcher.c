@@ -48,6 +48,10 @@ launcher_wnd_proc (HWND   wnd,
 
   switch (msg)
     {
+    case WM_DESTROY:
+      PostQuitMessage (0);
+      break;
+
     case WM_ERASEBKGND:
       /* Фон в виде изображения. */
       BitBlt ((HDC) w_param, 0, 0, app.bmp_width, app.bmp_height, app.mem_dc, 0, 0, SRCCOPY);
@@ -121,6 +125,10 @@ launcher_process_create (LPWSTR command,
   if (!fSuccess)
     return FALSE;
 
+  /* Ждём, пока программа запустится. */
+  WaitForInputIdle (pi.hProcess, INFINITE);
+
+  /* Ждём, пока программа завершится. */
   if (wait_)
     WaitForSingleObject (pi.hProcess, INFINITE);
 
@@ -273,7 +281,7 @@ launcher_read_config (const wchar_t *file_name)
   while (fgetws (line, 255, handle) != NULL)
     {
       launcher_trim (line);
-      if (line[0] == L'\0')
+      if (line[0] == L'\0' || line[0] == L'#')
         continue;
 
       /* Определяем группу. */
@@ -297,15 +305,10 @@ launcher_read_config (const wchar_t *file_name)
   fclose (handle);
 }
 
-INT WINAPI
-WinMain (HINSTANCE hInstance,
-         HINSTANCE hPrevInstance,
-         LPSTR     lpCmdLine,
-         INT       nCmdShow)
+DWORD WINAPI
+launcher_process (LPVOID lpParam)
 {
   LPWSTR module_dir;
-
-  launcher_app_init (hInstance);
 
   module_dir = launcher_get_module_dir ();
 
@@ -326,11 +329,19 @@ WinMain (HINSTANCE hInstance,
 
       for (i = 0; i < config.paths.len; ++i)
         {
-          WCHAR path_append[MAX_PATH];
+          if (PathIsRelativeW (config.paths.data[i]))
+            {
+              WCHAR abs_path[MAX_PATH];
 
-          wcscpy_s (path_append, MAX_PATH, module_dir);
-          PathAppendW (path_append, config.paths.data[i]);
-          launcher_path_prepend (module_dir);
+              wcscpy_s (abs_path, MAX_PATH, module_dir);
+              PathAppendW (abs_path, config.paths.data[i]);
+
+              launcher_path_prepend (abs_path);
+            }
+          else
+            {
+              launcher_path_prepend (config.paths.data[i]);
+            }
         }
     }
 
@@ -341,22 +352,24 @@ WinMain (HINSTANCE hInstance,
 
       if (app.loaded)
         {
-          SendMessageW (app.p_bar, PBM_SETRANGE, 0, MAKELPARAM (0, config.dlls.len));
-          SendMessageW (app.p_bar, PBM_SETSTEP, (WPARAM) 1, 0);
+          PostMessageW (app.p_bar, PBM_SETRANGE, 0, MAKELPARAM (0, config.dlls.len));
+          PostMessageW (app.p_bar, PBM_SETSTEP, (WPARAM) 1, 0);
         }
 
       for (i = 0; i < config.dlls.len; ++i)
         {
-          LoadLibraryW (config.dlls.data[i]);
+          OutputDebugStringW (L"Loading DLL: ");
+          OutputDebugStringW (config.dlls.data[i]);
+
+          if (!LoadLibraryW (config.dlls.data[i]))
+            OutputDebugStringW (L"... Failed!");
+
+          OutputDebugStringW (L"\n");
 
           if (app.loaded)
-            SendMessageW (app.p_bar, PBM_STEPIT, 0, 0);
+            PostMessageW (app.p_bar, PBM_STEPIT, 0, 0);
         }
     }
-
-  /* Закрываем сплэш-скрин. */
-  if (app.loaded)
-    SendMessageW (app.splash, WM_CLOSE, 0, 0);
 
   /* Выполняем команды. */
   if (config.cmds.len > 0)
@@ -364,9 +377,36 @@ WinMain (HINSTANCE hInstance,
       int i;
 
       for (i = 0; i < config.cmds.len; ++i)
-        launcher_process_create(config.cmds.data[i], i < config.cmds.len - 1);
+        launcher_process_create (config.cmds.data[i], i < config.cmds.len  - 1);
     }
 
+  /* Закрываем сплэш-скрин. */
+  if (app.loaded)
+    PostMessageW (app.splash, WM_CLOSE, 0, 0);
+
+  return 0;
+}
+
+INT WINAPI
+WinMain (HINSTANCE hInstance,
+         HINSTANCE hPrevInstance,
+         LPSTR     lpCmdLine,
+         INT       nCmdShow)
+{
+  MSG msg;
+
+  /* Инициализируемся. */
+  launcher_app_init (hInstance);
+
+  /* Запускаем поток обработки конфигурации запуска. */
+  CreateThread ( NULL, 0, launcher_process, NULL, 0, NULL);
+
+  /* Запускаем message loop. */
+  while (GetMessageW (&msg, NULL, 0, 0))
+   {
+     TranslateMessage (&msg);
+     DispatchMessageW (&msg);
+   }
 
   return 0;
 }
