@@ -450,6 +450,10 @@ run_manager (GObject *emitter)
                                                         (GDestroyNotify) loc_store_free);
 
       hyscan_mark_model_set_project (tglobal->marks.model, tglobal->db, project);
+
+      if (tglobal->override.project_changed != NULL)
+        tglobal->override.project_changed (tglobal, project);
+
       g_free (project);
     }
 
@@ -1555,6 +1559,9 @@ track_changed (GtkTreeView *list,
           break;
         }
     }
+
+  if (global->override.track_changed != NULL)
+    global->override.track_changed (global, track_name);
 
   g_value_unset (&value);
 }

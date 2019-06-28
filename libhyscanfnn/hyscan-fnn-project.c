@@ -232,6 +232,9 @@ projects_changed (HyScanDBInfo     *db_info,
   GHashTableIter htiter;
   gpointer key, value;
 
+  if (db_info == NULL)
+    return;
+
   gtk_list_store_clear (GTK_LIST_STORE (priv->project_ls));
 
   g_message ("Projects changed...");

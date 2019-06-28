@@ -275,6 +275,11 @@ struct _Global
                                 gdouble  brightness,
                                 gdouble  black,
                                 gint     selector);
+
+    void     (*project_changed) (Global      *global,
+                                 const gchar *project_name);
+    void     (*track_changed)   (Global      *global,
+                                 const gchar *track_name);
   } override;
 
   struct 

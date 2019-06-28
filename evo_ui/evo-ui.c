@@ -1,8 +1,6 @@
 #include <gmodule.h>
 #include <hyscan-gtk-area.h>
 #include <hyscan-gtk-fnn-offsets.h>
-#include "evo-settings.h"
-#include "evo-sensors.h"
 #include "evo-ui.h"
 
 #define GETTEXT_PACKAGE "hyscanfnn-evoui"
@@ -121,6 +119,12 @@ evo_brightness_set_override (Global  *global,
   return TRUE;
 }
 
+void
+evo_project_changed_override (Global *global,
+                          const gchar * project)
+{
+  hyscan_gtk_map_kit_set_project (global_ui.mapkit, project);
+}
 /***
  *     #     # ######     #    ######  ######  ####### ######   #####
  *     #  #  # #     #   # #   #     # #     # #       #     # #     #
@@ -136,7 +140,8 @@ void
 map_offline_wrapper (GObject *emitter,
                      HyScanGtkMapKit *map)
 {
-  hyscan_gtk_map_kit_set_offline (map, gtk_check_menu_item_get_active (emitter));
+  hyscan_gtk_map_kit_set_offline (map,
+                                  gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (emitter)));
 }
 
 static void
@@ -601,6 +606,7 @@ build_interface (Global *global)
   GtkWidget *rbox;
 
   global->override.brightness_set = evo_brightness_set_override;
+  global->override.project_changed = evo_project_changed_override;
 
   /* EvoUi это грид, вверху стек-свитчер с кнопками панелей,
    * внизу HyScanGtkArea. Внутри арии:
@@ -748,7 +754,12 @@ build_interface (Global *global)
               {
                 mitem = gtk_check_menu_item_new_with_label (*sensors);
                 gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (mitem), TRUE);
-                g_signal_connect (mitem, "toggled", G_CALLBACK (sensor_toggle_wrapper), *sensors);
+                // g_signal_connect (mitem, "toggled", G_CALLBACK (sensor_toggle_wrapper), );
+
+                g_signal_connect_data (mitem, "toggled", G_CALLBACK (sensor_toggle_wrapper),
+                                       g_strdup (*sensors), (GClosureNotify)g_free, 0);
+
+
                 gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
               }
 

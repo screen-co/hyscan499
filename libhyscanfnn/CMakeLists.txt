@@ -27,6 +27,7 @@ add_library (${HYSCAN_FNN_LIBRARY} SHARED
              hyscan-gtk-project-viewer.c
              hyscan-gtk-nav-indicator.c
              hyscan-gtk-fnn-box.c
+             hyscan-gtk-con.c
              hyscan-mark-sync.c
              sonar-configure.c
              fnn.c

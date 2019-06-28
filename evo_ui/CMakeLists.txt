@@ -17,8 +17,6 @@ add_custom_command (OUTPUT ${CMAKE_BINARY_DIR}/resources/${UI_NAME}-resources.c
 
 
 add_library (${UI_NAME} SHARED
-             evo-settings.c
-             evo-sensors.c
              hyscan-gtk-map-kit.c
              evo-ui.c
              ${CMAKE_BINARY_DIR}/resources/${UI_NAME}-resources.c)

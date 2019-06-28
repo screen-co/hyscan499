@@ -4,7 +4,7 @@
 #include <hyscan-fnn-splash.h>
 #include <hyscan-fnn-project.h>
 #include <hyscan-fnn-button.h>
-#include <hyscan-gtk-connector.h>
+#include <hyscan-gtk-con.h>
 #include <hyscan-profile-hw.h>
 #include <hyscan-profile-offset.h>
 #include <hyscan-profile-db.h>
@@ -31,12 +31,13 @@
 
 enum
 {
-  CONNECTOR_CANCEL,
+  CONNECTOR_CANCEL = 10,
   CONNECTOR_CLOSE,
 };
 
 /* Вот он, наш жирненький красавчик. */
 Global global = {0,};
+gint con_status = 0;
 
 typedef gboolean (*ui_build_fn) (Global *);
 typedef gboolean (*ui_config_fn) (GKeyFile *);
@@ -95,20 +96,23 @@ void
 connector_cancel (GtkAssistant *ass,
                   Global       *global)
 {
+  con_status = CONNECTOR_CANCEL;
   gtk_widget_destroy (GTK_WIDGET (ass));
+  gtk_main_quit();
 }
 
 void
 connector_close (GtkAssistant *ass,
                  Global       *global)
 {
-  if (hyscan_gtk_connector_get_result (HYSCAN_GTK_CONNECTOR (ass)))
+  if (hyscan_gtk_con_get_result (HYSCAN_GTK_CON (ass)))
     {
-      global->db = hyscan_gtk_connector_get_db (HYSCAN_GTK_CONNECTOR (ass));
-      global->control = hyscan_gtk_connector_get_control (HYSCAN_GTK_CONNECTOR (ass));
+      global->control = hyscan_gtk_con_get_control (HYSCAN_GTK_CON (ass));
       global->control_s = HYSCAN_SONAR (global->control);
+      con_status = CONNECTOR_CLOSE;
     }
   gtk_widget_destroy (GTK_WIDGET (ass));
+  gtk_main_quit();
 }
 
 gchar **
@@ -242,7 +246,6 @@ main (int argc, char **argv)
 
   /* Перенаправление логов в файл. */
   #ifdef FNN_LOGGING
-  g_message ("fuck!");
   hyscan_fnn_flog_open ("hyscan", 1000000);
   #endif
 
@@ -404,6 +407,13 @@ main (int argc, char **argv)
         settings_file = keyfile_string_read_helper (config, "common", "settings");
     }
 
+  /* Файл c настройками. */
+  if (settings_file == NULL)
+    settings_file = g_build_filename (g_get_user_config_dir (), "hyscan499-settings.ini", NULL);
+
+  global.settings = g_key_file_new ();
+  g_key_file_load_from_file (global.settings, settings_file, G_KEY_FILE_NONE, NULL);
+
 
 
   /***
@@ -422,57 +432,75 @@ main (int argc, char **argv)
       /* Подключение к базе данных. */
       global.db = hyscan_db_new (db_uri);
       hyscan_exit_if_w_param (global.db == NULL, "can't connect to db '%s'", db_uri);
-
-      /* Пути к дровам и имя файла с профилем аппаратного обеспечения. */
-      if (hardware_profile != NULL)
-        {
-          HyScanProfileHW *hw;
-
-          if (driver_paths == NULL)
-            {
-              g_print ("Driver paths not set. Re-run with --help-all to get help.");
-              return -1;
-            }
-
-          hw = hyscan_profile_hw_new (hardware_profile);
-          hyscan_profile_hw_set_driver_paths (hw, (gchar**)driver_paths);
-          g_strfreev (driver_paths);
-
-          if (!hyscan_profile_read (HYSCAN_PROFILE (hw)))
-            {
-              g_message ("Profile read error");
-              g_clear_object (&hw);
-              goto no_sonar;
-            }
-
-          if (hyscan_profile_hw_check (hw))
-            {
-              global.control = hyscan_profile_hw_connect (hw);
-              global.control_s = HYSCAN_SONAR (global.control);
-              hyscan_control_device_bind (global.control);
-            }
-          else
-            {
-              g_message ("Profile check error");
-            }
-
-          g_clear_object (&hw);
-        }
     }
   else
     {
-      /* Показываем гуй для подключения. */
-      GtkWidget *window = hyscan_gtk_connector_new (get_profile_dir(), driver_paths);
-      g_signal_connect (window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
-      g_signal_connect (window, "cancel", G_CALLBACK (connector_cancel), &global);
-      g_signal_connect (window, "close", G_CALLBACK (connector_close), &global);
-      gtk_widget_show_all (window);
-      gtk_main ();
+      gchar *folder;
+      /* К О С Т Ы Л И
+       * О С Т Ы Л И
+       * С Т Ы Л И
+       * Т Ы Л И
+       * Ы Л И
+       * Л И
+       * И
+       */
+      /* беру первую попавшуюся БД. Мне насрать. */
+      folder = g_build_filename (g_get_user_config_dir (), "hyscan","db-profiles", NULL);
+      {
+        const gchar *filename;
+        GError *error = NULL;
+        GDir *dir;
 
-      if (global.db == NULL && global.control == NULL)
-        goto exit;
+        if (!g_file_test (folder, G_FILE_TEST_IS_DIR | G_FILE_TEST_EXISTS))
+          {
+            g_warning ("HyScanFNN: directory %s doesn't exist", folder);
+            // return;
+          }
+
+        dir = g_dir_open (folder, 0, &error);
+        if (error != NULL)
+          {
+            g_warning ("HyScanFNN: %s", error->message);
+            g_clear_pointer (&error, g_error_free);
+            // return;
+          }
+
+        while ((filename = g_dir_read_name (dir)) != NULL)
+          {
+            gchar *fullname;
+            HyScanProfileDB *profile;
+
+            fullname = g_build_filename (folder, filename, NULL);
+            profile = hyscan_profile_db_new (fullname);
+            hyscan_profile_read (HYSCAN_PROFILE (profile));
+
+            g_free (fullname);
+            global.db = hyscan_profile_db_connect (profile);
+
+            if (global.db != NULL)
+              break;
+          }
+
+        g_dir_close (dir);
+      }
+
     }
 
+  /* теперь запускаю педрильный коннектор*/
+  {
+      GtkWidget *con;
+
+      con = hyscan_gtk_con_new (get_profile_dir(), driver_paths, global.settings, global.db);
+      g_signal_connect (con, "cancel", connector_cancel, &global);
+      g_signal_connect (con, "close", connector_close, &global);
+
+      gtk_widget_show_all (con);
+      gtk_main ();
+
+      if (con_status != CONNECTOR_CLOSE)
+        goto exit;
+
+  }
   /* К этому моменту подвезли global.control и global.db. Настраиваю контрол. */
   if (global.control != NULL)
     {
@@ -481,7 +509,7 @@ main (int argc, char **argv)
       const HyScanSourceType * source;
       guint32 i;
 
-      // hyscan_control_device_bind (global.control);
+      hyscan_control_device_bind (global.control);
       hyscan_control_writer_set_db (global.control, global.db);
 
       global.infos = g_hash_table_new (g_direct_hash, g_direct_equal);
@@ -518,13 +546,6 @@ main (int argc, char **argv)
    *                 ---   ---   ---   ---                           ---                           ---
    * проект, галс, настройки
    */
-
-  /* Файл c настройками ГЛ. */
-  if (settings_file == NULL)
-    settings_file = g_build_filename (g_get_user_config_dir (), "hyscan499-settings.ini", NULL);
-
-  global.settings = g_key_file_new ();
-  g_key_file_load_from_file (global.settings, settings_file, G_KEY_FILE_NONE, NULL);
 
   /* SV. */
   global.sound_velocity = sound_velocity;
