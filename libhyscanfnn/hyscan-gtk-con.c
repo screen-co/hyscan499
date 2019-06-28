@@ -39,7 +39,8 @@
 #include "hyscan-fnn-project.h"
 #include "sonar-configure.h"
 #include <hyscan-async.h>
-#include <glib/gi18n.h>
+#define GETTEXT_PACKAGE "libhyscanfnn"
+#include <glib/gi18n-lib.h>
 
 #define HYSCAN_GTK_CON_DB "db"
 #define HYSCAN_GTK_CON_HW_CHK "hw_check"

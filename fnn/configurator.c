@@ -140,7 +140,7 @@ configurator_build_view (Configurator *configurator)
                             G_CALLBACK (configurator_update_config), configurator);
 
   view->path = gtk_label_new (NULL);
-  gtk_label_set_xalign (GTK_LABEL (view->path), 0.0);
+  gtk_misc_set_alignment (GTK_MISC (view->path), 0, 0.5);
   gtk_label_set_ellipsize (GTK_LABEL (view->path), PANGO_ELLIPSIZE_MIDDLE);
 
   view->apply_button = gtk_button_new_with_label ("Применить");
@@ -149,14 +149,14 @@ configurator_build_view (Configurator *configurator)
   description = "Для запуска программы необходимо создать профиль базы данных. "
                 "Укажите название нового профиля и путь к директории, где будет храниться база данных.";
   description_label = gtk_label_new (description);
-  gtk_label_set_xalign (GTK_LABEL (description_label), 0.0);
+  gtk_misc_set_alignment (GTK_MISC (description_label), 0.0, 0.5);
   gtk_label_set_line_wrap (GTK_LABEL (description_label), TRUE);
 
   name_label = gtk_label_new ("Название профиля БД");
-  gtk_label_set_xalign (GTK_LABEL (name_label), 1.0);
+  gtk_misc_set_alignment (GTK_MISC (name_label), 1.0, 0.5);
 
   path_label = gtk_label_new ("Путь к БД");
-  gtk_label_set_xalign (GTK_LABEL (path_label), 1.0);
+  gtk_misc_set_alignment (GTK_MISC (path_label), 1.0, 0.5);
 
   row = 0;
   gtk_grid_attach (GTK_GRID (view->grid), description_label,  1, ++row, 3, 1);

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-06-20 10:48+0300\n"
+"POT-Creation-Date: 2019-06-28 17:16+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -25,7 +25,7 @@ msgstr ""
 msgid "SideScanLow"
 msgstr ""
 
-#: fnn.c:146 fnn.c:3159
+#: fnn.c:146 fnn.c:3167
 msgid "Profiler"
 msgstr ""
 
@@ -37,55 +37,55 @@ msgstr ""
 msgid "ForwardLook"
 msgstr ""
 
-#: fnn.c:469
+#: fnn.c:473
 msgid "Hardware parameters"
 msgstr ""
 
-#: fnn.c:471
+#: fnn.c:475
 msgid "Apply"
 msgstr ""
 
-#: fnn.c:472
+#: fnn.c:476
 msgid "Reset"
 msgstr ""
 
-#: fnn.c:473 fnn.c:506
+#: fnn.c:477 fnn.c:510
 msgid "Close"
 msgstr ""
 
-#: fnn.c:504
+#: fnn.c:508
 msgid "Sonar info"
 msgstr ""
 
-#: fnn.c:3168
+#: fnn.c:3176
 msgid "Yellow"
 msgstr ""
 
-#: fnn.c:3176
+#: fnn.c:3184
 msgid "90's"
 msgstr ""
 
-#: fnn.c:3183
+#: fnn.c:3191
 msgid "Sepia"
 msgstr ""
 
-#: fnn.c:3190
+#: fnn.c:3198
 msgid "White"
 msgstr ""
 
-#: fnn.c:3198
+#: fnn.c:3206
 msgid "Inverted"
 msgstr ""
 
-#: fnn.c:3206
+#: fnn.c:3214
 msgid "Green"
 msgstr ""
 
-#: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:461
+#: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:464
 msgid "Delete project"
 msgstr ""
 
-#: hyscan-fnn-project.c:137 hyscan-fnn-project.c:145 hyscan-fnn-project.c:480
+#: hyscan-fnn-project.c:137 hyscan-fnn-project.c:145 hyscan-fnn-project.c:483
 msgid "Delete track"
 msgstr ""
 
@@ -105,12 +105,36 @@ msgstr ""
 msgid "This can not be undone"
 msgstr ""
 
-#: hyscan-fnn-project.c:464 hyscan-fnn-project.c:507
+#: hyscan-fnn-project.c:467 hyscan-fnn-project.c:510
 msgid "Open project"
 msgstr ""
 
-#: hyscan-fnn-project.c:509
+#: hyscan-fnn-project.c:512
 msgid "Create and open project"
+msgstr ""
+
+#: hyscan-gtk-con.c:356
+msgid "Intro"
+msgstr ""
+
+#: hyscan-gtk-con.c:379 tmp/hyscan-gtk-con.ui.h:3
+msgid "Hardware"
+msgstr ""
+
+#: hyscan-gtk-con.c:425
+msgid "Connection"
+msgstr ""
+
+#: hyscan-gtk-con.c:451
+msgid "Connecting..."
+msgstr ""
+
+#: hyscan-gtk-con.c:486
+msgid "Connection completed. HyScan is ready to launch. "
+msgstr ""
+
+#: hyscan-gtk-con.c:488
+msgid "Connection failed. "
 msgstr ""
 
 #: hyscan-gtk-nav-indicator.c:255
@@ -127,6 +151,26 @@ msgstr ""
 
 #: hyscan-gtk-nav-indicator.c:256
 msgid "W"
+msgstr ""
+
+#: tmp/hyscan-gtk-con.ui.h:1
+msgid "Welcome to connection manager"
+msgstr ""
+
+#: tmp/hyscan-gtk-con.ui.h:2
+msgid "Project"
+msgstr ""
+
+#: tmp/hyscan-gtk-con.ui.h:4
+msgid "View"
+msgstr ""
+
+#: tmp/hyscan-gtk-con.ui.h:5
+msgid "Scan"
+msgstr ""
+
+#: tmp/hyscan-gtk-con.ui.h:6
+msgid "Project manager"
 msgstr ""
 
 #: tmp/hyscan-gtk-mark-editor.ui.h:1
