@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-06-24 16:36+0300\n"
+"POT-Creation-Date: 2019-07-01 17:23+0300\n"
 "PO-Revision-Date: 2019-06-20 15:00+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -18,37 +18,41 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: evo-ui.c:650
+#: evo-ui.c:652
 msgid "Map"
 msgstr "Карта"
 
-#: evo-ui.c:727
+#: evo-ui.c:729
 msgid "Project Manager"
 msgstr "Менеджер проектов"
 
-#: evo-ui.c:732
+#: evo-ui.c:734
 msgid "Map offline mode"
 msgstr "Не загружать карту"
 
-#: evo-ui.c:755
+#: evo-ui.c:762
 msgid "Sensors"
 msgstr "Датчики"
 
-#: evo-ui.c:767
+#: evo-ui.c:774
 msgid "Info"
 msgstr "Информация"
 
-#: evo-ui.c:771
+#: evo-ui.c:778
 msgid "Params"
 msgstr "Параметры"
 
-#: evo-ui.c:775
+#: evo-ui.c:782
 msgid "Sonar"
 msgstr "Локатор"
 
-#: evo-ui.c:789
+#: evo-ui.c:795
 msgid "Hardware info"
 msgstr "Параметры оборудования"
+
+#: evo-ui.c:804
+msgid "Exit"
+msgstr "Выйти"
 
 #: hyscan-gtk-map-kit.c:418
 msgid "OK"
@@ -252,9 +256,9 @@ msgid "Level"
 msgstr "Уровень"
 
 #: tmp/record.ui.h:1
-msgid "No beaming"
-msgstr "Без излучения"
-
-#: tmp/record.ui.h:2
 msgid "Start"
 msgstr "Работа"
+
+#: tmp/record.ui.h:2
+msgid "No beaming"
+msgstr "Без излучения"

@@ -1354,7 +1354,7 @@ mark_model_changed (HyScanMarkModel *model,
       GDateTime *mtime;
       gchar *mtime_str;
 
-      mtime = g_date_time_new_from_unix_local (mark_ll->mark->waterfall.modification_time / 1e6);
+      mtime = g_date_time_new_from_unix_local (mark_ll->mark->waterfall.mtime / 1e6);
       mtime_str = g_date_time_format (mtime, "%d.%m %H:%M");
 
       gtk_list_store_append (ls, &tree_iter);
@@ -1362,7 +1362,7 @@ mark_model_changed (HyScanMarkModel *model,
                           0, mark_id,
                           1, mark_ll->mark->waterfall.name,
                           2, mtime_str,
-                          3, mark_ll->mark->waterfall.modification_time,
+                          3, mark_ll->mark->waterfall.mtime,
                           -1);
 
       g_free (mtime_str);
