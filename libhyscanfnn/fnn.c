@@ -1277,18 +1277,18 @@ get_mark_coords (GHashTable * locstores,
       g_hash_table_insert (locstores, g_strdup (mark->waterfall.track), ls);
     }
 
-  pj = get_projector (locstores, mark->waterfall.track, mark->waterfall.source0, &mloc, &amp);
+  pj = get_projector (locstores, mark->waterfall.track, mark->waterfall.source, &mloc, &amp);
 
   if (pj == NULL || amp == NULL)
     return NULL;
 
   // hyscan_projector_index_to_coord (pj, mark->index0, &along);
-  hyscan_projector_count_to_coord (pj, mark->waterfall.count0, &across, 0);
+  hyscan_projector_count_to_coord (pj, mark->waterfall.count, &across, 0);
 
   apos = hyscan_amplitude_get_offset (amp);
-  hyscan_amplitude_get_amplitude (amp, mark->waterfall.index0, &n, &time, NULL);
+  hyscan_amplitude_get_amplitude (amp, mark->waterfall.index, &n, &time, NULL);
 
-  if (mark->waterfall.source0 == HYSCAN_SOURCE_SIDE_SCAN_PORT)
+  if (mark->waterfall.source == HYSCAN_SOURCE_SIDE_SCAN_PORT)
     across *= -1;
 
   if (!hyscan_mloc_get (mloc, time, &apos, 0, across, 0, &position))
