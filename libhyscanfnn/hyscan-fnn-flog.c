@@ -85,6 +85,20 @@ hyscan_fnn_flog_open (const gchar *component,
   /* Открываем файл. */
   flog.filename = g_build_path (G_DIR_SEPARATOR_S, log_dir, base_name, NULL);
   flog.filename_old = g_build_path (G_DIR_SEPARATOR_S, log_dir, base_name_old, NULL);
+
+#ifdef G_OS_WIN32
+  {
+    gchar *path;
+
+    path = g_win32_locale_filename_from_utf8 (flog.filename);
+    g_free (flog.filename);
+    flog.filename = path;
+
+    path = g_win32_locale_filename_from_utf8 (flog.filename_old);
+    g_free (flog.filename_old);
+    flog.filename_old = path;
+  }
+#endif  
   hyscan_fnn_flog_open_file ();
   if (flog.file != NULL)
     {
