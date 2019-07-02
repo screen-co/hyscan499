@@ -4,7 +4,6 @@
         <file compressed="true">hyscan-gtk-mark-editor.ui</file>
         <file compressed="true">hyscan-gtk-nav-indicator.ui</file>
         <file compressed="true">hyscan-gtk-project-viewer.ui</file>
-        <file compressed="true">hyscan-gtk-start-screen.ui</file>
         <file compressed="true">hyscan-gtk-con.ui</file>
         <file compressed="true">hyscan-fnn-fl.ui</file>
     </gresource>
