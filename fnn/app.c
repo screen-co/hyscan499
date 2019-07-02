@@ -164,11 +164,9 @@ win32_build_path (int n, ...)
   va_end (args);
 
   utf8_path = g_build_filenamev (args_str);
-  path = g_win32_locale_filename_from_utf8 (utf8_path);
-
-  g_message ("Path: %s", path);
-  g_free (utf8_path);
-  return path;
+  
+  g_message ("Path: %s", utf8_path);
+  return utf8_path;
 }
 #endif
 
@@ -180,7 +178,10 @@ get_locale_dir (void)
   if (locale_dir == NULL)
     {
       #ifdef G_OS_WIN32
-        locale_dir = win32_build_path (2, "share", "locale", NULL);
+        gchar *utf8_path;
+        utf8_path = win32_build_path (2, "share", "locale", NULL);
+        locale_dir = g_win32_locale_filename_from_utf8 (utf8_path);
+        g_free (utf8_path);
       #else
         locale_dir = FNN_LOCALE_DIR;
       #endif
