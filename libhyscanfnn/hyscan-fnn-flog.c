@@ -35,21 +35,24 @@ hyscan_fnn_flog_open_file ()
 {
   gsize filesize;
 
-  flog.file = fopen (flog.filename, "a+");
-  if (flog.file== NULL)
-      return;
+  /* Открываем файл в бинарном режиме, чтобы узнать его размер в байтах. */
+  flog.file = g_fopen (flog.filename, "rb");
+  if (flog.file == NULL)
+    return;
 
   /* Проверяем размер лога. */
   fseek (flog.file, 0, SEEK_END);
   filesize = ftell (flog.file);
-  if (filesize < flog.max_size)
-    return;
+  if (filesize > flog.max_size)
+    {
+      fclose (flog.file);
+      g_unlink (flog.filename_old);
+      g_rename (flog.filename, flog.filename_old);
+    }
 
-  /* Переименовываем файл и переоткрываем. */
+  /* Переоткрываем файл лога. */
   fclose (flog.file);
-  g_unlink (flog.filename_old);
-  g_rename (flog.filename, flog.filename_old);
-  flog.file = fopen (flog.filename, "a+");
+  flog.file = g_fopen (flog.filename, "a+");
 }
 
 
@@ -86,19 +89,6 @@ hyscan_fnn_flog_open (const gchar *component,
   flog.filename = g_build_path (G_DIR_SEPARATOR_S, log_dir, base_name, NULL);
   flog.filename_old = g_build_path (G_DIR_SEPARATOR_S, log_dir, base_name_old, NULL);
 
-#ifdef G_OS_WIN32
-  {
-    gchar *path;
-
-    path = g_win32_locale_filename_from_utf8 (flog.filename);
-    g_free (flog.filename);
-    flog.filename = path;
-
-    path = g_win32_locale_filename_from_utf8 (flog.filename_old);
-    g_free (flog.filename_old);
-    flog.filename_old = path;
-  }
-#endif  
   hyscan_fnn_flog_open_file ();
   if (flog.file != NULL)
     {
