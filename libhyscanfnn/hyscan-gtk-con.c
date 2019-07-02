@@ -71,6 +71,7 @@ struct _HyScanGtkConPrivate
   HyScanProfile *hw_profile;
   HyScanProfile *of_profile;
 
+
   struct
     {
       GtkWidget *bar;
@@ -81,6 +82,7 @@ struct _HyScanGtkConPrivate
   gchar         *of_profile_file;
 
   gint           connect_page;
+  GtkBox        *connect_box;
 
   HyScanAsync   *async;
   HyScanControl *control;
@@ -424,6 +426,8 @@ hyscan_gtk_con_make_connect_page (HyScanGtkCon *self)
   self->priv->connect_page = gtk_assistant_append_page (GTK_ASSISTANT (self), box);
   gtk_assistant_set_page_type (GTK_ASSISTANT (self), box, GTK_ASSISTANT_PAGE_SUMMARY);
   gtk_assistant_set_page_title (GTK_ASSISTANT (self), box, _("Connection"));
+
+  self->priv->connect_box = GTK_BOX (box);
 }
 
 
@@ -475,13 +479,6 @@ hyscan_gtk_con_closer (HyScanGtkCon *self)
   return G_SOURCE_REMOVE;
 }
 
-static gboolean
-hyscan_gtk_con_closer2 (HyScanGtkCon *self)
-{
-  gtk_window_close (GTK_WINDOW(self));
-  return G_SOURCE_REMOVE;
-}
-
 static void
 hyscan_gtk_con_finished (HyScanGtkCon *self,
                          gboolean      success)
@@ -494,12 +491,6 @@ hyscan_gtk_con_finished (HyScanGtkCon *self,
 
   current_page = gtk_assistant_get_nth_page (wizard, gtk_assistant_get_current_page (wizard));
   gtk_assistant_set_page_complete (wizard, current_page, TRUE);
-
-  {
-    GtkWidget *butt = gtk_button_new_with_label(" Fuck you I won't do what you tell me");
-    g_signal_connect_swapped (butt, "clicked", gtk_window_close, self);
-    gtk_box_pack_start(current_page, butt, 1,1,0);
-  }
 
   if (success)
     {
@@ -514,7 +505,7 @@ hyscan_gtk_con_finished (HyScanGtkCon *self,
       vm = gtk_button_new_with_label (_("Continue in view mode"));
       g_signal_connect (vm, "clicked", gtk_widget_hide, NULL);
       g_signal_connect (vm, "clicked", hyscan_gtk_con_run_view, self);
-      gtk_box_pack_start (current_page, vm, TRUE, TRUE, 0);
+      gtk_box_pack_start (self->priv->connect_box, vm, TRUE, TRUE, 0);
       gtk_widget_show (vm);
     }
 

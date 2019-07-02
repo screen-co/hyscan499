@@ -839,7 +839,7 @@ destroy_interface (void)
 {
   EvoUI *ui = &global_ui;
 
-  g_hash_table_unref (ui->builders);
+  g_clear_pointer (&ui->builders, g_hash_table_unref);
 
   g_clear_object (&ui->starter.all);
   g_clear_object (&ui->starter.dry);

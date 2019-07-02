@@ -3290,26 +3290,30 @@ fnn_deinit (Global *ext_global)
 
   if (settings != NULL)
     {
-      GHashTableIter iter;
-      gpointer k, v;
-      g_hash_table_iter_init (&iter, ext_global->panels);
-      while (g_hash_table_iter_next (&iter, &k, &v))
+      if (ext_global->panels != NULL)
         {
-          FnnPanel *panel = v;
-          keyfile_double_write_helper (settings, panel->name, "sonar.cur_distance", panel->current.distance);
-          keyfile_double_write_helper (settings, panel->name, "sonar.cur_signal", panel->current.signal);
-          keyfile_double_write_helper (settings, panel->name, "sonar.cur_gain0", panel->current.gain0);
-          keyfile_double_write_helper (settings, panel->name, "sonar.cur_gain_step", panel->current.gain_step);
-          keyfile_double_write_helper (settings, panel->name, "sonar.cur_level", panel->current.level);
-          keyfile_double_write_helper (settings, panel->name, "sonar.cur_sensitivity", panel->current.sensitivity);
+          GHashTableIter iter;
+          gpointer k, v;
+          g_hash_table_iter_init (&iter, ext_global->panels);
+          while (g_hash_table_iter_next (&iter, &k, &v))
+            {
+              FnnPanel *panel = v;
+              keyfile_double_write_helper (settings, panel->name, "sonar.cur_distance", panel->current.distance);
+              keyfile_double_write_helper (settings, panel->name, "sonar.cur_signal", panel->current.signal);
+              keyfile_double_write_helper (settings, panel->name, "sonar.cur_gain0", panel->current.gain0);
+              keyfile_double_write_helper (settings, panel->name, "sonar.cur_gain_step", panel->current.gain_step);
+              keyfile_double_write_helper (settings, panel->name, "sonar.cur_level", panel->current.level);
+              keyfile_double_write_helper (settings, panel->name, "sonar.cur_sensitivity", panel->current.sensitivity);
 
-          keyfile_double_write_helper (settings, panel->name, "cur_brightness",          panel->vis_current.brightness);
-          keyfile_double_write_helper (settings, panel->name, "cur_color_map",           panel->vis_current.colormap);
-          keyfile_double_write_helper (settings, panel->name, "cur_black",               panel->vis_current.black);
-          keyfile_double_write_helper (settings, panel->name, "cur_sensitivity",         panel->vis_current.sensitivity);
+              keyfile_double_write_helper (settings, panel->name, "cur_brightness",          panel->vis_current.brightness);
+              keyfile_double_write_helper (settings, panel->name, "cur_color_map",           panel->vis_current.colormap);
+              keyfile_double_write_helper (settings, panel->name, "cur_black",               panel->vis_current.black);
+              keyfile_double_write_helper (settings, panel->name, "cur_sensitivity",         panel->vis_current.sensitivity);
+            }
         }
 
-      keyfile_string_write_helper (settings, "common", "project", ext_global->project_name);
+      if (ext_global->project_name != NULL)
+        keyfile_string_write_helper (settings, "common", "project", ext_global->project_name);
     }
 
   tglobal = NULL;

@@ -495,16 +495,18 @@ main (int argc, char **argv)
       GtkWidget *con;
 
       con = hyscan_gtk_con_new (get_profile_dir(), driver_paths, global.settings, global.db);
+      g_signal_connect_swapped (con, "close", g_print, "close\n");
+      g_signal_connect_swapped (con, "cancel", g_print, "cancel\n");
       g_signal_connect (con, "cancel", connector_finished, &global);
       g_signal_connect (con, "close", connector_finished, &global);
+
 
       gtk_widget_show_all (con);
       gtk_main ();
 
-      if (con_status != CONNECTOR_CLOSE)
-        goto exit;
-
+      hyscan_exit_if (con_status != CONNECTOR_CLOSE, "Connector closed or failed");
   }
+
   /* К этому моменту подвезли global.control и global.db. Настраиваю контрол. */
   if (global.control != NULL)
     {
