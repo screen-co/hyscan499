@@ -1277,18 +1277,18 @@ get_mark_coords (GHashTable * locstores,
       g_hash_table_insert (locstores, g_strdup (mark->waterfall.track), ls);
     }
 
-  pj = get_projector (locstores, mark->waterfall.track, mark->waterfall.source0, &mloc, &amp);
+  pj = get_projector (locstores, mark->waterfall.track, mark->waterfall.source, &mloc, &amp);
 
   if (pj == NULL || amp == NULL)
     return NULL;
 
   // hyscan_projector_index_to_coord (pj, mark->index0, &along);
-  hyscan_projector_count_to_coord (pj, mark->waterfall.count0, &across, 0);
+  hyscan_projector_count_to_coord (pj, mark->waterfall.count, &across, 0);
 
   apos = hyscan_amplitude_get_offset (amp);
-  hyscan_amplitude_get_amplitude (amp, mark->waterfall.index0, &n, &time, NULL);
+  hyscan_amplitude_get_amplitude (amp, mark->waterfall.index, &n, &time, NULL);
 
-  if (mark->waterfall.source0 == HYSCAN_SOURCE_SIDE_SCAN_PORT)
+  if (mark->waterfall.source == HYSCAN_SOURCE_SIDE_SCAN_PORT)
     across *= -1;
 
   if (!hyscan_mloc_get (mloc, time, &apos, 0, across, 0, &position))
@@ -1354,7 +1354,7 @@ mark_model_changed (HyScanMarkModel *model,
       GDateTime *mtime;
       gchar *mtime_str;
 
-      mtime = g_date_time_new_from_unix_local (mark_ll->mark->waterfall.modification_time / 1e6);
+      mtime = g_date_time_new_from_unix_local (mark_ll->mark->waterfall.mtime / 1e6);
       mtime_str = g_date_time_format (mtime, "%d.%m %H:%M");
 
       gtk_list_store_append (ls, &tree_iter);
@@ -1362,7 +1362,7 @@ mark_model_changed (HyScanMarkModel *model,
                           0, mark_id,
                           1, mark_ll->mark->waterfall.name,
                           2, mtime_str,
-                          3, mark_ll->mark->waterfall.modification_time,
+                          3, mark_ll->mark->waterfall.mtime,
                           -1);
 
       g_free (mtime_str);
