@@ -3181,7 +3181,7 @@ fnn_make_color_maps (gboolean profiler)
   g_array_append_vals (colormaps, &new_map, 1);
 
   new_map = g_new (FnnColormap, 1);
-  new_map->name = g_strdup (_("90's"));
+  new_map->name = g_strdup (_("Brown"));
   new_map->colors = g_memdup (orange, 256 * sizeof (guint32));
   new_map->len = 256;
   new_map->bg = BLACK_BG;

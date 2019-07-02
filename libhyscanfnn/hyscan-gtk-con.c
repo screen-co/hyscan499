@@ -468,7 +468,19 @@ hyscan_gtk_con_apply (HyScanGtkCon *self)
   hyscan_gtk_con_finished (self, TRUE);
 }
 
+static gboolean
+hyscan_gtk_con_closer (HyScanGtkCon *self)
+{
+  gtk_window_close (GTK_WINDOW(self));
+  return G_SOURCE_REMOVE;
+}
 
+static gboolean
+hyscan_gtk_con_closer2 (HyScanGtkCon *self)
+{
+  gtk_window_close (GTK_WINDOW(self));
+  return G_SOURCE_REMOVE;
+}
 
 static void
 hyscan_gtk_con_finished (HyScanGtkCon *self,
@@ -483,10 +495,28 @@ hyscan_gtk_con_finished (HyScanGtkCon *self,
   current_page = gtk_assistant_get_nth_page (wizard, gtk_assistant_get_current_page (wizard));
   gtk_assistant_set_page_complete (wizard, current_page, TRUE);
 
+  {
+    GtkWidget *butt = gtk_button_new_with_label(" Fuck you I won't do what you tell me");
+    g_signal_connect_swapped (butt, "clicked", gtk_window_close, self);
+    gtk_box_pack_start(current_page, butt, 1,1,0);
+  }
+
   if (success)
-    gtk_label_set_text (label, _("Connection completed. HyScan is ready to launch. "));
+    {
+      gtk_label_set_text (label, _("Connection completed. HyScan will launch shortly. "));
+      g_timeout_add (500, hyscan_gtk_con_closer, self);
+    }
   else
-    gtk_label_set_text (label, _("Connection failed. "));
+    {
+      GtkWidget *vm;
+
+      gtk_label_set_text (label, _("Connection failed. "));
+      vm = gtk_button_new_with_label (_("Continue in view mode"));
+      g_signal_connect (vm, "clicked", gtk_widget_hide, NULL);
+      g_signal_connect (vm, "clicked", hyscan_gtk_con_run_view, self);
+      gtk_box_pack_start (current_page, vm, TRUE, TRUE, 0);
+      gtk_widget_show (vm);
+    }
 
   self->priv->result = success;
 }

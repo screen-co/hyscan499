@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-06-28 17:10+0300\n"
+"POT-Creation-Date: 2019-07-02 15:27+0300\n"
 "PO-Revision-Date: 2019-06-20 10:38+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -63,8 +63,8 @@ msgid "Yellow"
 msgstr "Желтый"
 
 #: fnn.c:3184
-msgid "90's"
-msgstr "Оранжевый"
+msgid "Brown"
+msgstr "Коричневый"
 
 #: fnn.c:3191
 msgid "Sepia"
@@ -111,32 +111,36 @@ msgid "Open project"
 msgstr "Открыть проект"
 
 #: hyscan-fnn-project.c:512
-msgid "Create and open project"
-msgstr "Создать и открыть проект"
+msgid "New project"
+msgstr "Открыть проект"
 
-#: hyscan-gtk-con.c:356
+#: hyscan-gtk-con.c:357
 msgid "Intro"
 msgstr "Начальная страница"
 
-#: hyscan-gtk-con.c:379 tmp/hyscan-gtk-con.ui.h:3
+#: hyscan-gtk-con.c:380 tmp/hyscan-gtk-con.ui.h:3
 msgid "Hardware"
 msgstr "Оборудование"
 
-#: hyscan-gtk-con.c:425
+#: hyscan-gtk-con.c:426
 msgid "Connection"
 msgstr "Подключение"
 
-#: hyscan-gtk-con.c:451
+#: hyscan-gtk-con.c:452
 msgid "Connecting..."
 msgstr "Подключаемся..."
 
-#: hyscan-gtk-con.c:486
-msgid "Connection completed. HyScan is ready to launch. "
-msgstr "Подключение завершено. HyScan готов к запуску."
+#: hyscan-gtk-con.c:506
+msgid "Connection completed. HyScan will launch shortly. "
+msgstr "Подключение завершено. HyScan вскоре запустится. "
 
-#: hyscan-gtk-con.c:488
+#: hyscan-gtk-con.c:513
 msgid "Connection failed. "
 msgstr "Не удалось подключиться."
+
+#: hyscan-gtk-con.c:514
+msgid "Continue in view mode"
+msgstr "Продолжить в режиме просмотра. "
 
 #: hyscan-gtk-nav-indicator.c:255
 msgid "N"

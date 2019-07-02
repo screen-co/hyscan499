@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-06-28 17:16+0300\n"
+"POT-Creation-Date: 2019-07-02 15:27+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -62,7 +62,7 @@ msgid "Yellow"
 msgstr ""
 
 #: fnn.c:3184
-msgid "90's"
+msgid "Brown"
 msgstr ""
 
 #: fnn.c:3191
@@ -110,31 +110,35 @@ msgid "Open project"
 msgstr ""
 
 #: hyscan-fnn-project.c:512
-msgid "Create and open project"
+msgid "New project"
 msgstr ""
 
-#: hyscan-gtk-con.c:356
+#: hyscan-gtk-con.c:357
 msgid "Intro"
 msgstr ""
 
-#: hyscan-gtk-con.c:379 tmp/hyscan-gtk-con.ui.h:3
+#: hyscan-gtk-con.c:380 tmp/hyscan-gtk-con.ui.h:3
 msgid "Hardware"
 msgstr ""
 
-#: hyscan-gtk-con.c:425
+#: hyscan-gtk-con.c:426
 msgid "Connection"
 msgstr ""
 
-#: hyscan-gtk-con.c:451
+#: hyscan-gtk-con.c:452
 msgid "Connecting..."
 msgstr ""
 
-#: hyscan-gtk-con.c:486
-msgid "Connection completed. HyScan is ready to launch. "
+#: hyscan-gtk-con.c:506
+msgid "Connection completed. HyScan will launch shortly. "
 msgstr ""
 
-#: hyscan-gtk-con.c:488
+#: hyscan-gtk-con.c:513
 msgid "Connection failed. "
+msgstr ""
+
+#: hyscan-gtk-con.c:514
+msgid "Continue in view mode"
 msgstr ""
 
 #: hyscan-gtk-nav-indicator.c:255

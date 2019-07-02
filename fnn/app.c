@@ -93,23 +93,18 @@ destroy_cb (GtkWidget *w)
 }
 
 void
-connector_cancel (GtkAssistant *ass,
-                  Global       *global)
-{
-  con_status = CONNECTOR_CANCEL;
-  gtk_widget_destroy (GTK_WIDGET (ass));
-  gtk_main_quit();
-}
-
-void
-connector_close (GtkAssistant *ass,
-                 Global       *global)
+connector_finished (GtkAssistant *ass,
+                    Global       *global)
 {
   if (hyscan_gtk_con_get_result (HYSCAN_GTK_CON (ass)))
     {
       global->control = hyscan_gtk_con_get_control (HYSCAN_GTK_CON (ass));
       global->control_s = HYSCAN_SONAR (global->control);
       con_status = CONNECTOR_CLOSE;
+    }
+  else
+    {
+      con_status = CONNECTOR_CANCEL;
     }
   gtk_widget_destroy (GTK_WIDGET (ass));
   gtk_main_quit();
@@ -181,29 +176,38 @@ static const gchar *
 get_locale_dir (void)
 {
   static gchar *locale_dir = NULL;
-  #ifdef G_OS_WIN32
-    if (locale_dir == NULL)
-      locale_dir = win32_build_path(2, "share", "locale", NULL);
-  #else
-    locale_dir = FNN_LOCALE_DIR;
-  #endif
 
-  g_message ("locale: %s", locale_dir);
+  if (locale_dir == NULL)
+    {
+      #ifdef G_OS_WIN32
+        locale_dir = win32_build_path (2, "share", "locale", NULL);
+      #else
+        locale_dir = FNN_LOCALE_DIR;
+      #endif
+
+      g_message ("locale_dir: <%s>", locale_dir);
+    }
+
   return locale_dir;
 }
 
 static const gchar *
 get_profile_dir (void)
 {
-  #ifdef G_OS_WIN32
-    static gchar *profile_dir = NULL;
-    if (profile_dir == NULL)
-      profile_dir = win32_build_path (1, "share", NULL);
-    return profile_dir;
+  static gchar *profile_dir = NULL;
 
-  #else
-    return FNN_PROFILE_DIR;
-  #endif
+  if (profile_dir == NULL)
+    {
+      #ifdef G_OS_WIN32
+        profile_dir = win32_build_path (1, "share", NULL);
+      #else
+        profile_dir = FNN_PROFILE_DIR;
+      #endif
+
+      g_message ("profile_dir: <%s>", profile_dir);
+    }
+
+  return profile_dir;
 }
 
 
@@ -491,8 +495,8 @@ main (int argc, char **argv)
       GtkWidget *con;
 
       con = hyscan_gtk_con_new (get_profile_dir(), driver_paths, global.settings, global.db);
-      g_signal_connect (con, "cancel", connector_cancel, &global);
-      g_signal_connect (con, "close", connector_close, &global);
+      g_signal_connect (con, "cancel", connector_finished, &global);
+      g_signal_connect (con, "close", connector_finished, &global);
 
       gtk_widget_show_all (con);
       gtk_main ();

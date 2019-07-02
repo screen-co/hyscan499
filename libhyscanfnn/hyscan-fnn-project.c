@@ -380,7 +380,7 @@ response_clicked (GtkDialog        *self,
       g_clear_pointer (&priv->project_name, g_free);
       g_clear_pointer (&priv->track_name, g_free);
 
-      date = g_date_time_format (dt, "%d.%m");
+      date = g_date_time_format (dt, "%Y.%m.%d");
       name = g_strdup (date);
 
       projects = hyscan_db_info_get_projects (priv->info);
@@ -398,7 +398,7 @@ response_clicked (GtkDialog        *self,
               if (g_str_equal (name, pinfo->name))
                 {
                   g_message ("Same project found %s %s", name, pinfo->name);
-                goto increment;
+                  goto increment;
                 }
             }
 
@@ -509,7 +509,7 @@ constructed (GObject *object)
 
   button = gtk_dialog_add_button (GTK_DIALOG (self), _("Open project"), HYSCAN_FNN_PROJECT_OPEN);
   gtk_style_context_add_class (gtk_widget_get_style_context (button), GTK_STYLE_CLASS_SUGGESTED_ACTION);
-  button = gtk_dialog_add_button (GTK_DIALOG (self), _("Create and open project"), HYSCAN_FNN_PROJECT_CREATE);
+  button = gtk_dialog_add_button (GTK_DIALOG (self), _("New project"), HYSCAN_FNN_PROJECT_CREATE);
   gtk_style_context_add_class (gtk_widget_get_style_context (button), GTK_STYLE_CLASS_SUGGESTED_ACTION);
 
   gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_OPEN, FALSE);
