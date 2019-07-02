@@ -261,10 +261,6 @@ track_select (Global *global)
     }
   while (gtk_tree_model_iter_next (global->gui.track.list, &iter));
 
-
-
-
-
 exit:
   g_free (track_name);
   gtk_tree_path_free (path);
@@ -791,7 +787,6 @@ build_interface (Global *global)
           {
             gchar ** env;
             const gchar * param_set;
-            GtkWidget * prm;
 
             env = g_get_environ ();
             param_set = g_environ_getenv (env, EVO_ENABLE_EXTRAS);
@@ -803,7 +798,12 @@ build_interface (Global *global)
               }
             g_strfreev (env);
           }
+
         }
+    /* exit */
+    mitem = gtk_menu_item_new_with_label (_("Exit"));
+    g_signal_connect_swapped (mitem, "activate", G_CALLBACK (gtk_widget_destroy), global->gui.window);
+    gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
     gtk_widget_show_all (settings);
     gtk_widget_show_all (menu);
