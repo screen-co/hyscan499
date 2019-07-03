@@ -346,8 +346,8 @@ run_offset_setup (GObject *emitter,
 //   #     # #     #  #  #    ##
 //   #     # #     # ### #     #
 
-GtkWidget *
-get_widget_from_builder (GtkBuilder * builder,
+GObject *
+get_from_builder (GtkBuilder * builder,
                          const gchar *name)
 {
   GObject *obj = gtk_builder_get_object (builder, name);
@@ -357,14 +357,28 @@ get_widget_from_builder (GtkBuilder * builder,
       return NULL;
     }
 
-  return GTK_WIDGET (obj);
+  return obj;
+}
+
+GtkWidget *
+get_widget_from_builder (GtkBuilder  * builder,
+                         const gchar * name)
+{
+  return GTK_WIDGET (get_from_builder (builder, name));
 }
 
 GtkLabel *
-get_label_from_builder (GtkBuilder * builder,
-                        const gchar *name)
+get_label_from_builder (GtkBuilder  * builder,
+                        const gchar * name)
 {
-  return GTK_LABEL (get_widget_from_builder (builder, name));
+  return GTK_LABEL (get_from_builder (builder, name));
+}
+
+GtkAdjustment *
+get_adjust_from_builder (GtkBuilder * builder,
+                        const gchar * name)
+{
+  return GTK_ADJUSTMENT (get_from_builder (builder, name));
 }
 
 GtkWidget *
@@ -480,7 +494,7 @@ make_page_for_panel (EvoUI     *ui,
         GtkAdjustment *adj;
         GtkWidget *balance = get_widget_from_builder (b, "ss_balance_control");               add_to_sg (sg, b, "ss_balance_label");
 
-        adj = GTK_ADJUSTMENT (gtk_builder_get_object (b, "ss_balance_adjustment"));
+        adj = get_adjust_from_builder (b, "ss_balance_adjustment");
         g_signal_connect (adj, "value-changed", G_CALLBACK (balance_changed), GINT_TO_POINTER (panelx));
 
         gtk_box_pack_start (GTK_BOX (box), balance, FALSE, FALSE, 0);
@@ -498,7 +512,7 @@ make_page_for_panel (EvoUI     *ui,
       g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
 
       {
-        GtkWidget *adj = get_widget_from_builder (b, "ss_player_adjustment");                 add_to_sg (sg, b, "ss_player_label");
+        GtkWidget *adj = get_adjust_from_builder (b, "ss_player_adjustment");                 add_to_sg (sg, b, "ss_player_label");
         g_signal_connect (adj, "value-changed", G_CALLBACK (player_adj_value_changed), wf->wf_play);
         g_signal_connect_swapped (wf->wf_play, "player-stop", G_CALLBACK (player_stop), adj);
       }
@@ -533,7 +547,7 @@ make_page_for_panel (EvoUI     *ui,
       g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
 
       {
-        GtkWidget *adj = get_widget_from_builder (b, "pf_player_adjustment");                 add_to_sg (sg, b, "pf_player_label");
+        GtkWidget *adj = get_adjust_from_builder (b, "pf_player_adjustment");                 add_to_sg (sg, b, "pf_player_label");
         g_signal_connect (adj, "value-changed", G_CALLBACK (player_adj_value_changed), wf->wf_play);
         g_signal_connect_swapped (wf->wf_play, "player-stop", G_CALLBACK (player_stop), adj);
       }
@@ -569,7 +583,7 @@ make_page_for_panel (EvoUI     *ui,
       g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
 
       {
-        GtkWidget *adj = get_widget_from_builder (b, "ss_player_adjustment");                 add_to_sg (sg, b, "ss_player_label");
+        GtkWidget *adj = get_adjust_from_builder (b, "ss_player_adjustment");                 add_to_sg (sg, b, "ss_player_label");
         g_signal_connect (adj, "value-changed", G_CALLBACK (player_adj_value_changed), wf->wf_play);
         g_signal_connect_swapped (wf->wf_play, "player-stop", G_CALLBACK (player_stop), adj);
       }
@@ -820,7 +834,7 @@ build_interface (Global *global)
 
           /* OFFSETS */
           mitem = gtk_menu_item_new_with_label (_("Antennas offsets"));
-          g_signal_connect (mitem, "activate", G_CALLBACK (run_offset_setup), NULL);
+          g_signal_connect (mitem, "activate", G_CALLBACK (run_offset_setup), global);
           gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
           {
@@ -869,6 +883,20 @@ build_interface (Global *global)
 
   gtk_stack_set_visible_child_name (GTK_STACK (ui->acoustic_stack), EVO_MAP);
   widget_swap (NULL, NULL, EVO_MAP);
+
+  /* offsets */
+  if (global->control != NULL)
+    {
+      gchar * file = g_build_filename (g_get_user_config_dir(), "hyscan", "offsets.ini", NULL);
+      HyScanFnnOffsets * o =  hyscan_fnn_offsets_new (global->control);
+      if (!hyscan_fnn_offsets_read (o, file))
+        g_message ("didn't read offsets");
+      else if (!hyscan_fnn_offsets_execute (o))
+        g_message ("didn't apply offsets");
+
+      g_object_unref (o);
+      g_free (file);
+    }
 
   return TRUE;
 }

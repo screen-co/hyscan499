@@ -33,6 +33,7 @@ struct _HyScanGtkFnnOffsetsPrivate
 
   GtkStack  *stack;
   GHashTable *adjustments; /* */
+  gchar *offile;
 
 };
 
@@ -247,7 +248,7 @@ response_clicked (GtkDialog        *self,
   if (response_id == GTK_RESPONSE_OK)
     {
       hyscan_fnn_offsets_execute (priv->offset_man);
-      hyscan_fnn_offsets_write (priv->offset_man, "./offsets.ini");
+      hyscan_fnn_offsets_write (priv->offset_man, priv->offile);
     }
 }
 
@@ -261,8 +262,9 @@ constructed (GObject *object)
 
   G_OBJECT_CLASS (hyscan_gtk_fnn_offsets_parent_class)->constructed (object);
 
+  priv->offile = g_build_filename (g_get_user_config_dir(), "hyscan", "offsets.ini", NULL);
   priv->offset_man = hyscan_fnn_offsets_new (priv->control);
-  hyscan_fnn_offsets_read (priv->offset_man, "./offsets.ini");
+  hyscan_fnn_offsets_read (priv->offset_man, priv->offile);
 
   priv->adjustments = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify)adjustments_free);
 
@@ -283,6 +285,8 @@ constructed (GObject *object)
 
   gtk_widget_set_size_request (GTK_WIDGET (self), 800, 600);
   gtk_widget_show_all (GTK_WIDGET (self));
+
+
 }
 
 static void
@@ -293,6 +297,7 @@ finalize (GObject *object)
 
   g_clear_object (&priv->offset_man);
   g_clear_object (&priv->control);
+  g_clear_pointer (&priv->offile, g_free);
 
   G_OBJECT_CLASS (hyscan_gtk_fnn_offsets_parent_class)->finalize (object);
 }

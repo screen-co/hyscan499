@@ -164,7 +164,7 @@ win32_build_path (int n, ...)
   va_end (args);
 
   utf8_path = g_build_filenamev (args_str);
-  
+
   g_message ("Path: %s", utf8_path);
   return utf8_path;
 }
@@ -415,7 +415,7 @@ main (int argc, char **argv)
   /* Файл c настройками. */
   if (settings_file == NULL)
     settings_file = g_build_filename (g_get_user_config_dir (), "hyscan",
-                                      "hyscan499-settings.ini", NULL);
+                                      "settings.ini", NULL);
 
   global.settings = g_key_file_new ();
   g_key_file_load_from_file (global.settings, settings_file, G_KEY_FILE_NONE, NULL);

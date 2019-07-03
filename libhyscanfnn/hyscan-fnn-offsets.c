@@ -289,6 +289,8 @@ hyscan_fnn_offsets_execute (HyScanFnnOffsets *self)
       if (info->master != NULL)
         info = hyscan_fnn_offsets_find_master (priv->antennas, key);
 
+      g_message ("Setting offset for <%s>", key);
+
       if (info->sensor != NULL)
         hyscan_sensor_antenna_set_offset (HYSCAN_SENSOR (priv->control), info->sensor, &info->offset);
       else
