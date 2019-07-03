@@ -33,25 +33,26 @@ hyscan_fnn_flog_handler (const gchar    *log_domain,
 static void
 hyscan_fnn_flog_open_file ()
 {
-  gsize filesize;
-
   /* Открываем файл в бинарном режиме, чтобы узнать его размер в байтах. */
   flog.file = g_fopen (flog.filename, "rb");
-  if (flog.file == NULL)
-    return;
-
-  /* Проверяем размер лога. */
-  fseek (flog.file, 0, SEEK_END);
-  filesize = ftell (flog.file);
-  if (filesize > flog.max_size)
+  if (flog.file != NULL)
     {
+      gsize filesize;
+      
+      /* Проверяем размер лога. */
+      fseek (flog.file, 0, SEEK_END);
+      filesize = ftell (flog.file);
+      if (filesize > flog.max_size)
+        {
+          fclose (flog.file);
+          g_unlink (flog.filename_old);
+          g_rename (flog.filename, flog.filename_old);
+        }
+      
+      /* Закрываем файл. */
       fclose (flog.file);
-      g_unlink (flog.filename_old);
-      g_rename (flog.filename, flog.filename_old);
     }
 
-  /* Переоткрываем файл лога. */
-  fclose (flog.file);
   flog.file = g_fopen (flog.filename, "a+");
 }
 
