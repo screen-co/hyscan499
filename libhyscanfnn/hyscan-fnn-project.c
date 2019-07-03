@@ -370,48 +370,84 @@ response_clicked (GtkDialog        *self,
                   gint              response_id)
 {
   HyScanFnnProjectPrivate *priv = HYSCAN_FNN_PROJECT (self)->priv;
+  gchar *name;
+  const gchar *text;
 
   if (response_id == HYSCAN_FNN_PROJECT_CREATE)
     {
-      GHashTable *projects;
-      gchar *date, *name;
-      gint i;
-      GDateTime *dt = g_date_time_new_now_local ();
-      g_clear_pointer (&priv->project_name, g_free);
-      g_clear_pointer (&priv->track_name, g_free);
+      /* Часть 1. Название по-умолчанию. */
+      {
+        GHashTable *projects;
+        gchar *date;
+        gint i;
+        GDateTime *dt = g_date_time_new_now_local ();
+        g_clear_pointer (&priv->project_name, g_free);
+        g_clear_pointer (&priv->track_name, g_free);
 
-      date = g_date_time_format (dt, "%Y.%m.%d");
-      name = g_strdup (date);
+        date = g_date_time_format (dt, "%Y.%m.%d");
+        name = g_strdup (date);
 
-      projects = hyscan_db_info_get_projects (priv->info);
+        projects = hyscan_db_info_get_projects (priv->info);
 
-      /* Ищем проект с таким же именем, если находим - меняем имя нового проекта. */
-      for (i = 2; ; ++i)
+        /* Ищем проект с таким же именем, если находим - меняем имя нового проекта. */
+        for (i = 2; ; ++i)
+          {
+            GHashTableIter iter;
+            gpointer key, value;
+
+            g_hash_table_iter_init (&iter, projects);
+            while (g_hash_table_iter_next (&iter, &key, &value))
+              {
+                HyScanProjectInfo *pinfo = value;
+                if (g_str_equal (name, pinfo->name))
+                  {
+                    g_message ("Same project found %s %s", name, pinfo->name);
+                    goto increment;
+                  }
+              }
+
+            break;
+
+            increment:
+            g_free (name);
+            name = g_strdup_printf ("%s-%i", date, i);
+          }
+
+        g_date_time_unref (dt);
+        g_hash_table_unref (projects);
+      }
+
+
+      GtkWidget *dialog, *content, *entry;
+      dialog = gtk_dialog_new_with_buttons (_("Enter project name"),
+                                            gtk_window_get_transient_for (GTK_WINDOW (self)),
+                                            GTK_DIALOG_MODAL | GTK_DIALOG_DESTROY_WITH_PARENT,
+                                            _("OK"), GTK_RESPONSE_ACCEPT,
+                                            NULL);
+
+      content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+      entry = gtk_entry_new ();
+
+      gtk_entry_set_text (GTK_ENTRY (entry), name);
+      gtk_entry_set_placeholder_text (GTK_ENTRY (entry), name);
+      g_free (name);
+
+      gtk_box_pack_start (GTK_BOX (content), entry, TRUE, TRUE, 0);
+      gtk_widget_show_all (content);
+
+      if (GTK_RESPONSE_ACCEPT == gtk_dialog_run (GTK_DIALOG (dialog)))
         {
-          GHashTableIter iter;
-          gpointer key, value;
+          text = gtk_entry_get_text (GTK_ENTRY (entry));
+          if (text == NULL || g_str_equal (text, ""))
+            text = gtk_entry_get_placeholder_text (GTK_ENTRY (entry));
 
-          g_hash_table_iter_init (&iter, projects);
-          while (g_hash_table_iter_next (&iter, &key, &value))
-            {
-              HyScanProjectInfo *pinfo = value;
-              if (g_str_equal (name, pinfo->name))
-                {
-                  g_message ("Same project found %s %s", name, pinfo->name);
-                  goto increment;
-                }
-            }
-
-          break;
-
-          increment:
-          g_free (name);
-          name = g_strdup_printf ("%s-%i", date, i);
+          priv->project_name = g_strdup (text);
         }
-
-      priv->project_name = name;
-      g_date_time_unref (dt);
-      g_hash_table_unref (projects);
+      else
+        {
+          g_signal_stop_emission_by_name (self, "response");
+        }
+      gtk_widget_destroy (dialog);
     }
 }
 

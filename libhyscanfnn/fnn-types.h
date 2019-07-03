@@ -9,6 +9,7 @@
 #include <hyscan-gtk-waterfall-control.h>
 #include <hyscan-gtk-waterfall-meter.h>
 #include <hyscan-gtk-waterfall-mark.h>
+#include <hyscan-gtk-waterfall-player.h>
 #include <hyscan-mark-model.h>
 #include <hyscan-gtk-project-viewer.h>
 #include <hyscan-gtk-mark-editor.h>
@@ -166,6 +167,7 @@ typedef struct
   HyScanGtkWaterfallControl     * wf_ctrl;
   HyScanGtkWaterfallMeter       * wf_metr;
   HyScanGtkWaterfallMark        * wf_mark;
+  HyScanGtkWaterfallPlayer      * wf_play;
 } VisualWF;
 
 typedef struct
@@ -690,6 +692,7 @@ make_overlay (HyScanGtkWaterfall          *wf,
               HyScanGtkWaterfallControl  **_ctrl,
               HyScanGtkWaterfallMark     **_mark,
               HyScanGtkWaterfallMeter    **_meter,
+              HyScanGtkWaterfallPlayer   **_player,
               HyScanMarkModel             *mark_model);
 
 HYSCAN_API void

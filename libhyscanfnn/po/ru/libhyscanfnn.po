@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-02 15:27+0300\n"
+"POT-Creation-Date: 2019-07-03 15:02+0300\n"
 "PO-Revision-Date: 2019-06-20 10:38+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -82,11 +82,11 @@ msgstr "Инверсия"
 msgid "Green"
 msgstr "Зеленый"
 
-#: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:464
+#: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:501
 msgid "Delete project"
 msgstr "Удалить проект"
 
-#: hyscan-fnn-project.c:137 hyscan-fnn-project.c:145 hyscan-fnn-project.c:483
+#: hyscan-fnn-project.c:137 hyscan-fnn-project.c:145 hyscan-fnn-project.c:520
 msgid "Delete track"
 msgstr "Удалить галс"
 
@@ -106,39 +106,47 @@ msgstr "Вы действительно хотите удалить проект
 msgid "This can not be undone"
 msgstr "Это нельзя отменить"
 
-#: hyscan-fnn-project.c:467 hyscan-fnn-project.c:510
+#: hyscan-fnn-project.c:422
+msgid "Enter project name"
+msgstr "Введите название проекта"
+
+#: hyscan-fnn-project.c:425
+msgid "OK"
+msgstr "Ок"
+
+#: hyscan-fnn-project.c:504 hyscan-fnn-project.c:547
 msgid "Open project"
 msgstr "Открыть проект"
 
-#: hyscan-fnn-project.c:512
+#: hyscan-fnn-project.c:549
 msgid "New project"
-msgstr "Открыть проект"
+msgstr "Создать проект"
 
-#: hyscan-gtk-con.c:357
+#: hyscan-gtk-con.c:359
 msgid "Intro"
 msgstr "Начальная страница"
 
-#: hyscan-gtk-con.c:380 tmp/hyscan-gtk-con.ui.h:3
+#: hyscan-gtk-con.c:382 tmp/hyscan-gtk-con.ui.h:3
 msgid "Hardware"
 msgstr "Оборудование"
 
-#: hyscan-gtk-con.c:426
+#: hyscan-gtk-con.c:428
 msgid "Connection"
 msgstr "Подключение"
 
-#: hyscan-gtk-con.c:452
+#: hyscan-gtk-con.c:456
 msgid "Connecting..."
 msgstr "Подключаемся..."
 
-#: hyscan-gtk-con.c:506
+#: hyscan-gtk-con.c:497
 msgid "Connection completed. HyScan will launch shortly. "
 msgstr "Подключение завершено. HyScan вскоре запустится. "
 
-#: hyscan-gtk-con.c:513
+#: hyscan-gtk-con.c:504
 msgid "Connection failed. "
 msgstr "Не удалось подключиться."
 
-#: hyscan-gtk-con.c:514
+#: hyscan-gtk-con.c:505
 msgid "Continue in view mode"
 msgstr "Продолжить в режиме просмотра. "
 

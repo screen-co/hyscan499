@@ -137,6 +137,19 @@ evo_project_changed_override (Global *global,
  */
 
 void
+player_adj_value_changed (GtkAdjustment            *adj,
+                          HyScanGtkWaterfallPlayer *player)
+{
+  hyscan_gtk_waterfall_player_set_speed (player, gtk_adjustment_get_value (adj));
+}
+
+void
+player_stop (GtkAdjustment *adjustment)
+{
+  gtk_adjustment_set_value (adjustment, 0);
+}
+
+void
 map_offline_wrapper (GObject *emitter,
                      HyScanGtkMapKit *map)
 {
@@ -448,7 +461,6 @@ make_page_for_panel (EvoUI     *ui,
   VisualWF *wf;
   GtkSizeGroup * sg;
 
-
   sg = gtk_size_group_new (GTK_SIZE_GROUP_HORIZONTAL);
   b = get_builder_for_panel (ui, panelx);
 
@@ -485,6 +497,12 @@ make_page_for_panel (EvoUI     *ui,
       g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_metr);
       g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
 
+      {
+        GtkWidget *adj = get_widget_from_builder (b, "ss_player_adjustment");                 add_to_sg (sg, b, "ss_player_label");
+        g_signal_connect (adj, "value-changed", G_CALLBACK (player_adj_value_changed), wf->wf_play);
+        g_signal_connect_swapped (wf->wf_play, "player-stop", G_CALLBACK (player_stop), adj);
+      }
+
       if (!panel_sources_are_in_sonar (global, panel))
         break;
 
@@ -513,6 +531,12 @@ make_page_for_panel (EvoUI     *ui,
       g_signal_connect_swapped (l_ctrl, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_ctrl);
       g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_metr);
       g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
+
+      {
+        GtkWidget *adj = get_widget_from_builder (b, "pf_player_adjustment");                 add_to_sg (sg, b, "pf_player_label");
+        g_signal_connect (adj, "value-changed", G_CALLBACK (player_adj_value_changed), wf->wf_play);
+        g_signal_connect_swapped (wf->wf_play, "player-stop", G_CALLBACK (player_stop), adj);
+      }
 
       if (!panel_sources_are_in_sonar (global, panel))
         break;
@@ -543,6 +567,12 @@ make_page_for_panel (EvoUI     *ui,
       g_signal_connect_swapped (l_ctrl, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_ctrl);
       g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_metr);
       g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
+
+      {
+        GtkWidget *adj = get_widget_from_builder (b, "ss_player_adjustment");                 add_to_sg (sg, b, "ss_player_label");
+        g_signal_connect (adj, "value-changed", G_CALLBACK (player_adj_value_changed), wf->wf_play);
+        g_signal_connect_swapped (wf->wf_play, "player-stop", G_CALLBACK (player_stop), adj);
+      }
 
       if (!panel_sources_are_in_sonar (global, panel))
         break;
@@ -775,6 +805,10 @@ build_interface (Global *global)
             g_signal_connect (mitem, "activate", G_CALLBACK (run_show_sonar_info), "/info");
             gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
 
+            mitem = gtk_menu_item_new_with_label (_("State"));
+            g_signal_connect (mitem, "activate", G_CALLBACK (run_show_sonar_info), "/state");
+            gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
             mitem = gtk_menu_item_new_with_label (_("Params"));
             g_signal_connect (mitem, "activate", G_CALLBACK (run_show_sonar_info), "/params");
             gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
@@ -783,6 +817,11 @@ build_interface (Global *global)
             gtk_menu_item_set_submenu (GTK_MENU_ITEM (mitem), submenu);
             gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
           }
+
+          /* OFFSETS */
+          mitem = gtk_menu_item_new_with_label (_("Antennas offsets"));
+          g_signal_connect (mitem, "activate", G_CALLBACK (run_offset_setup), NULL);
+          gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
           {
             gchar ** env;
