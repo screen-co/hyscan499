@@ -144,9 +144,32 @@ player_adj_value_changed (GtkAdjustment            *adj,
 }
 
 void
+player_adj_value_printer (GtkAdjustment *adj,
+                          GtkLabel      *label)
+{
+  gchar *markup;
+
+  markup = g_strdup_printf ("<small><b>%2.1f</b></small>", gtk_adjustment_get_value(adj));
+  gtk_label_set_markup (label, markup);
+  g_free (markup);
+}
+
+void
 player_stop (GtkAdjustment *adjustment)
 {
   gtk_adjustment_set_value (adjustment, 0);
+}
+
+void
+player_slower (GtkAdjustment *adjustment)
+{
+  gtk_adjustment_set_value (adjustment, gtk_adjustment_get_value (adjustment) - 1.0);
+}
+
+void
+player_faster (GtkAdjustment *adjustment)
+{
+  gtk_adjustment_set_value (adjustment, gtk_adjustment_get_value (adjustment) + 1.0);
 }
 
 void
@@ -512,9 +535,15 @@ make_page_for_panel (EvoUI     *ui,
       g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
 
       {
-        GtkWidget *adj = get_adjust_from_builder (b, "ss_player_adjustment");                 add_to_sg (sg, b, "ss_player_label");
+        GtkLabel *label = get_label_from_builder (b, "ss_player_value");
+        GtkAdjustment *adj = get_adjust_from_builder (b, "ss_player_adjustment");             add_to_sg (sg, b, "ss_player_label");
         g_signal_connect (adj, "value-changed", G_CALLBACK (player_adj_value_changed), wf->wf_play);
+        g_signal_connect (adj, "value-changed", G_CALLBACK (player_adj_value_printer), label);
         g_signal_connect_swapped (wf->wf_play, "player-stop", G_CALLBACK (player_stop), adj);
+        g_signal_connect_swapped (get_widget_from_builder(b, "ss_player_stop"), "clicked", G_CALLBACK (player_stop), adj);
+        g_signal_connect_swapped (get_widget_from_builder(b, "ss_player_slower"), "clicked", G_CALLBACK (player_slower), adj);
+        g_signal_connect_swapped (get_widget_from_builder(b, "ss_player_faster"), "clicked", G_CALLBACK (player_faster), adj);
+        player_adj_value_printer (adj, label);
       }
 
       if (!panel_sources_are_in_sonar (global, panel))
@@ -547,9 +576,15 @@ make_page_for_panel (EvoUI     *ui,
       g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
 
       {
-        GtkWidget *adj = get_adjust_from_builder (b, "pf_player_adjustment");                 add_to_sg (sg, b, "pf_player_label");
+        GtkLabel *label = get_label_from_builder (b, "pf_player_value");
+        GtkAdjustment *adj = get_adjust_from_builder (b, "pf_player_adjustment");             add_to_sg (sg, b, "pf_player_label");
         g_signal_connect (adj, "value-changed", G_CALLBACK (player_adj_value_changed), wf->wf_play);
+        g_signal_connect (adj, "value-changed", G_CALLBACK (player_adj_value_printer), label);
         g_signal_connect_swapped (wf->wf_play, "player-stop", G_CALLBACK (player_stop), adj);
+        g_signal_connect_swapped (get_widget_from_builder(b, "pf_player_stop"), "clicked", G_CALLBACK (player_stop), adj);
+        g_signal_connect_swapped (get_widget_from_builder(b, "pf_player_slower"), "clicked", G_CALLBACK (player_slower), adj);
+        g_signal_connect_swapped (get_widget_from_builder(b, "pf_player_faster"), "clicked", G_CALLBACK (player_faster), adj);
+        player_adj_value_printer (adj, label);
       }
 
       if (!panel_sources_are_in_sonar (global, panel))
@@ -583,9 +618,15 @@ make_page_for_panel (EvoUI     *ui,
       g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
 
       {
-        GtkWidget *adj = get_adjust_from_builder (b, "ss_player_adjustment");                 add_to_sg (sg, b, "ss_player_label");
+        GtkLabel *label = get_label_from_builder (b, "ss_player_value");
+        GtkAdjustment *adj = get_adjust_from_builder (b, "ss_player_adjustment");             add_to_sg (sg, b, "ss_player_label");
         g_signal_connect (adj, "value-changed", G_CALLBACK (player_adj_value_changed), wf->wf_play);
+        g_signal_connect (adj, "value-changed", G_CALLBACK (player_adj_value_printer), label);
         g_signal_connect_swapped (wf->wf_play, "player-stop", G_CALLBACK (player_stop), adj);
+        g_signal_connect_swapped (get_widget_from_builder(b, "ss_player_stop"), "clicked", G_CALLBACK (player_stop), adj);
+        g_signal_connect_swapped (get_widget_from_builder(b, "ss_player_slower"), "clicked", G_CALLBACK (player_slower), adj);
+        g_signal_connect_swapped (get_widget_from_builder(b, "ss_player_faster"), "clicked", G_CALLBACK (player_faster), adj);
+        player_adj_value_printer (adj, label);
       }
 
       if (!panel_sources_are_in_sonar (global, panel))

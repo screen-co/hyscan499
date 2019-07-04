@@ -282,9 +282,9 @@
         <signal name="state-set" handler="automove_switched" swapped="no"/>
       </object>
       <packing>
-        <property name="left_attach">2</property>
+        <property name="left_attach">1</property>
         <property name="top_attach">6</property>
-        <property name="width">2</property>
+        <property name="width">3</property>
       </packing>
     </child>
     <child>
@@ -394,9 +394,9 @@
         <signal name="state-set" handler="pf_special" swapped="no"/>
       </object>
       <packing>
-        <property name="left_attach">2</property>
+        <property name="left_attach">1</property>
         <property name="top_attach">8</property>
-        <property name="width">2</property>
+        <property name="width">3</property>
       </packing>
     </child>
     <child>
@@ -595,12 +595,6 @@
         <property name="top_attach">12</property>
         <property name="width">2</property>
       </packing>
-    </child>
-    <child>
-      <placeholder/>
-    </child>
-    <child>
-      <placeholder/>
     </child>
     <child>
       <placeholder/>
@@ -1376,9 +1370,9 @@
         <signal name="state-set" handler="automove_switched" swapped="no"/>
       </object>
       <packing>
-        <property name="left_attach">2</property>
+        <property name="left_attach">1</property>
         <property name="top_attach">8</property>
-        <property name="width">2</property>
+        <property name="width">3</property>
       </packing>
     </child>
     <child>
@@ -1673,9 +1667,6 @@
         <property name="top_attach">12</property>
         <property name="width">2</property>
       </packing>
-    </child>
-    <child>
-      <placeholder/>
     </child>
     <child>
       <placeholder/>
