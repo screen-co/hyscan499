@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-02 15:35+0300\n"
+"POT-Creation-Date: 2019-07-05 18:26+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -23,4 +23,30 @@ msgstr ""
 
 #: common.ui.h:2 tmp/common.ui.h:2
 msgid "Date"
+msgstr ""
+
+#: configurator.c:128
+msgid "Initial configuration"
+msgstr ""
+
+#: configurator.c:150
+msgid "Apply"
+msgstr ""
+
+#: configurator.c:153
+msgid ""
+"You should create a database profile to run HyScan. Please, specify the name "
+"of the profile and the path to the database directory."
+msgstr ""
+
+#: configurator.c:159
+msgid "Name of DB-profile"
+msgstr ""
+
+#: configurator.c:162
+msgid "Path to DB"
+msgstr ""
+
+#: configurator.c:247
+msgid "Default profile"
 msgstr ""

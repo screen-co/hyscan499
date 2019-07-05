@@ -1,12 +1,17 @@
 #include <gtk/gtk.h>
+#include <string.h>
+#include <glib/gi18n.h>
+#include <locale.h>
+
+#define GETTEXT_PACKAGE "hyscan-499"
 
 #ifdef G_OS_WIN32 /* Входная точка для GUI wWinMain. */
   #include <Windows.h>
 #endif
 
 typedef struct {
-  gchar *dir;
-  gchar *name;
+  gchar *dir;      /* Путь к директории с БД. */
+  gchar *name;     /* Имя профиля БД. */
 } ConfiguratorConfig;
 
 typedef struct {
@@ -47,8 +52,6 @@ configurator_update_config (Configurator *configurator)
 
   g_free (config->name);
   config->name = g_strdup (gtk_entry_get_text (GTK_ENTRY (view->name_entry)));
-
-  g_message ("Choice %s: %s", config->name, config->dir);
 
   configurator_update_view (configurator);
 }
@@ -121,7 +124,7 @@ configurator_build_view (Configurator *configurator)
   view->window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_position (GTK_WINDOW (view->window), GTK_WIN_POS_CENTER);
   gtk_window_set_default_size (GTK_WINDOW (view->window), 800, 400);
-  gtk_window_set_title (GTK_WINDOW (view->window), "Первичная конфигурация");
+  gtk_window_set_title (GTK_WINDOW (view->window),  _("Initial configuration"));
   g_signal_connect_swapped (view->window, "destroy", G_CALLBACK (gtk_main_quit), NULL);
 
   view->grid = gtk_grid_new ();
@@ -140,23 +143,23 @@ configurator_build_view (Configurator *configurator)
                             G_CALLBACK (configurator_update_config), configurator);
 
   view->path = gtk_label_new (NULL);
-  gtk_misc_set_alignment (GTK_MISC (view->path), 0, 0.5);
+  gtk_widget_set_halign (GTK_WIDGET (view->path), GTK_ALIGN_START);
   gtk_label_set_ellipsize (GTK_LABEL (view->path), PANGO_ELLIPSIZE_MIDDLE);
 
-  view->apply_button = gtk_button_new_with_label ("Применить");
+  view->apply_button = gtk_button_new_with_label (_("Apply"));
   g_signal_connect (view->apply_button, "clicked", G_CALLBACK (configurator_configure), configurator);
 
-  description = "Для запуска программы необходимо создать профиль базы данных. "
-                "Укажите название нового профиля и путь к директории, где будет храниться база данных.";
+  description = _( "You should create a database profile to run HyScan. "
+                   "Please, specify the name of the profile and the path to the database directory.");
   description_label = gtk_label_new (description);
-  gtk_misc_set_alignment (GTK_MISC (description_label), 0.0, 0.5);
+  gtk_widget_set_halign (GTK_WIDGET (description_label), GTK_ALIGN_START);
   gtk_label_set_line_wrap (GTK_LABEL (description_label), TRUE);
 
-  name_label = gtk_label_new ("Название профиля БД");
-  gtk_misc_set_alignment (GTK_MISC (name_label), 1.0, 0.5);
+  name_label = gtk_label_new (_("Name of DB-profile"));
+  gtk_widget_set_halign (GTK_WIDGET (name_label), GTK_ALIGN_END);
 
-  path_label = gtk_label_new ("Путь к БД");
-  gtk_misc_set_alignment (GTK_MISC (path_label), 1.0, 0.5);
+  path_label = gtk_label_new (_("Path to DB"));
+  gtk_widget_set_halign (GTK_WIDGET (path_label), GTK_ALIGN_END);
 
   row = 0;
   gtk_grid_attach (GTK_GRID (view->grid), description_label,  1, ++row, 3, 1);
@@ -200,6 +203,31 @@ configurator_profile_exists (void)
   return any_profiles;
 }
 
+static const gchar *
+configurator_get_locale_dir (void)
+{
+  static gchar *locale_dir = NULL;
+
+  if (locale_dir == NULL)
+    {
+#ifdef G_OS_WIN32
+        gchar *utf8_path;
+        gchar *install_dir;
+
+        install_dir = g_win32_get_package_installation_directory_of_module (NULL);
+        utf8_path = g_build_filename (install_dir, "share", "locale", NULL);
+        locale_dir = g_win32_locale_filename_from_utf8 (utf8_path);
+
+        g_free (install_dir);
+        g_free (utf8_path);
+#else
+        locale_dir = FNN_LOCALE_DIR;
+#endif
+    }
+
+  return locale_dir;
+}
+
 int
 main (int argc, char **argv)
 {
@@ -207,8 +235,13 @@ main (int argc, char **argv)
 
   gtk_init (&argc, &argv);
 
+  setlocale (LC_ALL, "");
+  bindtextdomain (GETTEXT_PACKAGE, configurator_get_locale_dir ());
+  bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+  textdomain (GETTEXT_PACKAGE);
+
   configurator = g_new0 (Configurator, 1);
-  configurator->config.name = g_strdup ("Стандартный профиль");
+  configurator->config.name = g_strdup (_("Default profile"));
 
   if (configurator_profile_exists ())
     return 0;
