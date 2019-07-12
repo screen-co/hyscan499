@@ -254,9 +254,9 @@ make_page_for_panel (SwUI     *ui,
       l_mark = get_widget_from_builder (b, "ss_marks_layer");
       l_meter = get_widget_from_builder (b, "ss_meter_layer");
 
-      g_signal_connect_swapped (l_ctrl, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_ctrl);
-      g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_metr);
-      g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
+      g_signal_connect_swapped (l_ctrl, "toggled", G_CALLBACK (hyscan_gtk_layer_grab_input), wf->wf_ctrl);
+      g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_layer_grab_input), wf->wf_metr);
+      g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_layer_grab_input), wf->wf_mark);
 
       if (global->control_s == NULL)
         break;
@@ -283,9 +283,9 @@ make_page_for_panel (SwUI     *ui,
       l_mark = get_widget_from_builder (b, "pf_marks_layer");
       l_meter = get_widget_from_builder (b, "pf_meter_layer");
 
-      g_signal_connect_swapped (l_ctrl, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_ctrl);
-      g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_metr);
-      g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
+      g_signal_connect_swapped (l_ctrl, "toggled", G_CALLBACK (hyscan_gtk_layer_grab_input), wf->wf_ctrl);
+      g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_layer_grab_input), wf->wf_metr);
+      g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_layer_grab_input), wf->wf_mark);
 
       if (global->control_s == NULL)
         break;
@@ -312,9 +312,9 @@ make_page_for_panel (SwUI     *ui,
       l_mark = get_widget_from_builder (b, "ss_marks_layer");
       l_meter = get_widget_from_builder (b, "ss_meter_layer");
 
-      g_signal_connect_swapped (l_ctrl, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_ctrl);
-      g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_metr);
-      g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input), wf->wf_mark);
+      g_signal_connect_swapped (l_ctrl, "toggled", G_CALLBACK (hyscan_gtk_layer_grab_input), wf->wf_ctrl);
+      g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_layer_grab_input), wf->wf_metr);
+      g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_layer_grab_input), wf->wf_mark);
 
       if (global->control_s == NULL)
         break;
