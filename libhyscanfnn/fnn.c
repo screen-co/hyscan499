@@ -573,7 +573,7 @@ turn_meter_helper (FnnPanel  *panel,
   wf = (VisualWF*)panel->vis_gui;
 
   layer = state ? (void*)wf->wf_metr : (void*)wf->wf_ctrl;
-  hyscan_gtk_waterfall_layer_grab_input (HYSCAN_GTK_WATERFALL_LAYER (layer));
+  hyscan_gtk_layer_grab_input (HYSCAN_GTK_LAYER (layer));
 }
 
 void
@@ -617,7 +617,7 @@ turn_mark_helper (FnnPanel  *panel,
   wf = (VisualWF*)panel->vis_gui;
 
   layer = state ? (void*)wf->wf_mark : (void*)wf->wf_ctrl;
-  hyscan_gtk_waterfall_layer_grab_input (HYSCAN_GTK_WATERFALL_LAYER (layer));
+  hyscan_gtk_layer_grab_input (HYSCAN_GTK_LAYER (layer));
 }
 
 void
@@ -656,7 +656,7 @@ hide_marks (GObject     *emitter,
         return;
       wf = (VisualWF*)panel->vis_gui;
 
-      hyscan_gtk_waterfall_layer_set_visible (HYSCAN_GTK_WATERFALL_LAYER (wf->wf_mark), state);
+      hyscan_gtk_layer_set_visible (HYSCAN_GTK_LAYER (wf->wf_mark), state);
     }
 
 }
@@ -3064,13 +3064,13 @@ set_dry (Global    *global,
 }
 
 GtkWidget*
-make_layer_btn (HyScanGtkWaterfallLayer *layer,
-                GtkWidget               *from)
+make_layer_btn (HyScanGtkLayer *layer,
+                GtkWidget      *from)
 {
   GtkWidget *button;
   const gchar *icon;
 
-  icon = hyscan_gtk_waterfall_layer_get_mnemonic (layer);
+  icon = hyscan_gtk_layer_get_icon_name (layer);
   button = gtk_radio_button_new_from_widget (GTK_RADIO_BUTTON (from));
 
   gtk_toggle_button_set_mode (GTK_TOGGLE_BUTTON (button), FALSE);
@@ -3078,7 +3078,7 @@ make_layer_btn (HyScanGtkWaterfallLayer *layer,
                         gtk_image_new_from_icon_name (icon, GTK_ICON_SIZE_BUTTON));
 
   g_signal_connect_swapped (button, "clicked",
-                            G_CALLBACK (hyscan_gtk_waterfall_layer_grab_input),
+                            G_CALLBACK (hyscan_gtk_layer_grab_input),
                             layer);
 
   return button;
@@ -3111,11 +3111,18 @@ make_overlay (HyScanGtkWaterfall          *wf,
 {
   GtkWidget * container = gtk_grid_new ();
 
-  HyScanGtkWaterfallGrid *grid = hyscan_gtk_waterfall_grid_new (wf);
-  HyScanGtkWaterfallControl *ctrl = hyscan_gtk_waterfall_control_new (wf);
-  HyScanGtkWaterfallMark *mark = hyscan_gtk_waterfall_mark_new (wf, mark_model);
-  HyScanGtkWaterfallMeter *meter = hyscan_gtk_waterfall_meter_new (wf);
-  HyScanGtkWaterfallPlayer *player = hyscan_gtk_waterfall_player_new (wf);
+  HyScanGtkWaterfallGrid *grid = hyscan_gtk_waterfall_grid_new ();
+  HyScanGtkWaterfallControl *ctrl = hyscan_gtk_waterfall_control_new ();
+  HyScanGtkWaterfallMark *mark = hyscan_gtk_waterfall_mark_new (mark_model);
+  HyScanGtkWaterfallMeter *meter = hyscan_gtk_waterfall_meter_new ();
+  HyScanGtkWaterfallPlayer *player = hyscan_gtk_waterfall_player_new ();
+
+  hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (grid), "grid");
+  hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (ctrl), "ctrl");
+  hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (mark), "mark");
+  hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (meter), "meter");
+  hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (player), "player");
+
   GtkWidget *hscroll = gtk_scrollbar_new (GTK_ORIENTATION_HORIZONTAL,
                                            hyscan_gtk_waterfall_grid_get_hadjustment (grid));
   GtkWidget *vscroll = gtk_scrollbar_new (GTK_ORIENTATION_VERTICAL,
