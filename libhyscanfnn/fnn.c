@@ -3124,9 +3124,9 @@ make_overlay (HyScanGtkWaterfall          *wf,
   hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (player), "player");
 
   GtkWidget *hscroll = gtk_scrollbar_new (GTK_ORIENTATION_HORIZONTAL,
-                                           hyscan_gtk_waterfall_grid_get_hadjustment (grid));
+                                           hyscan_gtk_waterfall_get_hadjustment (wf));
   GtkWidget *vscroll = gtk_scrollbar_new (GTK_ORIENTATION_VERTICAL,
-                                           hyscan_gtk_waterfall_grid_get_vadjustment (grid));
+                                           hyscan_gtk_waterfall_get_vadjustment (wf));
   gtk_range_set_inverted (GTK_RANGE (vscroll), TRUE);
   hyscan_gtk_waterfall_control_set_wheel_behaviour (ctrl, TRUE);
 
