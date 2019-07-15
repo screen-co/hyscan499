@@ -49,26 +49,45 @@ fnn_ensure_panel (gint    panelx,
 
   panel = g_new0 (FnnPanel, 1);
   /* Создаем панель. */
-  if (panelx == X_SIDESCAN)
+  if (panelx == X_SIDESCAN || panelx == X_SIDE_LOW || panelx == X_SIDE_HIGH)
     { /* ГБО */
       GtkWidget *main_widget;
       VisualWF *vwf = g_new0 (VisualWF, 1);
 
-      // panel->name_ru = g_strdup ("ГБО");
-      panel->name = g_strdup ("SideScan");
-      panel->name_local = g_strdup (_("SideScan"));
-      panel->short_name = g_strdup ("SS");
+      panel->vis_gui = (VisualCommon*)vwf;
       panel->type = FNN_PANEL_WATERFALL;
-
       panel->sources = g_new0 (HyScanSourceType, 3);
-      panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD;
-      panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_PORT;
       panel->sources[2] = HYSCAN_SOURCE_INVALID;
 
-      panel->vis_gui = (VisualCommon*)vwf;
+      if (panelx == X_SIDESCAN)
+        {
+          panel->name = g_strdup ("SideScan");
+          panel->name_local = g_strdup (_("SideScan"));
+          panel->short_name = g_strdup ("SS");
+
+          panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD;
+          panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_PORT;
+        }
+      else if (panelx == X_SIDE_LOW)
+        {
+          panel->name = g_strdup ("SideScanLow");
+          panel->name_local = g_strdup (_("SideScanLow"));
+          panel->short_name = g_strdup ("SSLow");
+
+          panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_LOW;
+          panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_PORT_LOW;
+        }
+      else if (panelx == X_SIDE_HIGH)
+        {
+          panel->name = g_strdup ("SideScanHigh");
+          panel->name_local = g_strdup (_("SideScanHigh"));
+          panel->short_name = g_strdup ("SSHigh");
+
+          panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_HI;
+          panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_PORT_HI;
+        }
 
       vwf->colormaps = fnn_make_color_maps (FALSE);
-
       vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global->cache));
       gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
 
@@ -79,62 +98,16 @@ fnn_ensure_panel (gint    panelx,
                                   global->marks.model);
 
       g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), global);
-      g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_SIDESCAN));
+      g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (panelx));
 
       hyscan_gtk_waterfall_state_sidescan (HYSCAN_GTK_WATERFALL_STATE (vwf->wf),
-                                           HYSCAN_SOURCE_SIDE_SCAN_PORT, HYSCAN_SOURCE_SIDE_SCAN_STARBOARD);
+                                           panel->sources[0], panel->sources[1]);
       hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), global->ship_speed);
       hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
       hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
       hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
 
       vwf->common.main = main_widget;
-
-
-      gtk_widget_show_all (main_widget);
-    }
-
-  else if (panelx == X_SIDE_LOW)
-    { /* ГБО-ВЧ */
-      GtkWidget *main_widget;
-      VisualWF *vwf = g_new0 (VisualWF, 1);
-
-      // panel->name_ru = g_strdup ("ГБО-НЧ");
-      panel->name = g_strdup ("SideScanLow");
-      panel->name_local = g_strdup (_("SideScanLow"));
-      panel->short_name = g_strdup ("SSLow");
-      panel->type = FNN_PANEL_WATERFALL;
-
-      panel->sources = g_new0 (HyScanSourceType, 3);
-      panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_LOW;
-      panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_PORT_LOW;
-      panel->sources[2] = HYSCAN_SOURCE_INVALID;
-
-      panel->vis_gui = (VisualCommon*)vwf;
-
-      vwf->colormaps = fnn_make_color_maps (FALSE);
-
-      vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global->cache));
-      gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
-
-      main_widget = make_overlay (vwf->wf,
-                                  &vwf->wf_grid, &vwf->wf_ctrl,
-                                  &vwf->wf_mark, &vwf->wf_metr,
-                                  &vwf->wf_play,
-                                  global->marks.model);
-
-      g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), global);
-      g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_SIDESCAN));
-
-      hyscan_gtk_waterfall_state_sidescan (HYSCAN_GTK_WATERFALL_STATE (vwf->wf),
-                                           HYSCAN_SOURCE_SIDE_SCAN_PORT_LOW, HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_LOW);
-      hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), global->ship_speed);
-      hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
-      hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
-      hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
-
-      vwf->common.main = main_widget;
-
       gtk_widget_show_all (main_widget);
     }
 
@@ -143,7 +116,6 @@ fnn_ensure_panel (gint    panelx,
       GtkWidget *main_widget;
       VisualWF *vwf = g_new0 (VisualWF, 1);
 
-      // panel->name_ru = g_strdup ("Профилограф");
       panel->name = g_strdup ("Profiler");
       panel->name_local = g_strdup (_("Profiler"));
       panel->short_name = g_strdup ("PF");
@@ -189,7 +161,6 @@ fnn_ensure_panel (gint    panelx,
       GtkWidget *main_widget;
       VisualWF *vwf = g_new0 (VisualWF, 1);
 
-      // panel->name_ru = g_strdup ("Эхолот");
       panel->name = g_strdup ("Echosounder");
       panel->name_local = g_strdup (_("Echosounder"));
       panel->short_name = g_strdup ("ES");
@@ -234,7 +205,6 @@ fnn_ensure_panel (gint    panelx,
 
       VisualFL *vfl = g_new0 (VisualFL, 1);
 
-      // panel->name_ru = g_strdup ("Курсовой");
       panel->name = g_strdup ("ForwardLook");
       panel->name_local = g_strdup (_("ForwardLook"));
       panel->short_name = g_strdup ("FL");

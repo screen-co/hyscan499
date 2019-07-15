@@ -68,6 +68,7 @@ enum
   X_FORWARDL = 356753,
   X_ECHOSOUND = 429878,
   X_SIDE_LOW = 568351,
+  X_SIDE_HIGH = 609583,
 };
 
 typedef struct FnnPanel _FnnPanel;

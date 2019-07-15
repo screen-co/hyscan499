@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-03 15:02+0300\n"
+"POT-Creation-Date: 2019-07-15 11:31+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,75 +17,79 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: fnn.c:59
+#: fnn.c:65
 msgid "SideScan"
 msgstr ""
 
-#: fnn.c:103
+#: fnn.c:74
 msgid "SideScanLow"
 msgstr ""
 
-#: fnn.c:146 fnn.c:3167
+#: fnn.c:83
+msgid "SideScanHigh"
+msgstr ""
+
+#: fnn.c:123 fnn.c:3157
 msgid "Profiler"
 msgstr ""
 
-#: fnn.c:191
+#: fnn.c:169
 msgid "Echosounder"
 msgstr ""
 
-#: fnn.c:235
+#: fnn.c:214
 msgid "ForwardLook"
 msgstr ""
 
-#: fnn.c:473
+#: fnn.c:452
 msgid "Hardware parameters"
 msgstr ""
 
-#: fnn.c:475
+#: fnn.c:454
 msgid "Apply"
 msgstr ""
 
-#: fnn.c:476
+#: fnn.c:455
 msgid "Reset"
 msgstr ""
 
-#: fnn.c:477 fnn.c:510
+#: fnn.c:456 fnn.c:489
 msgid "Close"
 msgstr ""
 
-#: fnn.c:508
+#: fnn.c:487
 msgid "Sonar info"
 msgstr ""
 
-#: fnn.c:3176
+#: fnn.c:3166
 msgid "Yellow"
 msgstr ""
 
-#: fnn.c:3184
+#: fnn.c:3174
 msgid "Brown"
 msgstr ""
 
-#: fnn.c:3191
+#: fnn.c:3181
 msgid "Sepia"
 msgstr ""
 
-#: fnn.c:3198
+#: fnn.c:3188
 msgid "White"
 msgstr ""
 
-#: fnn.c:3206
+#: fnn.c:3196
 msgid "Inverted"
 msgstr ""
 
-#: fnn.c:3214
+#: fnn.c:3204
 msgid "Green"
 msgstr ""
 
-#: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:501
+#: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:500
 msgid "Delete project"
 msgstr ""
 
-#: hyscan-fnn-project.c:137 hyscan-fnn-project.c:145 hyscan-fnn-project.c:520
+#: hyscan-fnn-project.c:137 hyscan-fnn-project.c:145 hyscan-fnn-project.c:519
 msgid "Delete track"
 msgstr ""
 
@@ -110,14 +114,14 @@ msgid "Enter project name"
 msgstr ""
 
 #: hyscan-fnn-project.c:425
-msgid "_OK"
+msgid "OK"
 msgstr ""
 
-#: hyscan-fnn-project.c:504 hyscan-fnn-project.c:547
+#: hyscan-fnn-project.c:503 hyscan-fnn-project.c:546
 msgid "Open project"
 msgstr ""
 
-#: hyscan-fnn-project.c:549
+#: hyscan-fnn-project.c:548
 msgid "New project"
 msgstr ""
 

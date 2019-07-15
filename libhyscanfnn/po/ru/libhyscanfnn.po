@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-03 15:02+0300\n"
+"POT-Creation-Date: 2019-07-15 11:31+0300\n"
 "PO-Revision-Date: 2019-06-20 10:38+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -18,75 +18,79 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: fnn.c:59
+#: fnn.c:65
 msgid "SideScan"
 msgstr "ГБО"
 
-#: fnn.c:103
+#: fnn.c:74
 msgid "SideScanLow"
 msgstr "ГБО-НЧ"
 
-#: fnn.c:146 fnn.c:3167
+#: fnn.c:83
+msgid "SideScanHigh"
+msgstr "ГБО-ВЧ"
+
+#: fnn.c:123 fnn.c:3157
 msgid "Profiler"
 msgstr "Профилограф"
 
-#: fnn.c:191
+#: fnn.c:169
 msgid "Echosounder"
 msgstr "Эхолот"
 
-#: fnn.c:235
+#: fnn.c:214
 msgid "ForwardLook"
 msgstr "Впередсмотрящий"
 
-#: fnn.c:473
+#: fnn.c:452
 msgid "Hardware parameters"
 msgstr "Параметры оборудования"
 
-#: fnn.c:475
+#: fnn.c:454
 msgid "Apply"
 msgstr "Применить"
 
-#: fnn.c:476
+#: fnn.c:455
 msgid "Reset"
 msgstr "Сбросить"
 
-#: fnn.c:477 fnn.c:510
+#: fnn.c:456 fnn.c:489
 msgid "Close"
 msgstr "Закрыть"
 
-#: fnn.c:508
+#: fnn.c:487
 msgid "Sonar info"
 msgstr "Информация о ГЛ"
 
-#: fnn.c:3176
+#: fnn.c:3166
 msgid "Yellow"
 msgstr "Желтый"
 
-#: fnn.c:3184
+#: fnn.c:3174
 msgid "Brown"
 msgstr "Коричневый"
 
-#: fnn.c:3191
+#: fnn.c:3181
 msgid "Sepia"
 msgstr "Сепия"
 
-#: fnn.c:3198
+#: fnn.c:3188
 msgid "White"
 msgstr "Белый"
 
-#: fnn.c:3206
+#: fnn.c:3196
 msgid "Inverted"
 msgstr "Инверсия"
 
-#: fnn.c:3214
+#: fnn.c:3204
 msgid "Green"
 msgstr "Зеленый"
 
-#: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:501
+#: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:500
 msgid "Delete project"
 msgstr "Удалить проект"
 
-#: hyscan-fnn-project.c:137 hyscan-fnn-project.c:145 hyscan-fnn-project.c:520
+#: hyscan-fnn-project.c:137 hyscan-fnn-project.c:145 hyscan-fnn-project.c:519
 msgid "Delete track"
 msgstr "Удалить галс"
 
@@ -114,11 +118,11 @@ msgstr "Введите название проекта"
 msgid "OK"
 msgstr "Ок"
 
-#: hyscan-fnn-project.c:504 hyscan-fnn-project.c:547
+#: hyscan-fnn-project.c:503 hyscan-fnn-project.c:546
 msgid "Open project"
 msgstr "Открыть проект"
 
-#: hyscan-fnn-project.c:549
+#: hyscan-fnn-project.c:548
 msgid "New project"
 msgstr "Создать проект"
 
