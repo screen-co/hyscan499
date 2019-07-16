@@ -474,7 +474,7 @@ on_configure_track_clicked (GtkButton *button,
       if (gtk_tree_model_get_iter (GTK_TREE_MODEL (priv->track_store), &iter, path))
         {
           GtkWidget *window;
-          HyScanGtkMapTrack *track;
+          HyScanGtkMapTrackItem *track;
 
           gtk_tree_model_get (GTK_TREE_MODEL (priv->track_store), &iter, TRACK_COLUMN, &track_name, -1);
           track = hyscan_gtk_map_track_lookup (HYSCAN_GTK_MAP_TRACK (priv->track_layer), track_name);
@@ -559,6 +559,43 @@ on_button_press_event (GtkTreeView     *tree_view,
   return FALSE;
 }
 
+/* Отмечает все галочки в списке галсов. */
+static void
+track_view_select_all (HyScanGtkMapKit *kit)
+{
+  HyScanGtkMapKitPrivate *priv = kit->priv;
+  gboolean valid;
+  GtkTreeIter iter;
+
+  valid = gtk_tree_model_get_iter_first (GTK_TREE_MODEL (priv->track_store), &iter);
+  while (valid)
+    {
+      gchar *track_name;
+
+      gtk_tree_model_get (GTK_TREE_MODEL (priv->track_store), &iter, TRACK_COLUMN, &track_name, -1);
+      hyscan_list_model_add (priv->list_model, track_name);
+      g_free (track_name);
+
+      valid = gtk_tree_model_iter_next (GTK_TREE_MODEL (priv->track_store), &iter);
+    }
+}
+
+/* Клик по заголовку с галочкой в таблице галсов. */
+static void
+track_view_visible_column_clicked (HyScanGtkMapKit *kit)
+{
+  HyScanGtkMapKitPrivate *priv = kit->priv;
+  gchar **selected;
+
+  selected = hyscan_list_model_get (priv->list_model);
+  if (g_strv_length (selected) == 0)
+    track_view_select_all (kit);
+  else
+    hyscan_list_model_remove_all (kit->priv->list_model);
+
+  g_strfreev (selected);
+}
+
 static GtkTreeView *
 create_track_tree_view (HyScanGtkMapKit *kit,
                         GtkTreeModel    *tree_model)
@@ -589,6 +626,8 @@ create_track_tree_view (HyScanGtkMapKit *kit,
   visible_column = gtk_tree_view_column_new_with_attributes (_("Show"), renderer,
                                                              "active", VISIBLE_COLUMN, NULL);
   image = gtk_image_new_from_icon_name ("object-select-symbolic", GTK_ICON_SIZE_MENU);
+  gtk_tree_view_column_set_clickable (visible_column, TRUE);
+  g_signal_connect_swapped (visible_column, "clicked", G_CALLBACK (track_view_visible_column_clicked), kit);
   gtk_widget_show (image);
   gtk_tree_view_column_set_widget (visible_column, image);
 
