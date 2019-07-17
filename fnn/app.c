@@ -259,11 +259,13 @@ main (int argc, char **argv)
   {
     setlocale (LC_ALL, "");
     bindtextdomain (GETTEXT_PACKAGE, get_locale_dir());
+    bindtextdomain ("hyscangui", get_locale_dir());
     bindtextdomain ("libhyscanfnn", get_locale_dir());
     bindtextdomain ("hyscanfnn-swui", get_locale_dir());
     bindtextdomain ("hyscanfnn-evoui", get_locale_dir());
 
     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+    bind_textdomain_codeset ("hyscangui" , "UTF-8");
     bind_textdomain_codeset ("libhyscanfnn" , "UTF-8");
     bind_textdomain_codeset ("hyscanfnn-swui", "UTF-8");
     bind_textdomain_codeset ("hyscanfnn-evoui", "UTF-8");
