@@ -1642,6 +1642,85 @@ hyscan_gtk_map_kit_model_init (HyScanGtkMapKit   *kit,
   }
 }
 
+/* Получает ключи видимых слоёв. */
+static gchar **
+hyscan_gtk_map_kit_get_layers (HyScanGtkMapKit *kit)
+{
+  HyScanGtkMapKitPrivate *priv = kit->priv;
+  GtkTreeIter iter;
+  gboolean valid;
+  GArray *array;
+
+  array = g_array_new (TRUE, FALSE, sizeof (gchar *));
+
+  valid = gtk_tree_model_get_iter_first (GTK_TREE_MODEL (priv->layer_store), &iter);
+  while (valid)
+   {
+     HyScanGtkLayer *layer;
+     gchar *layer_key;
+
+     gtk_tree_model_get (GTK_TREE_MODEL (priv->layer_store), &iter,
+                         LAYER_KEY_COLUMN, &layer_key,
+                         LAYER_COLUMN, &layer,
+                         -1);
+
+     if (hyscan_gtk_layer_get_visible (layer))
+       g_array_append_val (array, layer_key);
+     else
+       g_free (layer_key);
+
+     g_object_unref (layer);
+     
+     valid = gtk_tree_model_iter_next (GTK_TREE_MODEL (priv->layer_store), &iter);
+   }
+
+  return (gchar **) g_array_free (array, FALSE);
+}
+
+/* Устанавливает видимость слоёв с ключами layers. */
+static void
+hyscan_gtk_map_kit_set_layers (HyScanGtkMapKit  *kit,
+                               gchar           **layers)
+{
+  HyScanGtkMapKitPrivate *priv = kit->priv;
+  GtkTreeIter iter;
+  gboolean valid;
+
+  valid = gtk_tree_model_get_iter_first (GTK_TREE_MODEL (priv->layer_store), &iter);
+  while (valid)
+   {
+     gchar *layer_key;
+     HyScanGtkLayer *layer;
+     gboolean visible;
+
+     gtk_tree_model_get (GTK_TREE_MODEL (priv->layer_store), &iter,
+                         LAYER_KEY_COLUMN, &layer_key,
+                         LAYER_COLUMN, &layer,
+                         -1);
+
+     visible = g_strv_contains ((const gchar *const *) layers, layer_key);
+     gtk_list_store_set (priv->layer_store, &iter, LAYER_VISIBLE_COLUMN, visible, -1);
+     hyscan_gtk_layer_set_visible (layer, visible);
+
+     g_free (layer_key);
+     g_object_unref (layer);
+
+     valid = gtk_tree_model_iter_next (GTK_TREE_MODEL (priv->layer_store), &iter);
+   }
+}
+
+/* Устанавливает видимость галсов с названиями tracks. */
+static void
+hyscan_gtk_map_kit_set_tracks (HyScanGtkMapKit  *kit,
+                               gchar           **tracks)
+{
+  HyScanGtkMapKitPrivate *priv = kit->priv;
+  gint i;
+
+  for (i = 0; tracks[i] != NULL; ++i)
+   hyscan_list_model_add (priv->list_model, tracks[i]);
+}
+
 /**
  * hyscan_gtk_map_kit_new_map:
  * @center: центр карты
@@ -1675,12 +1754,12 @@ hyscan_gtk_map_kit_set_project (HyScanGtkMapKit *kit,
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
 
+  /* Очищаем список активных галсов, только если уже был открыт другой проект. */
+  if (priv->list_model && priv->project_name != NULL)
+    hyscan_list_model_remove_all (priv->list_model);
+
   g_free (priv->project_name);
   priv->project_name = g_strdup (project_name);
-
-  /* Очищаем список активных галсов. */
-  if (priv->list_model)
-    hyscan_list_model_remove_all (priv->list_model);
 
   if (priv->db_info)
     hyscan_db_info_set_project (priv->db_info, priv->project_name);
@@ -1945,7 +2024,6 @@ hyscan_gtk_map_kit_free (HyScanGtkMapKit *kit)
   g_free (kit);
 }
 
-
 GtkTreeView *
 hyscan_gtk_map_kit_get_track_view (HyScanGtkMapKit *kit,
                                    gint            *track_col)
@@ -1953,4 +2031,89 @@ hyscan_gtk_map_kit_get_track_view (HyScanGtkMapKit *kit,
   if (track_col != NULL)
     *track_col = TRACK_COLUMN;
   return kit->priv->track_tree;
+}
+
+/**
+ * hyscan_gtk_map_kit_kf_setup:
+ * @kit
+ * @kf
+ *
+ * Загружает настройки карты из файла @kf
+ */
+void
+hyscan_gtk_map_kit_kf_setup (HyScanGtkMapKit *kit,
+                             GKeyFile        *kf)
+{
+  gchar *profile = NULL;
+  gboolean offline;
+  HyScanGeoGeodetic center;
+  gchar **layers, **tracks;
+
+  /* Подгружаем центр карты. */
+  center.lat = g_key_file_get_double      (kf, "evo-map", "lat", NULL);
+  center.lon = g_key_file_get_double      (kf, "evo-map", "lon", NULL);
+  profile    = g_key_file_get_string      (kf, "evo-map", "profile", NULL);
+  offline    = g_key_file_get_boolean     (kf, "evo-map", "offline", NULL);
+  layers     = g_key_file_get_string_list (kf, "evo-map", "layers", NULL, NULL);
+  tracks     = g_key_file_get_string_list (kf, "evo-map", "tracks", NULL, NULL);
+  hyscan_gtk_map_move_to (HYSCAN_GTK_MAP (kit->map), center);
+
+  if (profile != NULL)
+    {
+      hyscan_gtk_map_kit_set_profile_name (kit, profile);
+      g_free (profile);
+    }
+
+  if (layers != NULL)
+    {
+      hyscan_gtk_map_kit_set_layers (kit, layers);
+      g_strfreev (layers);
+    }
+
+  if (tracks != NULL)
+    {
+      hyscan_gtk_map_kit_set_tracks (kit, tracks);
+      g_strfreev (tracks);
+    }
+
+  hyscan_gtk_map_kit_set_offline (kit, offline);
+}
+
+/**
+ * hyscan_gtk_map_kit_kf_desetup:
+ * @kit
+ * @kf
+ *
+ * Сохраняет настройки карты в файл @kf
+ */
+void
+hyscan_gtk_map_kit_kf_desetup (HyScanGtkMapKit *kit,
+                               GKeyFile        *kf)
+{
+  HyScanGtkMapKitPrivate *priv = kit->priv;
+  gchar *proifle;
+  gchar **layers, **tracks;
+  HyScanGeoGeodetic geod;
+  HyScanGeoCartesian2D  c2d;
+  gdouble from_x, to_x, from_y, to_y;
+
+  gtk_cifro_area_get_view (GTK_CIFRO_AREA (kit->map), &from_x, &to_x, &from_y, &to_y);
+  c2d.x = (to_x + from_x) / 2.0;
+  c2d.y = (to_y + from_y) / 2.0;
+  hyscan_gtk_map_value_to_geo (HYSCAN_GTK_MAP (kit->map), &geod, c2d);
+
+  proifle = hyscan_gtk_map_kit_get_profile_name (kit);
+  layers = hyscan_gtk_map_kit_get_layers (kit);
+  tracks = hyscan_list_model_get (priv->list_model);
+
+  g_key_file_set_double      (kf, "evo-map", "lat",     geod.lat);
+  g_key_file_set_double      (kf, "evo-map", "lon",     geod.lon);
+  g_key_file_set_string      (kf, "evo-map", "profile", proifle);
+  g_key_file_set_boolean     (kf, "evo-map", "offline", hyscan_gtk_map_kit_get_offline (kit));
+  g_key_file_set_string_list (kf, "evo-map", "layers", (const gchar *const *) layers, g_strv_length (layers));
+  g_key_file_set_string_list (kf, "evo-map", "tracks", (const gchar *const *) tracks, g_strv_length (tracks));
+
+  g_free (proifle);
+  g_free (tracks);
+  g_strfreev (layers);
 }

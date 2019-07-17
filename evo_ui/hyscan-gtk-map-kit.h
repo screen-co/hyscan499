@@ -69,4 +69,12 @@ HYSCAN_API
 GtkTreeView *     hyscan_gtk_map_kit_get_track_view   (HyScanGtkMapKit   *kit,
                                                        gint              *track_col);
 
+HYSCAN_API
+void              hyscan_gtk_map_kit_kf_setup         (HyScanGtkMapKit   *kit,
+                                                       GKeyFile          *kf);
+
+HYSCAN_API
+void              hyscan_gtk_map_kit_kf_desetup       (HyScanGtkMapKit   *kit,
+                                                       GKeyFile          *keyfile);
+
 #endif /* __HYSCAN_GTK_MAP_KIT_H__ */
