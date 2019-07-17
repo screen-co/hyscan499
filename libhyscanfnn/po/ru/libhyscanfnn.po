@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-15 11:31+0300\n"
+"POT-Creation-Date: 2019-07-17 09:51+0300\n"
 "PO-Revision-Date: 2019-06-20 10:38+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -30,59 +30,59 @@ msgstr "ГБО-НЧ"
 msgid "SideScanHigh"
 msgstr "ГБО-ВЧ"
 
-#: fnn.c:123 fnn.c:3157
+#: fnn.c:120 fnn.c:3152
 msgid "Profiler"
 msgstr "Профилограф"
 
-#: fnn.c:169
+#: fnn.c:165
 msgid "Echosounder"
 msgstr "Эхолот"
 
-#: fnn.c:214
+#: fnn.c:209
 msgid "ForwardLook"
 msgstr "Впередсмотрящий"
 
-#: fnn.c:452
+#: fnn.c:447
 msgid "Hardware parameters"
 msgstr "Параметры оборудования"
 
-#: fnn.c:454
+#: fnn.c:449
 msgid "Apply"
 msgstr "Применить"
 
-#: fnn.c:455
+#: fnn.c:450
 msgid "Reset"
 msgstr "Сбросить"
 
-#: fnn.c:456 fnn.c:489
+#: fnn.c:451 fnn.c:484
 msgid "Close"
 msgstr "Закрыть"
 
-#: fnn.c:487
+#: fnn.c:482
 msgid "Sonar info"
 msgstr "Информация о ГЛ"
 
-#: fnn.c:3166
+#: fnn.c:3161
 msgid "Yellow"
 msgstr "Желтый"
 
-#: fnn.c:3174
+#: fnn.c:3169
 msgid "Brown"
 msgstr "Коричневый"
 
-#: fnn.c:3181
+#: fnn.c:3176
 msgid "Sepia"
 msgstr "Сепия"
 
-#: fnn.c:3188
+#: fnn.c:3183
 msgid "White"
 msgstr "Белый"
 
-#: fnn.c:3196
+#: fnn.c:3191
 msgid "Inverted"
 msgstr "Инверсия"
 
-#: fnn.c:3204
+#: fnn.c:3199
 msgid "Green"
 msgstr "Зеленый"
 
@@ -130,7 +130,7 @@ msgstr "Создать проект"
 msgid "Intro"
 msgstr "Начальная страница"
 
-#: hyscan-gtk-con.c:382 tmp/hyscan-gtk-con.ui.h:3
+#: hyscan-gtk-con.c:382
 msgid "Hardware"
 msgstr "Оборудование"
 
@@ -175,8 +175,12 @@ msgid "Welcome to connection manager"
 msgstr "Добро пожаловать в менеджер подключений"
 
 #: tmp/hyscan-gtk-con.ui.h:2
-msgid "Project"
-msgstr "Проекты"
+msgid "Project:"
+msgstr "Проекты:"
+
+#: tmp/hyscan-gtk-con.ui.h:3
+msgid "Hardware:"
+msgstr "Оборудование:"
 
 #: tmp/hyscan-gtk-con.ui.h:4
 msgid "View"
@@ -188,7 +192,7 @@ msgstr "Съемка"
 
 #: tmp/hyscan-gtk-con.ui.h:6
 msgid "Project manager"
-msgstr "Проекты"
+msgstr "Проекты..."
 
 #: tmp/hyscan-gtk-mark-editor.ui.h:1
 msgid "Title"

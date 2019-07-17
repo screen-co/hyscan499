@@ -2562,12 +2562,12 @@ brightness_up (GtkWidget *widget,
       case FNN_PANEL_PROFILER:
       case FNN_PANEL_ECHO:
         {
-          if (new_brightness < 50.0)
-            step = 10.0;
-          else if (new_brightness < 90.0)
+          // if (new_brightness < 50.0)
+            // step = 10.0;
+          // else if (new_brightness < 90.0)
+            // step = 5.0;
+          // else
             step = 5.0;
-          else
-            step = 1.0;
         }
         break;
 
@@ -2614,12 +2614,12 @@ brightness_down (GtkWidget *widget,
       case FNN_PANEL_PROFILER:
       case FNN_PANEL_ECHO:
         {
-          if (new_brightness > 90.0)
-            step = -1.0;
-          else if (new_brightness > 50.0)
+          // if (new_brightness > 90.0)
             step = -5.0;
-          else
-            step = -10.0;
+          // else if (new_brightness > 50.0)
+            // step = -5.0;
+          // else
+            // step = -10.0;
         }
         break;
 
@@ -2666,12 +2666,12 @@ black_up (GtkWidget *widget,
       case FNN_PANEL_PROFILER:
       case FNN_PANEL_ECHO:
         {
-          if (new_black < 50.0)
-            step = 10.0;
-          else if (new_black < 90.0)
+          // if (new_black < 50.0)
+            // step = 10.0;
+          // else if (new_black < 90.0)
+            // step = 5.0;
+          // else
             step = 5.0;
-          else
-            step = 1.0;
         }
         break;
 
@@ -2695,7 +2695,8 @@ black_up (GtkWidget *widget,
 
   new_black = new_black + step;
   new_black = new_black - fmod (new_black, ABS (step));
-  new_black = CLAMP (new_black, 0.0, 100.0);
+  // new_black = CLAMP (new_black, 0.0, 100.0);
+  new_black = CLAMP (new_black, -100.0, 100.0);
 
   if (brightness_set (tglobal, panel->vis_current.brightness, new_black, panelx))
     panel->vis_current.black = new_black;
@@ -2718,12 +2719,12 @@ black_down (GtkWidget *widget,
       case FNN_PANEL_PROFILER:
       case FNN_PANEL_ECHO:
         {
-          if (new_black > 90.0)
-            step = -1.0;
-          else if (new_black > 50.0)
+          // if (new_black > 90.0)
             step = -5.0;
-          else
-            step = -10.0;
+          // else if (new_black > 50.0)
+            // step = -5.0;
+          // else
+            // step = -10.0;
         }
         break;
 
@@ -2747,7 +2748,8 @@ black_down (GtkWidget *widget,
 
   new_black = new_black + step;
   new_black = new_black - fmod (new_black, ABS (step));
-  new_black = CLAMP (new_black, 0.0, 100.0);
+  // new_black = CLAMP (new_black, 0.0, 100.0);
+  new_black = CLAMP (new_black, -100.0, 100.0);
 
   if (brightness_set (tglobal, panel->vis_current.brightness, new_black, panelx))
     panel->vis_current.black = new_black;

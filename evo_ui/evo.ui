@@ -119,7 +119,7 @@
         <property name="can_focus">False</property>
         <property name="halign">end</property>
         <property name="valign">center</property>
-        <property name="label" translatable="yes">Brightness</property>
+        <property name="label" translatable="yes">Contrast</property>
         <property name="use_markup">True</property>
         <property name="justify">center</property>
       </object>
@@ -293,7 +293,7 @@
         <property name="can_focus">False</property>
         <property name="halign">end</property>
         <property name="valign">center</property>
-        <property name="label" translatable="yes">Black</property>
+        <property name="label" translatable="yes">Range</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -534,7 +534,7 @@
         <property name="can_focus">False</property>
         <property name="valign">center</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;0.0&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;0&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
         <property name="justify">center</property>
       </object>
@@ -861,9 +861,9 @@
         <signal name="state-set" handler="mode_changed" swapped="no"/>
       </object>
       <packing>
-        <property name="left_attach">1</property>
+        <property name="left_attach">2</property>
         <property name="top_attach">6</property>
-        <property name="width">3</property>
+        <property name="width">2</property>
       </packing>
     </child>
     <child>
@@ -878,6 +878,9 @@
         <property name="top_attach">7</property>
         <property name="width">4</property>
       </packing>
+    </child>
+    <child>
+      <placeholder/>
     </child>
   </object>
   <object class="GtkImage" id="signal_image_down">
@@ -1047,51 +1050,6 @@
     <property name="step_increment">0.01</property>
     <property name="page_increment">0.10000000000000001</property>
   </object>
-  <object class="GtkGrid" id="ss_balance_control">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <child>
-      <object class="GtkSpinButton" id="ss_balance_scale">
-        <property name="width_request">150</property>
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="valign">center</property>
-        <property name="text" translatable="yes">0.00</property>
-        <property name="adjustment">ss_balance_adjustment</property>
-        <property name="digits">2</property>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">0</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="ss_balance_label">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">end</property>
-        <property name="valign">center</property>
-        <property name="label" translatable="yes">Balance</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">0</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkSeparator" id="separator8">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="margin_top">3</property>
-        <property name="margin_bottom">3</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">1</property>
-        <property name="width">2</property>
-      </packing>
-    </child>
-  </object>
   <object class="GtkImage" id="ss_black_down_image">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -1170,7 +1128,7 @@
         <property name="can_focus">False</property>
         <property name="halign">end</property>
         <property name="valign">center</property>
-        <property name="label" translatable="yes">White</property>
+        <property name="label" translatable="yes">Contrast</property>
         <property name="use_markup">True</property>
         <property name="justify">center</property>
         <property name="ellipsize">start</property>
@@ -1386,7 +1344,7 @@
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="halign">end</property>
-        <property name="label" translatable="yes">Black</property>
+        <property name="label" translatable="yes">Range</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -1612,7 +1570,7 @@
         <property name="can_focus">False</property>
         <property name="valign">center</property>
         <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;0.0&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;0&lt;/b&gt;&lt;/small&gt;</property>
         <property name="use_markup">True</property>
         <property name="justify">center</property>
       </object>

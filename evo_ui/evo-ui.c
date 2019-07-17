@@ -20,6 +20,7 @@ EvoUI global_ui = {0,};
 Global *_global = NULL;
 
 /* OVERRIDES */
+/*
 gboolean
 evo_brightness_set_override (Global  *global,
                              gdouble  new_brightness,
@@ -118,6 +119,107 @@ evo_brightness_set_override (Global  *global,
 
   return TRUE;
 }
+*/
+
+gboolean
+evo_brightness_set_override (Global  *global,
+                             gdouble  new_brightness,
+                             gdouble  new_black,
+                             gint     panelx)
+{
+  VisualWF *wf;
+  VisualFL *fl;
+  gchar *text_bright;
+  gchar *text_black;
+  gdouble b, g, w;
+  FnnPanel *panel;
+  gdouble new_contrast = new_brightness;
+  gdouble new_shrink = new_black;
+
+  panel = get_panel (global, panelx);
+
+  if (new_brightness < 0.0)
+    return FALSE;
+  if (new_brightness > 100.0)
+    return FALSE;
+  if (new_black < -100.0)
+    return FALSE;
+  if (new_black > 100.0)
+    return FALSE;
+
+  text_bright = g_strdup_printf ("<small><b>%.0f%%</b></small>", new_brightness);
+  text_black = g_strdup_printf ("<small><b>%.0f%%</b></small>", new_black);
+
+  switch (panel->type)
+    {
+    case FNN_PANEL_WATERFALL:
+    case FNN_PANEL_ECHO:
+      {
+        // EvoUI *ui = &global_ui;
+        // GtkAdjustment *balance_adj;
+        HyScanSourceType lsource, rsource;
+        // gdouble lw, rw, balance;
+
+        new_contrast *= .99 * 0.01;
+        new_shrink *= .99 * 0.01;
+
+
+        // balance_adj = g_hash_table_lookup (ui->balance_table, GINT_TO_POINTER (panelx));
+        // balance = gtk_adjustment_get_value (balance_adj);
+        // lw = balance < 0 ? b + (w - b) * (1 - 0.99 * ABS (balance)) : w;
+        // rw = balance > 0 ? b + (w - b) * (1 - 0.99 * ABS (balance)) : w;
+
+        wf = (VisualWF*)panel->vis_gui;
+        hyscan_gtk_waterfall_state_get_sources (HYSCAN_GTK_WATERFALL_STATE (wf->wf), &lsource, &rsource);
+        hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), new_shrink, 1.0, new_contrast);
+        gtk_label_set_markup (wf->common.brightness_value, text_bright);
+        gtk_label_set_markup (wf->common.black_value, text_black);
+        break;
+      }
+
+      // w = 1 - 0.99 * new_brightness / 100.0;
+      // b = w * new_black / 100.0;
+      // g = 1.25 - 0.5 * (new_brightness / 100.0);
+
+      // wf = (VisualWF*)panel->vis_gui;
+      // hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), b, g, w);
+      // gtk_label_set_markup (wf->common.brightness_value, text_bright);
+      // gtk_label_set_markup (wf->common.black_value, text_black);
+      // break;
+
+    case FNN_PANEL_PROFILER:
+      b = new_black / 250000;
+      w = b + (1 - 0.99 * new_brightness / 100.0) * (1 - b);
+      g = 1;
+      if (b >= w)
+        {
+          g_message ("BBC error");
+          return FALSE;
+        }
+
+      wf = (VisualWF*)panel->vis_gui;
+      hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), b, g, w);
+
+      gtk_label_set_markup (wf->common.brightness_value, text_bright);
+      gtk_label_set_markup (wf->common.black_value, text_black);
+      break;
+
+    case FNN_PANEL_FORWARDLOOK:
+      fl = (VisualFL*)panel->vis_gui;
+      hyscan_gtk_forward_look_set_brightness (fl->fl, new_brightness);
+      gtk_label_set_markup (fl->common.brightness_value, text_bright);
+      break;
+
+    default:
+      g_warning ("brightness_set: wrong panel type!");
+    }
+
+  g_free (text_bright);
+  g_free (text_black);
+
+  return TRUE;
+}
+
 
 void
 evo_project_changed_override (Global *global,
@@ -149,7 +251,7 @@ player_adj_value_printer (GtkAdjustment *adj,
 {
   gchar *markup;
 
-  markup = g_strdup_printf ("<small><b>%2.1f</b></small>", gtk_adjustment_get_value(adj));
+  markup = g_strdup_printf ("<small><b>%2.0f %s</b></small>", gtk_adjustment_get_value(adj), _("m/s"));
   gtk_label_set_markup (label, markup);
   g_free (markup);
 }
@@ -514,15 +616,15 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");         add_to_sg (sg, b, "ss_live_view_label");
 
       {
-        GtkAdjustment *adj;
-        GtkWidget *balance = get_widget_from_builder (b, "ss_balance_control");               add_to_sg (sg, b, "ss_balance_label");
+        // GtkAdjustment *adj;
+        // GtkWidget *balance = get_widget_from_builder (b, "ss_balance_control");               add_to_sg (sg, b, "ss_balance_label");
 
-        adj = get_adjust_from_builder (b, "ss_balance_adjustment");
-        g_signal_connect (adj, "value-changed", G_CALLBACK (balance_changed), GINT_TO_POINTER (panelx));
+        // adj = get_adjust_from_builder (b, "ss_balance_adjustment");
+        // g_signal_connect (adj, "value-changed", G_CALLBACK (balance_changed), GINT_TO_POINTER (panelx));
 
-        gtk_box_pack_start (GTK_BOX (box), balance, FALSE, FALSE, 0);
+        // gtk_box_pack_start (GTK_BOX (box), balance, FALSE, FALSE, 0);
 
-        g_hash_table_insert (ui->balance_table, GINT_TO_POINTER (panelx), adj);
+        // g_hash_table_insert (ui->balance_table, GINT_TO_POINTER (panelx), adj);
       }
 
       wf = (VisualWF*)panel->vis_gui;
@@ -1109,7 +1211,8 @@ panel_pack (FnnPanel *panel,
 
       balance = keyfile_double_read_helper (ui->settings, panel->name, "evo.balance", 0.0);
       adj = g_hash_table_lookup (ui->balance_table, GINT_TO_POINTER (panelx));
-      gtk_adjustment_set_value (adj, balance);
+      if (adj != NULL)
+        gtk_adjustment_set_value (adj, balance);
     }
 
   return TRUE;
