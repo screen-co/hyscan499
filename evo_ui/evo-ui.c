@@ -785,7 +785,7 @@ make_page_for_panel (EvoUI     *ui,
         player_adj_value_printer (adj, label);
       }
 
-      if (!!panel_sources_are_in_sonar (global, panel))
+      if (!panel_sources_are_in_sonar (global, panel))
         break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
@@ -820,7 +820,7 @@ make_page_for_panel (EvoUI     *ui,
         player_adj_value_printer (adj, label);
       }
 
-      if (!!panel_sources_are_in_sonar (global, panel))
+      if (!panel_sources_are_in_sonar (global, panel))
         break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
@@ -856,7 +856,7 @@ make_page_for_panel (EvoUI     *ui,
         player_adj_value_printer (adj, label);
       }
 
-      if (!!panel_sources_are_in_sonar (global, panel))
+      if (!panel_sources_are_in_sonar (global, panel))
         break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
@@ -875,7 +875,7 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->scale_value       = get_label_from_builder (b, "fl_scale_value");       add_to_sg (sg, b, "fl_scale_label");
       panel->vis_gui->sensitivity_value = get_label_from_builder (b, "fl_sensitivity_value"); add_to_sg (sg, b, "fl_sensitivity_label");
 
-      if (!!panel_sources_are_in_sonar (global, panel))
+      if (!panel_sources_are_in_sonar (global, panel))
         break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
