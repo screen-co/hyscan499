@@ -163,6 +163,9 @@ msgstr "Перейти"
 msgid "Offline"
 msgstr "Оффлайн"
 
+msgid "Online"
+msgstr "Онлайн"
+
 #: hyscan-gtk-map-kit.c:1563
 msgid "Tracks"
 msgstr "Галсы"

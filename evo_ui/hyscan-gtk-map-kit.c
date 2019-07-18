@@ -112,6 +112,8 @@ struct _HyScanGtkMapKitPrivate
   GtkWidget             *lon_spin;        /* Поля для ввода долготы. */
 
   GtkWidget             *mark_editor;     /* Редактор названия меток. */
+  GtkWidget             *stbar_offline;   /* Статусбар оффлайн. */
+  GtkWidget             *stbar_coord;     /* Статусбар координат. */
 };
 
 static GtkWidget *
@@ -1157,16 +1159,16 @@ on_move_to_click (HyScanGtkMapKit *kit)
 }
 
 static gboolean
-on_motion_show_coords (HyScanGtkMap   *map,
-                       GdkEventMotion *event,
-                       GtkStatusbar   *statusbar)
+on_motion_show_coords (HyScanGtkMap    *map,
+                       GdkEventMotion  *event,
+                       HyScanGtkMapKit *kit)
 {
   HyScanGeoGeodetic geo;
   gchar text[255];
 
   hyscan_gtk_map_point_to_geo (map, &geo, event->x, event->y);
-  g_snprintf (text, sizeof (text), "%.5f°, %.5f°", geo.lat, geo.lon);
-  gtk_statusbar_push (statusbar, 0, text);
+  g_snprintf (text, sizeof (text), "%.6f°, %.6f°", geo.lat, geo.lon);
+  gtk_statusbar_push (GTK_STATUSBAR (kit->priv->stbar_coord), 0, text);
 
   return FALSE;
 }
@@ -1377,13 +1379,19 @@ create_preloader (HyScanGtkMapKit *kit,
 static GtkWidget *
 create_status_bar (HyScanGtkMapKit *kit)
 {
-  GtkWidget *statusbar;
+  GtkWidget *statusbar_box;
 
-  statusbar = gtk_statusbar_new ();
-  g_object_set (statusbar, "margin", 0, NULL);
-  g_signal_connect (kit->map, "motion-notify-event", G_CALLBACK (on_motion_show_coords), statusbar);
+  statusbar_box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+  kit->priv->stbar_offline = gtk_statusbar_new ();
+  kit->priv->stbar_coord = gtk_statusbar_new ();
+  g_object_set (kit->priv->stbar_offline, "margin", 0, NULL);
+  g_object_set (kit->priv->stbar_coord, "margin", 0, NULL);
+  g_signal_connect (kit->map, "motion-notify-event", G_CALLBACK (on_motion_show_coords), kit);
 
-  return statusbar;
+  gtk_box_pack_start (GTK_BOX (statusbar_box), kit->priv->stbar_offline, FALSE, TRUE, 10);
+  gtk_box_pack_start (GTK_BOX (statusbar_box), kit->priv->stbar_coord, FALSE, TRUE, 10);
+
+  return statusbar_box;
 }
 
 static void
@@ -1826,6 +1834,9 @@ hyscan_gtk_map_kit_set_profile_name (HyScanGtkMapKit *kit,
   gtk_combo_box_set_active_id (GTK_COMBO_BOX (priv->profiles_box), priv->profile_active);
   g_signal_handlers_unblock_by_func (priv->profiles_box, on_profile_change, kit);
 
+  gtk_statusbar_push (GTK_STATUSBAR (priv->stbar_offline), 0,
+                      priv->profile_offline ? _("Offline") : _("Online"));
+
   return TRUE;
 }
 
@@ -1930,7 +1941,7 @@ hyscan_gtk_map_kit_add_nav (HyScanGtkMapKit *kit,
 
   /* Слой с траекторией движения судна. */
   priv->way_layer = hyscan_gtk_map_nav_new (priv->nav_model);
-  add_layer_row (kit, priv->way_layer, "way", _("Navigation"));
+  add_layer_row (kit, priv->way_layer, "nav", _("Navigation"));
 }
 
 void
