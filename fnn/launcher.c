@@ -38,6 +38,32 @@ struct {
   HDC       mem_dc;
 } app;
 
+/* Возвращает подпись на языке пользователя. */
+LPWSTR
+launcher_label ()
+{
+  LANGID langid;
+  LPCSTR text_utf8;
+  LPWSTR text_w;
+  int text_len = 100;
+
+  langid = GetUserDefaultUILanguage ();
+
+  if (PRIMARYLANGID (langid) == LANG_RUSSIAN)
+    text_utf8 = "Загрузка...";
+  else
+    text_utf8 = "Loading...";
+
+  text_len = MultiByteToWideChar (CP_UTF8, 0, text_utf8, -1, NULL, 0);
+  if (text_len <= 0)
+    return NULL;
+
+  text_w = malloc (text_len);
+  MultiByteToWideChar (CP_UTF8, 0, text_utf8, -1, text_w, text_len);
+
+  return text_w;
+}
+
 /* Обработка сообщений к сплэш-скрину. */
 LRESULT CALLBACK
 launcher_wnd_proc (HWND   wnd,
@@ -55,6 +81,32 @@ launcher_wnd_proc (HWND   wnd,
     case WM_ERASEBKGND:
       /* Фон в виде изображения. */
       BitBlt ((HDC) w_param, 0, 0, app.bmp_width, app.bmp_height, app.mem_dc, 0, 0, SRCCOPY);
+      LPWSTR label;
+
+      label = launcher_label ();
+      if (label != NULL)
+        {
+          RECT rect, text_rect;
+          UINT draw_format = DT_SINGLELINE | DT_NOCLIP | DT_CENTER;
+          LONG text_height;
+
+          GetClientRect (wnd, &rect) ;
+          text_rect = rect;
+
+          DrawTextW ((HDC) w_param, label, -1, &text_rect, draw_format | DT_CALCRECT);
+          text_height = text_rect.bottom - text_rect.top;
+
+          rect.top = app.bmp_height - text_height;
+
+          HBRUSH brush = CreateSolidBrush (RGB (50, 151, 151));
+          FillRect((HDC) w_param, &rect, brush);
+          DeleteObject(brush);
+
+          SetBkMode((HDC) w_param, TRANSPARENT);
+          DrawTextW ((HDC) w_param, label, -1, &rect, draw_format);
+
+          free (label);
+        }
       break;
 
     default:
@@ -191,7 +243,7 @@ launcher_app_init (HINSTANCE hInstance)
     }
 
   app.p_bar = CreateWindowExW (0, PROGRESS_CLASSW, NULL, WS_CHILD | WS_VISIBLE,
-                               0, app.bmp_height - 20, app.bmp_width, 20,
+                               0, app.bmp_height, app.bmp_width, 20,
                                app.splash, NULL, app.instance, NULL);
 
 

@@ -201,11 +201,11 @@ msgstr "Навигация"
 
 #: hyscan-gtk-map-kit.c:1810
 msgid "Waterfall Marks"
-msgstr "Метки водопада"
+msgstr "Метки АИ"
 
 #: hyscan-gtk-map-kit.c:1837
 msgid "Geo Marks"
-msgstr "Метки карты"
+msgstr "Геометки"
 
 #: tmp/evo.ui.h:1
 msgid "Contrast"

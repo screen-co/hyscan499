@@ -1194,27 +1194,12 @@ kf_config (GKeyFile *kf)
 G_MODULE_EXPORT gboolean
 kf_setting (GKeyFile *kf)
 {
-  gchar *profile = NULL;
   EvoUI *ui = &global_ui;
   ui->settings = g_key_file_ref (kf);
 
-  /* Подгружаем центр карты. */
-  HyScanGeoGeodetic center;
-  center.lat = keyfile_double_read_helper (kf, EVO_MAP, EVO_MAP_CENTER_LAT, 0.0);
-  center.lon = keyfile_double_read_helper (kf, EVO_MAP, EVO_MAP_CENTER_LON, 0.0);
-  profile = keyfile_string_read_helper (kf, EVO_MAP, EVO_MAP_PROFILE);
-  hyscan_gtk_map_move_to (HYSCAN_GTK_MAP (ui->mapkit->map), center);
-
-  if (profile != NULL)
-    {
-      hyscan_gtk_map_kit_set_profile_name (ui->mapkit, profile);
-      g_free (profile);
-    }
-
+  hyscan_gtk_map_kit_kf_setup (ui->mapkit, kf);
   gtk_check_menu_item_set_active (ui->map_offline,
-                                  keyfile_bool_read_helper (kf, EVO_MAP,
-                                                            EVO_MAP_OFFLINE));
-
+                                  hyscan_gtk_map_kit_get_offline (ui->mapkit));
 
   return TRUE;
 }
@@ -1243,27 +1228,7 @@ kf_desetup (GKeyFile *kf)
     }
 
   /* Запоминаем карту. */
-  {
-    gchar *proifle;
-    HyScanGeoGeodetic geod;
-    HyScanGeoCartesian2D  c2d;
-    gdouble from_x, to_x, from_y, to_y;
-
-    gtk_cifro_area_get_view (GTK_CIFRO_AREA (ui->mapkit->map), &from_x, &to_x, &from_y, &to_y);
-    c2d.x = (to_x + from_x) / 2.0;
-    c2d.y = (to_y + from_y) / 2.0;
-    hyscan_gtk_map_value_to_geo (HYSCAN_GTK_MAP (ui->mapkit->map), &geod, c2d);
-
-    keyfile_double_write_helper (kf, EVO_MAP, EVO_MAP_CENTER_LAT, geod.lat);
-    keyfile_double_write_helper (kf, EVO_MAP, EVO_MAP_CENTER_LON, geod.lon);
-
-    proifle = hyscan_gtk_map_kit_get_profile_name (ui->mapkit);
-    keyfile_string_write_helper (kf, EVO_MAP, EVO_MAP_PROFILE, proifle);
-    g_free (proifle);
-
-    keyfile_bool_write_helper (kf, EVO_MAP, EVO_MAP_OFFLINE,
-                               gtk_check_menu_item_get_active(ui->map_offline));
-  }
+  hyscan_gtk_map_kit_kf_desetup (ui->mapkit, kf);
 
   g_clear_pointer (&ui->settings, g_key_file_unref);
   return TRUE;
