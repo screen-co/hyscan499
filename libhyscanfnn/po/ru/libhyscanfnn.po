@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-17 09:51+0300\n"
+"POT-Creation-Date: 2019-07-18 12:35+0300\n"
 "PO-Revision-Date: 2019-06-20 10:38+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -30,7 +30,7 @@ msgstr "ГБО-НЧ"
 msgid "SideScanHigh"
 msgstr "ГБО-ВЧ"
 
-#: fnn.c:120 fnn.c:3152
+#: fnn.c:120 fnn.c:3164
 msgid "Profiler"
 msgstr "Профилограф"
 
@@ -38,59 +38,59 @@ msgstr "Профилограф"
 msgid "Echosounder"
 msgstr "Эхолот"
 
-#: fnn.c:209
+#: fnn.c:210
 msgid "ForwardLook"
 msgstr "Впередсмотрящий"
 
-#: fnn.c:447
+#: fnn.c:457
 msgid "Hardware parameters"
 msgstr "Параметры оборудования"
 
-#: fnn.c:449
+#: fnn.c:459
 msgid "Apply"
 msgstr "Применить"
 
-#: fnn.c:450
+#: fnn.c:460
 msgid "Reset"
 msgstr "Сбросить"
 
-#: fnn.c:451 fnn.c:484
+#: fnn.c:461 fnn.c:494
 msgid "Close"
 msgstr "Закрыть"
 
-#: fnn.c:482
+#: fnn.c:492
 msgid "Sonar info"
 msgstr "Информация о ГЛ"
 
-#: fnn.c:3161
+#: fnn.c:3173
 msgid "Yellow"
 msgstr "Желтый"
 
-#: fnn.c:3169
+#: fnn.c:3181
 msgid "Brown"
 msgstr "Коричневый"
 
-#: fnn.c:3176
+#: fnn.c:3188
 msgid "Sepia"
 msgstr "Сепия"
 
-#: fnn.c:3183
+#: fnn.c:3195
 msgid "White"
 msgstr "Белый"
 
-#: fnn.c:3191
+#: fnn.c:3203
 msgid "Inverted"
 msgstr "Инверсия"
 
-#: fnn.c:3199
+#: fnn.c:3211
 msgid "Green"
 msgstr "Зеленый"
 
-#: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:500
+#: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:518
 msgid "Delete project"
 msgstr "Удалить проект"
 
-#: hyscan-fnn-project.c:137 hyscan-fnn-project.c:145 hyscan-fnn-project.c:519
+#: hyscan-fnn-project.c:137 hyscan-fnn-project.c:145 hyscan-fnn-project.c:537
 msgid "Delete track"
 msgstr "Удалить галс"
 
@@ -106,23 +106,27 @@ msgstr "Галсы"
 msgid "Do you really want to delete project"
 msgstr "Вы действительно хотите удалить проект"
 
-#: hyscan-fnn-project.c:186
+#: hyscan-fnn-project.c:186 hyscan-fnn-project.c:228
 msgid "This can not be undone"
 msgstr "Это нельзя отменить"
 
-#: hyscan-fnn-project.c:422
+#: hyscan-fnn-project.c:226
+msgid "Do you really want to delete track"
+msgstr "Вы действительно хотите удалить галс"
+
+#: hyscan-fnn-project.c:440
 msgid "Enter project name"
 msgstr "Введите название проекта"
 
-#: hyscan-fnn-project.c:425
+#: hyscan-fnn-project.c:443
 msgid "OK"
 msgstr "Ок"
 
-#: hyscan-fnn-project.c:503 hyscan-fnn-project.c:546
+#: hyscan-fnn-project.c:521 hyscan-fnn-project.c:564
 msgid "Open project"
 msgstr "Открыть проект"
 
-#: hyscan-fnn-project.c:548
+#: hyscan-fnn-project.c:566
 msgid "New project"
 msgstr "Создать проект"
 
@@ -154,19 +158,19 @@ msgstr "Не удалось подключиться."
 msgid "Continue in view mode"
 msgstr "Продолжить в режиме просмотра. "
 
-#: hyscan-gtk-nav-indicator.c:255
+#: hyscan-gtk-mark-editor.c:126 hyscan-gtk-nav-indicator.c:255
 msgid "N"
 msgstr "С.Ш."
 
-#: hyscan-gtk-nav-indicator.c:255
+#: hyscan-gtk-mark-editor.c:126 hyscan-gtk-nav-indicator.c:255
 msgid "S"
 msgstr "Ю.Ш."
 
-#: hyscan-gtk-nav-indicator.c:256
+#: hyscan-gtk-mark-editor.c:127 hyscan-gtk-nav-indicator.c:256
 msgid "E"
 msgstr "В.Д."
 
-#: hyscan-gtk-nav-indicator.c:256
+#: hyscan-gtk-mark-editor.c:127 hyscan-gtk-nav-indicator.c:256
 msgid "W"
 msgstr "З.Д."
 

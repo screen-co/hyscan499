@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-17 09:51+0300\n"
+"POT-Creation-Date: 2019-07-18 12:35+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,7 +29,7 @@ msgstr ""
 msgid "SideScanHigh"
 msgstr ""
 
-#: fnn.c:120 fnn.c:3152
+#: fnn.c:120 fnn.c:3164
 msgid "Profiler"
 msgstr ""
 
@@ -37,59 +37,59 @@ msgstr ""
 msgid "Echosounder"
 msgstr ""
 
-#: fnn.c:209
+#: fnn.c:210
 msgid "ForwardLook"
 msgstr ""
 
-#: fnn.c:447
+#: fnn.c:457
 msgid "Hardware parameters"
 msgstr ""
 
-#: fnn.c:449
+#: fnn.c:459
 msgid "Apply"
 msgstr ""
 
-#: fnn.c:450
+#: fnn.c:460
 msgid "Reset"
 msgstr ""
 
-#: fnn.c:451 fnn.c:484
+#: fnn.c:461 fnn.c:494
 msgid "Close"
 msgstr ""
 
-#: fnn.c:482
+#: fnn.c:492
 msgid "Sonar info"
 msgstr ""
 
-#: fnn.c:3161
+#: fnn.c:3173
 msgid "Yellow"
 msgstr ""
 
-#: fnn.c:3169
+#: fnn.c:3181
 msgid "Brown"
 msgstr ""
 
-#: fnn.c:3176
+#: fnn.c:3188
 msgid "Sepia"
 msgstr ""
 
-#: fnn.c:3183
+#: fnn.c:3195
 msgid "White"
 msgstr ""
 
-#: fnn.c:3191
+#: fnn.c:3203
 msgid "Inverted"
 msgstr ""
 
-#: fnn.c:3199
+#: fnn.c:3211
 msgid "Green"
 msgstr ""
 
-#: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:500
+#: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:518
 msgid "Delete project"
 msgstr ""
 
-#: hyscan-fnn-project.c:137 hyscan-fnn-project.c:145 hyscan-fnn-project.c:519
+#: hyscan-fnn-project.c:137 hyscan-fnn-project.c:145 hyscan-fnn-project.c:537
 msgid "Delete track"
 msgstr ""
 
@@ -105,23 +105,27 @@ msgstr ""
 msgid "Do you really want to delete project"
 msgstr ""
 
-#: hyscan-fnn-project.c:186
+#: hyscan-fnn-project.c:186 hyscan-fnn-project.c:228
 msgid "This can not be undone"
 msgstr ""
 
-#: hyscan-fnn-project.c:422
+#: hyscan-fnn-project.c:226
+msgid "Do you really want to delete track"
+msgstr ""
+
+#: hyscan-fnn-project.c:440
 msgid "Enter project name"
 msgstr ""
 
-#: hyscan-fnn-project.c:425
+#: hyscan-fnn-project.c:443
 msgid "OK"
 msgstr ""
 
-#: hyscan-fnn-project.c:503 hyscan-fnn-project.c:546
+#: hyscan-fnn-project.c:521 hyscan-fnn-project.c:564
 msgid "Open project"
 msgstr ""
 
-#: hyscan-fnn-project.c:548
+#: hyscan-fnn-project.c:566
 msgid "New project"
 msgstr ""
 
@@ -153,19 +157,19 @@ msgstr ""
 msgid "Continue in view mode"
 msgstr ""
 
-#: hyscan-gtk-nav-indicator.c:255
+#: hyscan-gtk-mark-editor.c:126 hyscan-gtk-nav-indicator.c:255
 msgid "N"
 msgstr ""
 
-#: hyscan-gtk-nav-indicator.c:255
+#: hyscan-gtk-mark-editor.c:126 hyscan-gtk-nav-indicator.c:255
 msgid "S"
 msgstr ""
 
-#: hyscan-gtk-nav-indicator.c:256
+#: hyscan-gtk-mark-editor.c:127 hyscan-gtk-nav-indicator.c:256
 msgid "E"
 msgstr ""
 
-#: hyscan-gtk-nav-indicator.c:256
+#: hyscan-gtk-mark-editor.c:127 hyscan-gtk-nav-indicator.c:256
 msgid "W"
 msgstr ""
 
