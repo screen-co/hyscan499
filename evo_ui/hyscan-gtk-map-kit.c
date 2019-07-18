@@ -1683,6 +1683,24 @@ hyscan_gtk_map_kit_get_layers (HyScanGtkMapKit *kit)
   return (gchar **) g_array_free (array, FALSE);
 }
 
+#if !GLIB_CHECK_VERSION (2, 44, 0)
+static gboolean
+g_strv_contains (const gchar * const *strv,
+                 const gchar         *str)
+{
+  g_return_val_if_fail (strv != NULL, FALSE);
+  g_return_val_if_fail (str != NULL, FALSE);
+
+  for (; *strv != NULL; strv++)
+    {
+      if (g_str_equal (str, *strv))
+        return TRUE;
+    }
+
+  return FALSE;
+}
+#endif
+
 /* Устанавливает видимость слоёв с ключами layers. */
 static void
 hyscan_gtk_map_kit_set_layers (HyScanGtkMapKit  *kit,
