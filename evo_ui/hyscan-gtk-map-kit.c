@@ -1362,6 +1362,7 @@ create_preloader (HyScanGtkMapKit *kit,
                   GtkContainer    *container)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
+  GtkWidget *description;
 
   priv->preload_state = -1;
 
@@ -1371,6 +1372,10 @@ create_preloader (HyScanGtkMapKit *kit,
   priv->preload_progress = GTK_PROGRESS_BAR (gtk_progress_bar_new ());
   gtk_progress_bar_set_show_text (priv->preload_progress, TRUE);
 
+  description = gtk_label_new (_("Download visible area of map\nto make it available when offline"));
+  gtk_label_set_line_wrap (GTK_LABEL (description), TRUE);
+
+  gtk_container_add (container, description);
   gtk_container_add (container, GTK_WIDGET (priv->preload_progress));
   gtk_container_add (container, GTK_WIDGET (priv->preload_button));
 }
@@ -1549,8 +1554,8 @@ create_control_box (HyScanGtkMapKit *kit)
                   "margin", 6,
                   "halign", GTK_ALIGN_CENTER,
                   NULL);
-    create_preloader (kit, GTK_CONTAINER (stack_box));
-    gtk_stack_add_titled (GTK_STACK (stack), stack_box, "cache", _("Offline"));
+    create_preloader (kit, GTK_BOX (stack_box));
+    gtk_stack_add_titled (GTK_STACK (stack), stack_box, "cache", _("Download"));
 
     stack_switcher = gtk_stack_switcher_new ();
     gtk_widget_set_halign (stack_switcher, GTK_ALIGN_CENTER);

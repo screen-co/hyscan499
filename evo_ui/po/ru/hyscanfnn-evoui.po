@@ -166,6 +166,17 @@ msgstr "Оффлайн"
 msgid "Online"
 msgstr "Онлайн"
 
+msgid "Download"
+msgstr "Загрузить"
+
+msgid ""
+"Download visible area of map\n"
+"to make it available when offline"
+msgstr ""
+"Загрузить видимую область карты,\n"
+"чтобы сделать её доступной\n"
+"в режиме оффлайн"
+
 #: hyscan-gtk-map-kit.c:1563
 msgid "Tracks"
 msgstr "Галсы"
