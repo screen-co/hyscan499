@@ -187,10 +187,11 @@ fnn_ensure_panel (gint    panelx,
       g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_ECHOSOUND));
 
       hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ECHOSOUNDER);
-      hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), global->ship_speed);
+      hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), global->ship_speed / 10);
       hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
       hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);
       hyscan_gtk_waterfall_set_regeneration_period (HYSCAN_GTK_WATERFALL (vwf->wf), 500000);
+      hyscan_gtk_waterfall_grid_set_condence(vwf->wf_grid, 10);
 
       vwf->common.main = main_widget;
 
@@ -395,6 +396,14 @@ button_set_active (GObject *object,
   g_object_set (object, "state", setting, NULL);
 }
 
+void
+set_window_title (Global *global)
+{
+  gchar *title = g_strdup_printf ("HyScan - %s", global->project_name);
+  gtk_window_set_title (GTK_WINDOW (global->gui.window), title);
+  g_free (title);
+}
+
 gint
 run_manager (GObject *emitter)
 {
@@ -428,6 +437,7 @@ run_manager (GObject *emitter)
       if (tglobal->override.project_changed != NULL)
         tglobal->override.project_changed (tglobal, project);
 
+      set_window_title (tglobal);
       g_free (project);
     }
 

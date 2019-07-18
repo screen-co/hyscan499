@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-17 15:43+0300\n"
+"POT-Creation-Date: 2019-07-18 09:26+0300\n"
 "PO-Revision-Date: 2019-06-20 15:00+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -18,51 +18,71 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: evo-ui.c:254
+#: evo-ui.c:261
 msgid "m/s"
 msgstr "м/с"
 
-#: evo-ui.c:839
+#: evo-ui.c:631 hyscan-gtk-map-kit.c:1399
+msgid "Layer"
+msgstr "Слой"
+
+#: evo-ui.c:642 hyscan-gtk-map-kit.c:589 hyscan-gtk-map-kit.c:1394
+msgid "Show"
+msgstr "Вид."
+
+#: evo-ui.c:653 hyscan-gtk-map-kit.c:1565
+msgid "Grid"
+msgstr "Сетка"
+
+#: evo-ui.c:654
+msgid "Marks"
+msgstr "Метки"
+
+#: evo-ui.c:655
+msgid "Measurements"
+msgstr "Измерения"
+
+#: evo-ui.c:983
 msgid "Map"
 msgstr "Карта"
 
-#: evo-ui.c:916
+#: evo-ui.c:1060
 msgid "Project Manager"
 msgstr "Менеджер проектов"
 
-#: evo-ui.c:921
+#: evo-ui.c:1065
 msgid "Map offline mode"
 msgstr "Не загружать карту"
 
-#: evo-ui.c:949
+#: evo-ui.c:1093
 msgid "Sensors"
 msgstr "Датчики"
 
-#: evo-ui.c:961
+#: evo-ui.c:1105
 msgid "Info"
 msgstr "Информация"
 
-#: evo-ui.c:965
+#: evo-ui.c:1109
 msgid "State"
 msgstr "Состояние"
 
-#: evo-ui.c:969
+#: evo-ui.c:1113
 msgid "Params"
 msgstr "Параметры"
 
-#: evo-ui.c:973
+#: evo-ui.c:1117
 msgid "Sonar"
 msgstr "Локатор"
 
-#: evo-ui.c:979
+#: evo-ui.c:1123
 msgid "Antennas offsets"
 msgstr "Смещения антенн"
 
-#: evo-ui.c:991
+#: evo-ui.c:1135
 msgid "Hardware info"
 msgstr "Параметры оборудования"
 
-#: evo-ui.c:1000
+#: evo-ui.c:1144
 msgid "Exit"
 msgstr "Выход"
 
@@ -93,10 +113,6 @@ msgstr "Галс"
 #: hyscan-gtk-map-kit.c:582 hyscan-gtk-map-kit.c:632
 msgid "Date"
 msgstr "Дата"
-
-#: hyscan-gtk-map-kit.c:589 hyscan-gtk-map-kit.c:1394
-msgid "Show"
-msgstr "Вид."
 
 #: hyscan-gtk-map-kit.c:622
 msgid "Name"
@@ -139,10 +155,6 @@ msgstr "Шир."
 msgid "Lon"
 msgstr "Долг."
 
-#: hyscan-gtk-map-kit.c:1399
-msgid "Layer"
-msgstr "Слой"
-
 #: hyscan-gtk-map-kit.c:1435
 msgid "Enable editing"
 msgstr "Разрешить изменения"
@@ -178,10 +190,6 @@ msgstr "Линейка"
 #: hyscan-gtk-map-kit.c:1564
 msgid "Pin"
 msgstr "Булавка"
-
-#: hyscan-gtk-map-kit.c:1565
-msgid "Grid"
-msgstr "Сетка"
 
 #: hyscan-gtk-map-kit.c:1759
 msgid "Planner"

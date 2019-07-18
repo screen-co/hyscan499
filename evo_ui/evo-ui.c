@@ -15,6 +15,16 @@
 #define EVO_MAP_OFFLINE "offline"    /* для настроек, офлаен-режим. */
 #define EVO_ENABLE_EXTRAS "HY_PARAM"
 
+#define EVO_GRID_KEY "GRID"
+#define EVO_MARK_KEY "MARK"
+#define EVO_METR_KEY "METR"
+enum
+{
+  LAYER_VISIBLE_COLUMN,
+  LAYER_KEY_COLUMN,
+  LAYER_TITLE_COLUMN,
+  LAYER_COLUMN
+};
 
 EvoUI global_ui = {0,};
 Global *_global = NULL;
@@ -518,6 +528,151 @@ make_stack (void)
   return stack;
 }
 
+static void
+add_layer_row (GtkListStore    *store,
+               HyScanGtkLayer  *layer,
+               const gchar     *title,
+               const gchar     *key)
+{
+  GtkTreeIter tree_iter;
+
+  if (layer == NULL)
+    return;
+
+  /* Регистрируем слой в layer_store. */
+  gtk_list_store_append (store, &tree_iter);
+  gtk_list_store_set (store, &tree_iter,
+                      LAYER_VISIBLE_COLUMN, hyscan_gtk_layer_get_visible (layer),
+                      LAYER_TITLE_COLUMN, title,
+                      LAYER_COLUMN, layer,
+                      LAYER_KEY_COLUMN, key,
+                      -1);
+}
+
+static void
+on_enable_layer (GtkCellRendererToggle *cell_renderer,
+                 gchar                 *path,
+                 GtkTreeModel *tree_model)
+{
+  GtkTreeIter iter;
+  GtkTreePath *tree_path;
+  gboolean visible;
+  HyScanGtkLayer *layer;
+  gchar *key;
+
+  /* Узнаем, галочку какого слоя изменил пользователь. */
+  tree_path = gtk_tree_path_new_from_string (path);
+  gtk_tree_model_get_iter (tree_model, &iter, tree_path);
+  gtk_tree_path_free (tree_path);
+  gtk_tree_model_get (tree_model, &iter,
+                      LAYER_COLUMN, &layer,
+                      LAYER_VISIBLE_COLUMN, &visible,
+                      LAYER_KEY_COLUMN, &key,
+                      -1);
+
+  /* Устанавливаем новое данных. */
+  visible = !visible;
+  if (g_strcmp0 (key, EVO_GRID_KEY) == 0)
+    {
+      hyscan_gtk_waterfall_grid_show_grid(HYSCAN_GTK_WATERFALL_GRID(layer), visible);
+    }
+  else
+    {
+      hyscan_gtk_layer_set_visible (layer, visible);
+    }
+  gtk_list_store_set (GTK_LIST_STORE (tree_model), &iter, LAYER_VISIBLE_COLUMN, visible, -1);
+
+  g_object_unref (layer);
+  g_free (key);
+}
+
+
+static void
+layer_changed (GtkTreeSelection *selection,
+               HyScanGtkLayerContainer *container)
+{
+  // HyScanGtkMapKitPrivate *priv = kit->priv;
+
+  GtkTreeModel *model;
+  GtkTreeIter iter;
+  HyScanGtkLayer *layer;
+  gchar *layer_key;
+
+  /* Получаем данные выбранного слоя. */
+  gtk_tree_selection_get_selected (selection, &model, &iter);
+  gtk_tree_model_get (model, &iter,
+                      LAYER_COLUMN, &layer,
+                      LAYER_KEY_COLUMN, &layer_key,
+                      -1);
+
+  if (!hyscan_gtk_layer_grab_input (layer))
+    hyscan_gtk_layer_container_set_input_owner (container, NULL);
+
+  // layer_tools = gtk_stack_get_child_by_name (GTK_STACK (priv->layer_tool_stack), layer_key);
+
+  // if (layer_tools != NULL)
+  //   {
+  //     gtk_stack_set_visible_child (GTK_STACK (priv->layer_tool_stack), layer_tools);
+  //     gtk_widget_show_all (GTK_WIDGET (priv->layer_tool_stack));
+  //   }
+  // else
+  //   {
+  //     gtk_widget_hide (GTK_WIDGET (priv->layer_tool_stack));
+  //   }
+
+  // g_free (layer_key);
+  // g_object_unref (layer);
+}
+
+GtkWidget *
+make_layer_list (EvoUI *ui,
+                 VisualWF *vwf)
+{
+  GtkCellRenderer *renderer;
+  GtkTreeViewColumn *column;
+  GtkWidget *tree_view;
+  GtkTreeSelection *selection;
+  GtkListStore *store;
+  GtkTreeIter tree_iter;
+
+  store = gtk_list_store_new (4,
+                              G_TYPE_BOOLEAN,        /* LAYER_VISIBLE_COLUMN */
+                              G_TYPE_STRING,         /* LAYER_KEY_COLUMN     */
+                              G_TYPE_STRING,         /* LAYER_TITLE_COLUMN   */
+                              HYSCAN_TYPE_GTK_LAYER  /* LAYER_COLUMN         */);
+  tree_view = gtk_tree_view_new_with_model (store);
+
+  renderer = gtk_cell_renderer_text_new ();
+  column = gtk_tree_view_column_new_with_attributes (_("Layer"),
+                                                     renderer,
+                                                     "text", LAYER_TITLE_COLUMN,
+                                                     NULL);
+
+  gtk_tree_view_column_set_expand (column, TRUE);
+  gtk_tree_view_append_column (GTK_TREE_VIEW (tree_view), column);
+
+
+  renderer = gtk_cell_renderer_toggle_new ();
+  g_signal_connect (renderer, "toggled", G_CALLBACK (on_enable_layer), store);
+  column = gtk_tree_view_column_new_with_attributes (_("Show"),
+                                                     renderer,
+                                                     "active", LAYER_VISIBLE_COLUMN,
+                                                     NULL);
+  gtk_tree_view_append_column (GTK_TREE_VIEW (tree_view), column);
+
+
+  selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (tree_view));
+  g_signal_connect (selection, "changed", G_CALLBACK (layer_changed), vwf->wf);
+
+  /* Регистрируем слой в layer_store. */
+  add_layer_row (store, vwf->wf_grid, _("Grid"), EVO_GRID_KEY);
+  add_layer_row (store, vwf->wf_mark, _("Marks"), EVO_MARK_KEY);
+  add_layer_row (store, vwf->wf_metr, _("Measurements"), EVO_METR_KEY);
+
+  gtk_widget_show_all (tree_view);
+  return tree_view;
+}
+
 GtkWidget *
 make_record_control (Global *global,
                      EvoUI   *ui)
@@ -594,7 +749,7 @@ make_page_for_panel (EvoUI     *ui,
                      Global   *global)
 {
   GtkBuilder *b;
-  GtkWidget *view = NULL, *sonar = NULL, *tvg = NULL;
+  GtkWidget *view = NULL, *sonar = NULL, *tvg = NULL, *layers = NULL;
   GtkWidget *box;
   GtkWidget *l_ctrl, *l_mark, *l_meter;
   VisualWF *wf;
@@ -615,26 +770,8 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->colormap_value    = get_label_from_builder (b, "ss_color_map_value");   add_to_sg (sg, b, "ss_color_map_label");
       panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");         add_to_sg (sg, b, "ss_live_view_label");
 
-      {
-        // GtkAdjustment *adj;
-        // GtkWidget *balance = get_widget_from_builder (b, "ss_balance_control");               add_to_sg (sg, b, "ss_balance_label");
-
-        // adj = get_adjust_from_builder (b, "ss_balance_adjustment");
-        // g_signal_connect (adj, "value-changed", G_CALLBACK (balance_changed), GINT_TO_POINTER (panelx));
-
-        // gtk_box_pack_start (GTK_BOX (box), balance, FALSE, FALSE, 0);
-
-        // g_hash_table_insert (ui->balance_table, GINT_TO_POINTER (panelx), adj);
-      }
-
       wf = (VisualWF*)panel->vis_gui;
-      l_ctrl = get_widget_from_builder (b, "ss_control_layer");                               add_to_sg (sg, b, "ss_layers_label");
-      l_mark = get_widget_from_builder (b, "ss_marks_layer");
-      l_meter = get_widget_from_builder (b, "ss_meter_layer");
-
-      g_signal_connect_swapped (l_ctrl, "toggled", G_CALLBACK (hyscan_gtk_layer_grab_input), wf->wf_ctrl);
-      g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_layer_grab_input), wf->wf_metr);
-      g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_layer_grab_input), wf->wf_mark);
+      layers = make_layer_list (ui, wf);
 
       {
         GtkLabel *label = get_label_from_builder (b, "ss_player_value");
@@ -648,7 +785,7 @@ make_page_for_panel (EvoUI     *ui,
         player_adj_value_printer (adj, label);
       }
 
-      if (!panel_sources_are_in_sonar (global, panel))
+      if (!!panel_sources_are_in_sonar (global, panel))
         break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
@@ -669,13 +806,7 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->live_view         = get_widget_from_builder(b, "pf_live_view");         add_to_sg (sg, b, "pf_live_view_label");
 
       wf = (VisualWF*)panel->vis_gui;
-      l_ctrl = get_widget_from_builder (b, "pf_control_layer");                               add_to_sg (sg, b, "pf_layers_label");
-      l_mark = get_widget_from_builder (b, "pf_marks_layer");                                 add_to_sg (sg, b, "pf_processing_label");
-      l_meter = get_widget_from_builder (b, "pf_meter_layer");
-
-      g_signal_connect_swapped (l_ctrl, "toggled", G_CALLBACK (hyscan_gtk_layer_grab_input), wf->wf_ctrl);
-      g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_layer_grab_input), wf->wf_metr);
-      g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_layer_grab_input), wf->wf_mark);
+      layers =  make_layer_list (ui, wf);
 
       {
         GtkLabel *label = get_label_from_builder (b, "pf_player_value");
@@ -689,7 +820,7 @@ make_page_for_panel (EvoUI     *ui,
         player_adj_value_printer (adj, label);
       }
 
-      if (!panel_sources_are_in_sonar (global, panel))
+      if (!!panel_sources_are_in_sonar (global, panel))
         break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
@@ -711,13 +842,7 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");         add_to_sg (sg, b, "ss_live_view_label");
 
       wf = (VisualWF*)panel->vis_gui;
-      l_ctrl = get_widget_from_builder (b, "ss_control_layer");                               add_to_sg (sg, b, "ss_layers_label");
-      l_mark = get_widget_from_builder (b, "ss_marks_layer");
-      l_meter = get_widget_from_builder (b, "ss_meter_layer");
-
-      g_signal_connect_swapped (l_ctrl, "toggled", G_CALLBACK (hyscan_gtk_layer_grab_input), wf->wf_ctrl);
-      g_signal_connect_swapped (l_meter, "toggled", G_CALLBACK (hyscan_gtk_layer_grab_input), wf->wf_metr);
-      g_signal_connect_swapped (l_mark, "toggled", G_CALLBACK (hyscan_gtk_layer_grab_input), wf->wf_mark);
+      layers =  make_layer_list (ui, wf);
 
       {
         GtkLabel *label = get_label_from_builder (b, "ss_player_value");
@@ -731,7 +856,7 @@ make_page_for_panel (EvoUI     *ui,
         player_adj_value_printer (adj, label);
       }
 
-      if (!panel_sources_are_in_sonar (global, panel))
+      if (!!panel_sources_are_in_sonar (global, panel))
         break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
@@ -750,7 +875,7 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->scale_value       = get_label_from_builder (b, "fl_scale_value");       add_to_sg (sg, b, "fl_scale_label");
       panel->vis_gui->sensitivity_value = get_label_from_builder (b, "fl_sensitivity_value"); add_to_sg (sg, b, "fl_sensitivity_label");
 
-      if (!panel_sources_are_in_sonar (global, panel))
+      if (!!panel_sources_are_in_sonar (global, panel))
         break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
@@ -769,6 +894,8 @@ make_page_for_panel (EvoUI     *ui,
   gtk_builder_connect_signals (b, GINT_TO_POINTER (panelx));
 
   gtk_box_pack_start (GTK_BOX (box), view, FALSE, FALSE, 0);
+  if (layers != NULL)
+    gtk_box_pack_start (GTK_BOX (box), layers, FALSE, FALSE, 0);
   if (sonar != NULL && tvg != NULL)
     {
       gtk_box_pack_end (GTK_BOX (box), tvg, FALSE, FALSE, 0);
@@ -1138,7 +1265,7 @@ kf_desetup (GKeyFile *kf)
                                gtk_check_menu_item_get_active(ui->map_offline));
   }
 
-  g_key_file_unref (ui->settings);
+  g_clear_pointer (&ui->settings, g_key_file_unref);
   return TRUE;
 }
 

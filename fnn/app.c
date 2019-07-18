@@ -89,6 +89,7 @@ shutdown_handler (gint signum)
 void
 destroy_cb (GtkWidget *w)
 {
+  g_message ("Desetup");
   ui_desetup (global.settings);
 }
 
@@ -617,7 +618,7 @@ main (int argc, char **argv)
   global.gui.window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   g_signal_connect_after (G_OBJECT (global.gui.window), "destroy", G_CALLBACK (gtk_main_quit), NULL);
   g_signal_connect (G_OBJECT (global.gui.window), "key-press-event", G_CALLBACK (key_press), &global);
-  gtk_window_set_title (GTK_WINDOW (global.gui.window), "HyScan");
+  set_window_title (&global);
   gtk_window_set_default_size (GTK_WINDOW (global.gui.window), 1600, 900);
 
   /* Навигационные данные. */

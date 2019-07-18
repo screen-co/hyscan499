@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-17 15:43+0300\n"
+"POT-Creation-Date: 2019-07-18 09:26+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,51 +17,71 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: evo-ui.c:254
+#: evo-ui.c:261
 msgid "m/s"
 msgstr ""
 
-#: evo-ui.c:839
+#: evo-ui.c:631 hyscan-gtk-map-kit.c:1399
+msgid "Layer"
+msgstr ""
+
+#: evo-ui.c:642 hyscan-gtk-map-kit.c:589 hyscan-gtk-map-kit.c:1394
+msgid "Show"
+msgstr ""
+
+#: evo-ui.c:653 hyscan-gtk-map-kit.c:1565
+msgid "Grid"
+msgstr ""
+
+#: evo-ui.c:654
+msgid "Marks"
+msgstr ""
+
+#: evo-ui.c:655
+msgid "Measurements"
+msgstr ""
+
+#: evo-ui.c:983
 msgid "Map"
 msgstr ""
 
-#: evo-ui.c:916
+#: evo-ui.c:1060
 msgid "Project Manager"
 msgstr ""
 
-#: evo-ui.c:921
+#: evo-ui.c:1065
 msgid "Map offline mode"
 msgstr ""
 
-#: evo-ui.c:949
+#: evo-ui.c:1093
 msgid "Sensors"
 msgstr ""
 
-#: evo-ui.c:961
+#: evo-ui.c:1105
 msgid "Info"
 msgstr ""
 
-#: evo-ui.c:965
+#: evo-ui.c:1109
 msgid "State"
 msgstr ""
 
-#: evo-ui.c:969
+#: evo-ui.c:1113
 msgid "Params"
 msgstr ""
 
-#: evo-ui.c:973
+#: evo-ui.c:1117
 msgid "Sonar"
 msgstr ""
 
-#: evo-ui.c:979
+#: evo-ui.c:1123
 msgid "Antennas offsets"
 msgstr ""
 
-#: evo-ui.c:991
+#: evo-ui.c:1135
 msgid "Hardware info"
 msgstr ""
 
-#: evo-ui.c:1000
+#: evo-ui.c:1144
 msgid "Exit"
 msgstr ""
 
@@ -91,10 +111,6 @@ msgstr ""
 
 #: hyscan-gtk-map-kit.c:582 hyscan-gtk-map-kit.c:632
 msgid "Date"
-msgstr ""
-
-#: hyscan-gtk-map-kit.c:589 hyscan-gtk-map-kit.c:1394
-msgid "Show"
 msgstr ""
 
 #: hyscan-gtk-map-kit.c:622
@@ -138,10 +154,6 @@ msgstr ""
 msgid "Lon"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1399
-msgid "Layer"
-msgstr ""
-
 #: hyscan-gtk-map-kit.c:1435
 msgid "Enable editing"
 msgstr ""
@@ -176,10 +188,6 @@ msgstr ""
 
 #: hyscan-gtk-map-kit.c:1564
 msgid "Pin"
-msgstr ""
-
-#: hyscan-gtk-map-kit.c:1565
-msgid "Grid"
 msgstr ""
 
 #: hyscan-gtk-map-kit.c:1759

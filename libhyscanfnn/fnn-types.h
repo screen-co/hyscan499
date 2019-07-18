@@ -354,6 +354,9 @@ HYSCAN_API gint
 run_manager (GObject     *emitter);
 
 HYSCAN_API void
+set_window_title (Global *global);
+
+HYSCAN_API void
 run_param (GObject     *emitter,
            const gchar *root);
 

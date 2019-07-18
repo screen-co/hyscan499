@@ -180,10 +180,10 @@ delete_project (HyScanFnnProject *self)
                                    GTK_DIALOG_MODAL,
                                    GTK_MESSAGE_WARNING,
                                    GTK_BUTTONS_YES_NO,
-                                   "%s %s?\n%s",
+                                   "%s %s?",
                                    _("Do you really want to delete project"),
-                                   priv->project_name,
-                                   _("This can not be undone"));
+                                   priv->project_name);
+  gtk_message_dialog_format_secondary_text (GTK_MESSAGE_DIALOG (dialog), _("This can not be undone"));
 
   gtk_dialog_set_default_response (GTK_DIALOG (dialog), GTK_RESPONSE_NO);
   gtk_widget_show_all (dialog);
@@ -206,6 +206,7 @@ delete_track (HyScanFnnProject *self)
 {
   HyScanFnnProjectPrivate *priv = self->priv;
   gint32 project_id;
+  GtkWidget *dialog;
 
   if (priv->track_name == NULL)
     return;
@@ -217,9 +218,26 @@ delete_track (HyScanFnnProject *self)
       return;
     }
 
-  hyscan_db_track_remove (priv->db, project_id, priv->track_name);
+  dialog = gtk_message_dialog_new (gtk_window_get_transient_for (GTK_WINDOW (self)),
+                                   GTK_DIALOG_MODAL,
+                                   GTK_MESSAGE_WARNING,
+                                   GTK_BUTTONS_YES_NO,
+                                   "%s %s?",
+                                   _("Do you really want to delete track"),
+                                   priv->track_name);
+  gtk_message_dialog_format_secondary_text (GTK_MESSAGE_DIALOG (dialog), _("This can not be undone"));
+
+  gtk_dialog_set_default_response (GTK_DIALOG (dialog), GTK_RESPONSE_NO);
+  gtk_widget_show_all (dialog);
+
+  if (GTK_RESPONSE_YES == gtk_dialog_run (GTK_DIALOG (dialog)))
+    {
+      hyscan_db_track_remove (priv->db, project_id, priv->track_name);
+      g_clear_pointer (&priv->track_name, g_free);
+    }
+
+  gtk_widget_destroy (dialog);
   hyscan_db_close (priv->db, project_id);
-  g_clear_pointer (&priv->track_name, g_free);
 }
 
 static void
