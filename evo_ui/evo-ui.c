@@ -947,11 +947,13 @@ build_interface (Global *global)
 
   /* Карта всегда в наличии. */
   {
+    GtkWidget *box;
     GtkTreeView * tv;
     gchar *profile_dir = g_build_filename (g_get_user_config_dir (), "hyscan", "map-profiles", NULL);
     gchar *cache_dir = g_build_filename (g_get_user_cache_dir (), "hyscan", NULL);
     HyScanGeoGeodetic center = {0, 0};
 
+    box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     ui->mapkit = hyscan_gtk_map_kit_new (&center, global->db, cache_dir);
     hyscan_gtk_map_kit_set_project (ui->mapkit, global->project_name);
     hyscan_gtk_map_kit_load_profiles (ui->mapkit, profile_dir);
@@ -963,7 +965,11 @@ build_interface (Global *global)
 
     gtk_stack_add_named (GTK_STACK (ui->control_stack), ui->mapkit->control, EVO_MAP);
     gtk_stack_add_named (GTK_STACK (ui->nav_stack), ui->mapkit->navigation, EVO_MAP);
-    gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), ui->mapkit->map, EVO_MAP, _("Map"));
+    // gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), ui->mapkit->map, EVO_MAP, _("Map"));
+    gtk_box_pack_start (GTK_BOX (box), ui->mapkit->map, TRUE, TRUE, 0);
+    // gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), ui->mapkit->status_bar, EVO_MAP, _("Map"));
+    gtk_box_pack_start (GTK_BOX (box), ui->mapkit->status_bar, FALSE, FALSE, 0);
+    gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), box, EVO_MAP, _("Map"));
     gtk_stack_set_visible_child_name(GTK_STACK (ui->acoustic_stack), EVO_MAP);
 
     tv = hyscan_gtk_map_kit_get_track_view (ui->mapkit, NULL);
