@@ -177,6 +177,9 @@ msgstr ""
 "чтобы сделать её доступной\n"
 "в режиме оффлайн"
 
+msgid "Lock layers"
+msgstr "Блокировать слои"
+
 #: hyscan-gtk-map-kit.c:1563
 msgid "Tracks"
 msgstr "Галсы"

@@ -162,6 +162,20 @@ msgstr ""
 msgid "Offline"
 msgstr ""
 
+msgid "Online"
+msgstr ""
+
+msgid "Download"
+msgstr ""
+
+msgid ""
+"Download visible area of map\n"
+"to make it available when offline"
+msgstr ""
+
+msgid "Lock layers"
+msgstr ""
+
 #: hyscan-gtk-map-kit.c:1563
 msgid "Tracks"
 msgstr ""
