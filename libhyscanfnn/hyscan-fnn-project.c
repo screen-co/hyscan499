@@ -551,6 +551,8 @@ constructed (GObject *object)
   gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_OPEN, FALSE);
   gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_CREATE, FALSE);
 
+  gtk_header_bar_set_title (GTK_HEADER_BAR (gtk_dialog_get_header_bar (GTK_DIALOG (self))),
+                            C_("widget_title", "Project manager"));
   gtk_widget_set_size_request (GTK_WIDGET (self), 800, 600);
   gtk_widget_show_all (GTK_WIDGET (self));
 }

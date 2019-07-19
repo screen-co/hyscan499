@@ -1,4 +1,5 @@
 #include "hyscan-gtk-fnn-offsets.h"
+#include "fnn-types-common.h"
 
 enum
 {
@@ -281,11 +282,13 @@ constructed (GObject *object)
   gtk_box_pack_start (GTK_BOX (content), grid, TRUE, TRUE, 0);
   g_signal_connect (self, "response", G_CALLBACK (response_clicked), NULL);
 
-  gtk_dialog_add_button (GTK_DIALOG (self), "Done", GTK_RESPONSE_OK);
+  gtk_dialog_add_button (GTK_DIALOG (self), _("Done"), GTK_RESPONSE_OK);
 
   gtk_widget_set_size_request (GTK_WIDGET (self), 800, 600);
   gtk_widget_show_all (GTK_WIDGET (self));
 
+  gtk_header_bar_set_title (GTK_HEADER_BAR (gtk_dialog_get_header_bar (GTK_DIALOG (self))),
+                            _("Offset setup"));
 
 }
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-15 11:31+0300\n"
+"POT-Creation-Date: 2019-07-19 17:06+0300\n"
 "PO-Revision-Date: 2019-06-20 10:38+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -30,59 +30,59 @@ msgstr "ГБО-НЧ"
 msgid "SideScanHigh"
 msgstr "ГБО-ВЧ"
 
-#: fnn.c:123 fnn.c:3157
+#: fnn.c:120 fnn.c:3156
 msgid "Profiler"
 msgstr "Профилограф"
 
-#: fnn.c:169
+#: fnn.c:165
 msgid "Echosounder"
 msgstr "Эхолот"
 
-#: fnn.c:214
+#: fnn.c:209
 msgid "ForwardLook"
 msgstr "Впередсмотрящий"
 
-#: fnn.c:452
+#: fnn.c:447 fnn.c:454
 msgid "Hardware parameters"
 msgstr "Параметры оборудования"
 
-#: fnn.c:454
+#: fnn.c:449
 msgid "Apply"
 msgstr "Применить"
 
-#: fnn.c:455
+#: fnn.c:450
 msgid "Reset"
 msgstr "Сбросить"
 
-#: fnn.c:456 fnn.c:489
+#: fnn.c:451 fnn.c:486
 msgid "Close"
 msgstr "Закрыть"
 
-#: fnn.c:487
+#: fnn.c:484 fnn.c:489
 msgid "Sonar info"
 msgstr "Информация о ГЛ"
 
-#: fnn.c:3166
+#: fnn.c:3165
 msgid "Yellow"
 msgstr "Желтый"
 
-#: fnn.c:3174
+#: fnn.c:3173
 msgid "Brown"
 msgstr "Коричневый"
 
-#: fnn.c:3181
+#: fnn.c:3180
 msgid "Sepia"
 msgstr "Сепия"
 
-#: fnn.c:3188
+#: fnn.c:3187
 msgid "White"
 msgstr "Белый"
 
-#: fnn.c:3196
+#: fnn.c:3195
 msgid "Inverted"
 msgstr "Инверсия"
 
-#: fnn.c:3204
+#: fnn.c:3203
 msgid "Green"
 msgstr "Зеленый"
 
@@ -126,6 +126,11 @@ msgstr "Открыть проект"
 msgid "New project"
 msgstr "Создать проект"
 
+#: hyscan-fnn-project.c:555
+msgctxt "widget_title"
+msgid "Project manager"
+msgstr "Менеджер проектов"
+
 #: hyscan-gtk-con.c:359
 msgid "Intro"
 msgstr "Начальная страница"
@@ -153,6 +158,14 @@ msgstr "Не удалось подключиться."
 #: hyscan-gtk-con.c:505
 msgid "Continue in view mode"
 msgstr "Продолжить в режиме просмотра. "
+
+#: hyscan-gtk-fnn-offsets.c:285
+msgid "Done"
+msgstr "Готово"
+
+#: hyscan-gtk-fnn-offsets.c:291
+msgid "Offset setup"
+msgstr "Местоположения антенн"
 
 #: hyscan-gtk-nav-indicator.c:255
 msgid "N"
@@ -188,7 +201,7 @@ msgstr "Съемка"
 
 #: tmp/hyscan-gtk-con.ui.h:6
 msgid "Project manager"
-msgstr "Проекты"
+msgstr "Проекты..."
 
 #: tmp/hyscan-gtk-mark-editor.ui.h:1
 msgid "Title"

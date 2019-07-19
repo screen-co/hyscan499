@@ -516,7 +516,7 @@ tracks_changed (HyScanDBInfo    *db_info,
 
   tracks = hyscan_db_info_get_tracks (db_info);
   g_hash_table_iter_init (&hash_iter, tracks);
-
+  g_message ("chg1");
   while (g_hash_table_iter_next (&hash_iter, &key, &value))
     {
       GDateTime *local;
@@ -1676,7 +1676,7 @@ hyscan_gtk_map_kit_get_layers (HyScanGtkMapKit *kit)
        g_free (layer_key);
 
      g_object_unref (layer);
-     
+
      valid = gtk_tree_model_iter_next (GTK_TREE_MODEL (priv->layer_store), &iter);
    }
 

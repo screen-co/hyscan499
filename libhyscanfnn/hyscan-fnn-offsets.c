@@ -1,6 +1,5 @@
 #include "hyscan-fnn-offsets.h"
 
-
 #define HYSCAN_FNN_OFFSETS_MASTER "master"
 #define HYSCAN_FNN_OFFSETS_X "x"
 #define HYSCAN_FNN_OFFSETS_Y "y"
@@ -115,6 +114,8 @@ hyscan_fnn_offsets_object_constructed (GObject *object)
       info->sensor = g_strdup (*sensors);
       g_hash_table_insert (priv->antennas, g_strdup (*sensors), info);
     }
+
+
 }
 
 static void
