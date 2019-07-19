@@ -7,8 +7,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-18 12:35+0300\n"
-"PO-Revision-Date: 2019-06-20 10:38+0300\n"
+"POT-Creation-Date: 2019-07-19 17:25+0300\n"
+"PO-Revision-Date: 2019-07-19 17:26+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
 "Language: ru\n"
@@ -30,7 +30,7 @@ msgstr "ГБО-НЧ"
 msgid "SideScanHigh"
 msgstr "ГБО-ВЧ"
 
-#: fnn.c:120 fnn.c:3164
+#: fnn.c:120 fnn.c:3170
 msgid "Profiler"
 msgstr "Профилограф"
 
@@ -40,51 +40,51 @@ msgstr "Эхолот"
 
 #: fnn.c:210
 msgid "ForwardLook"
-msgstr "Впередсмотрящий"
+msgstr "ВСЛ"
 
-#: fnn.c:457
+#: fnn.c:457 fnn.c:465
 msgid "Hardware parameters"
 msgstr "Параметры оборудования"
 
-#: fnn.c:459
+#: fnn.c:460
 msgid "Apply"
 msgstr "Применить"
 
-#: fnn.c:460
+#: fnn.c:461
 msgid "Reset"
 msgstr "Сбросить"
 
-#: fnn.c:461 fnn.c:494
+#: fnn.c:462 fnn.c:498
 msgid "Close"
 msgstr "Закрыть"
 
-#: fnn.c:492
+#: fnn.c:495 fnn.c:501
 msgid "Sonar info"
-msgstr "Информация о ГЛ"
+msgstr "Информация о локаторе"
 
-#: fnn.c:3173
+#: fnn.c:3179
 msgid "Yellow"
-msgstr "Желтый"
+msgstr "Жёлтая"
 
-#: fnn.c:3181
+#: fnn.c:3187
 msgid "Brown"
-msgstr "Коричневый"
+msgstr "Коричневая"
 
-#: fnn.c:3188
+#: fnn.c:3194
 msgid "Sepia"
 msgstr "Сепия"
 
-#: fnn.c:3195
+#: fnn.c:3201
 msgid "White"
-msgstr "Белый"
+msgstr "Белая"
 
-#: fnn.c:3203
+#: fnn.c:3209
 msgid "Inverted"
-msgstr "Инверсия"
+msgstr "Инверсная"
 
-#: fnn.c:3211
+#: fnn.c:3217
 msgid "Green"
-msgstr "Зеленый"
+msgstr "Зеленая"
 
 #: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:518
 msgid "Delete project"
@@ -130,6 +130,11 @@ msgstr "Открыть проект"
 msgid "New project"
 msgstr "Создать проект"
 
+#: hyscan-fnn-project.c:573
+msgctxt "widget_title"
+msgid "Project manager"
+msgstr "Менеджер проектов"
+
 #: hyscan-gtk-con.c:359
 msgid "Intro"
 msgstr "Начальная страница"
@@ -144,19 +149,27 @@ msgstr "Подключение"
 
 #: hyscan-gtk-con.c:456
 msgid "Connecting..."
-msgstr "Подключаемся..."
+msgstr "Подключение..."
 
 #: hyscan-gtk-con.c:497
 msgid "Connection completed. HyScan will launch shortly. "
-msgstr "Подключение завершено. HyScan вскоре запустится. "
+msgstr "Подключение завершено. HyScan скоро запустится. "
 
 #: hyscan-gtk-con.c:504
 msgid "Connection failed. "
-msgstr "Не удалось подключиться."
+msgstr "Не удалось подключиться"
 
 #: hyscan-gtk-con.c:505
 msgid "Continue in view mode"
-msgstr "Продолжить в режиме просмотра. "
+msgstr "Продолжить в режиме просмотра"
+
+#: hyscan-gtk-fnn-offsets.c:285
+msgid "Done"
+msgstr "Готово"
+
+#: hyscan-gtk-fnn-offsets.c:291
+msgid "Offset setup"
+msgstr "Местоположения антенн"
 
 #: hyscan-gtk-mark-editor.c:126 hyscan-gtk-nav-indicator.c:255
 msgid "N"
@@ -164,7 +177,7 @@ msgstr "С.Ш."
 
 #: hyscan-gtk-mark-editor.c:126 hyscan-gtk-nav-indicator.c:255
 msgid "S"
-msgstr "Ю.Ш."
+msgstr "Ю.Ш"
 
 #: hyscan-gtk-mark-editor.c:127 hyscan-gtk-nav-indicator.c:256
 msgid "E"
@@ -180,7 +193,7 @@ msgstr "Добро пожаловать в менеджер подключени
 
 #: tmp/hyscan-gtk-con.ui.h:2
 msgid "Project:"
-msgstr "Проекты:"
+msgstr "Проект:"
 
 #: tmp/hyscan-gtk-con.ui.h:3
 msgid "Hardware:"
@@ -208,7 +221,7 @@ msgstr "Широта"
 
 #: tmp/hyscan-gtk-mark-editor.ui.h:3 tmp/hyscan-gtk-nav-indicator.ui.h:2
 msgid "--"
-msgstr "-"
+msgstr "--"
 
 #: tmp/hyscan-gtk-mark-editor.ui.h:4 tmp/hyscan-gtk-nav-indicator.ui.h:3
 msgid "Longitude"
@@ -232,7 +245,7 @@ msgstr "Время"
 
 #: tmp/hyscan-gtk-project-viewer.ui.h:1
 msgid "Name"
-msgstr "Имя"
+msgstr "Название"
 
 #: tmp/hyscan-gtk-project-viewer.ui.h:2
 msgid "Date"

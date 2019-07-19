@@ -455,11 +455,14 @@ run_param (GObject     *emitter,
   gint res;
 
   dialog = gtk_dialog_new_with_buttons (_("Hardware parameters"),
-                                        GTK_WINDOW (tglobal->gui.window), 0,
+                                        GTK_WINDOW (tglobal->gui.window),
+                                        GTK_DIALOG_USE_HEADER_BAR,
                                         _("Apply"), GTK_RESPONSE_APPLY,
                                         _("Reset"), GTK_RESPONSE_CANCEL,
                                         _("Close"), GTK_RESPONSE_CLOSE,
                                         NULL);
+  gtk_header_bar_set_title (GTK_HEADER_BAR (gtk_dialog_get_header_bar (GTK_DIALOG (dialog))),
+                            _("Hardware parameters"));
   content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
   tree = hyscan_gtk_param_tree_new (HYSCAN_PARAM (tglobal->control), root, TRUE);
   hyscan_gtk_param_set_watch_period (HYSCAN_GTK_PARAM (tree), 200);
@@ -490,9 +493,12 @@ run_show_sonar_info (GObject     *emitter,
   GtkWidget *dialog, *content, *cc;
 
   dialog = gtk_dialog_new_with_buttons (_("Sonar info"),
-                                        GTK_WINDOW (tglobal->gui.window), 0,
+                                        GTK_WINDOW (tglobal->gui.window),
+                                        GTK_DIALOG_USE_HEADER_BAR,
                                         _("Close"), GTK_RESPONSE_CLOSE,
                                         NULL);
+  gtk_header_bar_set_title (GTK_HEADER_BAR (gtk_dialog_get_header_bar (GTK_DIALOG (dialog))),
+                            _("Sonar info"));
   content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
   cc = hyscan_gtk_param_cc_new (HYSCAN_PARAM (tglobal->control), root, TRUE);
   hyscan_gtk_param_set_watch_period (HYSCAN_GTK_PARAM (cc), 200);

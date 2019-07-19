@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-18 12:35+0300\n"
+"POT-Creation-Date: 2019-07-19 17:25+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,7 +29,7 @@ msgstr ""
 msgid "SideScanHigh"
 msgstr ""
 
-#: fnn.c:120 fnn.c:3164
+#: fnn.c:120 fnn.c:3170
 msgid "Profiler"
 msgstr ""
 
@@ -41,47 +41,47 @@ msgstr ""
 msgid "ForwardLook"
 msgstr ""
 
-#: fnn.c:457
+#: fnn.c:457 fnn.c:465
 msgid "Hardware parameters"
 msgstr ""
 
-#: fnn.c:459
+#: fnn.c:460
 msgid "Apply"
 msgstr ""
 
-#: fnn.c:460
+#: fnn.c:461
 msgid "Reset"
 msgstr ""
 
-#: fnn.c:461 fnn.c:494
+#: fnn.c:462 fnn.c:498
 msgid "Close"
 msgstr ""
 
-#: fnn.c:492
+#: fnn.c:495 fnn.c:501
 msgid "Sonar info"
 msgstr ""
 
-#: fnn.c:3173
+#: fnn.c:3179
 msgid "Yellow"
 msgstr ""
 
-#: fnn.c:3181
+#: fnn.c:3187
 msgid "Brown"
 msgstr ""
 
-#: fnn.c:3188
+#: fnn.c:3194
 msgid "Sepia"
 msgstr ""
 
-#: fnn.c:3195
+#: fnn.c:3201
 msgid "White"
 msgstr ""
 
-#: fnn.c:3203
+#: fnn.c:3209
 msgid "Inverted"
 msgstr ""
 
-#: fnn.c:3211
+#: fnn.c:3217
 msgid "Green"
 msgstr ""
 
@@ -129,6 +129,11 @@ msgstr ""
 msgid "New project"
 msgstr ""
 
+#: hyscan-fnn-project.c:573
+msgctxt "widget_title"
+msgid "Project manager"
+msgstr ""
+
 #: hyscan-gtk-con.c:359
 msgid "Intro"
 msgstr ""
@@ -155,6 +160,14 @@ msgstr ""
 
 #: hyscan-gtk-con.c:505
 msgid "Continue in view mode"
+msgstr ""
+
+#: hyscan-gtk-fnn-offsets.c:285
+msgid "Done"
+msgstr ""
+
+#: hyscan-gtk-fnn-offsets.c:291
+msgid "Offset setup"
 msgstr ""
 
 #: hyscan-gtk-mark-editor.c:126 hyscan-gtk-nav-indicator.c:255

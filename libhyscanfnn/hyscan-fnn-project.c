@@ -257,7 +257,7 @@ projects_changed (HyScanDBInfo     *db_info,
 
   g_message ("Projects changed...");
   projects = hyscan_db_info_get_projects (db_info);
-  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_OPEN, TRUE);
+  // gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_OPEN, TRUE);
   gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_CREATE, TRUE);
 
   g_hash_table_iter_init (&htiter, projects);
@@ -502,11 +502,12 @@ project_selected (GtkTreeView      *tree,
 
   project = get_selected (tree);
 
-  if (project == NULL)
-    return;
-
-  if (priv->project_name != NULL && g_str_equal (project, priv->project_name))
-    return;
+  if ((project == NULL) ||
+      (priv->project_name != NULL && g_str_equal (project, priv->project_name)))
+    {
+      gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_OPEN, FALSE);
+      return;
+    }
 
   g_clear_pointer (&priv->project_name, g_free);
   g_clear_pointer (&priv->track_name, g_free);
@@ -519,6 +520,7 @@ project_selected (GtkTreeView      *tree,
 
   resp_widget = gtk_dialog_get_widget_for_response (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_OPEN);
   set_button_text (GTK_BUTTON (resp_widget), _("Open project"), priv->project_name);
+  gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_OPEN, TRUE);
   g_free (project);
 }
 
@@ -569,6 +571,8 @@ constructed (GObject *object)
   gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_OPEN, FALSE);
   gtk_dialog_set_response_sensitive (GTK_DIALOG (self), HYSCAN_FNN_PROJECT_CREATE, FALSE);
 
+  gtk_header_bar_set_title (GTK_HEADER_BAR (gtk_dialog_get_header_bar (GTK_DIALOG (self))),
+                            C_("widget_title", "Project manager"));
   gtk_widget_set_size_request (GTK_WIDGET (self), 800, 600);
   gtk_widget_show_all (GTK_WIDGET (self));
 }

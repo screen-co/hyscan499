@@ -82,7 +82,7 @@ set (HYSCAN_LIBRARIES gtkcifroarea-3.1
                       urpc)
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
-  add_definitions (-DFNN_LOGGING=1)
+  # add_definitions (-DFNN_LOGGING=1)
 endif ()
 
 add_definitions (-DG_LOG_DOMAIN="Fnn")
