@@ -2154,13 +2154,19 @@ hyscan_gtk_map_kit_kf_setup (HyScanGtkMapKit *kit,
   HyScanGeoGeodetic center;
   gchar **layers, **tracks;
 
-  /* Подгружаем центр карты. */
+  /* Считываем настройки из файла конфигурации. */
   center.lat = g_key_file_get_double      (kf, "evo-map", "lat", NULL);
   center.lon = g_key_file_get_double      (kf, "evo-map", "lon", NULL);
   profile    = g_key_file_get_string      (kf, "evo-map", "profile", NULL);
-  offline    = g_key_file_get_boolean     (kf, "evo-map", "offline", NULL);
   layers     = g_key_file_get_string_list (kf, "evo-map", "layers", NULL, NULL);
   tracks     = g_key_file_get_string_list (kf, "evo-map", "tracks", NULL, NULL);
+
+  if (g_key_file_has_key (kf, "evo-map", "offline", NULL))
+    offline = g_key_file_get_boolean (kf, "evo-map", "offline", NULL);
+  else
+    offline = TRUE;
+
+  /* Применяем настройки. */
   hyscan_gtk_map_move_to (HYSCAN_GTK_MAP (kit->map), center);
 
   if (profile != NULL)
