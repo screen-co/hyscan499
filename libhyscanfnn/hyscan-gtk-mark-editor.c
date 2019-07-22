@@ -123,8 +123,8 @@ hyscan_gtk_mark_editor_set_mark (HyScanGtkMarkEditor *mark_editor,
 
   gtk_entry_buffer_set_text (priv->title_entrybuf, title, -1);
 
-  lat_text = g_strdup_printf ("%f °%s", lat, lat > 0 ? _("N") : _("S"));
-  lon_text = g_strdup_printf ("%f °%s", lon, lon > 0 ? _("E") : _("W"));
+  lat_text = g_strdup_printf ("%.6f°", lat);
+  lon_text = g_strdup_printf ("%.6f°", lon);
 
   gtk_label_set_text (priv->latitude, lat_text);
   gtk_label_set_text (priv->longitude, lon_text);
