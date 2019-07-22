@@ -1503,7 +1503,7 @@ create_control_box (HyScanGtkMapKit *kit)
   ctrl_box = gtk_grid_new ();
   gtk_grid_set_column_homogeneous (GTK_GRID (ctrl_box), TRUE);
   gtk_grid_set_column_spacing (GTK_GRID (ctrl_box), 5);
-  gtk_grid_set_row_spacing (GTK_GRID (ctrl_box), 6);
+  gtk_grid_set_row_spacing (GTK_GRID (ctrl_box), 3);
 
   /* Выпадающий список с профилями. */
   priv->profiles_box = gtk_combo_box_text_new ();
