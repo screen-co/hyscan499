@@ -1,4 +1,5 @@
 #include "hyscan-fnn-flog.h"
+#include <string.h>
 #include <stdio.h>
 #include <glib/gstdio.h>
 
@@ -16,6 +17,39 @@ typedef struct
 
 static HyScanFnnFlog flog;
 
+static void
+hyscan_fnn_flog_write (const gchar *log_domain,
+                       const gchar *message)
+{
+  gchar *log_entry;
+
+  if (flog.file == NULL)
+    return;
+
+  log_entry = g_strdup_printf ("[%9.3f] %s: %s\n",
+                               1e-6 * (gdouble) (g_get_monotonic_time () - flog.start_time),
+                               log_domain, message);
+  flog.size += strlen (log_entry);
+  fputs (log_entry, flog.file);
+  fflush (flog.file);
+}
+
+static void
+hyscan_fnn_flog_rotate (void)
+{
+  if (flog.size > flog.max_size)
+    {
+      g_clear_pointer (&flog.file, fclose);
+
+      g_unlink (flog.filename_old);
+      g_rename (flog.filename, flog.filename_old);
+      flog.size = 0;
+    }
+
+  if (flog.file == NULL)
+    flog.file = g_fopen (flog.filename, "a+");
+}
+
 /* Обработчик вывода лог сообщений в файл. */
 static void
 hyscan_fnn_flog_handler (const gchar    *log_domain,
@@ -26,8 +60,10 @@ hyscan_fnn_flog_handler (const gchar    *log_domain,
   if (log_level & G_LOG_LEVEL_DEBUG)
     return;
 
-  fprintf (flog.file, "[%9.3f] %s: %s\n", 1e-6 * (g_get_monotonic_time () - flog.start_time), log_domain, message);
-  fflush (flog.file);
+  g_mutex_lock (&flog.lock);
+  hyscan_fnn_flog_write (log_domain, message);
+  hyscan_fnn_flog_rotate ();
+  g_mutex_unlock (&flog.lock);
 }
 
 static void
@@ -37,23 +73,15 @@ hyscan_fnn_flog_open_file ()
   flog.file = g_fopen (flog.filename, "rb");
   if (flog.file != NULL)
     {
-      gsize filesize;
-      
       /* Проверяем размер лога. */
       fseek (flog.file, 0, SEEK_END);
-      filesize = ftell (flog.file);
-      if (filesize > flog.max_size)
-        {
-          fclose (flog.file);
-          g_unlink (flog.filename_old);
-          g_rename (flog.filename, flog.filename_old);
-        }
+      flog.size = ftell (flog.file);
       
       /* Закрываем файл. */
-      fclose (flog.file);
+      g_clear_pointer (&flog.file, fclose);
     }
 
-  flog.file = g_fopen (flog.filename, "a+");
+  hyscan_fnn_flog_rotate ();
 }
 
 
@@ -72,6 +100,8 @@ hyscan_fnn_flog_open (const gchar *component,
   gchar *log_dir;
   gchar *base_name, *base_name_old;
   gboolean result = FALSE;
+
+  g_mutex_init (&flog.lock);
 
   base_name = g_strdup_printf ("%s.log", component);
   base_name_old = g_strdup_printf ("%s.0.log", component);
@@ -116,6 +146,7 @@ hyscan_fnn_flog_close (void)
   /* Возвращаем стандартный обработчик логов. */
   g_log_set_default_handler (g_log_default_handler, NULL);
 
+  g_mutex_clear (&flog.lock);
   g_clear_pointer (&flog.file, fclose);
   g_free (flog.filename);
   g_free (flog.filename_old);
