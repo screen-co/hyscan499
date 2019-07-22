@@ -289,7 +289,7 @@ map_offline_wrapper (GObject *emitter,
                      HyScanGtkMapKit *map)
 {
   hyscan_gtk_map_kit_set_offline (map,
-                                  gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (emitter)));
+                                  !gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (emitter)));
 }
 
 static void
@@ -1051,7 +1051,7 @@ build_interface (Global *global)
     gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
     /* офлайн-карта */
-    mitem = gtk_check_menu_item_new_with_label (_("Map offline mode"));
+    mitem = gtk_check_menu_item_new_with_label (_("Online Map"));
     ui->map_offline = g_object_ref (mitem);
     g_signal_connect (mitem, "toggled", G_CALLBACK (map_offline_wrapper), ui->mapkit);
     gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
@@ -1205,7 +1205,7 @@ kf_setting (GKeyFile *kf)
 
   hyscan_gtk_map_kit_kf_setup (ui->mapkit, kf);
   gtk_check_menu_item_set_active (ui->map_offline,
-                                  hyscan_gtk_map_kit_get_offline (ui->mapkit));
+                                  !hyscan_gtk_map_kit_get_offline (ui->mapkit));
 
   return TRUE;
 }
