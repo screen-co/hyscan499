@@ -103,6 +103,7 @@ struct _HyScanGtkMapKitPrivate
   GtkTreeView           *track_tree;       /* GtkTreeView со списком галсов. */
   GtkListStore          *track_store;      /* Модель данных для track_tree. */
   GtkMenu               *track_menu;       /* Контекстное меню галса (по правой кнопке). */
+  GtkWidget             *track_menu_find;  /* Пункт меню поиска галса на карте. */
 
   GtkTreeView           *mark_tree;       /* GtkTreeView со списком галсов. */
   GtkListStore          *mark_store;      /* Модель данных для track_tree. */
@@ -359,16 +360,15 @@ on_active_track_changed (HyScanListModel *model,
    }
 }
 
-static void
-on_locate_track_clicked (GtkButton *button,
-                         gpointer   user_data)
+static gchar *
+get_selected_track_name (HyScanGtkMapKit *kit)
 {
-  HyScanGtkMapKit *kit = user_data;
   HyScanGtkMapKitPrivate *priv = kit->priv;
 
   GtkTreeSelection *selection;
   GList *list;
   GtkTreeModel *tree_model = GTK_TREE_MODEL (priv->track_store);
+  gchar *track_name = NULL;
 
   selection = gtk_tree_view_get_selection (priv->track_tree);
   list = gtk_tree_selection_get_selected_rows (selection, &tree_model);
@@ -376,18 +376,27 @@ on_locate_track_clicked (GtkButton *button,
     {
       GtkTreePath *path = list->data;
       GtkTreeIter iter;
-      gchar *track_name;
 
       if (gtk_tree_model_get_iter (GTK_TREE_MODEL (priv->track_store), &iter, path))
-        {
           gtk_tree_model_get (GTK_TREE_MODEL (priv->track_store), &iter, TRACK_COLUMN, &track_name, -1);
-          hyscan_gtk_map_track_track_view (HYSCAN_GTK_MAP_TRACK (priv->track_layer), track_name, FALSE);
-
-          g_free (track_name);
-        }
     }
   g_list_free_full (list, (GDestroyNotify) gtk_tree_path_free);
 
+  return track_name;
+}
+
+static void
+on_locate_track_clicked (GtkButton *button,
+                         gpointer   user_data)
+{
+  HyScanGtkMapKit *kit = user_data;
+  HyScanGtkMapKitPrivate *priv = kit->priv;
+  gchar *track_name;
+
+  track_name = get_selected_track_name (kit);
+
+  if (track_name != NULL)
+    hyscan_gtk_map_track_track_view (HYSCAN_GTK_MAP_TRACK (priv->track_layer), track_name, FALSE);
 }
 
 static GtkWidget *
@@ -557,7 +566,7 @@ on_button_press_event (GtkTreeView     *tree_view,
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
 
-  if ((event_button->type == GDK_BUTTON_PRESS) && (event_button->button == 3))
+  if ((event_button->type == GDK_BUTTON_PRESS) && (event_button->button == GDK_BUTTON_SECONDARY))
     {
       gtk_menu_popup (priv->track_menu, NULL, NULL, NULL, NULL, event_button->button, event_button->time);
     }
@@ -689,24 +698,44 @@ create_mark_tree_view (HyScanGtkMapKit *kit,
   return tree_view;
 }
 
-static GtkMenu *
+static void
+on_track_change (HyScanGtkMapKit *kit)
+{
+  HyScanGtkMapKitPrivate *priv = kit->priv;
+  HyScanGtkMapTrackItem *track_item = NULL;
+  gchar *track_name;
+  gboolean has_nmea;
+
+  track_name = get_selected_track_name (kit);
+
+  if (track_name != NULL)
+    track_item = hyscan_gtk_map_track_lookup (HYSCAN_GTK_MAP_TRACK (priv->track_layer), track_name);
+
+  has_nmea = (track_item != NULL) && hyscan_gtk_map_track_item_has_nmea (track_item);
+
+  gtk_widget_set_sensitive (priv->track_menu_find, has_nmea);
+}
+
+static void
 create_track_menu (HyScanGtkMapKit *kit)
 {
-  GtkWidget *menu_item;
-  GtkMenu *menu;
+  HyScanGtkMapKitPrivate *priv = kit->priv;
+  GtkWidget *menu_item_settings;
 
-  menu = GTK_MENU (gtk_menu_new ());
-  menu_item = gtk_menu_item_new_with_label (_("Find track on the map"));
-  g_signal_connect (menu_item, "activate", G_CALLBACK (on_locate_track_clicked), kit);
-  gtk_widget_show (menu_item);
-  gtk_menu_shell_append (GTK_MENU_SHELL (menu), menu_item);
+  priv->track_menu = GTK_MENU (gtk_menu_new ());
+  priv->track_menu_find = gtk_menu_item_new_with_label (_("Find track on the map"));
+  g_signal_connect (priv->track_menu_find, "activate", G_CALLBACK (on_locate_track_clicked), kit);
+  gtk_widget_show (priv->track_menu_find);
+  gtk_menu_shell_append (GTK_MENU_SHELL (priv->track_menu), priv->track_menu_find);
+  gtk_widget_set_sensitive (priv->track_menu_find, FALSE);
 
-  menu_item = gtk_menu_item_new_with_label (_("Track settings"));
-  g_signal_connect (menu_item, "activate", G_CALLBACK (on_configure_track_clicked), kit);
-  gtk_widget_show (menu_item);
-  gtk_menu_shell_append (GTK_MENU_SHELL (menu), menu_item);
+  menu_item_settings = gtk_menu_item_new_with_label (_("Track settings"));
+  g_signal_connect (menu_item_settings, "activate", G_CALLBACK (on_configure_track_clicked), kit);
+  gtk_widget_show (menu_item_settings);
+  gtk_menu_shell_append (GTK_MENU_SHELL (priv->track_menu), menu_item_settings);
 
-  return menu;
+  /* Обработчик определяет доступные пункт при выборе галса. */
+  g_signal_connect_swapped (gtk_tree_view_get_selection (priv->track_tree), "changed", G_CALLBACK (on_track_change), kit);
 }
 
 /* Ищет метку по её типу и идентификатору. */
@@ -1106,7 +1135,7 @@ create_track_box (HyScanGtkMapKit *kit,
                                           G_TYPE_STRING   /* DATE_COLUMN      */);
   priv->track_tree = create_track_tree_view (kit, GTK_TREE_MODEL (priv->track_store));
 
-  priv->track_menu = create_track_menu (kit);
+  create_track_menu (kit);
   gtk_menu_attach_to_widget (priv->track_menu, GTK_WIDGET (priv->track_tree), NULL);
 
   g_signal_connect_swapped (priv->track_tree, "destroy", G_CALLBACK (gtk_widget_destroy), priv->track_menu);
