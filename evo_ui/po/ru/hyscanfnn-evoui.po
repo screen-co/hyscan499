@@ -188,7 +188,10 @@ msgstr "Перейти"
 msgid "Download"
 msgstr "Загрузить"
 
-#: hyscan-gtk-map-kit.c:1620
+msgid "Lock layers"
+msgstr "Блокировать слои"
+
+#: hyscan-gtk-map-kit.c:1563
 msgid "Tracks"
 msgstr "Галсы"
 

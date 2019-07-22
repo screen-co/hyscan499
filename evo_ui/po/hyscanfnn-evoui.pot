@@ -184,7 +184,16 @@ msgstr ""
 msgid "Download"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1620
+msgid "Online"
+msgstr ""
+
+msgid "Download"
+msgstr ""
+
+msgid "Lock layers"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1563
 msgid "Tracks"
 msgstr ""
 
