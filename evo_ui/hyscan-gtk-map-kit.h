@@ -40,10 +40,6 @@ void              hyscan_gtk_map_kit_load_profiles    (HyScanGtkMapKit   *kit,
                                                        const gchar       *profile_dir);
 
 HYSCAN_API
-void              hyscan_gtk_map_kit_add_planner      (HyScanGtkMapKit   *kit,
-                                                       const gchar       *planner_ini);
-
-HYSCAN_API
 void              hyscan_gtk_map_kit_add_nav          (HyScanGtkMapKit   *kit,
                                                        HyScanSensor      *sensor,
                                                        const gchar       *sensor_name,

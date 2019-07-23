@@ -204,11 +204,7 @@ msgstr ""
 msgid "Online"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1982
-msgid "Planner"
-msgstr ""
-
-#: hyscan-gtk-map-kit.c:2014
+#: hyscan-gtk-map-kit.c:1949
 msgid "Navigation"
 msgstr ""
 
