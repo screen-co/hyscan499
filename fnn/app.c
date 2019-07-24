@@ -232,12 +232,6 @@ main (int argc, char **argv)
   gchar             *um_path = FNN_DEFAULT_UI;  /* Модуль с интерфейсом. */
   GModule           *ui_module = NULL;
 
-  gboolean           need_ss = FALSE;
-  gboolean           need_ss_lo = FALSE;
-  gboolean           need_pf = FALSE;
-  gboolean           need_es = FALSE;
-  gboolean           need_fl = FALSE;
-
   GtkBuilder        *common_builder = NULL;
 
   // HyScanFnnSplash   *splash = NULL;
@@ -298,15 +292,6 @@ main (int argc, char **argv)
         { "ui", 0,   G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &um_path,    "UI module", NULL },
         { NULL, }
       };
-    GOptionEntry panel_entries[] =
-      {
-        { "ss",    0, 0, G_OPTION_ARG_NONE, &need_ss,    "SideScan ", NULL },
-        { "ss-lo", 0, 0, G_OPTION_ARG_NONE, &need_ss_lo, "SideScan low frequency", NULL },
-        { "pf",    0, 0, G_OPTION_ARG_NONE, &need_pf,    "Profiler", NULL },
-        { "fl",    0, 0, G_OPTION_ARG_NONE, &need_fl,    "Forwardlook", NULL },
-        { "es",    0, 0, G_OPTION_ARG_NONE, &need_es,    "Echosounder", NULL },
-        { NULL, }
-      };
 
 #ifdef G_OS_WIN32
     args = g_win32_get_command_line ();
@@ -324,11 +309,6 @@ main (int argc, char **argv)
     group = g_option_group_new ("common", "General parameters", "General parameters", NULL, NULL);
     g_option_group_add_entries (group, common_entries);
     g_option_context_add_group(context, group);
-
-    group = g_option_group_new ("panels", "Available panels", "Available panels", NULL, NULL);
-    g_option_group_add_entries (group, panel_entries);
-    g_option_context_add_group(context, group);
-
     if (!g_option_context_parse_strv (context, &args, &error))
       {
         g_print ("%s\n", error->message);
@@ -500,10 +480,10 @@ main (int argc, char **argv)
       GtkWidget *con;
 
       con = hyscan_gtk_con_new (get_profile_dir(), driver_paths, global.settings, global.db);
-      g_signal_connect_swapped (con, "close", g_print, "close\n");
-      g_signal_connect_swapped (con, "cancel", g_print, "cancel\n");
-      g_signal_connect (con, "cancel", connector_finished, &global);
-      g_signal_connect (con, "close", connector_finished, &global);
+      g_signal_connect_swapped (con, "close", G_CALLBACK (g_print), "close\n");
+      g_signal_connect_swapped (con, "cancel", G_CALLBACK (g_print), "cancel\n");
+      g_signal_connect (con, "cancel", G_CALLBACK (connector_finished), &global);
+      g_signal_connect (con, "close", G_CALLBACK (connector_finished), &global);
 
 
       gtk_widget_show_all (con);
@@ -545,9 +525,6 @@ main (int argc, char **argv)
           g_hash_table_insert (global.infos, GINT_TO_POINTER (source[i]), (void*)info);
         }
     }
-
-  no_sonar:
-
 
   /***
    *     ___   ___   ___         ___   ___   ___         ___         ___         ___   ___   ___   ___
@@ -668,14 +645,6 @@ main (int argc, char **argv)
   global.panels = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, fnn_panel_destroy);
 
   hardware = g_key_file_new ();
-
-  /* Проверяем флаги на панели */
-  if (!need_ss && !need_pf && !need_fl && !need_es)
-    {
-      // g_warning ("You must explicitly choose panels\n"
-                 // "Enabling: SS, PF, FL");
-      need_ss = need_pf = need_fl = TRUE;
-    }
 
   ui_config (config);
   // Вызываем постройку билдера!

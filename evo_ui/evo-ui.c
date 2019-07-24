@@ -751,7 +751,6 @@ make_page_for_panel (EvoUI     *ui,
   GtkBuilder *b;
   GtkWidget *view = NULL, *sonar = NULL, *tvg = NULL, *layers = NULL;
   GtkWidget *box;
-  GtkWidget *l_ctrl, *l_mark, *l_meter;
   VisualWF *wf;
   GtkSizeGroup * sg;
 
