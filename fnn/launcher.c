@@ -58,7 +58,7 @@ launcher_label ()
   if (text_len <= 0)
     return NULL;
 
-  text_w = malloc (text_len);
+  text_w = (LPWSTR) malloc (text_len * sizeof (WCHAR));
   MultiByteToWideChar (CP_UTF8, 0, text_utf8, -1, text_w, text_len);
 
   return text_w;
