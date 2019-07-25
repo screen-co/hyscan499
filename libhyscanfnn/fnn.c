@@ -704,7 +704,7 @@ fname (GObject * emitter,                                                    \
   switch (panel->type)                                                       \
     {                                                                        \
       case FNN_PANEL_WATERFALL:                                              \
-      case FNN_PANEL_PROFILER:                                                   \
+      case FNN_PANEL_PROFILER:                                               \
       case FNN_PANEL_ECHO:                                                   \
         wf = (VisualWF*)panel->vis_gui;                                      \
         widget = GTK_WIDGET (wf->wf);                                        \
@@ -2056,42 +2056,162 @@ signal_down (GtkWidget *widget,
 }
 
 void
+tvg_printer (GtkLabel    *label,
+             gdouble      value,
+             const gchar *units)
+{
+  gchar *text;
+
+  if (label == NULL)
+    return;
+
+  text = g_strdup_printf ("<small><b>%.1f%s%s</b></small>", value,
+                          units != NULL ? " " : "", // space
+                          units != NULL ? units : ""); // units
+
+  gtk_label_set_markup (label, text);
+  g_free (text);
+}
+
+void
 tvg_label (FnnPanel *panel,
            gdouble   gain0,
            gdouble   step)
 {
-  gchar *gain_text, *step_text;
+  tvg_printer (panel->gui.tvg0_value, gain0, "dB");
+  tvg_printer (panel->gui.tvg_value, step, "dB");
+}
 
-  if (panel->gui.tvg0_value != NULL)
+void
+auto_tvg_label (FnnPanel *panel,
+                gdouble   level,
+                gdouble   sensitivity)
+{
+  tvg_printer (panel->gui.tvg_level_value, level, NULL);
+  tvg_printer (panel->gui.tvg_sens_value, sensitivity, NULL);
+}
+
+void
+log_tvg_label (FnnPanel *panel,
+               gdouble   gain0,
+               gdouble   beta,
+               gdouble   alpha)
+{
+  tvg_printer (panel->gui.logtvg_gain0_value, gain0, "dB");
+  tvg_printer (panel->gui.logtvg_beta_value, beta, "dB");
+  tvg_printer (panel->gui.logtvg_alpha_value, alpha, "dB/m");
+}
+
+void
+const_tvg_label (FnnPanel *panel,
+                 gdouble   gain0)
+{
+  tvg_printer (panel->gui.consttvg_value, gain0, "dB");
+}
+
+
+gboolean
+log_tvg_set (Global  *global,
+             gdouble *gain0,
+             gdouble  beta,
+             gdouble  alpha,
+             gint     panelx)
+{
+  HyScanSourceType *iter;
+  FnnPanel *panel = get_panel_quiet (global, panelx);
+  g_message ("log_tvg_set: %s (%i), gain0 %f, beta %f, alpha %f", panel->name, panelx, *gain0, beta, alpha);
+
+  if (panel == NULL)
     {
-      gain_text = g_strdup_printf ("<small><b>%.1f dB</b></small>", gain0);
-      gtk_label_set_markup (panel->gui.tvg0_value, gain_text);
-      g_free (gain_text);
+      g_warning ("  log_tvg_set: panel %i not found!", panelx);
+      return FALSE;
     }
-  if (panel->gui.tvg_value != NULL)
+
+  for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
     {
-      step_text = g_strdup_printf ("<small><b>%.1f dB</b></small>", step);
-      gtk_label_set_markup (panel->gui.tvg_value, step_text);
-      g_free (step_text);
+      gboolean status;
+      HyScanSonarInfoSource *info;
+      HyScanSourceType source = *iter;
+
+      source_informer ("  setting TVG", source);
+
+      /* Проверяем gain0. */
+      info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (source));
+      hyscan_return_val_if_fail (info != NULL && info->tvg != NULL, TRUE); // TODO do something
+      *gain0 = CLAMP (*gain0, info->tvg->min_gain,info->tvg->max_gain);
+
+      status = hyscan_sonar_tvg_set_logarithmic (global->control_s, source, *gain0, beta, alpha);
+      if (!status)
+        {
+          g_message ("  failure!");
+          return FALSE;
+        }
     }
+
+  sync_sonar (global);
+
+  log_tvg_label (panel, *gain0, beta, alpha);
+  g_message ("  success");
+  return TRUE;
+}
+
+gboolean
+const_tvg_set (Global  *global,
+               gdouble *gain0,
+               gint     panelx)
+{
+  HyScanSourceType *iter;
+  FnnPanel *panel = get_panel_quiet (global, panelx);
+  g_message ("const_tvg_set: %s (%i), gain0 %f", panel->name, panelx, *gain0);
+
+  if (panel == NULL)
+    {
+      g_warning ("  const_tvg_set: panel %i not found!", panelx);
+      return FALSE;
+    }
+
+  for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
+    {
+      gboolean status;
+      HyScanSonarInfoSource *info;
+      HyScanSourceType source = *iter;
+
+      source_informer ("  setting TVG", source);
+
+      /* Проверяем gain0. */
+      info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (source));
+      hyscan_return_val_if_fail (info != NULL && info->tvg != NULL, TRUE); // TODO do something
+      *gain0 = CLAMP (*gain0, info->tvg->min_gain,info->tvg->max_gain);
+
+      status = hyscan_sonar_tvg_set_constant (global->control_s, source, *gain0);
+      if (!status)
+        {
+          g_message ("  failure!");
+          return FALSE;
+        }
+    }
+
+  sync_sonar (global);
+
+  const_tvg_label (panel, *gain0);
+  g_message ("  success");
+  return TRUE;
 }
 
 /* Функция устанавливает параметры ВАРУ. */
 gboolean
-tvg_set (Global  *global,
-         gdouble *gain0,
-         gdouble  step,
-         gint     panelx)
+lin_tvg_set (Global  *global,
+             gdouble *gain0,
+             gdouble  step,
+             gint     panelx)
 {
   HyScanSourceType *iter;
-
   FnnPanel *panel = get_panel_quiet (global, panelx);
-
-  g_message ("tvg_set: %s (%i), gain0 %f, step %f", panel->name, panelx, *gain0, step);
+  g_message ("lin_tvg_set: %s (%i), gain0 %f, step %f", panel->name, panelx, *gain0, step);
 
   if (panel == NULL)
     {
-      g_warning ("  tvg_set: panel %i not found!", panelx);
+      g_warning ("  lin_tvg_set: panel %i not found!", panelx);
       return FALSE;
     }
 
@@ -2136,92 +2256,6 @@ tvg_set (Global  *global,
   return TRUE;
 }
 
-void
-tvg0_up (GtkWidget *widget,
-         gint       panelx)
-{
-  gdouble desired;
-  FnnPanel *panel = get_panel (tglobal, panelx);
-
-  desired = panel->current.gain0 + 1;
-  desired = desired - fmod (desired, 1);
-
-  if (tvg_set (tglobal, &desired, panel->current.gain_step, panelx))
-    panel->current.gain0 = desired;
-  else
-    g_warning ("tvg0_up failed");
-}
-
-void
-tvg0_down (GtkWidget *widget,
-           gint       panelx)
-{
-  gdouble desired;
-  FnnPanel *panel = get_panel (tglobal, panelx);
-
-  desired = panel->current.gain0 - 1;
-  desired = desired - fmod (desired, 1);
-
-  if (tvg_set (tglobal, &desired, panel->current.gain_step, panelx))
-    panel->current.gain0 = desired;
-  else
-    g_warning ("tvg0_down failed");
-}
-
-void
-tvg_up (GtkWidget *widget,
-         gint       panelx)
-{
-  gdouble desired;
-  FnnPanel *panel = get_panel (tglobal, panelx);
-
-  desired = panel->current.gain_step + 1.0;
-  desired = desired - fmod (desired, 1);
-
-  if (tvg_set (tglobal, &panel->current.gain0, desired, panelx))
-    panel->current.gain_step = desired;
-  else
-    g_warning ("tvg_up failed");
-}
-
-void
-tvg_down (GtkWidget *widget,
-           gint       panelx)
-{
-  gdouble desired;
-  FnnPanel *panel = get_panel (tglobal, panelx);
-
-  desired = panel->current.gain_step - 1.0;
-  desired = desired - fmod (desired, 1);
-
-  if (tvg_set (tglobal, &panel->current.gain0, desired, panelx))
-    panel->current.gain_step = desired;
-  else
-    g_warning ("tvg_down failed");
-}
-
-void
-auto_tvg_label (FnnPanel *panel,
-                gdouble   level,
-                gdouble   sensitivity)
-{
-  gchar *sens_text, *level_text;
-
-  if (panel->gui.tvg_level_value != NULL)
-    {
-      level_text = g_strdup_printf ("<small><b>%.1f</b></small>", level);
-      gtk_label_set_markup (panel->gui.tvg_level_value, level_text);
-      g_free (level_text);
-    }
-
-  if (panel->gui.tvg_sens_value != NULL)
-    {
-      sens_text = g_strdup_printf ("<small><b>%.1f</b></small>", sensitivity);
-      gtk_label_set_markup (panel->gui.tvg_sens_value, sens_text);
-      g_free (sens_text);
-    }
-}
-
 /* Функция устанавливает параметры автоВАРУ. */
 gboolean
 auto_tvg_set (Global   *global,
@@ -2261,69 +2295,93 @@ auto_tvg_set (Global   *global,
   return TRUE;
 }
 
-void
-tvg_level_up (GtkWidget *widget,
-              gint       panelx)
-{
-  gdouble desired;
-  FnnPanel *panel = get_panel (tglobal, panelx);
 
-  desired = panel->current.level + 0.1;
-  desired = CLAMP (desired, 0.0, 1.0);
-
-  if (auto_tvg_set (tglobal, desired, panel->current.sensitivity, panelx))
-    panel->current.level = desired;
-  else
-    g_warning ("tvg_level_up failed");
+#define CONST_TVG_FUNC(fname, sign, value, from_to)                             \
+TVG_FUNC_DEF(fname)                                                             \
+{                                                                               \
+  gdouble desired;                                                              \
+  FnnPanel *panel = get_panel (tglobal, panelx);                                \
+                                                                                \
+  desired = from_to sign value;                                                 \
+  desired = desired - fmod (desired, value);                                    \
+                                                                                \
+  if (const_tvg_set (tglobal, &desired, panelx))                                \
+    from_to = desired;                                                          \
+  else                                                                          \
+    g_warning ("%s failed", __FUNCTION__);                                      \
 }
 
-void
-tvg_level_down (GtkWidget *widget,
-                gint       panelx)
-{
-  gdouble desired;
-  FnnPanel *panel = get_panel (tglobal, panelx);
+CONST_TVG_FUNC (consttvg_up, +, 1, panel->current.const_gain0);
+CONST_TVG_FUNC (consttvg_down, -, 1, panel->current.const_gain0);
 
-  desired = panel->current.level - 0.1;
-  desired = CLAMP (desired, 0.0, 1.0);
-
-  if (auto_tvg_set (tglobal, desired, panel->current.sensitivity, panelx))
-    panel->current.level = desired;
-  else
-    g_warning ("tvg_level_down failed");
+#define LOG_TVG_FUNC(fname, sign, value, from_to, param1, param2, param3)       \
+TVG_FUNC_DEF(fname)                                                             \
+{                                                                               \
+  gdouble desired;                                                              \
+  FnnPanel *panel = get_panel (tglobal, panelx);                                \
+                                                                                \
+  desired = from_to sign value;                                                 \
+  desired = desired - fmod (desired, value);                                    \
+                                                                                \
+  if (log_tvg_set (tglobal, param1, param2, param3, panelx))                    \
+    from_to = desired;                                                          \
+  else                                                                          \
+    g_warning ("%s failed", __FUNCTION__);                                      \
 }
 
-void
-tvg_sens_up (GtkWidget *widget,
-             gint       panelx)
-{
-  gdouble desired;
-  FnnPanel *panel = get_panel (tglobal, panelx);
+LOG_TVG_FUNC (tvglog_gain0_up,   +, 1, panel->current.log_gain0, &desired, panel->current.log_beta, panel->current.log_alpha)
+LOG_TVG_FUNC (tvglog_gain0_down, -, 1, panel->current.log_gain0, &desired, panel->current.log_beta, panel->current.log_alpha)
 
-  desired = panel->current.sensitivity + 0.1;
-  desired = CLAMP (desired, 0.0, 1.0);
+LOG_TVG_FUNC (tvglog_beta_up,    +, 1, panel->current.log_beta, &panel->current.log_gain0, desired, panel->current.log_alpha)
+LOG_TVG_FUNC (tvglog_beta_down,  -, 1, panel->current.log_beta, &panel->current.log_gain0, desired, panel->current.log_alpha)
 
-  if (auto_tvg_set (tglobal, panel->current.level, desired, panelx))
-    panel->current.sensitivity = desired;
-  else
-    g_warning ("tvg_sens_up failed");
+LOG_TVG_FUNC (tvglog_alpha_up,   +, 1, panel->current.log_alpha, &panel->current.log_gain0, panel->current.log_beta, desired)
+LOG_TVG_FUNC (tvglog_alpha_down, -, 1, panel->current.log_alpha, &panel->current.log_gain0, panel->current.log_beta, desired)
+
+
+#define LIN_TVG_FUNC(fname, sign, value, from_to, param1, param2)               \
+TVG_FUNC_DEF(fname)                                                             \
+{                                                                               \
+  gdouble desired;                                                              \
+  FnnPanel *panel = get_panel (tglobal, panelx);                                \
+                                                                                \
+  desired = from_to sign value;                                                 \
+  desired = desired - fmod (desired, value);                                    \
+                                                                                \
+  if (lin_tvg_set (tglobal, param1, param2, panelx))                            \
+    from_to = desired;                                                          \
+  else                                                                          \
+    g_warning ("%s failed", __FUNCTION__);                                      \
 }
 
-void
-tvg_sens_down (GtkWidget *widget,
-               gint       panelx)
-{
-  gdouble desired;
-  FnnPanel *panel = get_panel (tglobal, panelx);
+/* Use gcc -E to test. */
+LIN_TVG_FUNC (tvg0_up,   +, 1, panel->current.gain0, &desired, panel->current.gain_step); // tvg0_up
+LIN_TVG_FUNC (tvg0_down, -, 1, panel->current.gain0, &desired, panel->current.gain_step); // tvg0_down
 
-  desired = panel->current.sensitivity - 0.1;
-  desired = CLAMP (desired, 0.0, 1.0);
+LIN_TVG_FUNC (tvg_up,    +, 1, panel->current.gain_step, &panel->current.gain0, desired); // tvg_up
+LIN_TVG_FUNC (tvg_down,  -, 1, panel->current.gain_step, &panel->current.gain0, desired); // tvg0_own
 
-  if (auto_tvg_set (tglobal, panel->current.level, desired, panelx))
-    panel->current.sensitivity = desired;
-  else
-    g_warning ("tvg_sens_down failed");
+
+#define AUTO_TVG_FUNC(fname, sign, value, from_to, param1, param2)              \
+TVG_FUNC_DEF(fname)                                                             \
+{                                                                               \
+  gdouble desired;                                                              \
+  FnnPanel *panel = get_panel (tglobal, panelx);                                \
+                                                                                \
+  desired = from_to sign value;                                                 \
+  desired = CLAMP (desired, 0.0, 1.0);                                          \
+                                                                                \
+  if (auto_tvg_set (tglobal, param1, param2, panelx))                           \
+    from_to = desired;                                                          \
+  else                                                                          \
+    g_warning ("%s failed", __FUNCTION__);                                      \
 }
+
+AUTO_TVG_FUNC (tvg_level_up,   +, 0.1, panel->current.level, desired, panel->current.sensitivity);
+AUTO_TVG_FUNC (tvg_level_down, -, 0.1, panel->current.level, desired, panel->current.sensitivity);
+
+AUTO_TVG_FUNC (tvg_sens_up,    +, 0.1, panel->current.sensitivity, panel->current.level, desired);
+AUTO_TVG_FUNC (tvg_sens_down,  -, 0.1, panel->current.sensitivity, panel->current.level, desired);
 
 void
 distance_label (FnnPanel *panel,
@@ -2968,7 +3026,7 @@ start_stop (Global    *global,
             case FNN_PANEL_PROFILER:
             case FNN_PANEL_ECHO:
             case FNN_PANEL_FORWARDLOOK:
-              status &= tvg_set (global, &panel->current.gain0, panel->current.gain_step, panelx);
+              status &= lin_tvg_set (global, &panel->current.gain0, panel->current.gain_step, panelx);
               break;
 
             default:

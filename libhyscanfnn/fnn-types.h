@@ -52,7 +52,6 @@
 
 #define DRY_TRACK_SUFFIX                "-dry"
 
-
 enum
 {
   FNN_DATE_SORT_COLUMN,
@@ -116,19 +115,31 @@ typedef struct
 {
   gdouble   distance;
   gint      signal;
-  gdouble   gain0;
-  gdouble   gain_step;
-  gdouble   level;
-  gdouble   sensitivity;
+  gdouble   gain0;       // lin
+  gdouble   gain_step;   // lin
+  gdouble   level;       // auto
+  gdouble   sensitivity; // auto
+  gdouble   log_gain0;   // log
+  gdouble   log_beta;    // log
+  gdouble   log_alpha;   // log
+  gdouble   const_gain0; // const
 } SonarCurrent;
 
 typedef struct
 {
   GtkLabel *distance_value;
-  GtkLabel *tvg_value;
-  GtkLabel *tvg0_value;
-  GtkLabel *tvg_level_value;
-  GtkLabel *tvg_sens_value;
+  GtkLabel *tvg0_value; // lin
+  GtkLabel *tvg_value; // lin
+
+  GtkLabel *tvg_level_value; // auto
+  GtkLabel *tvg_sens_value; // auto
+  
+  GtkLabel *logtvg_gain0_value; // log
+  GtkLabel *logtvg_beta_value; // log
+  GtkLabel *logtvg_alpha_value; // log
+  
+  GtkLabel *consttvg_value; // const 
+
   GtkLabel *signal_value;
 } SonarGUI;
 
@@ -294,6 +305,10 @@ struct _Global
 
 }; // Global
 
+
+HYSCAN_API void
+source_informer (const gchar      *text,
+                 HyScanSourceType  source);
 
 HYSCAN_API gboolean
 fnn_ensure_panel (gint panelx,
@@ -532,21 +547,52 @@ signal_set (Global   *global,
             gint      cur_signal,
             gint      selector);
 
+#define TVG_FUNC_DEF(fname) void fname (GtkWidget *widget, gint panelx)
+
+HYSCAN_API TVG_FUNC_DEF(consttvg_up);
+HYSCAN_API TVG_FUNC_DEF(consttvg_down);
+
+HYSCAN_API TVG_FUNC_DEF(tvglog_gain0_up);
+HYSCAN_API TVG_FUNC_DEF(tvglog_gain0_down);
+HYSCAN_API TVG_FUNC_DEF(tvglog_beta_up);
+HYSCAN_API TVG_FUNC_DEF(tvglog_beta_down);
+HYSCAN_API TVG_FUNC_DEF(tvglog_alpha_up);
+HYSCAN_API TVG_FUNC_DEF(tvglog_alpha_down);
+
+HYSCAN_API TVG_FUNC_DEF(tvg0_up);
+HYSCAN_API TVG_FUNC_DEF(tvg0_down);
+HYSCAN_API TVG_FUNC_DEF(tvg_up);
+HYSCAN_API TVG_FUNC_DEF(tvg_down);
+
+HYSCAN_API TVG_FUNC_DEF(tvg_level_up);
+HYSCAN_API TVG_FUNC_DEF(tvg_level_down);
+HYSCAN_API TVG_FUNC_DEF(tvg_sens_up);
+HYSCAN_API TVG_FUNC_DEF(tvg_sens_down);
+
 HYSCAN_API gboolean
-tvg_set (Global  *global,
-         gdouble *gain0,
-         gdouble  step,
-         gint     selector);
+lin_tvg_set (Global  *global,
+             gdouble *gain0,
+             gdouble  step,
+             gint     selector);
+
+
+HYSCAN_API gboolean
+log_tvg_set (Global  *global,
+             gdouble *gain0,
+             gdouble  beta,
+             gdouble  alpha,
+             gint     selector);
+
+HYSCAN_API gboolean
+const_tvg_set (Global  *global,
+               gdouble *gain0,
+               gint     selector);
 
 HYSCAN_API gboolean
 auto_tvg_set (Global  *global,
               gdouble  level,
               gdouble  sensitivity,
               gint     selector);
-
-void
-distance_printer (GtkLabel *label,
-                  gdouble   value);
 
 gboolean
 distance_set (Global  *global,
@@ -638,38 +684,6 @@ distance_down (GtkWidget *widget,
                gint       sonar_selector);
 
 HYSCAN_API void
-tvg0_up (GtkWidget *widget,
-         gint       selector);
-
-HYSCAN_API void
-tvg0_down (GtkWidget *widget,
-           gint       selector);
-
-HYSCAN_API void
-tvg_up (GtkWidget *widget,
-        gint       selector);
-
-HYSCAN_API void
-tvg_down (GtkWidget *widget,
-          gint       selector);
-
-HYSCAN_API void
-tvg_level_up (GtkWidget *widget,
-              gint       selector);
-
-HYSCAN_API void
-tvg_level_down (GtkWidget *widget,
-                gint       selector);
-
-HYSCAN_API void
-tvg_sens_up (GtkWidget *widget,
-             gint       selector);
-
-HYSCAN_API void
-tvg_sens_down (GtkWidget *widget,
-               gint       selector);
-
-HYSCAN_API void
 signal_up (GtkWidget *widget,
            gint       selector);
 
@@ -718,5 +732,7 @@ fnn_init (Global *ext_global);
 
 HYSCAN_API void
 fnn_deinit (Global *ext_global);
+
+
 
 #endif /* __TRIPLE_TYPES_H__ */

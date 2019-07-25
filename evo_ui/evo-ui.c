@@ -633,14 +633,13 @@ make_layer_list (EvoUI *ui,
   GtkWidget *tree_view;
   GtkTreeSelection *selection;
   GtkListStore *store;
-  GtkTreeIter tree_iter;
 
   store = gtk_list_store_new (4,
                               G_TYPE_BOOLEAN,        /* LAYER_VISIBLE_COLUMN */
                               G_TYPE_STRING,         /* LAYER_KEY_COLUMN     */
                               G_TYPE_STRING,         /* LAYER_TITLE_COLUMN   */
                               HYSCAN_TYPE_GTK_LAYER  /* LAYER_COLUMN         */);
-  tree_view = gtk_tree_view_new_with_model (store);
+  tree_view = gtk_tree_view_new_with_model (GTK_TREE_MODEL (store));
 
   renderer = gtk_cell_renderer_text_new ();
   column = gtk_tree_view_column_new_with_attributes (_("Layer"),
@@ -741,6 +740,72 @@ add_to_sg (GtkSizeGroup *sg,
   gtk_size_group_add_widget (sg, w);
 }
 
+#define EVO_TVG_VALUE(value) panel->gui. value = get_label_from_builder  (b, #value); add_to_sg (sg, b, #value);
+
+GtkWidget *
+make_tvg_control (Global *global,
+                  FnnPanel *panel,
+                  GtkBuilder *b,
+                  GtkSizeGroup *sg)
+{
+  const gchar * tvg_control_name;
+  HyScanSonarTVGModeType caps;
+  const HyScanSonarInfoSource * info;
+  HyScanSourceType *sources = panel->sources;
+  gboolean auto_ok = TRUE, log_ok = TRUE, lin_ok = TRUE, const_ok = TRUE;
+
+  for (; sources != NULL && *sources != HYSCAN_SOURCE_INVALID; ++sources)
+    {
+      info = hyscan_control_source_get_info (global->control, *sources);
+      if (info->tvg == NULL)
+        {
+          source_informer ("No TVG info", *sources);
+          continue;
+        }
+
+      caps = info->tvg->capabilities;
+      auto_ok  &= caps & HYSCAN_SONAR_TVG_MODE_AUTO;
+      lin_ok   &= caps & HYSCAN_SONAR_TVG_MODE_LINEAR_DB;
+      log_ok   &= caps & HYSCAN_SONAR_TVG_MODE_LOGARITHMIC;
+      const_ok &= caps & HYSCAN_SONAR_TVG_MODE_CONSTANT;
+    }
+
+  g_message ("Panel <%s>, TVG: AUTO %i; LIN %i; LOG %i CONST %i",
+             panel->name, auto_ok, lin_ok, log_ok, const_ok);
+
+  if (auto_ok)
+    {
+      tvg_control_name = "auto_tvg_control";
+      panel->gui.tvg_level_value = get_label_from_builder  (b, "tvg_level_value");     add_to_sg (sg, b, "tvg_level_label");
+      panel->gui.tvg_sens_value  = get_label_from_builder  (b, "tvg_sens_value");      add_to_sg (sg, b, "tvg_sensitivity_label");
+    }
+  else if (lin_ok)
+    {
+      tvg_control_name = "lin_tvg_control";
+      panel->gui.tvg_value  = get_label_from_builder  (b, "tvg_value");          add_to_sg (sg, b, "tvg_label");
+      panel->gui.tvg0_value = get_label_from_builder  (b, "tvg0_value");         add_to_sg (sg, b, "tvg0_label");
+    }
+  else if (log_ok)
+    {
+      tvg_control_name = "log_tvg_control";
+      panel->gui.logtvg_gain0_value = get_label_from_builder  (b, "logtvg_gain0_value");     add_to_sg (sg, b, "logtvg_gain0_label");
+      panel->gui.logtvg_beta_value  = get_label_from_builder  (b, "logtvg_beta_value");      add_to_sg (sg, b, "logtvg_beta_label");
+      panel->gui.logtvg_alpha_value  = get_label_from_builder  (b, "logtvg_alpha_value");      add_to_sg (sg, b, "logtvg_alpha_label");
+    }
+  else if (const_ok)
+    {
+      tvg_control_name = "const_tvg_control";
+      panel->gui.consttvg_value  = get_label_from_builder  (b, "consttvg_value");      add_to_sg (sg, b, "consttvg_label");
+    }
+  else /* if (log_ok) */
+    {
+      tvg_control_name = NULL;
+      return NULL;
+    }
+
+  return get_widget_from_builder (b, tvg_control_name);
+}
+
 /* Ядро всего уйца. Подключает сигналы, достает виджеты. */
 GtkWidget *
 make_page_for_panel (EvoUI     *ui,
@@ -788,10 +853,8 @@ make_page_for_panel (EvoUI     *ui,
         break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
-      tvg = get_widget_from_builder (b, "auto_tvg_control");
+      tvg = make_tvg_control (global, panel, b, sg);
       panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");      add_to_sg (sg, b, "distance_label");
-      panel->gui.tvg_level_value        = get_label_from_builder  (b, "tvg_level_value");     add_to_sg (sg, b, "tvg_level_label");
-      panel->gui.tvg_sens_value         = get_label_from_builder  (b, "tvg_sens_value");      add_to_sg (sg, b, "tvg_sensitivity_label");
       panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");        add_to_sg (sg, b, "signal_label");
 
       break;
@@ -823,10 +886,8 @@ make_page_for_panel (EvoUI     *ui,
         break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
-      tvg = get_widget_from_builder (b, "lin_tvg_control");
+      tvg = make_tvg_control (global, panel, b, sg);
       panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");     add_to_sg (sg, b, "distance_label");
-      panel->gui.tvg_value              = get_label_from_builder  (b, "tvg_value");          add_to_sg (sg, b, "tvg_label");
-      panel->gui.tvg0_value             = get_label_from_builder  (b, "tvg0_value");         add_to_sg (sg, b, "tvg0_label");
       panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");       add_to_sg (sg, b, "signal_label");
 
       break;
@@ -859,10 +920,8 @@ make_page_for_panel (EvoUI     *ui,
         break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
-      tvg = get_widget_from_builder (b, "lin_tvg_control");
+      tvg = make_tvg_control (global, panel, b, sg);
       panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");      add_to_sg (sg, b, "distance_label");
-      panel->gui.tvg_value              = get_label_from_builder  (b, "tvg_value");           add_to_sg (sg, b, "tvg_label");
-      panel->gui.tvg0_value             = get_label_from_builder  (b, "tvg0_value");          add_to_sg (sg, b, "tvg0_label");
       panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");        add_to_sg (sg, b, "signal_label");
 
       break;
@@ -878,10 +937,8 @@ make_page_for_panel (EvoUI     *ui,
         break;
 
       sonar = get_widget_from_builder (b, "sonar_control");
-      tvg = get_widget_from_builder (b, "lin_tvg_control");
+      tvg = make_tvg_control (global, panel, b, sg);
       panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");       add_to_sg (sg, b, "distance_label");
-      panel->gui.tvg_value              = get_label_from_builder  (b, "tvg_value");            add_to_sg (sg, b, "tvg_label");
-      panel->gui.tvg0_value             = get_label_from_builder  (b, "tvg0_value");           add_to_sg (sg, b, "tvg0_label");
       panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");         add_to_sg (sg, b, "signal_label");
 
       break;
