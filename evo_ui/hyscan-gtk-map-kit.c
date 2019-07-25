@@ -393,7 +393,7 @@ on_locate_track_clicked (GtkButton *button,
   track_name = get_selected_track_name (kit);
 
   if (track_name != NULL)
-    hyscan_gtk_map_track_track_view (HYSCAN_GTK_MAP_TRACK (priv->track_layer), track_name, FALSE);
+    hyscan_gtk_map_track_view (HYSCAN_GTK_MAP_TRACK (priv->track_layer), track_name, FALSE);
 }
 
 static GtkWidget *
@@ -944,7 +944,7 @@ on_track_activated (GtkTreeView        *treeview,
     gchar *track_name;
 
     gtk_tree_model_get (model, &iter, TRACK_COLUMN, &track_name, -1);
-    hyscan_gtk_map_track_track_view (HYSCAN_GTK_MAP_TRACK (priv->track_layer), track_name, FALSE);
+    hyscan_gtk_map_track_view (HYSCAN_GTK_MAP_TRACK (priv->track_layer), track_name, FALSE);
 
     g_free (track_name);
   }
@@ -1382,7 +1382,7 @@ create_nav_input (HyScanGtkMapKit *kit,
 /* Загрузка тайлов. */
 static void
 create_preloader (HyScanGtkMapKit *kit,
-                  GtkContainer    *container)
+                  GtkBox          *box)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
   GtkWidget *description;
@@ -1398,9 +1398,9 @@ create_preloader (HyScanGtkMapKit *kit,
   description = gtk_label_new (_("Download visible area of map\nto make it available when offline"));
   gtk_label_set_line_wrap (GTK_LABEL (description), TRUE);
 
-  gtk_container_add (container, description);
-  gtk_container_add (container, GTK_WIDGET (priv->preload_progress));
-  gtk_container_add (container, GTK_WIDGET (priv->preload_button));
+  gtk_box_pack_start (box, description,                         TRUE, TRUE, 0);
+  gtk_box_pack_start (box, GTK_WIDGET (priv->preload_progress), TRUE, TRUE, 0);
+  gtk_box_pack_start (box, GTK_WIDGET (priv->preload_button),   TRUE, TRUE, 0);
 }
 
 /* Текущие координаты. */
@@ -1417,7 +1417,7 @@ create_status_bar (HyScanGtkMapKit *kit)
   g_signal_connect (kit->map, "motion-notify-event", G_CALLBACK (on_motion_show_coords), kit);
 
   gtk_box_pack_start (GTK_BOX (statusbar_box), kit->priv->stbar_offline, FALSE, TRUE, 10);
-  gtk_box_pack_start (GTK_BOX (statusbar_box), kit->priv->stbar_coord, FALSE, TRUE, 10);
+  gtk_box_pack_start (GTK_BOX (statusbar_box), kit->priv->stbar_coord,   FALSE, TRUE, 10);
 
   return statusbar_box;
 }
