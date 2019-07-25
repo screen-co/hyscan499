@@ -779,18 +779,18 @@ make_tvg_control (Global *global,
       panel->gui.tvg_level_value = get_label_from_builder  (b, "tvg_level_value");     add_to_sg (sg, b, "tvg_level_label");
       panel->gui.tvg_sens_value  = get_label_from_builder  (b, "tvg_sens_value");      add_to_sg (sg, b, "tvg_sensitivity_label");
     }
-  else if (lin_ok)
-    {
-      tvg_control_name = "lin_tvg_control";
-      panel->gui.tvg_value  = get_label_from_builder  (b, "tvg_value");          add_to_sg (sg, b, "tvg_label");
-      panel->gui.tvg0_value = get_label_from_builder  (b, "tvg0_value");         add_to_sg (sg, b, "tvg0_label");
-    }
   else if (log_ok)
     {
       tvg_control_name = "log_tvg_control";
       panel->gui.logtvg_gain0_value = get_label_from_builder  (b, "logtvg_gain0_value");     add_to_sg (sg, b, "logtvg_gain0_label");
       panel->gui.logtvg_beta_value  = get_label_from_builder  (b, "logtvg_beta_value");      add_to_sg (sg, b, "logtvg_beta_label");
       panel->gui.logtvg_alpha_value  = get_label_from_builder  (b, "logtvg_alpha_value");      add_to_sg (sg, b, "logtvg_alpha_label");
+    }
+  else if (lin_ok)
+    {
+      tvg_control_name = "lin_tvg_control";
+      panel->gui.tvg_value  = get_label_from_builder  (b, "tvg_value");          add_to_sg (sg, b, "tvg_label");
+      panel->gui.tvg0_value = get_label_from_builder  (b, "tvg0_value");         add_to_sg (sg, b, "tvg0_label");
     }
   else if (const_ok)
     {
