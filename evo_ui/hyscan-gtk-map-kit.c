@@ -15,7 +15,7 @@
 #include <hyscan-gtk-map-wfmark.h>
 #include <hyscan-list-model.h>
 #include <hyscan-mark-model.h>
-#include <hyscan-gtk-map-planner.h>
+// #include <hyscan-gtk-map-planner.h>
 #include <hyscan-gtk-map-geomark.h>
 
 #define GETTEXT_PACKAGE "hyscanfnn-evoui"
@@ -65,7 +65,7 @@ struct _HyScanGtkMapKitPrivate
   HyScanDB              *db;
   HyScanCache           *cache;
   HyScanNavModel        *nav_model;
-  HyScanPlanner         *planner;
+  // HyScanPlanner         *planner;
   gchar                 *project_name;
 
   GHashTable            *profiles;         /* Хэш-таблица профилей карты. */
@@ -77,7 +77,7 @@ struct _HyScanGtkMapKitPrivate
 
   /* Слои. */
   GtkListStore          *layer_store;      /* Модель параметров отображения слоёв. */
-  HyScanGtkLayer        *planner_layer;    /* Слой планировщика. */
+  // HyScanGtkLayer        *planner_layer;    /* Слой планировщика. */
   HyScanGtkLayer        *track_layer;      /* Слой просмотра галсов. */
   HyScanGtkLayer        *wfmark_layer;     /* Слой с метками водопада. */
   HyScanGtkLayer        *geomark_layer;    /* Слой с метками водопада. */
@@ -1963,24 +1963,24 @@ hyscan_gtk_map_kit_load_profiles (HyScanGtkMapKit *kit,
  *
  * Добавляет слой планировщика галсов.
  */
-void
-hyscan_gtk_map_kit_add_planner (HyScanGtkMapKit *kit,
-                                const gchar     *planner_ini)
-{
-  HyScanGtkMapKitPrivate *priv = kit->priv;
+// void
+// hyscan_gtk_map_kit_add_planner (HyScanGtkMapKit *kit,
+//                                 const gchar     *planner_ini)
+// {
+//   HyScanGtkMapKitPrivate *priv = kit->priv;
 
-  g_return_if_fail (priv->planner == NULL);
+//   g_return_if_fail (priv->planner == NULL);
 
-  priv->planner = hyscan_planner_new ();
-  hyscan_planner_load_ini (priv->planner, planner_ini);
+//   priv->planner = hyscan_planner_new ();
+//   hyscan_planner_load_ini (priv->planner, planner_ini);
 
-  /* Автосохранение. */
-  g_signal_connect (priv->planner, "changed", G_CALLBACK (hyscan_planner_save_ini), (gpointer) planner_ini);
+//   /* Автосохранение. */
+//   g_signal_connect (priv->planner, "changed", G_CALLBACK (hyscan_planner_save_ini), (gpointer) planner_ini);
 
-  /* Слой планировщика миссий. */
-  priv->planner_layer = hyscan_gtk_map_planner_new (priv->planner);
-  add_layer_row (kit, priv->planner_layer, "planner", _("Planner"));
-}
+//   /* Слой планировщика миссий. */
+//   priv->planner_layer = hyscan_gtk_map_planner_new (priv->planner);
+//   add_layer_row (kit, priv->planner_layer, "planner", _("Planner"));
+// }
 
 /**
  * hyscan_gtk_map_kit_add_nav:
@@ -2113,7 +2113,7 @@ hyscan_gtk_map_kit_free (HyScanGtkMapKit *kit)
   g_free (priv->tile_cache_dir);
   g_free (priv->project_name);
   g_hash_table_destroy (priv->profiles);
-  g_clear_object (&priv->planner);
+  // g_clear_object (&priv->planner);
   g_clear_object (&priv->cache);
   g_clear_object (&priv->ml_model);
   g_clear_object (&priv->db);

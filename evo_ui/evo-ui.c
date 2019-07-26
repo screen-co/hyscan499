@@ -784,7 +784,7 @@ make_tvg_control (Global *global,
       tvg_control_name = "log_tvg_control";
       panel->gui.logtvg_gain0_value = get_label_from_builder  (b, "logtvg_gain0_value");     add_to_sg (sg, b, "logtvg_gain0_label");
       panel->gui.logtvg_beta_value  = get_label_from_builder  (b, "logtvg_beta_value");      add_to_sg (sg, b, "logtvg_beta_label");
-      panel->gui.logtvg_alpha_value  = get_label_from_builder  (b, "logtvg_alpha_value");      add_to_sg (sg, b, "logtvg_alpha_label");
+      panel->gui.logtvg_alpha_value  = get_label_from_builder  (b, "logtvg_alpha_value");    add_to_sg (sg, b, "logtvg_alpha_label");
     }
   else if (lin_ok)
     {
