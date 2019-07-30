@@ -339,15 +339,14 @@ main (int argc, char **argv)
   /* Грузим модуль построения интерфейса. */
   {
     gchar *module_path;
-    gboolean status = TRUE;
+    gboolean status = FALSE;
 
     module_path = g_build_filename (".", um_path, NULL);
     ui_module = g_module_open (module_path, G_MODULE_BIND_LAZY | G_MODULE_BIND_LOCAL);
-    g_free (module_path);
 
     if (ui_module != NULL)
       {
-        status &= module_loader_helper (ui_module, "build_interface", (gpointer *) &ui_build);
+        status  = module_loader_helper (ui_module, "build_interface", (gpointer *) &ui_build);
         status &= module_loader_helper (ui_module, "destroy_interface", (gpointer *) &ui_destroy);
 
         status &= module_loader_helper (ui_module, "kf_config", (gpointer *) &ui_config);
@@ -357,6 +356,11 @@ main (int argc, char **argv)
         status &= module_loader_helper (ui_module, "panel_pack", (gpointer *)  &ui_pack);
         status &= module_loader_helper (ui_module, "panel_adjust_visibility", (gpointer *)  &ui_adj_vis);
       }
+    else
+      {
+        g_warning ("UI <%s> not loaded", module_path);
+      }
+    g_free (module_path);
 
     /* Если что-то не получилось загрузить, то уходим отсюда. */
     if (!status)

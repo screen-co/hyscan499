@@ -65,8 +65,8 @@ fnn_ensure_panel (gint    panelx,
           panel->name_local = g_strdup (_("SideScan"));
           panel->short_name = g_strdup ("SS");
 
-          panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD;
-          panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_PORT;
+          panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_PORT;
+          panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD;
         }
       else if (panelx == X_SIDE_LOW)
         {
@@ -74,8 +74,8 @@ fnn_ensure_panel (gint    panelx,
           panel->name_local = g_strdup (_("SideScanLow"));
           panel->short_name = g_strdup ("SSLow");
 
-          panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_LOW;
-          panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_PORT_LOW;
+          panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_PORT_LOW;
+          panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_LOW;
         }
       else if (panelx == X_SIDE_HIGH)
         {
@@ -83,8 +83,8 @@ fnn_ensure_panel (gint    panelx,
           panel->name_local = g_strdup (_("SideScanHigh"));
           panel->short_name = g_strdup ("SSHigh");
 
-          panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_HI;
-          panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_PORT_HI;
+          panel->sources[0] = HYSCAN_SOURCE_SIDE_SCAN_PORT_HI;
+          panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_HI;
         }
 
       vwf->colormaps = fnn_make_color_maps (FALSE);
