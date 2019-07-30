@@ -208,11 +208,7 @@ msgstr "Оффлайн"
 msgid "Online"
 msgstr "Онлайн"
 
-#: hyscan-gtk-map-kit.c:1982
-msgid "Planner"
-msgstr "Планирование"
-
-#: hyscan-gtk-map-kit.c:2014
+#: hyscan-gtk-map-kit.c:1949
 msgid "Navigation"
 msgstr "Навигация"
 

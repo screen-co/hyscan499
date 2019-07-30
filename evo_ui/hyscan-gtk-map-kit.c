@@ -1,6 +1,6 @@
 #include "hyscan-gtk-map-kit.h"
 #include "hyscan-gtk-mark-editor.h"
-#include <hyscan-gtk-map-tiles.h>
+#include <hyscan-gtk-map-base.h>
 #include <hyscan-gtk-map-control.h>
 #include <hyscan-gtk-map-ruler.h>
 #include <hyscan-gtk-map-grid.h>
@@ -11,16 +11,15 @@
 #include <hyscan-profile-map.h>
 #include <hyscan-map-tile-loader.h>
 #include <hyscan-db-info.h>
-#include <hyscan-gtk-param-tree.h>
+#include <hyscan-gtk-map-scale.h>
+#include <hyscan-gtk-param-list.h>
 #include <hyscan-gtk-map-wfmark.h>
 #include <hyscan-list-model.h>
 #include <hyscan-mark-model.h>
-// #include <hyscan-gtk-map-planner.h>
 #include <hyscan-gtk-map-geomark.h>
 
 #define GETTEXT_PACKAGE "hyscanfnn-evoui"
 #include <glib/gi18n-lib.h>
-#include <hyscan-gtk-map-scale.h>
 
 #define DEFAULT_PROFILE_NAME "default"    /* Имя профиля карты по умолчанию. */
 #define PRELOAD_STATE_DONE   1000         /* Статус кэширования тайлов 0 "Загрузка завершена". */
@@ -65,7 +64,6 @@ struct _HyScanGtkMapKitPrivate
   HyScanDB              *db;
   HyScanCache           *cache;
   HyScanNavModel        *nav_model;
-  // HyScanPlanner         *planner;
   gchar                 *project_name;
 
   GHashTable            *profiles;         /* Хэш-таблица профилей карты. */
@@ -77,7 +75,6 @@ struct _HyScanGtkMapKitPrivate
 
   /* Слои. */
   GtkListStore          *layer_store;      /* Модель параметров отображения слоёв. */
-  // HyScanGtkLayer        *planner_layer;    /* Слой планировщика. */
   HyScanGtkLayer        *track_layer;      /* Слой просмотра галсов. */
   HyScanGtkLayer        *wfmark_layer;     /* Слой с метками водопада. */
   HyScanGtkLayer        *geomark_layer;    /* Слой с метками водопада. */
@@ -396,7 +393,7 @@ on_locate_track_clicked (GtkButton *button,
   track_name = get_selected_track_name (kit);
 
   if (track_name != NULL)
-    hyscan_gtk_map_track_track_view (HYSCAN_GTK_MAP_TRACK (priv->track_layer), track_name, FALSE);
+    hyscan_gtk_map_track_view (HYSCAN_GTK_MAP_TRACK (priv->track_layer), track_name, FALSE);
 }
 
 static GtkWidget *
@@ -416,7 +413,7 @@ create_param_settings_window (HyScanGtkMapKit *kit,
   /* Настраиваем окошко. */
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title (GTK_WINDOW (window), title);
-  gtk_window_set_default_size (GTK_WINDOW (window), 250, 400);
+  gtk_window_set_default_size (GTK_WINDOW (window), 250, 300);
   gtk_window_set_modal (GTK_WINDOW (window), TRUE);
   toplevel = gtk_widget_get_toplevel (GTK_WIDGET (priv->track_tree));
   if (GTK_IS_WINDOW (toplevel))
@@ -425,7 +422,7 @@ create_param_settings_window (HyScanGtkMapKit *kit,
   g_signal_connect_swapped (window, "destroy", G_CALLBACK (gtk_widget_destroy), window);
 
   /* Виджет отображения параметров. */
-  frontend = hyscan_gtk_param_tree_new (param, "/", FALSE);
+  frontend = hyscan_gtk_param_list_new (param, "/", FALSE);
   hyscan_gtk_param_set_watch_period (HYSCAN_GTK_PARAM (frontend), 500);
 
   /* Кнопки сохранения настроек. */
@@ -456,7 +453,7 @@ create_param_settings_window (HyScanGtkMapKit *kit,
   gtk_size_group_add_widget (GTK_SIZE_GROUP (size), cancel);
 
   grid = gtk_grid_new ();
-  g_object_set (grid, "margin", 10, NULL);
+  g_object_set (grid, "margin", 12, NULL);
 
   /* Пакуем всё вместе. */
   gtk_grid_attach (GTK_GRID (grid), frontend, 0, 0, 4, 1);
@@ -947,7 +944,7 @@ on_track_activated (GtkTreeView        *treeview,
     gchar *track_name;
 
     gtk_tree_model_get (model, &iter, TRACK_COLUMN, &track_name, -1);
-    hyscan_gtk_map_track_track_view (HYSCAN_GTK_MAP_TRACK (priv->track_layer), track_name, FALSE);
+    hyscan_gtk_map_track_view (HYSCAN_GTK_MAP_TRACK (priv->track_layer), track_name, FALSE);
 
     g_free (track_name);
   }
@@ -1284,11 +1281,10 @@ preload_start (HyScanGtkMapKit *kit)
   gdouble from_x, to_x, from_y, to_y;
   GThread *thread;
 
-  // todo: надо бы найти слой каким-то другим образом, а не по ключу "tiles-layer"
-  layer = hyscan_gtk_layer_container_lookup (HYSCAN_GTK_LAYER_CONTAINER (kit->map), "tiles-layer");
-  g_return_if_fail (HYSCAN_IS_GTK_MAP_TILES (layer));
+  layer = hyscan_gtk_layer_container_lookup (HYSCAN_GTK_LAYER_CONTAINER (kit->map), HYSCAN_PROFILE_MAP_BASE_ID);
+  g_return_if_fail (HYSCAN_IS_GTK_MAP_BASE (layer));
 
-  source = hyscan_gtk_map_tiles_get_source (HYSCAN_GTK_MAP_TILES (layer));
+  source = hyscan_gtk_map_base_get_source (HYSCAN_GTK_MAP_BASE (layer));
   priv->loader = hyscan_map_tile_loader_new ();
   g_object_unref (source);
 
@@ -1386,7 +1382,7 @@ create_nav_input (HyScanGtkMapKit *kit,
 /* Загрузка тайлов. */
 static void
 create_preloader (HyScanGtkMapKit *kit,
-                  GtkContainer    *container)
+                  GtkBox          *box)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
   GtkWidget *description;
@@ -1402,9 +1398,9 @@ create_preloader (HyScanGtkMapKit *kit,
   description = gtk_label_new (_("Download visible area of map\nto make it available when offline"));
   gtk_label_set_line_wrap (GTK_LABEL (description), TRUE);
 
-  gtk_container_add (container, description);
-  gtk_container_add (container, GTK_WIDGET (priv->preload_progress));
-  gtk_container_add (container, GTK_WIDGET (priv->preload_button));
+  gtk_box_pack_start (box, description,                         TRUE, TRUE, 0);
+  gtk_box_pack_start (box, GTK_WIDGET (priv->preload_progress), TRUE, TRUE, 0);
+  gtk_box_pack_start (box, GTK_WIDGET (priv->preload_button),   TRUE, TRUE, 0);
 }
 
 /* Текущие координаты. */
@@ -1421,7 +1417,7 @@ create_status_bar (HyScanGtkMapKit *kit)
   g_signal_connect (kit->map, "motion-notify-event", G_CALLBACK (on_motion_show_coords), kit);
 
   gtk_box_pack_start (GTK_BOX (statusbar_box), kit->priv->stbar_offline, FALSE, TRUE, 10);
-  gtk_box_pack_start (GTK_BOX (statusbar_box), kit->priv->stbar_coord, FALSE, TRUE, 10);
+  gtk_box_pack_start (GTK_BOX (statusbar_box), kit->priv->stbar_coord,   FALSE, TRUE, 10);
 
   return statusbar_box;
 }
@@ -1957,32 +1953,6 @@ hyscan_gtk_map_kit_load_profiles (HyScanGtkMapKit *kit,
 }
 
 /**
- * hyscan_gtk_map_kit_add_planner:
- * @kit
- * @planner_ini: ini-файл с запланированной миссией
- *
- * Добавляет слой планировщика галсов.
- */
-// void
-// hyscan_gtk_map_kit_add_planner (HyScanGtkMapKit *kit,
-//                                 const gchar     *planner_ini)
-// {
-//   HyScanGtkMapKitPrivate *priv = kit->priv;
-
-//   g_return_if_fail (priv->planner == NULL);
-
-//   priv->planner = hyscan_planner_new ();
-//   hyscan_planner_load_ini (priv->planner, planner_ini);
-
-//   /* Автосохранение. */
-//   g_signal_connect (priv->planner, "changed", G_CALLBACK (hyscan_planner_save_ini), (gpointer) planner_ini);
-
-//   /* Слой планировщика миссий. */
-//   priv->planner_layer = hyscan_gtk_map_planner_new (priv->planner);
-//   add_layer_row (kit, priv->planner_layer, "planner", _("Planner"));
-// }
-
-/**
  * hyscan_gtk_map_kit_add_nav:
  * @kit:
  * @sensor: датчик GPS-ресивера
@@ -2113,7 +2083,6 @@ hyscan_gtk_map_kit_free (HyScanGtkMapKit *kit)
   g_free (priv->tile_cache_dir);
   g_free (priv->project_name);
   g_hash_table_destroy (priv->profiles);
-  // g_clear_object (&priv->planner);
   g_clear_object (&priv->cache);
   g_clear_object (&priv->ml_model);
   g_clear_object (&priv->db);
