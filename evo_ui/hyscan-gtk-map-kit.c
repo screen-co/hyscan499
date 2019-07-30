@@ -11,7 +11,8 @@
 #include <hyscan-profile-map.h>
 #include <hyscan-map-tile-loader.h>
 #include <hyscan-db-info.h>
-#include <hyscan-gtk-param-tree.h>
+#include <hyscan-gtk-map-scale.h>
+#include <hyscan-gtk-param-list.h>
 #include <hyscan-gtk-map-wfmark.h>
 #include <hyscan-list-model.h>
 #include <hyscan-mark-model.h>
@@ -19,7 +20,6 @@
 
 #define GETTEXT_PACKAGE "hyscanfnn-evoui"
 #include <glib/gi18n-lib.h>
-#include <hyscan-gtk-map-scale.h>
 
 #define DEFAULT_PROFILE_NAME "default"    /* Имя профиля карты по умолчанию. */
 #define PRELOAD_STATE_DONE   1000         /* Статус кэширования тайлов 0 "Загрузка завершена". */
@@ -413,7 +413,7 @@ create_param_settings_window (HyScanGtkMapKit *kit,
   /* Настраиваем окошко. */
   window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
   gtk_window_set_title (GTK_WINDOW (window), title);
-  gtk_window_set_default_size (GTK_WINDOW (window), 250, 400);
+  gtk_window_set_default_size (GTK_WINDOW (window), 250, 300);
   gtk_window_set_modal (GTK_WINDOW (window), TRUE);
   toplevel = gtk_widget_get_toplevel (GTK_WIDGET (priv->track_tree));
   if (GTK_IS_WINDOW (toplevel))
@@ -422,7 +422,7 @@ create_param_settings_window (HyScanGtkMapKit *kit,
   g_signal_connect_swapped (window, "destroy", G_CALLBACK (gtk_widget_destroy), window);
 
   /* Виджет отображения параметров. */
-  frontend = hyscan_gtk_param_tree_new (param, "/", FALSE);
+  frontend = hyscan_gtk_param_list_new (param, "/", FALSE);
   hyscan_gtk_param_set_watch_period (HYSCAN_GTK_PARAM (frontend), 500);
 
   /* Кнопки сохранения настроек. */
@@ -453,7 +453,7 @@ create_param_settings_window (HyScanGtkMapKit *kit,
   gtk_size_group_add_widget (GTK_SIZE_GROUP (size), cancel);
 
   grid = gtk_grid_new ();
-  g_object_set (grid, "margin", 10, NULL);
+  g_object_set (grid, "margin", 12, NULL);
 
   /* Пакуем всё вместе. */
   gtk_grid_attach (GTK_GRID (grid), frontend, 0, 0, 4, 1);
