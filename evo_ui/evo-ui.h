@@ -19,8 +19,9 @@ typedef struct
 
   struct
     {
-      GtkWidget  *dry;
-      GtkWidget  *all;
+      GtkCheckMenuItem *dry_menu;
+      GtkWidget        *dry_switch;
+      GtkWidget        *all;
     } starter;
 
   GtkWidget  *more;

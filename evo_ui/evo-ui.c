@@ -292,6 +292,37 @@ map_offline_wrapper (GObject *emitter,
                                   !gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (emitter)));
 }
 
+void
+menu_dry_wrapper (GObject *emitter)
+{
+  EvoUI *ui = &global_ui;
+  gboolean state = gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (emitter));
+
+  set_dry (_global, state);
+
+  gtk_switch_set_active (GTK_SWITCH (ui->starter.dry_switch), state);
+}
+
+gboolean
+ui_start_stop_dry (GtkSwitch *button,
+                   gboolean   state,
+                   gpointer   user_data)
+{
+  EvoUI *ui = &global_ui;
+  // gboolean status;
+
+  set_dry (_global, state);
+  // status = start_stop (_global, state);
+
+  // if (!status)
+  //   return TRUE;
+
+  // gtk_widget_set_sensitive (ui->starter.all, !state);
+  gtk_check_menu_item_set_active (ui->starter.dry_menu, state);
+
+  return FALSE;
+}
+
 static void
 sensor_toggle_wrapper (GtkCheckMenuItem *mitem,
                        const gchar      *name)
@@ -318,32 +349,14 @@ ui_start_stop (GtkSwitch *button,
   EvoUI *ui = &global_ui;
   gboolean status;
 
-  set_dry (_global, FALSE);
+  // set_dry (_global, FALSE);
   status = start_stop (_global, state);
 
   if (!status)
     return TRUE;
 
-  gtk_widget_set_sensitive (ui->starter.dry, !state);
-
-  return FALSE;
-}
-
-gboolean
-ui_start_stop_dry (GtkSwitch *button,
-                   gboolean   state,
-                   gpointer   user_data)
-{
-  EvoUI *ui = &global_ui;
-  gboolean status;
-
-  set_dry (_global, TRUE);
-  status = start_stop (_global, state);
-
-  if (!status)
-    return TRUE;
-
-  gtk_widget_set_sensitive (ui->starter.all, !state);
+  gtk_widget_set_sensitive (ui->starter.dry_switch, !state);
+  gtk_widget_set_sensitive (GTK_WIDGET (ui->starter.dry_menu), !state);
 
   return FALSE;
 }
@@ -685,7 +698,7 @@ make_record_control (Global *global,
   b = gtk_builder_new_from_resource ("/org/evo/gtk/record.ui");
 
   w = g_object_ref (get_widget_from_builder (b, "record_control"));
-  ui->starter.dry = g_object_ref (get_widget_from_builder (b, "start_stop_dry"));
+  ui->starter.dry_switch = g_object_ref (get_widget_from_builder (b, "start_stop_dry"));
   ui->starter.all = g_object_ref (get_widget_from_builder (b, "start_stop"));
 
   gtk_builder_add_callback_symbol (b, "ui_start_stop", G_CALLBACK (ui_start_stop));
@@ -701,7 +714,7 @@ make_record_control (Global *global,
     if (param_set != NULL)
       {
         gtk_widget_set_visible (get_widget_from_builder (b, "dry_label"), TRUE);
-        gtk_widget_set_visible (ui->starter.dry, TRUE);
+        gtk_widget_set_visible (ui->starter.dry_switch, TRUE);
       }
     g_strfreev (env);
   }
@@ -1169,6 +1182,12 @@ build_interface (Global *global)
           g_signal_connect (mitem, "activate", G_CALLBACK (run_offset_setup), global);
           gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
+          /* офлайн-карта */
+          mitem = gtk_check_menu_item_new_with_label (_("No beaming"));
+          ui->starter.dry_menu = g_object_ref (mitem);
+          g_signal_connect (mitem, "toggled", G_CALLBACK (menu_dry_wrapper), NULL);
+          gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
+
           {
             gchar ** env;
             const gchar * param_set;
@@ -1241,7 +1260,7 @@ destroy_interface (void)
   g_clear_pointer (&ui->builders, g_hash_table_unref);
 
   g_clear_object (&ui->starter.all);
-  g_clear_object (&ui->starter.dry);
+  g_clear_object (&ui->starter.dry_switch);
 
   g_clear_pointer (&ui->mapkit, hyscan_gtk_map_kit_free);
 }
