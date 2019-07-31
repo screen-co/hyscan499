@@ -330,8 +330,10 @@ tracks_changed (HyScanDBInfo     *db_info,
 
       if (tinfo->ctime != NULL)
         {
-          time_str = g_date_time_format (tinfo->ctime, "%d.%m %H:%M");
+          GDateTime *local = g_date_time_to_local (tinfo->ctime);
+          time_str = g_date_time_format (local, "%d.%m %H:%M");
           sort = g_date_time_to_unix (tinfo->ctime);
+          g_clear_pointer (&local, g_date_time_unref);
         }
       else
         {
