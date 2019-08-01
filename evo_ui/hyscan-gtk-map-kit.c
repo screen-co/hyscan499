@@ -14,7 +14,6 @@
 #include <hyscan-gtk-map-scale.h>
 #include <hyscan-gtk-param-list.h>
 #include <hyscan-gtk-map-wfmark.h>
-#include <hyscan-list-model.h>
 #include <hyscan-mark-model.h>
 #include <hyscan-gtk-map-geomark.h>
 
@@ -57,7 +56,6 @@ struct _HyScanGtkMapKitPrivate
 {
   /* Модели данных. */
   HyScanDBInfo          *db_info;          /* Доступ к данным БД. */
-  HyScanListModel       *list_model;       /* Модель списка активных галсов. */
   HyScanMarkModel       *mark_model;       /* Модель меток водопада. */
   HyScanMarkModel       *mark_geo_model;   /* Модель геометок. */
   HyScanMarkLocModel    *ml_model;         /* Модель местоположения меток водопада. */
@@ -113,6 +111,17 @@ struct _HyScanGtkMapKitPrivate
   GtkWidget             *stbar_offline;   /* Статусбар оффлайн. */
   GtkWidget             *stbar_coord;     /* Статусбар координат. */
 };
+
+static void     hyscan_gtk_map_kit_set_tracks   (HyScanGtkMapKit      *kit,
+                                                 gchar               **tracks);
+static gchar ** hyscan_gtk_map_kit_get_tracks   (HyScanGtkMapKit      *kit);
+static void     hyscan_gtk_map_kit_track_enable (HyScanGtkMapKit      *kit,
+                                                 const gchar          *track_name,
+                                                 gboolean              enable);
+#if !GLIB_CHECK_VERSION (2, 44, 0)
+static gboolean g_strv_contains               (const gchar * const  *strv,
+                                               const gchar          *str);
+#endif
 
 static GtkWidget *
 create_map (HyScanGtkMapKit *kit)
@@ -290,11 +299,8 @@ on_enable_track (GtkCellRendererToggle *cell_renderer,
   gtk_tree_path_free (tree_path);
   gtk_tree_model_get (tree_model, &iter, TRACK_COLUMN, &track_name, VISIBLE_COLUMN, &active, -1);
 
-  /* Устанавливаем новое значение в модель данных. */
-  if (active)
-    hyscan_list_model_remove (priv->list_model, track_name);
-  else
-    hyscan_list_model_add (priv->list_model, track_name);
+  /* Устанавливаем видимость галса. */
+  hyscan_gtk_map_kit_track_enable (kit, track_name, !active);
 
   g_free (track_name);
 }
@@ -330,11 +336,10 @@ on_enable_layer (GtkCellRendererToggle *cell_renderer,
   g_object_unref (layer);
 }
 
-/* Обработчик HyScanListModel::changed
- * Обновляет список активных галсов при измении модели. */
+/* Обновляет список активных галсов при измении модели. */
 static void
-on_active_track_changed (HyScanListModel *model,
-                         HyScanGtkMapKit *kit)
+track_tree_view_visible_changed (HyScanGtkMapKit     *kit,
+                                 const gchar *const *visible_tracks)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
   GtkTreeIter iter;
@@ -348,7 +353,7 @@ on_active_track_changed (HyScanListModel *model,
 
      gtk_tree_model_get (GTK_TREE_MODEL (priv->track_store), &iter, TRACK_COLUMN, &track_name, -1);
 
-     active = hyscan_list_model_has (priv->list_model, track_name);
+     active = g_strv_contains (visible_tracks, track_name);
      gtk_list_store_set (priv->track_store, &iter, VISIBLE_COLUMN, active, -1);
 
      g_free (track_name);
@@ -358,7 +363,7 @@ on_active_track_changed (HyScanListModel *model,
 }
 
 static gchar *
-get_selected_track_name (HyScanGtkMapKit *kit)
+track_tree_view_get_selected (HyScanGtkMapKit *kit)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
 
@@ -390,10 +395,12 @@ on_locate_track_clicked (GtkButton *button,
   HyScanGtkMapKitPrivate *priv = kit->priv;
   gchar *track_name;
 
-  track_name = get_selected_track_name (kit);
+  track_name = track_tree_view_get_selected (kit);
 
   if (track_name != NULL)
     hyscan_gtk_map_track_view (HYSCAN_GTK_MAP_TRACK (priv->track_layer), track_name, FALSE);
+
+  g_free (track_name);
 }
 
 static GtkWidget *
@@ -511,6 +518,7 @@ tracks_changed (HyScanDBInfo    *db_info,
   GHashTable *tracks;
   GHashTableIter hash_iter;
   gpointer key, value;
+  gchar **selected_tracks;
 
   HyScanGtkMapKitPrivate *priv = kit->priv;
 
@@ -521,8 +529,8 @@ tracks_changed (HyScanDBInfo    *db_info,
   gtk_list_store_clear (priv->track_store);
 
   tracks = hyscan_db_info_get_tracks (db_info);
+  selected_tracks = hyscan_gtk_map_kit_get_tracks (kit);
   g_hash_table_iter_init (&hash_iter, tracks);
-  g_message ("chg1");
   while (g_hash_table_iter_next (&hash_iter, &key, &value))
     {
       GDateTime *local;
@@ -539,7 +547,7 @@ tracks_changed (HyScanDBInfo    *db_info,
       /* Добавляем в список галсов. */
       local = g_date_time_to_local (track_info->ctime);
       time_str = g_date_time_format (local, "%d.%m %H:%M");
-      visible = hyscan_list_model_has (priv->list_model, track_info->name);
+      visible = g_strv_contains ((const gchar *const *) selected_tracks, track_info->name);
 
       gtk_list_store_append (priv->track_store, &tree_iter);
       gtk_list_store_set (priv->track_store, &tree_iter,
@@ -553,6 +561,7 @@ tracks_changed (HyScanDBInfo    *db_info,
       g_date_time_unref (local);
     }
 
+  g_free (selected_tracks);
   g_hash_table_unref (tracks);
 }
 
@@ -585,7 +594,7 @@ track_view_select_all (HyScanGtkMapKit *kit)
       gchar *track_name;
 
       gtk_tree_model_get (GTK_TREE_MODEL (priv->track_store), &iter, TRACK_COLUMN, &track_name, -1);
-      hyscan_list_model_add (priv->list_model, track_name);
+      hyscan_gtk_map_kit_track_enable (kit, track_name, TRUE);
       g_free (track_name);
 
       valid = gtk_tree_model_iter_next (GTK_TREE_MODEL (priv->track_store), &iter);
@@ -594,16 +603,15 @@ track_view_select_all (HyScanGtkMapKit *kit)
 
 /* Клик по заголовку с галочкой в таблице галсов. */
 static void
-track_view_visible_column_clicked (HyScanGtkMapKit *kit)
+on_enable_all_tracks (HyScanGtkMapKit *kit)
 {
-  HyScanGtkMapKitPrivate *priv = kit->priv;
   gchar **selected;
 
-  selected = hyscan_list_model_get (priv->list_model);
+  selected = hyscan_gtk_map_kit_get_tracks (kit);
   if (g_strv_length (selected) == 0)
     track_view_select_all (kit);
   else
-    hyscan_list_model_remove_all (kit->priv->list_model);
+    hyscan_gtk_map_kit_set_tracks (kit, NULL);
 
   g_strfreev (selected);
 }
@@ -639,7 +647,7 @@ create_track_tree_view (HyScanGtkMapKit *kit,
                                                              "active", VISIBLE_COLUMN, NULL);
   image = gtk_image_new_from_icon_name ("object-select-symbolic", GTK_ICON_SIZE_MENU);
   gtk_tree_view_column_set_clickable (visible_column, TRUE);
-  g_signal_connect_swapped (visible_column, "clicked", G_CALLBACK (track_view_visible_column_clicked), kit);
+  g_signal_connect_swapped (visible_column, "clicked", G_CALLBACK (on_enable_all_tracks), kit);
   gtk_widget_show (image);
   gtk_tree_view_column_set_widget (visible_column, image);
 
@@ -703,14 +711,15 @@ on_track_change (HyScanGtkMapKit *kit)
   gchar *track_name;
   gboolean has_nmea;
 
-  track_name = get_selected_track_name (kit);
+  track_name = track_tree_view_get_selected (kit);
 
   if (track_name != NULL)
     track_item = hyscan_gtk_map_track_lookup (HYSCAN_GTK_MAP_TRACK (priv->track_layer), track_name);
 
   has_nmea = (track_item != NULL) && hyscan_gtk_map_track_item_has_nmea (track_item);
-
   gtk_widget_set_sensitive (priv->track_menu_find, has_nmea);
+
+  g_free (track_name);
 }
 
 static void
@@ -1139,8 +1148,6 @@ create_track_box (HyScanGtkMapKit *kit,
   g_signal_connect (priv->track_tree, "button-press-event", G_CALLBACK (on_button_press_event), kit);
   g_signal_connect (priv->track_tree, "row-activated", G_CALLBACK (on_track_activated), kit);
   g_signal_connect (priv->db_info, "tracks-changed", G_CALLBACK (tracks_changed), kit);
-  g_signal_connect (priv->list_model, "changed", G_CALLBACK (on_active_track_changed), kit);
-
 
   /* Область прокрутки со списком галсов. */
   scrolled_window = gtk_scrolled_window_new (NULL, NULL);
@@ -1648,8 +1655,8 @@ create_layers (HyScanGtkMapKit *kit)
   hyscan_gtk_layer_set_visible (priv->pin_layer, TRUE);
 
   /* Слой с галсами. */
-  if (priv->db != NULL && priv->list_model != NULL)
-    priv->track_layer = hyscan_gtk_map_track_new (priv->db, priv->list_model, priv->cache);
+  if (priv->db != NULL)
+    priv->track_layer = hyscan_gtk_map_track_new (priv->db, priv->cache);
 }
 
 /* Создает модели данных. */
@@ -1666,7 +1673,6 @@ hyscan_gtk_map_kit_model_create (HyScanGtkMapKit *kit,
     {
       priv->db = g_object_ref (db);
       priv->db_info = hyscan_db_info_new (db);
-      priv->list_model = hyscan_list_model_new ();
     }
 
   kit->map = create_map (kit);
@@ -1807,16 +1813,72 @@ hyscan_gtk_map_kit_set_layers (HyScanGtkMapKit  *kit,
    }
 }
 
+/* Устанавливает видимость галса track_name. */
+static void
+hyscan_gtk_map_kit_track_enable (HyScanGtkMapKit *kit,
+                                 const gchar     *track_name,
+                                 gboolean         enable)
+{
+  gchar **tracks;
+  gboolean track_enabled;
+  const gchar **tracks_new;
+  gint i, j;
+
+  tracks = hyscan_gtk_map_kit_get_tracks (kit);
+  track_enabled = g_strv_contains ((const gchar *const *) tracks, track_name);
+
+  /* Галс уже и так в нужном состоянии. */
+  if ((track_enabled != 0) == (enable != 0))
+    {
+      g_free (tracks);
+      return;
+    }
+
+  /* Новый массив = старый массив ± track_name + NULL. */
+  tracks_new = g_new (const gchar *, g_strv_length (tracks) + (enable ? 1 : -1) + 1);
+
+  for (i = 0, j = 0; tracks[i] != NULL; ++i)
+    {
+      if (!enable && g_strcmp0 (tracks[i], track_name) == 0)
+        continue;
+
+      tracks_new[j++] = tracks[i];
+    }
+
+  if (enable)
+    tracks_new[j++] = track_name;
+
+  tracks_new[j] = NULL;
+
+  hyscan_gtk_map_kit_set_tracks (kit, (gchar **) tracks_new);
+
+  g_free (tracks);
+  g_free (tracks_new);
+}
+
 /* Устанавливает видимость галсов с названиями tracks. */
 static void
 hyscan_gtk_map_kit_set_tracks (HyScanGtkMapKit  *kit,
                                gchar           **tracks)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
-  gint i;
 
-  for (i = 0; tracks[i] != NULL; ++i)
-   hyscan_list_model_add (priv->list_model, tracks[i]);
+  if (priv->track_layer != NULL)
+    hyscan_gtk_map_track_set_tracks (HYSCAN_GTK_MAP_TRACK (priv->track_layer), tracks);
+
+  track_tree_view_visible_changed (kit, (const gchar *const *) tracks);
+}
+
+/* Устанавливает видимость галсов с названиями tracks. */
+static gchar **
+hyscan_gtk_map_kit_get_tracks (HyScanGtkMapKit  *kit)
+{
+  HyScanGtkMapKitPrivate *priv = kit->priv;
+
+  if (priv->track_layer != NULL)
+    return hyscan_gtk_map_track_get_tracks (HYSCAN_GTK_MAP_TRACK (priv->track_layer));
+
+  return g_new0 (gchar *, 1);
 }
 
 /**
@@ -1853,8 +1915,8 @@ hyscan_gtk_map_kit_set_project (HyScanGtkMapKit *kit,
   HyScanGtkMapKitPrivate *priv = kit->priv;
 
   /* Очищаем список активных галсов, только если уже был открыт другой проект. */
-  if (priv->list_model && priv->project_name != NULL)
-    hyscan_list_model_remove_all (priv->list_model);
+  if (priv->project_name != NULL)
+    hyscan_gtk_map_kit_set_tracks (kit, (gchar **) { NULL });
 
   g_free (priv->project_name);
   priv->project_name = g_strdup (project_name);
@@ -2089,7 +2151,6 @@ hyscan_gtk_map_kit_free (HyScanGtkMapKit *kit)
   g_clear_object (&priv->db_info);
   g_clear_object (&priv->mark_model);
   g_clear_object (&priv->mark_geo_model);
-  g_clear_object (&priv->list_model);
   g_clear_object (&priv->layer_store);
   g_clear_object (&priv->track_store);
   g_clear_object (&priv->mark_store);
@@ -2170,7 +2231,6 @@ void
 hyscan_gtk_map_kit_kf_desetup (HyScanGtkMapKit *kit,
                                GKeyFile        *kf)
 {
-  HyScanGtkMapKitPrivate *priv = kit->priv;
   gchar *proifle;
   gchar **layers, **tracks;
   HyScanGeoGeodetic geod;
@@ -2184,7 +2244,7 @@ hyscan_gtk_map_kit_kf_desetup (HyScanGtkMapKit *kit,
 
   proifle = hyscan_gtk_map_kit_get_profile_name (kit);
   layers = hyscan_gtk_map_kit_get_layers (kit);
-  tracks = hyscan_list_model_get (priv->list_model);
+  tracks = hyscan_gtk_map_kit_get_tracks (kit);
 
   g_key_file_set_double      (kf, "evo-map", "lat",     geod.lat);
   g_key_file_set_double      (kf, "evo-map", "lon",     geod.lon);
