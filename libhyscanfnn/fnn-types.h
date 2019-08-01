@@ -145,8 +145,9 @@ typedef struct
 
 typedef struct
 {
-  gdouble brightness;
   gdouble black;
+  gdouble gamma;
+  gdouble white;
   gdouble sensitivity;
   gint    colormap;
           // scale;
@@ -160,8 +161,9 @@ typedef struct
   GtkWidget *main; /* Должно быть на 1 месте, чтобы у остальных эл-тов
                     * оффсет был больше нуля. Исп-ся в амешной проге. */
 
-  GtkLabel  *brightness_value;
   GtkLabel  *black_value;
+  GtkLabel  *gamma_value;
+  GtkLabel  *white_value;
   GtkLabel  *scale_value;
   GtkLabel  *colormap_value;
   GtkLabel  *sensitivity_value;
@@ -285,9 +287,10 @@ struct _Global
 
   struct
   {
-    gboolean (*brightness_set) (Global  *global,
-                                gdouble  brightness,
+    gboolean (*levels_set)     (Global  *global,
                                 gdouble  black,
+                                gdouble  gamma,
+                                gdouble  white,
                                 gint     selector);
 
     void     (*project_changed) (Global      *global,
@@ -480,10 +483,12 @@ track_changed (GtkTreeView *list,
                Global      *global);
 
 HYSCAN_API gboolean
-brightness_set (Global  *global,
-                gdouble  cur_brightness,
-                gdouble  cur_black,
-                gint     selector);
+// brightness_set (Global  *global,
+levels_set (Global  *global,
+            gdouble  new_black,
+            gdouble  new_gamma,
+            gdouble  new_white,
+            gint     selector);
 
 HYSCAN_API void
 zoom_changed (HyScanGtkWaterfall *wfall,
@@ -603,11 +608,13 @@ HYSCAN_API void
 void_callback (gpointer data);
 
 HYSCAN_API void
-brightness_up (GtkWidget *widget,
+white_up
+ (GtkWidget *widget,
                gint        selector);
 
 HYSCAN_API void
-brightness_down (GtkWidget *widget,
+white_down
+ (GtkWidget *widget,
                  gint       selector);
 
 HYSCAN_API void

@@ -118,9 +118,9 @@ static HwuiPage ss_image_pages[] =
         {L, 4, REPT,"Цвет",         TOGGLE_NONE, CBK(color_map_cyclic),UD(XSS),
             VALUE_OFFSET(VisualCommon, colormap_value)},
 
-        {R, 2, MORE, "Контр",       TOGGLE_NONE, CBK(brightness_up),   UD(XSS),
-            VALUE_OFFSET(VisualCommon, brightness_value)},
-        {R, 3, LESS, NULL,          TOGGLE_NONE, CBK(brightness_down), UD(XSS)},
+        {R, 2, MORE, "Контр",       TOGGLE_NONE, CBK(white_up),   UD(XSS),
+            VALUE_OFFSET(VisualCommon, white_value)},
+        {R, 3, LESS, NULL,          TOGGLE_NONE, CBK(white_down), UD(XSS)},
         {R, 4, DOT, "Измерения",    TOGGLE_OFF,  CBK(turn_meter),      UD(XSS)},
         {END}
       }
@@ -180,9 +180,9 @@ static HwuiPage pf_image_pages[] =
         {L, 1, BACK,"Назад",        TOGGLE_NONE, CBK(switch_page),    UD("И_ПФ")},
         {L, 4, DOT, "Слои",         TOGGLE_OFF,  CBK(pf_special),     UD(XPF)},
 
-        {R, 0, MORE, "Сжатие диап", TOGGLE_NONE, CBK(brightness_up),  UD(XPF),
-            VALUE_OFFSET(VisualCommon, brightness_value)},
-        {R, 1, LESS, NULL,          TOGGLE_NONE, CBK(brightness_down),UD(XPF)},
+        {R, 0, MORE, "Сжатие диап", TOGGLE_NONE, CBK(white_up),  UD(XPF),
+            VALUE_OFFSET(VisualCommon, white_value)},
+        {R, 1, LESS, NULL,          TOGGLE_NONE, CBK(white_down),UD(XPF)},
         {R, 2, MORE, "Нач ур",      TOGGLE_NONE, CBK(black_up),       UD(XPF),
             VALUE_OFFSET(VisualCommon, black_value)},
         {R, 3, LESS, NULL,          TOGGLE_NONE, CBK(black_down),     UD(XPF)},
@@ -247,9 +247,9 @@ static HwuiPage fl_image_pages[] =
             VALUE_OFFSET (VisualCommon, sensitivity_value), VALUE_DEFAULT ("--")},
         {L, 3, LESS, NULL,          TOGGLE_NONE, CBK(sensitivity_down), UD(XFL)},
         {L, 4, DOT,  "Цель",        TOGGLE_ON,   CBK(mode_changed),   UD(XFL)},
-        {R, 2, MORE, "Яркость",     TOGGLE_NONE, CBK(brightness_up),  UD(XFL),
-            VALUE_OFFSET (VisualCommon, brightness_value), VALUE_DEFAULT ("--")},
-        {R, 3, LESS, NULL,          TOGGLE_NONE, CBK(brightness_down),UD(XFL)},
+        {R, 2, MORE, "Яркость",     TOGGLE_NONE, CBK(white_up),  UD(XFL),
+            VALUE_OFFSET (VisualCommon, white_value), VALUE_DEFAULT ("--")},
+        {R, 3, LESS, NULL,          TOGGLE_NONE, CBK(white_down),UD(XFL)},
 
         {END}
       }

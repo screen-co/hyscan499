@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-25 18:18+0300\n"
+"POT-Creation-Date: 2019-08-01 17:08+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,277 +21,285 @@ msgstr ""
 msgid "m/s"
 msgstr ""
 
-#: evo-ui.c:645 hyscan-gtk-map-kit.c:1484
+#: evo-ui.c:658 hyscan-gtk-map-kit.c:1480
 msgid "Layer"
 msgstr ""
 
-#: evo-ui.c:656 hyscan-gtk-map-kit.c:641 hyscan-gtk-map-kit.c:1479
+#: evo-ui.c:669 hyscan-gtk-map-kit.c:638 hyscan-gtk-map-kit.c:1475
 msgid "Show"
 msgstr ""
 
-#: evo-ui.c:667 hyscan-gtk-map-kit.c:1688
+#: evo-ui.c:680 hyscan-gtk-map-kit.c:1684
 msgid "Grid"
 msgstr ""
 
-#: evo-ui.c:668
+#: evo-ui.c:681
 msgid "Marks"
 msgstr ""
 
-#: evo-ui.c:669
+#: evo-ui.c:682
 msgid "Measurements"
 msgstr ""
 
-#: evo-ui.c:1028
+#: evo-ui.c:1043
 msgid "Map"
 msgstr ""
 
-#: evo-ui.c:1105
+#: evo-ui.c:1120
 msgid "Project Manager"
 msgstr ""
 
-#: evo-ui.c:1110
+#: evo-ui.c:1125
 msgid "Online Map"
 msgstr ""
 
-#: evo-ui.c:1138
+#: evo-ui.c:1153
 msgid "Sensors"
 msgstr ""
 
-#: evo-ui.c:1150
+#: evo-ui.c:1165
 msgid "Info"
 msgstr ""
 
-#: evo-ui.c:1154
+#: evo-ui.c:1169
 msgid "State"
 msgstr ""
 
-#: evo-ui.c:1158
+#: evo-ui.c:1173
 msgid "Params"
 msgstr ""
 
-#: evo-ui.c:1162
+#: evo-ui.c:1177
 msgid "Sonar"
 msgstr ""
 
-#: evo-ui.c:1168
+#: evo-ui.c:1183
 msgid "Antennas offsets"
 msgstr ""
 
-#: evo-ui.c:1180
+#: evo-ui.c:1188 tmp/record.ui.h:2
+msgid "No beaming"
+msgstr ""
+
+#: evo-ui.c:1201
 msgid "Hardware info"
 msgstr ""
 
-#: evo-ui.c:1189
+#: evo-ui.c:1210
 msgid "Exit"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:432
+#: hyscan-gtk-map-kit.c:429
 msgid "OK"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:433
+#: hyscan-gtk-map-kit.c:430
 msgid "Cancel"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:434
+#: hyscan-gtk-map-kit.c:431
 msgid "Restore"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:435
+#: hyscan-gtk-map-kit.c:432
 msgid "Apply"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:497 hyscan-gtk-map-kit.c:732
+#: hyscan-gtk-map-kit.c:494 hyscan-gtk-map-kit.c:729
 msgid "Track settings"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:625
+#: hyscan-gtk-map-kit.c:622
 msgid "Track"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:634 hyscan-gtk-map-kit.c:686
+#: hyscan-gtk-map-kit.c:631 hyscan-gtk-map-kit.c:683
 msgid "Date"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:676
+#: hyscan-gtk-map-kit.c:673
 msgid "Name"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:726
+#: hyscan-gtk-map-kit.c:723
 msgid "Find track on the map"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1229
+#: hyscan-gtk-map-kit.c:1226
 msgid "Done!"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1231
+#: hyscan-gtk-map-kit.c:1228
 #, c-format
 msgid "Done! Failed to load %d tiles"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1235 hyscan-gtk-map-kit.c:1396
+#: hyscan-gtk-map-kit.c:1232 hyscan-gtk-map-kit.c:1392
 msgid "Start download"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1295
+#: hyscan-gtk-map-kit.c:1291
 msgid "Stop download"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1366
+#: hyscan-gtk-map-kit.c:1362
 msgid "My location"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1375
+#: hyscan-gtk-map-kit.c:1371
 msgid "Go"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1378
+#: hyscan-gtk-map-kit.c:1374
 msgid "Lat"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1380
+#: hyscan-gtk-map-kit.c:1376
 msgid "Lon"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1402
+#: hyscan-gtk-map-kit.c:1398
 msgid ""
 "Download visible area of map\n"
 "to make it available when offline"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1558 tmp/evo.ui.h:7
+#: hyscan-gtk-map-kit.c:1554 tmp/evo.ui.h:3
 msgid "Scale"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1576
+#: hyscan-gtk-map-kit.c:1572
 msgid "Lock layers"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1589
+#: hyscan-gtk-map-kit.c:1585
 msgid "Remove ruler"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1593
+#: hyscan-gtk-map-kit.c:1589
 msgid "Remove all pins"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1617
+#: hyscan-gtk-map-kit.c:1613
 msgid "Go to"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1625
+#: hyscan-gtk-map-kit.c:1621
 msgid "Download"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1685
+#: hyscan-gtk-map-kit.c:1681
 msgid "Tracks"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1686
+#: hyscan-gtk-map-kit.c:1682
 msgid "Ruler"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1687
+#: hyscan-gtk-map-kit.c:1683
 msgid "Pin"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1908
+#: hyscan-gtk-map-kit.c:1904
 msgid "Offline"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1908
+#: hyscan-gtk-map-kit.c:1904
 msgid "Online"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1949
+#: hyscan-gtk-map-kit.c:1984
 msgid "Navigation"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:2033
+#: hyscan-gtk-map-kit.c:2003
 msgid "Waterfall Marks"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:2060
+#: hyscan-gtk-map-kit.c:2030
 msgid "Geo Marks"
 msgstr ""
 
 #: tmp/evo.ui.h:1
-msgid "Gain"
+msgid "Range"
 msgstr ""
 
 #: tmp/evo.ui.h:2
 msgid "<small><b>xx</b></small>"
 msgstr ""
 
-#: tmp/evo.ui.h:3
-msgid "Start gain"
-msgstr ""
-
 #: tmp/evo.ui.h:4
-msgid "Beta"
-msgstr ""
-
-#: tmp/evo.ui.h:5
-msgid "Alpha"
-msgstr ""
-
-#: tmp/evo.ui.h:6
-msgid "Contrast"
-msgstr ""
-
-#: tmp/evo.ui.h:8
 msgid "Autoscroll"
 msgstr ""
 
-#: tmp/evo.ui.h:9
-msgid "Range"
+#: tmp/evo.ui.h:5
+msgid "Black"
 msgstr ""
 
-#: tmp/evo.ui.h:10
+#: tmp/evo.ui.h:6
 msgid "Profiler layers"
 msgstr ""
 
-#: tmp/evo.ui.h:11
+#: tmp/evo.ui.h:7
 msgid "Player"
 msgstr ""
 
-#: tmp/evo.ui.h:12
+#: tmp/evo.ui.h:8
 msgid "<small><b>0</b></small>"
 msgstr ""
 
-#: tmp/evo.ui.h:13
+#: tmp/evo.ui.h:9
 msgid "Brightness"
 msgstr ""
 
-#: tmp/evo.ui.h:14
+#: tmp/evo.ui.h:10
 msgid "Target mode"
 msgstr ""
 
-#: tmp/evo.ui.h:15
+#: tmp/evo.ui.h:11
 msgid "Sensitivity"
 msgstr ""
 
-#: tmp/evo.ui.h:16
+#: tmp/evo.ui.h:12
 msgid "Distance"
 msgstr ""
 
-#: tmp/evo.ui.h:17
+#: tmp/evo.ui.h:13
 msgid "Signal"
 msgstr ""
 
-#: tmp/evo.ui.h:18
+#: tmp/evo.ui.h:14
+msgid "White"
+msgstr ""
+
+#: tmp/evo.ui.h:15
+msgid "Gamma"
+msgstr ""
+
+#: tmp/evo.ui.h:16
 msgid "Color"
+msgstr ""
+
+#: tmp/evo.ui.h:17
+msgid "Start gain"
+msgstr ""
+
+#: tmp/evo.ui.h:18
+msgid "Gain"
 msgstr ""
 
 #: tmp/evo.ui.h:19
 msgid "Level"
 msgstr ""
 
-#: tmp/record.ui.h:1
-msgid "Start"
+#: tmp/evo.ui.h:20
+msgid "Beta"
 msgstr ""
 
-#: tmp/record.ui.h:2
-msgid "No beaming"
+#: tmp/evo.ui.h:21
+msgid "Alpha"
+msgstr ""
+
+#: tmp/record.ui.h:1
+msgid "Start"
 msgstr ""

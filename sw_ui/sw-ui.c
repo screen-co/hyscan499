@@ -244,7 +244,7 @@ make_page_for_panel (SwUI     *ui,
     case FNN_PANEL_WATERFALL:
 
       view = get_widget_from_builder (b, "ss_view_control");
-      panel->vis_gui->brightness_value  = get_label_from_builder (b, "ss_brightness_value");
+      panel->vis_gui->brightness_value  = get_label_from_builder (b, "ss_white_value");
       panel->vis_gui->scale_value       = get_label_from_builder (b, "ss_scale_value");
       panel->vis_gui->colormap_value    = get_label_from_builder (b, "ss_color_map_value");
       panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");
@@ -273,7 +273,7 @@ make_page_for_panel (SwUI     *ui,
     case FNN_PANEL_PROFILER:
 
       view = get_widget_from_builder (b, "pf_view_control");
-      panel->vis_gui->brightness_value  = get_label_from_builder (b, "pf_brightness_value");
+      panel->vis_gui->brightness_value  = get_label_from_builder (b, "pf_white_value");
       panel->vis_gui->black_value       = get_label_from_builder (b, "pf_black_value");
       panel->vis_gui->scale_value       = get_label_from_builder (b, "pf_scale_value");
       panel->vis_gui->live_view         = get_widget_from_builder(b, "pf_live_view");
@@ -302,7 +302,7 @@ make_page_for_panel (SwUI     *ui,
     case FNN_PANEL_ECHO:
 
       view = get_widget_from_builder (b, "ss_view_control");
-      panel->vis_gui->brightness_value  = get_label_from_builder (b, "ss_brightness_value");
+      panel->vis_gui->brightness_value  = get_label_from_builder (b, "ss_white_value");
       panel->vis_gui->scale_value       = get_label_from_builder (b, "ss_scale_value");
       panel->vis_gui->colormap_value    = get_label_from_builder (b, "ss_color_map_value");
       panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");

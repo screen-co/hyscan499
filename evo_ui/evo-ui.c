@@ -81,7 +81,7 @@ evo_brightness_set_override (Global  *global,
         hyscan_gtk_waterfall_state_get_sources (HYSCAN_GTK_WATERFALL_STATE (wf->wf), &lsource, &rsource);
         hyscan_gtk_waterfall_set_levels (HYSCAN_GTK_WATERFALL (wf->wf), lsource, b, g, lw);
         hyscan_gtk_waterfall_set_levels (HYSCAN_GTK_WATERFALL (wf->wf), rsource, b, g, rw);
-        gtk_label_set_markup (wf->common.brightness_value, text_bright);
+        gtk_label_set_markup (wf->common.white_value, text_bright);
         gtk_label_set_markup (wf->common.black_value, text_black);
         break;
       }
@@ -93,7 +93,7 @@ evo_brightness_set_override (Global  *global,
 
       wf = (VisualWF*)panel->vis_gui;
       hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), b, g, w);
-      gtk_label_set_markup (wf->common.brightness_value, text_bright);
+      gtk_label_set_markup (wf->common.white_value, text_bright);
       gtk_label_set_markup (wf->common.black_value, text_black);
       break;
 
@@ -110,14 +110,14 @@ evo_brightness_set_override (Global  *global,
       wf = (VisualWF*)panel->vis_gui;
       hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), b, g, w);
 
-      gtk_label_set_markup (wf->common.brightness_value, text_bright);
+      gtk_label_set_markup (wf->common.white_value, text_bright);
       gtk_label_set_markup (wf->common.black_value, text_black);
       break;
 
     case FNN_PANEL_FORWARDLOOK:
       fl = (VisualFL*)panel->vis_gui;
       hyscan_gtk_forward_look_set_brightness (fl->fl, new_brightness);
-      gtk_label_set_markup (fl->common.brightness_value, text_bright);
+      gtk_label_set_markup (fl->common.white_value, text_bright);
       break;
 
     default:
@@ -182,7 +182,7 @@ evo_brightness_set_override (Global  *global,
         wf = (VisualWF*)panel->vis_gui;
         hyscan_gtk_waterfall_state_get_sources (HYSCAN_GTK_WATERFALL_STATE (wf->wf), &lsource, &rsource);
         hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), new_shrink, 1.0, new_contrast);
-        gtk_label_set_markup (wf->common.brightness_value, text_bright);
+        gtk_label_set_markup (wf->common.white_value, text_bright);
         gtk_label_set_markup (wf->common.black_value, text_black);
         break;
       }
@@ -193,7 +193,7 @@ evo_brightness_set_override (Global  *global,
 
       // wf = (VisualWF*)panel->vis_gui;
       // hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), b, g, w);
-      // gtk_label_set_markup (wf->common.brightness_value, text_bright);
+      // gtk_label_set_markup (wf->common.white_value, text_bright);
       // gtk_label_set_markup (wf->common.black_value, text_black);
       // break;
 
@@ -210,14 +210,14 @@ evo_brightness_set_override (Global  *global,
       wf = (VisualWF*)panel->vis_gui;
       hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), b, g, w);
 
-      gtk_label_set_markup (wf->common.brightness_value, text_bright);
+      gtk_label_set_markup (wf->common.white_value, text_bright);
       gtk_label_set_markup (wf->common.black_value, text_black);
       break;
 
     case FNN_PANEL_FORWARDLOOK:
       fl = (VisualFL*)panel->vis_gui;
       hyscan_gtk_forward_look_set_brightness (fl->fl, new_brightness);
-      gtk_label_set_markup (fl->common.brightness_value, text_bright);
+      gtk_label_set_markup (fl->common.white_value, text_bright);
       break;
 
     default:
@@ -368,7 +368,7 @@ balance_changed (GtkAdjustment *adj,
   gint panelx = GPOINTER_TO_INT (udata);
   FnnPanel *panel = get_panel (_global, panelx);
 
-  brightness_set (_global, panel->vis_current.brightness, panel->vis_current.black, panelx);
+  levels_set (_global, panel->vis_current.white, panel->vis_current.gamma, panel->vis_current.black, panelx);
 }
 
 void
@@ -677,9 +677,9 @@ make_layer_list (EvoUI *ui,
   g_signal_connect (selection, "changed", G_CALLBACK (layer_changed), vwf->wf);
 
   /* Регистрируем слой в layer_store. */
-  add_layer_row (store, vwf->wf_grid, _("Grid"), EVO_GRID_KEY);
-  add_layer_row (store, vwf->wf_mark, _("Marks"), EVO_MARK_KEY);
-  add_layer_row (store, vwf->wf_metr, _("Measurements"), EVO_METR_KEY);
+  add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_grid), _("Grid"), EVO_GRID_KEY);
+  add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_mark), _("Marks"), EVO_MARK_KEY);
+  add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_metr), _("Measurements"), EVO_METR_KEY);
 
   gtk_widget_show_all (tree_view);
   return tree_view;
@@ -841,8 +841,9 @@ make_page_for_panel (EvoUI     *ui,
     case FNN_PANEL_WATERFALL:
 
       view = get_widget_from_builder (b, "ss_view_control");
-      panel->vis_gui->brightness_value  = get_label_from_builder (b, "ss_brightness_value");  add_to_sg (sg, b, "ss_brightness_label");
-      panel->vis_gui->black_value       = get_label_from_builder (b, "ss_black_value");       add_to_sg (sg, b, "ss_black_label");
+      panel->vis_gui->white_value       = get_label_from_builder (b, "ss_white_value");  add_to_sg (sg, b, "ss_white_label");
+      // panel->vis_gui->black_value       = get_label_from_builder (b, "ss_black_value");       add_to_sg (sg, b, "ss_black_label");
+      panel->vis_gui->gamma_value       = get_label_from_builder (b, "ss_gamma_value");       add_to_sg (sg, b, "ss_gamma_label");
       panel->vis_gui->scale_value       = get_label_from_builder (b, "ss_scale_value");       add_to_sg (sg, b, "ss_scale_label");
       panel->vis_gui->colormap_value    = get_label_from_builder (b, "ss_color_map_value");   add_to_sg (sg, b, "ss_color_map_label");
       panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");         add_to_sg (sg, b, "ss_live_view_label");
@@ -875,7 +876,7 @@ make_page_for_panel (EvoUI     *ui,
     case FNN_PANEL_PROFILER:
 
       view = get_widget_from_builder (b, "pf_view_control");
-      panel->vis_gui->brightness_value  = get_label_from_builder (b, "pf_brightness_value");  add_to_sg (sg, b, "pf_brightness_label");
+      panel->vis_gui->white_value  = get_label_from_builder (b, "pf_white_value");  add_to_sg (sg, b, "pf_white_label");
       panel->vis_gui->scale_value       = get_label_from_builder (b, "pf_scale_value");       add_to_sg (sg, b, "pf_scale_label");
       panel->vis_gui->black_value       = get_label_from_builder (b, "pf_black_value");       add_to_sg (sg, b, "pf_black_label");
       panel->vis_gui->live_view         = get_widget_from_builder(b, "pf_live_view");         add_to_sg (sg, b, "pf_live_view_label");
@@ -908,8 +909,9 @@ make_page_for_panel (EvoUI     *ui,
     case FNN_PANEL_ECHO:
 
       view = get_widget_from_builder (b, "ss_view_control");
-      panel->vis_gui->brightness_value  = get_label_from_builder (b, "ss_brightness_value");  add_to_sg (sg, b, "ss_brightness_label");
-      panel->vis_gui->black_value       = get_label_from_builder (b, "ss_black_value");       add_to_sg (sg, b, "ss_black_label");
+      panel->vis_gui->white_value       = get_label_from_builder (b, "ss_white_value");  add_to_sg (sg, b, "ss_white_label");
+      // panel->vis_gui->black_value       = get_label_from_builder (b, "ss_black_value");       add_to_sg (sg, b, "ss_black_label");
+      panel->vis_gui->gamma_value       = get_label_from_builder (b, "ss_gamma_value");       add_to_sg (sg, b, "ss_gamma_label");
       panel->vis_gui->scale_value       = get_label_from_builder (b, "ss_scale_value");       add_to_sg (sg, b, "ss_scale_label");
       panel->vis_gui->colormap_value    = get_label_from_builder (b, "ss_color_map_value");   add_to_sg (sg, b, "ss_color_map_label");
       panel->vis_gui->live_view         = get_widget_from_builder(b, "ss_live_view");         add_to_sg (sg, b, "ss_live_view_label");
@@ -942,7 +944,7 @@ make_page_for_panel (EvoUI     *ui,
     case FNN_PANEL_FORWARDLOOK:
 
       view = get_widget_from_builder (b, "fl_view_control");
-      panel->vis_gui->brightness_value  = get_label_from_builder (b, "fl_brightness_value");  add_to_sg (sg, b, "fl_brightness_label");
+      panel->vis_gui->white_value       = get_label_from_builder (b, "fl_brightness_value");  add_to_sg (sg, b, "fl_brightness_label");
       panel->vis_gui->scale_value       = get_label_from_builder (b, "fl_scale_value");       add_to_sg (sg, b, "fl_scale_label");
       panel->vis_gui->sensitivity_value = get_label_from_builder (b, "fl_sensitivity_value"); add_to_sg (sg, b, "fl_sensitivity_label");
 
@@ -984,7 +986,7 @@ build_interface (Global *global)
   GtkWidget *settings;
   GtkWidget *rbox;
 
-  global->override.brightness_set = evo_brightness_set_override;
+  // global->override.brightness_set = evo_brightness_set_override;
   global->override.project_changed = evo_project_changed_override;
 
   /* EvoUi это грид, вверху стек-свитчер с кнопками панелей,

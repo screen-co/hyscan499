@@ -166,6 +166,7 @@ fnn_ensure_panel (gint    panelx,
       panel->short_name = g_strdup ("ES");
       panel->type = FNN_PANEL_ECHO;
 
+
       panel->sources = g_new0 (HyScanSourceType, 2);
       panel->sources[0] = HYSCAN_SOURCE_ECHOSOUNDER;
       panel->sources[1] = HYSCAN_SOURCE_INVALID;
@@ -266,9 +267,10 @@ fnn_ensure_panel (gint    panelx,
       panel->current.level =       keyfile_double_read_helper (global->settings, panel->name, "sonar.cur_level", 0.5);
       panel->current.sensitivity = keyfile_double_read_helper (global->settings, panel->name, "sonar.cur_sensitivity", 0.6);
 
-      panel->vis_current.brightness =  keyfile_double_read_helper (global->settings, panel->name, "cur_brightness",   80.0);
-      panel->vis_current.colormap =    keyfile_double_read_helper (global->settings, panel->name, "cur_color_map",    0);
       panel->vis_current.black =       keyfile_double_read_helper (global->settings, panel->name, "cur_black",        0);
+      panel->vis_current.gamma =       keyfile_double_read_helper (global->settings, panel->name, "cur_gamma",        1.0);
+      panel->vis_current.white =       keyfile_double_read_helper (global->settings, panel->name, "cur_white",   80.0);
+      panel->vis_current.colormap =    keyfile_double_read_helper (global->settings, panel->name, "cur_color_map",    0);
       panel->vis_current.sensitivity = keyfile_double_read_helper (global->settings, panel->name, "cur_sensitivity",  8.0);
 
       if (panel->type == FNN_PANEL_WATERFALL ||
@@ -282,7 +284,7 @@ fnn_ensure_panel (gint    panelx,
           sensitivity_set (global, panel->vis_current.sensitivity, panelx);
         }
 
-      brightness_set (global, panel->vis_current.brightness, panel->vis_current.black, panelx);
+      levels_set (global, panel->vis_current.black, panel->vis_current.gamma, panel->vis_current.white, panelx);
       scale_set (global, FALSE, panelx);
 
       /* Если нет локатора, нечего и задавать. */
@@ -2355,11 +2357,11 @@ TVG_FUNC_DEF(fname)                                                             
 }
 
 /* Use gcc -E to test. */
-LIN_TVG_FUNC (tvg0_up,   +, 1, panel->current.gain0, &desired, panel->current.gain_step); // tvg0_up
-LIN_TVG_FUNC (tvg0_down, -, 1, panel->current.gain0, &desired, panel->current.gain_step); // tvg0_down
+LIN_TVG_FUNC (tvg0_up,   +, 1, panel->current.gain0, &desired, panel->current.gain_step); /* tvg0_up*/
+LIN_TVG_FUNC (tvg0_down, -, 1, panel->current.gain0, &desired, panel->current.gain_step); /* tvg0_down*/
 
-LIN_TVG_FUNC (tvg_up,    +, 1, panel->current.gain_step, &panel->current.gain0, desired); // tvg_up
-LIN_TVG_FUNC (tvg_down,  -, 1, panel->current.gain_step, &panel->current.gain0, desired); // tvg0_own
+LIN_TVG_FUNC (tvg_up,    +, 1, panel->current.gain_step, &panel->current.gain0, desired); /* tvg_up*/
+LIN_TVG_FUNC (tvg_down,  -, 1, panel->current.gain_step, &panel->current.gain0, desired); /* tvg0_own*/
 
 
 #define AUTO_TVG_FUNC(fname, sign, value, from_to, param1, param2)              \
@@ -2538,99 +2540,116 @@ void_callback (gpointer data)
   g_message ("This is a void callback. ");
 }
 
+void
+levels_printer (FnnPanel    *panel,
+                const gchar *text_black,
+                const gchar *text_gamma,
+                const gchar *text_white)
+{
+  if (panel->vis_gui->black_value != NULL && text_black != NULL)
+    gtk_label_set_markup (panel->vis_gui->black_value, text_black);
+  if (panel->vis_gui->gamma_value != NULL && text_gamma != NULL)
+    gtk_label_set_markup (panel->vis_gui->gamma_value, text_gamma);
+  if (panel->vis_gui->white_value != NULL && text_white != NULL)
+    gtk_label_set_markup (panel->vis_gui->white_value, text_white);
+}
 /* Функция устанавливает яркость отображения. */
+// gboolean
+// brightness_set (Global  *global,
+                // gdouble  new_brightness,
+                // gdouble  new_black,
+                // gint     panelx)
 gboolean
-brightness_set (Global  *global,
-                gdouble  new_brightness,
-                gdouble  new_black,
-                gint     panelx)
+levels_set (Global  *global,
+            gdouble  new_black,
+            gdouble  new_gamma,
+            gdouble  new_white,
+            gint     panelx)
 {
   VisualWF *wf;
   VisualFL *fl;
-  gchar *text_bright;
   gchar *text_black;
+  gchar *text_gamma;
+  gchar *text_white;
   gdouble b, g, w;
   FnnPanel *panel;
 
-  if (global->override.brightness_set != NULL)
-    return global->override.brightness_set (global, new_brightness, new_black, panelx);
+  if (global->override.levels_set != NULL)
+    return global->override.levels_set (global, new_black, new_gamma, new_white, panelx);
 
   panel = get_panel (global, panelx);
 
-  if (new_brightness < 0.0)
+  if (new_white <= 0.0)
     return FALSE;
-  if (new_brightness > 100.0)
+  if (new_white > 100.0)
+    return FALSE;
+  if (new_gamma < 0.0)
     return FALSE;
   if (new_black < 0.0)
     return FALSE;
   if (new_black > 100.0)
     return FALSE;
 
-  text_bright = g_strdup_printf ("<small><b>%.0f%%</b></small>", new_brightness);
-  text_black = g_strdup_printf ("<small><b>%.0f%%</b></small>", new_black);
-
   switch (panel->type)
     {
     case FNN_PANEL_WATERFALL:
     case FNN_PANEL_ECHO:
-      b = 0;
-      w = 1 - 0.99 * new_brightness / 100.0;
-      g = 1.25 - 0.5 * (new_brightness / 100.0);
+      b = new_black / 100.0;
+      w = new_white / 100.0;
+      g = new_gamma; // 100.0;
 
       wf = (VisualWF*)panel->vis_gui;
-      hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), b, g, w);
-      gtk_label_set_markup (wf->common.brightness_value, text_bright);
+      if (!hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), b, g, w))
+        return FALSE;
       break;
 
     case FNN_PANEL_PROFILER:
-      // b = new_black * 0.0000025;
-      // w = 1.0 - (new_brightness / 100.0) * 0.99;
-      // w *= w;
-      // g = 1;
       b = new_black / 400000;
-      w = (1 - 0.99 * new_brightness / 100.0) * (1 - b);
-      w = b + w * w;
+      w = (new_white / 100.0) * (1 - b);
+      w *= w;
       g = 1;
 
+      g_message ("SET: (%f %f %f)-> (%f %f %f)", new_black,new_gamma,new_white, b,g,w);
       if (b >= w)
         {
           g_message ("BBC error");
           return FALSE;
         }
 
-
       wf = (VisualWF*)panel->vis_gui;
-      hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), b, g, w);
-
-      gtk_label_set_markup (wf->common.brightness_value, text_bright);
-      gtk_label_set_markup (wf->common.black_value, text_black);
+      if (!hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), b, g, w))
+        return FALSE;
       break;
 
     case FNN_PANEL_FORWARDLOOK:
       fl = (VisualFL*)panel->vis_gui;
-      hyscan_gtk_forward_look_set_brightness (fl->fl, new_brightness);
-      gtk_label_set_markup (fl->common.brightness_value, text_bright);
+      hyscan_gtk_forward_look_set_brightness (fl->fl, new_white);
       break;
 
     default:
       g_warning ("brightness_set: wrong panel type!");
     }
 
-  g_free (text_bright);
+  text_black = g_strdup_printf ("<small><b>%.0f%%</b></small>", new_black);
+  text_gamma = g_strdup_printf ("<small><b>%.1f</b></small>", new_gamma);
+  text_white = g_strdup_printf ("<small><b>%.0f%%</b></small>", new_white);
+  levels_printer (panel, text_black, text_gamma, text_white);
   g_free (text_black);
+  g_free (text_gamma);
+  g_free (text_white);
 
   return TRUE;
 }
 
 void
-brightness_up (GtkWidget *widget,
-               gint       panelx)
+white_up (GtkWidget *widget,
+          gint       panelx)
 {
-  gdouble new_brightness;
+  gdouble new_white;
   gdouble step;
   FnnPanel *panel = get_panel (tglobal, panelx);
 
-  new_brightness = panel->vis_current.brightness;
+  new_white = panel->vis_current.white;
 
   switch (panel->type)
     {
@@ -2638,9 +2657,9 @@ brightness_up (GtkWidget *widget,
       case FNN_PANEL_PROFILER:
       case FNN_PANEL_ECHO:
         {
-          // if (new_brightness < 50.0)
+          // if (new_white < 50.0)
             // step = 10.0;
-          // else if (new_brightness < 90.0)
+          // else if (new_white < 90.0)
             // step = 5.0;
           // else
             step = 5.0;
@@ -2649,11 +2668,11 @@ brightness_up (GtkWidget *widget,
 
       case FNN_PANEL_FORWARDLOOK:
         {
-          if (new_brightness < 10.0)
+          if (new_white < 10.0)
             step = 1.0;
-          else if (new_brightness < 30.0)
+          else if (new_white < 30.0)
             step = 2.0;
-          else if (new_brightness < 50.0)
+          else if (new_white < 50.0)
             step = 5.0;
           else
             step = 10.0;
@@ -2661,28 +2680,28 @@ brightness_up (GtkWidget *widget,
         break;
 
       default:
-        g_warning ("brightness_up: wrong panel type");
+        g_warning ("white_up: wrong panel type");
         return;
     }
 
-  new_brightness = new_brightness + step;
-  new_brightness = new_brightness - fmod (new_brightness, ABS (step));
-  new_brightness = CLAMP (new_brightness, 0.0, 100.0);
+  new_white = new_white + step;
+  new_white = new_white - fmod (new_white, ABS (step));
+  new_white = CLAMP (new_white, 0.0, 100.0);
 
-  if (brightness_set (tglobal, new_brightness, panel->vis_current.black, panelx))
-    panel->vis_current.brightness = new_brightness;
+  if (levels_set (tglobal, panel->vis_current.black, panel->vis_current.gamma, new_white, panelx))
+    panel->vis_current.white = new_white;
   else
-    g_warning ("brightness_up failed");
+    g_warning ("white_up failed");
 }
 
 void
-brightness_down (GtkWidget *widget,
-                 gint        panelx)
+white_down (GtkWidget *widget,
+            gint        panelx)
 {
-  gdouble new_brightness, step;
+  gdouble new_white, step;
   FnnPanel *panel = get_panel (tglobal, panelx);
 
-  new_brightness = panel->vis_current.brightness;
+  new_white = panel->vis_current.white;
 
   switch (panel->type)
     {
@@ -2690,9 +2709,9 @@ brightness_down (GtkWidget *widget,
       case FNN_PANEL_PROFILER:
       case FNN_PANEL_ECHO:
         {
-          // if (new_brightness > 90.0)
+          // if (new_white > 90.0)
             step = -5.0;
-          // else if (new_brightness > 50.0)
+          // else if (new_white > 50.0)
             // step = -5.0;
           // else
             // step = -10.0;
@@ -2701,30 +2720,30 @@ brightness_down (GtkWidget *widget,
 
       case FNN_PANEL_FORWARDLOOK:
         {
-          if (new_brightness <= 10.0)
+          if (new_white <= 10.0)
             step = -1.0;
-          else if (new_brightness <= 30.0)
+          else if (new_white <= 30.0)
             step = -2.0;
-          else if (new_brightness <= 50.0)
+          else if (new_white <= 50.0)
             step = -5.0;
           else
-            new_brightness -= 10.0;
+            new_white -= 10.0;
         }
         break;
 
       default:
-        g_warning ("brightness_down: wrong panel type");
+        g_warning ("white_down: wrong panel type");
         return;
     }
 
-  new_brightness = new_brightness + step;
-  new_brightness = new_brightness - fmod (new_brightness, ABS (step));
-  new_brightness = CLAMP (new_brightness, 0.0, 100.0);
+  new_white = new_white + step;
+  new_white = new_white - fmod (new_white, ABS (step));
+  new_white = CLAMP (new_white, 0.0, 100.0);
 
-  if (brightness_set (tglobal, new_brightness, panel->vis_current.black, panelx))
-    panel->vis_current.brightness = new_brightness;
+  if (levels_set (tglobal, panel->vis_current.black, panel->vis_current.gamma, new_white, panelx))
+    panel->vis_current.white = new_white;
   else
-    g_warning ("brightness_down failed");
+    g_warning ("white_down failed");
 }
 
 void
@@ -2771,10 +2790,9 @@ black_up (GtkWidget *widget,
 
   new_black = new_black + step;
   new_black = new_black - fmod (new_black, ABS (step));
-  // new_black = CLAMP (new_black, 0.0, 100.0);
-  new_black = CLAMP (new_black, -100.0, 100.0);
+  new_black = CLAMP (new_black, 0.0, 100.0);
 
-  if (brightness_set (tglobal, panel->vis_current.brightness, new_black, panelx))
+  if (levels_set (tglobal, new_black, panel->vis_current.gamma, panel->vis_current.white, panelx))
     panel->vis_current.black = new_black;
   else
     g_warning ("black_up failed");
@@ -2824,13 +2842,50 @@ black_down (GtkWidget *widget,
 
   new_black = new_black + step;
   new_black = new_black - fmod (new_black, ABS (step));
-  // new_black = CLAMP (new_black, 0.0, 100.0);
-  new_black = CLAMP (new_black, -100.0, 100.0);
+  new_black = CLAMP (new_black, 0.0, 100.0);
 
-  if (brightness_set (tglobal, panel->vis_current.brightness, new_black, panelx))
+  if (levels_set (tglobal, new_black, panel->vis_current.gamma, panel->vis_current.white, panelx))
     panel->vis_current.black = new_black;
   else
     g_warning ("black_down failed");
+}
+
+void
+gamma_up (GtkWidget *widget,
+          gint       panelx)
+{
+  gdouble new_gamma, step;
+  FnnPanel *panel = get_panel (tglobal, panelx);
+
+  new_gamma = panel->vis_current.gamma;
+
+  step = .1;
+
+  new_gamma = new_gamma + step;
+  new_gamma = CLAMP (new_gamma, 0.001, 2.0);
+
+  if (levels_set (tglobal, panel->vis_current.black, new_gamma, panel->vis_current.white, panelx))
+    panel->vis_current.gamma = new_gamma;
+  else
+    g_warning ("gamma_up failed");
+}
+
+void
+gamma_down (GtkWidget *widget,
+            gint       panelx)
+{
+  gdouble new_gamma, step;
+  FnnPanel *panel = get_panel (tglobal, panelx);
+  new_gamma = panel->vis_current.gamma;
+
+  step = -.1;
+  new_gamma = new_gamma + step;
+  new_gamma = CLAMP (new_gamma, 0.001, 2.0);
+
+  if (levels_set (tglobal, panel->vis_current.black, new_gamma, panel->vis_current.white, panelx))
+    panel->vis_current.gamma = new_gamma;
+  else
+    g_warning ("gamma_down failed");
 }
 
 void
@@ -3368,9 +3423,10 @@ fnn_deinit (Global *ext_global)
               keyfile_double_write_helper (settings, panel->name, "sonar.cur_level", panel->current.level);
               keyfile_double_write_helper (settings, panel->name, "sonar.cur_sensitivity", panel->current.sensitivity);
 
-              keyfile_double_write_helper (settings, panel->name, "cur_brightness",          panel->vis_current.brightness);
-              keyfile_double_write_helper (settings, panel->name, "cur_color_map",           panel->vis_current.colormap);
               keyfile_double_write_helper (settings, panel->name, "cur_black",               panel->vis_current.black);
+              keyfile_double_write_helper (settings, panel->name, "cur_gamma",               panel->vis_current.gamma);
+              keyfile_double_write_helper (settings, panel->name, "cur_white",               panel->vis_current.white);
+              keyfile_double_write_helper (settings, panel->name, "cur_color_map",           panel->vis_current.colormap);
               keyfile_double_write_helper (settings, panel->name, "cur_sensitivity",         panel->vis_current.sensitivity);
             }
         }
