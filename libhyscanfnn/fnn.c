@@ -267,11 +267,11 @@ fnn_ensure_panel (gint    panelx,
       panel->current.level =       keyfile_double_read_helper (global->settings, panel->name, "sonar.cur_level", 0.5);
       panel->current.sensitivity = keyfile_double_read_helper (global->settings, panel->name, "sonar.cur_sensitivity", 0.6);
 
-      panel->vis_current.black =       keyfile_double_read_helper (global->settings, panel->name, "cur_black",        0);
-      panel->vis_current.gamma =       keyfile_double_read_helper (global->settings, panel->name, "cur_gamma",        1.0);
-      panel->vis_current.white =       keyfile_double_read_helper (global->settings, panel->name, "cur_white",   80.0);
-      panel->vis_current.colormap =    keyfile_double_read_helper (global->settings, panel->name, "cur_color_map",    0);
-      panel->vis_current.sensitivity = keyfile_double_read_helper (global->settings, panel->name, "cur_sensitivity",  8.0);
+      panel->vis_current.black =       keyfile_double_read_helper (global->settings, panel->name, "cur_black2",       0);
+      panel->vis_current.gamma =       keyfile_double_read_helper (global->settings, panel->name, "cur_gamma2",       0.45);
+      panel->vis_current.white =       keyfile_double_read_helper (global->settings, panel->name, "cur_white2",       50.0);
+      panel->vis_current.colormap =    keyfile_double_read_helper (global->settings, panel->name, "cur_color_map2",   0);
+      panel->vis_current.sensitivity = keyfile_double_read_helper (global->settings, panel->name, "cur_sensitivity2", 8.0);
 
       if (panel->type == FNN_PANEL_WATERFALL ||
           panel->type == FNN_PANEL_ECHO ||
@@ -1246,6 +1246,12 @@ get_mark_coords (GHashTable * locstores,
   guint32 n;
   HyScanGeoGeodetic position;
   HyScanmLoc *mloc;
+
+  if (mark->waterfall.track == NULL)
+    {
+      G_BREAKPOINT();
+      return NULL;
+    }
 
   /* Определяем название галса по айди. */
   if (!g_hash_table_contains (locstores, mark->waterfall.track))
@@ -2628,7 +2634,7 @@ levels_set (Global  *global,
     }
 
   text_black = g_strdup_printf ("<small><b>%.0f%%</b></small>", new_black);
-  text_gamma = g_strdup_printf ("<small><b>%.1f</b></small>", new_gamma);
+  text_gamma = g_strdup_printf ("<small><b>%.2f</b></small>", new_gamma);
   text_white = g_strdup_printf ("<small><b>%.0f%%</b></small>", new_white);
   levels_printer (panel, text_black, text_gamma, text_white);
   g_free (text_black);
@@ -2856,7 +2862,7 @@ gamma_up (GtkWidget *widget,
 
   new_gamma = panel->vis_current.gamma;
 
-  step = .1;
+  step = .05;
 
   new_gamma = new_gamma + step;
   new_gamma = CLAMP (new_gamma, 0.001, 2.0);
@@ -2875,7 +2881,7 @@ gamma_down (GtkWidget *widget,
   FnnPanel *panel = get_panel (tglobal, panelx);
   new_gamma = panel->vis_current.gamma;
 
-  step = -.1;
+  step = -.05;
   new_gamma = new_gamma + step;
   new_gamma = CLAMP (new_gamma, 0.001, 2.0);
 
@@ -3413,18 +3419,18 @@ fnn_deinit (Global *ext_global)
           while (g_hash_table_iter_next (&iter, &k, &v))
             {
               FnnPanel *panel = v;
-              keyfile_double_write_helper (settings, panel->name, "sonar.cur_distance", panel->current.distance);
-              keyfile_double_write_helper (settings, panel->name, "sonar.cur_signal", panel->current.signal);
-              keyfile_double_write_helper (settings, panel->name, "sonar.cur_gain0", panel->current.gain0);
-              keyfile_double_write_helper (settings, panel->name, "sonar.cur_gain_step", panel->current.gain_step);
-              keyfile_double_write_helper (settings, panel->name, "sonar.cur_level", panel->current.level);
+              keyfile_double_write_helper (settings, panel->name, "sonar.cur_distance",    panel->current.distance);
+              keyfile_double_write_helper (settings, panel->name, "sonar.cur_signal",      panel->current.signal);
+              keyfile_double_write_helper (settings, panel->name, "sonar.cur_gain0",       panel->current.gain0);
+              keyfile_double_write_helper (settings, panel->name, "sonar.cur_gain_step",   panel->current.gain_step);
+              keyfile_double_write_helper (settings, panel->name, "sonar.cur_level",       panel->current.level);
               keyfile_double_write_helper (settings, panel->name, "sonar.cur_sensitivity", panel->current.sensitivity);
 
-              keyfile_double_write_helper (settings, panel->name, "cur_black",               panel->vis_current.black);
-              keyfile_double_write_helper (settings, panel->name, "cur_gamma",               panel->vis_current.gamma);
-              keyfile_double_write_helper (settings, panel->name, "cur_white",               panel->vis_current.white);
-              keyfile_double_write_helper (settings, panel->name, "cur_color_map",           panel->vis_current.colormap);
-              keyfile_double_write_helper (settings, panel->name, "cur_sensitivity",         panel->vis_current.sensitivity);
+              keyfile_double_write_helper (settings, panel->name, "cur_black2",            panel->vis_current.black);
+              keyfile_double_write_helper (settings, panel->name, "cur_gamma2",            panel->vis_current.gamma);
+              keyfile_double_write_helper (settings, panel->name, "cur_white2",            panel->vis_current.white);
+              keyfile_double_write_helper (settings, panel->name, "cur_color_map2",        panel->vis_current.colormap);
+              keyfile_double_write_helper (settings, panel->name, "cur_sensitivity2",      panel->vis_current.sensitivity);
             }
         }
 

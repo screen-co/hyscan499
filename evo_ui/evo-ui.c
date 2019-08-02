@@ -1003,6 +1003,7 @@ build_interface (Global *global)
   /* Центральная зона: виджет с виджетами. Да. */
   ui->nav_stack = make_stack ();
   ui->acoustic_stack = make_stack ();
+  g_object_ref (ui->acoustic_stack);
 
   /* Связываем стеки. */
   g_signal_connect (ui->acoustic_stack, "notify::visible-child-name", G_CALLBACK (widget_swap), NULL);
@@ -1259,12 +1260,16 @@ destroy_interface (void)
 {
   EvoUI *ui = &global_ui;
 
+  g_signal_handlers_disconnect_by_func(ui->acoustic_stack, G_CALLBACK(widget_swap), NULL);
+  g_clear_object (&ui->acoustic_stack);
   g_clear_pointer (&ui->builders, g_hash_table_unref);
 
   g_clear_object (&ui->starter.all);
   g_clear_object (&ui->starter.dry_switch);
 
   g_clear_pointer (&ui->mapkit, hyscan_gtk_map_kit_free);
+
+
 }
 
 

@@ -688,7 +688,10 @@ exit:
 
   fnn_deinit (&global);
   if (global.settings != NULL)
-    g_key_file_save_to_file (global.settings, settings_file, NULL);
+    {
+      keyfile_string_write_helper(global.settings, "common", "version", "2019.01");
+      g_key_file_save_to_file (global.settings, settings_file, NULL);
+    }
 
   #ifdef FNN_LOGGING
   hyscan_fnn_flog_close ();
