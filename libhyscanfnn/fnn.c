@@ -326,6 +326,7 @@ fnn_panel_destroy (gpointer data)
 
   g_free (panel->name);
   g_free (panel->name_local);
+  g_free (panel->short_name);
   g_free (panel->sources);
 
   switch (panel->type)
@@ -2553,12 +2554,8 @@ levels_printer (FnnPanel    *panel,
   if (panel->vis_gui->white_value != NULL && text_white != NULL)
     gtk_label_set_markup (panel->vis_gui->white_value, text_white);
 }
-/* Функция устанавливает яркость отображения. */
-// gboolean
-// brightness_set (Global  *global,
-                // gdouble  new_brightness,
-                // gdouble  new_black,
-                // gint     panelx)
+
+/* Функция устанавливает уровни. */
 gboolean
 levels_set (Global  *global,
             gdouble  new_black,
@@ -2627,7 +2624,7 @@ levels_set (Global  *global,
       break;
 
     default:
-      g_warning ("brightness_set: wrong panel type!");
+      g_warning ("levels_set: wrong panel type!");
     }
 
   text_black = g_strdup_printf ("<small><b>%.0f%%</b></small>", new_black);
