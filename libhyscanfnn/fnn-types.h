@@ -608,14 +608,20 @@ HYSCAN_API void
 void_callback (gpointer data);
 
 HYSCAN_API void
-white_up
- (GtkWidget *widget,
-               gint        selector);
+white_up (GtkWidget *widget,
+          gint        selector);
 
 HYSCAN_API void
-white_down
- (GtkWidget *widget,
-                 gint       selector);
+white_down (GtkWidget *widget,
+            gint       selector);
+
+HYSCAN_API void
+gamma_up (GtkWidget *widget,
+          gint        selector);
+
+HYSCAN_API void
+gamma_down (GtkWidget *widget,
+            gint       selector);
 
 HYSCAN_API void
 black_up (GtkWidget *widget,
