@@ -18,6 +18,8 @@
 #define EVO_GRID_KEY "GRID"
 #define EVO_MARK_KEY "MARK"
 #define EVO_METR_KEY "METR"
+
+#define TVG_TEST(caps,concrete) ((caps & concrete) == concrete)
 enum
 {
   LAYER_VISIBLE_COLUMN,
@@ -777,10 +779,10 @@ make_tvg_control (Global *global,
         }
 
       caps = info->tvg->capabilities;
-      auto_ok  &= caps & HYSCAN_SONAR_TVG_MODE_AUTO;
-      lin_ok   &= caps & HYSCAN_SONAR_TVG_MODE_LINEAR_DB;
-      log_ok   &= caps & HYSCAN_SONAR_TVG_MODE_LOGARITHMIC;
-      const_ok &= caps & HYSCAN_SONAR_TVG_MODE_CONSTANT;
+      auto_ok  &= TVG_TEST(caps, HYSCAN_SONAR_TVG_MODE_AUTO);
+      lin_ok   &= TVG_TEST(caps, HYSCAN_SONAR_TVG_MODE_LINEAR_DB);
+      log_ok   &= TVG_TEST(caps, HYSCAN_SONAR_TVG_MODE_LOGARITHMIC);
+      const_ok &= TVG_TEST(caps, HYSCAN_SONAR_TVG_MODE_CONSTANT);
     }
 
   g_message ("Panel <%s>, TVG: AUTO %i; LIN %i; LOG %i CONST %i",
