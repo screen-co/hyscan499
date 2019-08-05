@@ -206,6 +206,7 @@ typedef struct
   gchar            *name;
   gchar            *name_local;
   FnnPanelType      type;    /* тип панели: вф, фл, пф */
+  gint              panelx;  /* id панели. */
   HyScanSourceType *sources; /* Источники для панели */
 
   SonarCurrent      current;   /* Текущие значения параметров ГЛ. */

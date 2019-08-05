@@ -48,6 +48,7 @@ fnn_ensure_panel (gint    panelx,
   svp = make_svp_from_velocity (global->sound_velocity);
 
   panel = g_new0 (FnnPanel, 1);
+  panel->panelx = panelx;
   /* Создаем панель. */
   if (panelx == X_SIDESCAN || panelx == X_SIDE_LOW || panelx == X_SIDE_HIGH)
     { /* ГБО */

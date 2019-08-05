@@ -500,7 +500,12 @@ GObject *
 get_from_builder (GtkBuilder * builder,
                          const gchar *name)
 {
-  GObject *obj = gtk_builder_get_object (builder, name);
+  GObject *obj;
+
+  if (obj == NULL)
+    return NULL;
+
+  obj = gtk_builder_get_object (builder, name);
   if (obj == NULL)
     {
       g_warning ("EvoUI: <%s> not found.", name);
@@ -788,34 +793,69 @@ make_tvg_control (Global *global,
   g_message ("Panel <%s>, TVG: AUTO %i; LIN %i; LOG %i CONST %i",
              panel->name, auto_ok, lin_ok, log_ok, const_ok);
 
-  if (auto_ok)
+  if (panel->panelx == X_ECHOSOUND)
     {
-      tvg_control_name = "auto_tvg_control";
-      panel->gui.tvg_level_value = get_label_from_builder  (b, "tvg_level_value");     add_to_sg (sg, b, "tvg_level_label");
-      panel->gui.tvg_sens_value  = get_label_from_builder  (b, "tvg_sens_value");      add_to_sg (sg, b, "tvg_sensitivity_label");
+      if (auto_ok)
+        {
+          tvg_control_name = "auto_tvg_control";
+          panel->gui.tvg_level_value = get_label_from_builder  (b, "tvg_level_value");     add_to_sg (sg, b, "tvg_level_label");
+          panel->gui.tvg_sens_value  = get_label_from_builder  (b, "tvg_sens_value");      add_to_sg (sg, b, "tvg_sensitivity_label");
+        }
+      else if (log_ok)
+        {
+          tvg_control_name = "log_tvg_control";
+          panel->gui.logtvg_gain0_value = get_label_from_builder  (b, "logtvg_gain0_value");     add_to_sg (sg, b, "logtvg_gain0_label");
+          panel->gui.logtvg_beta_value  = get_label_from_builder  (b, "logtvg_beta_value");      add_to_sg (sg, b, "logtvg_beta_label");
+          panel->gui.logtvg_alpha_value  = get_label_from_builder  (b, "logtvg_alpha_value");    add_to_sg (sg, b, "logtvg_alpha_label");
+        }
+      else if (lin_ok)
+        {
+          tvg_control_name = "lin_tvg_control";
+          panel->gui.tvg_value  = get_label_from_builder  (b, "tvg_value");          add_to_sg (sg, b, "tvg_label");
+          panel->gui.tvg0_value = get_label_from_builder  (b, "tvg0_value");         add_to_sg (sg, b, "tvg0_label");
+        }
+      else if (const_ok)
+        {
+          tvg_control_name = "const_tvg_control";
+          panel->gui.consttvg_value  = get_label_from_builder  (b, "consttvg_value");      add_to_sg (sg, b, "consttvg_label");
+        }
+      else /* if (log_ok) */
+        {
+          tvg_control_name = NULL;
+          return NULL;
+        }
     }
-  else if (log_ok)
+  else
     {
-      tvg_control_name = "log_tvg_control";
-      panel->gui.logtvg_gain0_value = get_label_from_builder  (b, "logtvg_gain0_value");     add_to_sg (sg, b, "logtvg_gain0_label");
-      panel->gui.logtvg_beta_value  = get_label_from_builder  (b, "logtvg_beta_value");      add_to_sg (sg, b, "logtvg_beta_label");
-      panel->gui.logtvg_alpha_value  = get_label_from_builder  (b, "logtvg_alpha_value");    add_to_sg (sg, b, "logtvg_alpha_label");
-    }
-  else if (lin_ok)
-    {
-      tvg_control_name = "lin_tvg_control";
-      panel->gui.tvg_value  = get_label_from_builder  (b, "tvg_value");          add_to_sg (sg, b, "tvg_label");
-      panel->gui.tvg0_value = get_label_from_builder  (b, "tvg0_value");         add_to_sg (sg, b, "tvg0_label");
-    }
-  else if (const_ok)
-    {
-      tvg_control_name = "const_tvg_control";
-      panel->gui.consttvg_value  = get_label_from_builder  (b, "consttvg_value");      add_to_sg (sg, b, "consttvg_label");
-    }
-  else /* if (log_ok) */
-    {
-      tvg_control_name = NULL;
-      return NULL;
+      if (auto_ok)
+        {
+          tvg_control_name = "auto_tvg_control";
+          panel->gui.tvg_level_value = get_label_from_builder  (b, "tvg_level_value");     add_to_sg (sg, b, "tvg_level_label");
+          panel->gui.tvg_sens_value  = get_label_from_builder  (b, "tvg_sens_value");      add_to_sg (sg, b, "tvg_sensitivity_label");
+        }
+      else if (lin_ok)
+        {
+          tvg_control_name = "lin_tvg_control";
+          panel->gui.tvg_value  = get_label_from_builder  (b, "tvg_value");          add_to_sg (sg, b, "tvg_label");
+          panel->gui.tvg0_value = get_label_from_builder  (b, "tvg0_value");         add_to_sg (sg, b, "tvg0_label");
+        }
+      else if (log_ok)
+        {
+          tvg_control_name = "log_tvg_control";
+          panel->gui.logtvg_gain0_value = get_label_from_builder  (b, "logtvg_gain0_value");     add_to_sg (sg, b, "logtvg_gain0_label");
+          panel->gui.logtvg_beta_value  = get_label_from_builder  (b, "logtvg_beta_value");      add_to_sg (sg, b, "logtvg_beta_label");
+          panel->gui.logtvg_alpha_value  = get_label_from_builder  (b, "logtvg_alpha_value");    add_to_sg (sg, b, "logtvg_alpha_label");
+        }
+      else if (const_ok)
+        {
+          tvg_control_name = "const_tvg_control";
+          panel->gui.consttvg_value  = get_label_from_builder  (b, "consttvg_value");      add_to_sg (sg, b, "consttvg_label");
+        }
+      else /* if (log_ok) */
+        {
+          tvg_control_name = NULL;
+          return NULL;
+        }
     }
 
   return get_widget_from_builder (b, tvg_control_name);
