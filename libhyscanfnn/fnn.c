@@ -260,12 +260,16 @@ fnn_ensure_panel (gint    panelx,
   /* Преднастройки. */
   if (global->settings != NULL)
     {
-      panel->current.distance =    keyfile_double_read_helper (global->settings, panel->name, "sonar.cur_distance", 50);
-      panel->current.signal =      keyfile_double_read_helper (global->settings, panel->name, "sonar.cur_signal", 0);
-      panel->current.gain0 =       keyfile_double_read_helper (global->settings, panel->name, "sonar.cur_gain0", 0);
-      panel->current.gain_step =   keyfile_double_read_helper (global->settings, panel->name, "sonar.cur_gain_step", 10);
-      panel->current.level =       keyfile_double_read_helper (global->settings, panel->name, "sonar.cur_level", 0.5);
-      panel->current.sensitivity = keyfile_double_read_helper (global->settings, panel->name, "sonar.cur_sensitivity", 0.6);
+      panel->current.distance =    keyfile_double_read_helper (global->settings, panel->name, "sonar.distance", 50);
+      panel->current.signal =      keyfile_double_read_helper (global->settings, panel->name, "sonar.signal", 0);
+      panel->current.gain0 =       keyfile_double_read_helper (global->settings, panel->name, "sonar.gain0", 0);
+      panel->current.gain_step =   keyfile_double_read_helper (global->settings, panel->name, "sonar.gain_step", 10);
+      panel->current.level =       keyfile_double_read_helper (global->settings, panel->name, "sonar.level", 0.5);
+      panel->current.sensitivity = keyfile_double_read_helper (global->settings, panel->name, "sonar.sensitivity", 0.6);
+      panel->current.log_gain0 =   keyfile_double_read_helper (global->settings, panel->name, "sonar.log_gain0", 5);
+      panel->current.log_beta =    keyfile_double_read_helper (global->settings, panel->name, "sonar.log_beta", 0.0);
+      panel->current.log_alpha =   keyfile_double_read_helper (global->settings, panel->name, "sonar.log_alpha", 0.0);
+      panel->current.const_gain0 = keyfile_double_read_helper (global->settings, panel->name, "sonar.const_gain0", 1);
 
       panel->vis_current.black =       keyfile_double_read_helper (global->settings, panel->name, "cur_black2",       0);
       panel->vis_current.gamma =       keyfile_double_read_helper (global->settings, panel->name, "cur_gamma2",       0.45);
@@ -293,7 +297,12 @@ fnn_ensure_panel (gint    panelx,
         {
           /* Для локаторов мы ничего не задаем, но лейблы всёрно надо проинициализировать. */
           distance_label (panel, panel->current.distance);
+
           tvg_label (panel, panel->current.gain0, panel->current.gain_step);
+          auto_tvg_label (panel, panel->current.level, panel->current.sensitivity);
+          log_tvg_label (panel, panel->current.log_gain0, panel->current.log_beta, panel->current.log_alpha);
+          const_tvg_label (panel, panel->current.const_gain0);
+
           auto_tvg_label (panel, panel->current.level, panel->current.sensitivity);
 
           /* С сигналом чуть сложней, т.к. надо найти сигнал и вытащить из него имя. */
@@ -2338,14 +2347,14 @@ TVG_FUNC_DEF(fname)                                                             
     g_warning ("%s failed", __FUNCTION__);                                      \
 }
 
-LOG_TVG_FUNC (tvglog_gain0_up,   +, 1, panel->current.log_gain0, &desired, panel->current.log_beta, panel->current.log_alpha)
-LOG_TVG_FUNC (tvglog_gain0_down, -, 1, panel->current.log_gain0, &desired, panel->current.log_beta, panel->current.log_alpha)
+LOG_TVG_FUNC (logtvg_gain0_up,   +, 1, panel->current.log_gain0, &desired, panel->current.log_beta, panel->current.log_alpha)
+LOG_TVG_FUNC (logtvg_gain0_down, -, 1, panel->current.log_gain0, &desired, panel->current.log_beta, panel->current.log_alpha)
 
-LOG_TVG_FUNC (tvglog_beta_up,    +, 1, panel->current.log_beta, &panel->current.log_gain0, desired, panel->current.log_alpha)
-LOG_TVG_FUNC (tvglog_beta_down,  -, 1, panel->current.log_beta, &panel->current.log_gain0, desired, panel->current.log_alpha)
+LOG_TVG_FUNC (logtvg_beta_up,    +, 1, panel->current.log_beta, &panel->current.log_gain0, desired, panel->current.log_alpha)
+LOG_TVG_FUNC (logtvg_beta_down,  -, 1, panel->current.log_beta, &panel->current.log_gain0, desired, panel->current.log_alpha)
 
-LOG_TVG_FUNC (tvglog_alpha_up,   +, 1, panel->current.log_alpha, &panel->current.log_gain0, panel->current.log_beta, desired)
-LOG_TVG_FUNC (tvglog_alpha_down, -, 1, panel->current.log_alpha, &panel->current.log_gain0, panel->current.log_beta, desired)
+LOG_TVG_FUNC (logtvg_alpha_up,   +, 1, panel->current.log_alpha, &panel->current.log_gain0, panel->current.log_beta, desired)
+LOG_TVG_FUNC (logtvg_alpha_down, -, 1, panel->current.log_alpha, &panel->current.log_gain0, panel->current.log_beta, desired)
 
 
 #define LIN_TVG_FUNC(fname, sign, value, from_to, param1, param2)               \
@@ -3419,12 +3428,16 @@ fnn_deinit (Global *ext_global)
           while (g_hash_table_iter_next (&iter, &k, &v))
             {
               FnnPanel *panel = v;
-              keyfile_double_write_helper (settings, panel->name, "sonar.cur_distance",    panel->current.distance);
-              keyfile_double_write_helper (settings, panel->name, "sonar.cur_signal",      panel->current.signal);
-              keyfile_double_write_helper (settings, panel->name, "sonar.cur_gain0",       panel->current.gain0);
-              keyfile_double_write_helper (settings, panel->name, "sonar.cur_gain_step",   panel->current.gain_step);
-              keyfile_double_write_helper (settings, panel->name, "sonar.cur_level",       panel->current.level);
-              keyfile_double_write_helper (settings, panel->name, "sonar.cur_sensitivity", panel->current.sensitivity);
+              keyfile_double_write_helper (settings, panel->name, "sonar.distance",    panel->current.distance);
+              keyfile_double_write_helper (settings, panel->name, "sonar.signal",      panel->current.signal);
+              keyfile_double_write_helper (settings, panel->name, "sonar.gain0",       panel->current.gain0);
+              keyfile_double_write_helper (settings, panel->name, "sonar.gain_step",   panel->current.gain_step);
+              keyfile_double_write_helper (settings, panel->name, "sonar.level",       panel->current.level);
+              keyfile_double_write_helper (settings, panel->name, "sonar.sensitivity", panel->current.sensitivity);
+              keyfile_double_write_helper (settings, panel->name, "sonar.log_gain0",   panel->current.log_gain0);
+              keyfile_double_write_helper (settings, panel->name, "sonar.log_beta",    panel->current.log_beta);
+              keyfile_double_write_helper (settings, panel->name, "sonar.log_alpha",   panel->current.log_alpha);
+              keyfile_double_write_helper (settings, panel->name, "sonar.const_gain0", panel->current.const_gain0);
 
               keyfile_double_write_helper (settings, panel->name, "cur_black2",            panel->vis_current.black);
               keyfile_double_write_helper (settings, panel->name, "cur_gamma2",            panel->vis_current.gamma);

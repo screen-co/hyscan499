@@ -1834,32 +1834,32 @@
       </packing>
     </child>
   </object>
-  <object class="GtkImage" id="tvglog_alpha_image_down">
+  <object class="GtkImage" id="logtvg_alpha_image_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="icon_name">list-remove-symbolic</property>
   </object>
-  <object class="GtkImage" id="tvglog_alpha_image_up">
+  <object class="GtkImage" id="logtvg_alpha_image_up">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="icon_name">list-add-symbolic</property>
   </object>
-  <object class="GtkImage" id="tvglog_beta_image_down">
+  <object class="GtkImage" id="logtvg_beta_image_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="icon_name">list-remove-symbolic</property>
   </object>
-  <object class="GtkImage" id="tvglog_beta_image_down1">
+  <object class="GtkImage" id="logtvg_beta_image_down1">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="icon_name">list-remove-symbolic</property>
   </object>
-  <object class="GtkImage" id="tvglog_beta_image_up">
+  <object class="GtkImage" id="logtvg_beta_image_up">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="icon_name">list-add-symbolic</property>
   </object>
-  <object class="GtkImage" id="tvglog_beta_image_up1">
+  <object class="GtkImage" id="logtvg_beta_image_up1">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="icon_name">list-add-symbolic</property>
@@ -1869,7 +1869,7 @@
     <property name="can_focus">False</property>
     <property name="hexpand">False</property>
     <child>
-      <object class="GtkLabel" id="tvglog_gain0_label">
+      <object class="GtkLabel" id="logtvg_gain0_label">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="halign">end</property>
@@ -1882,14 +1882,14 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="tvglog_beta_down1">
+      <object class="GtkButton" id="logtvg_beta_down1">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="halign">center</property>
         <property name="valign">center</property>
-        <property name="image">tvglog_beta_image_down1</property>
-        <signal name="clicked" handler="tvglog_gain0_down" swapped="no"/>
+        <property name="image">logtvg_beta_image_down1</property>
+        <signal name="clicked" handler="logtvg_gain0_down" swapped="no"/>
       </object>
       <packing>
         <property name="left_attach">2</property>
@@ -1897,7 +1897,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="tvglog_gain0_value">
+      <object class="GtkLabel" id="logtvg_gain0_value">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="valign">center</property>
@@ -1911,14 +1911,14 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="tvglog_beta_up1">
+      <object class="GtkButton" id="logtvg_beta_up1">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="halign">center</property>
         <property name="valign">center</property>
-        <property name="image">tvglog_beta_image_up1</property>
-        <signal name="clicked" handler="tvglog_gain0_up" swapped="no"/>
+        <property name="image">logtvg_beta_image_up1</property>
+        <signal name="clicked" handler="logtvg_gain0_up" swapped="no"/>
       </object>
       <packing>
         <property name="left_attach">3</property>
@@ -1939,7 +1939,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="tvglog_beta_label">
+      <object class="GtkLabel" id="logtvg_beta_label">
         <property name="name">0</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
@@ -1954,14 +1954,14 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="tvglog_beta_down">
+      <object class="GtkButton" id="logtvg_beta_down">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="halign">center</property>
         <property name="valign">center</property>
-        <property name="image">tvglog_beta_image_down</property>
-        <signal name="clicked" handler="tvglog_beta_down" swapped="no"/>
+        <property name="image">logtvg_beta_image_down</property>
+        <signal name="clicked" handler="logtvg_beta_down" swapped="no"/>
       </object>
       <packing>
         <property name="left_attach">2</property>
@@ -1969,7 +1969,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="tvglog_beta_value">
+      <object class="GtkLabel" id="logtvg_beta_value">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="valign">center</property>
@@ -1983,14 +1983,14 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="tvglog_beta_up">
+      <object class="GtkButton" id="logtvg_beta_up">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="halign">center</property>
         <property name="valign">center</property>
-        <property name="image">tvglog_beta_image_up</property>
-        <signal name="clicked" handler="tvglog_beta_up" swapped="no"/>
+        <property name="image">logtvg_beta_image_up</property>
+        <signal name="clicked" handler="logtvg_beta_up" swapped="no"/>
       </object>
       <packing>
         <property name="left_attach">3</property>
@@ -2024,7 +2024,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="tvglog_alpha_label">
+      <object class="GtkLabel" id="logtvg_alpha_label">
         <property name="name">0</property>
         <property name="visible">True</property>
         <property name="can_focus">False</property>
@@ -2039,7 +2039,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="tvglog_alpha_value">
+      <object class="GtkLabel" id="logtvg_alpha_value">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="valign">center</property>
@@ -2053,14 +2053,14 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="tvglog_alpha_down">
+      <object class="GtkButton" id="logtvg_alpha_down">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="halign">center</property>
         <property name="valign">center</property>
-        <property name="image">tvglog_alpha_image_down</property>
-        <signal name="clicked" handler="tvglog_alpha_down" swapped="no"/>
+        <property name="image">logtvg_alpha_image_down</property>
+        <signal name="clicked" handler="logtvg_alpha_down" swapped="no"/>
       </object>
       <packing>
         <property name="left_attach">2</property>
@@ -2068,14 +2068,14 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="tvglog_alpha_up">
+      <object class="GtkButton" id="logtvg_alpha_up">
         <property name="visible">True</property>
         <property name="can_focus">True</property>
         <property name="receives_default">True</property>
         <property name="halign">center</property>
         <property name="valign">center</property>
-        <property name="image">tvglog_alpha_image_up</property>
-        <signal name="clicked" handler="tvglog_alpha_up" swapped="no"/>
+        <property name="image">logtvg_alpha_image_up</property>
+        <signal name="clicked" handler="logtvg_alpha_up" swapped="no"/>
       </object>
       <packing>
         <property name="left_attach">3</property>

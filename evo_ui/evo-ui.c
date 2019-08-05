@@ -779,10 +779,10 @@ make_tvg_control (Global *global,
         }
 
       caps = info->tvg->capabilities;
-      auto_ok  &= TVG_TEST(caps, HYSCAN_SONAR_TVG_MODE_AUTO);
-      lin_ok   &= TVG_TEST(caps, HYSCAN_SONAR_TVG_MODE_LINEAR_DB);
-      log_ok   &= TVG_TEST(caps, HYSCAN_SONAR_TVG_MODE_LOGARITHMIC);
-      const_ok &= TVG_TEST(caps, HYSCAN_SONAR_TVG_MODE_CONSTANT);
+      auto_ok  &= TVG_TEST (caps, HYSCAN_SONAR_TVG_MODE_AUTO);
+      lin_ok   &= TVG_TEST (caps, HYSCAN_SONAR_TVG_MODE_LINEAR_DB);
+      log_ok   &= TVG_TEST (caps, HYSCAN_SONAR_TVG_MODE_LOGARITHMIC);
+      const_ok &= TVG_TEST (caps, HYSCAN_SONAR_TVG_MODE_CONSTANT);
     }
 
   g_message ("Panel <%s>, TVG: AUTO %i; LIN %i; LOG %i CONST %i",

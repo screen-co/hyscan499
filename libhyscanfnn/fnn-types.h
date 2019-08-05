@@ -532,6 +532,18 @@ HYSCAN_API void
 auto_tvg_label (FnnPanel *panel,
                 gdouble   level,
                 gdouble   sensitivity);
+
+HYSCAN_API void
+log_tvg_label (FnnPanel *panel,
+               gdouble   gain0,
+               gdouble   beta,
+               gdouble   alpha);
+
+HYSCAN_API void
+const_tvg_label (FnnPanel *panel,
+                 gdouble   gain0);
+
+
 HYSCAN_API void
 distance_label (FnnPanel *panel,
                 gdouble   distance);
@@ -557,12 +569,12 @@ signal_set (Global   *global,
 HYSCAN_API TVG_FUNC_DEF(consttvg_up);
 HYSCAN_API TVG_FUNC_DEF(consttvg_down);
 
-HYSCAN_API TVG_FUNC_DEF(tvglog_gain0_up);
-HYSCAN_API TVG_FUNC_DEF(tvglog_gain0_down);
-HYSCAN_API TVG_FUNC_DEF(tvglog_beta_up);
-HYSCAN_API TVG_FUNC_DEF(tvglog_beta_down);
-HYSCAN_API TVG_FUNC_DEF(tvglog_alpha_up);
-HYSCAN_API TVG_FUNC_DEF(tvglog_alpha_down);
+HYSCAN_API TVG_FUNC_DEF(logtvg_gain0_up);
+HYSCAN_API TVG_FUNC_DEF(logtvg_gain0_down);
+HYSCAN_API TVG_FUNC_DEF(logtvg_beta_up);
+HYSCAN_API TVG_FUNC_DEF(logtvg_beta_down);
+HYSCAN_API TVG_FUNC_DEF(logtvg_alpha_up);
+HYSCAN_API TVG_FUNC_DEF(logtvg_alpha_down);
 
 HYSCAN_API TVG_FUNC_DEF(tvg0_up);
 HYSCAN_API TVG_FUNC_DEF(tvg0_down);
