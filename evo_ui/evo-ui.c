@@ -948,6 +948,7 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->scale_value       = get_label_from_builder (b, "fl_scale_value");       add_to_sg (sg, b, "fl_scale_label");
       panel->vis_gui->sensitivity_value = get_label_from_builder (b, "fl_sensitivity_value"); add_to_sg (sg, b, "fl_sensitivity_label");
 
+      g_message ("fl %i", panel_sources_are_in_sonar (global, panel));
       if (!panel_sources_are_in_sonar (global, panel))
         break;
 
@@ -967,11 +968,10 @@ make_page_for_panel (EvoUI     *ui,
   gtk_box_pack_start (GTK_BOX (box), view, FALSE, FALSE, 0);
   if (layers != NULL)
     gtk_box_pack_start (GTK_BOX (box), layers, FALSE, FALSE, 0);
-  if (sonar != NULL && tvg != NULL)
-    {
-      gtk_box_pack_end (GTK_BOX (box), tvg, FALSE, FALSE, 0);
-      gtk_box_pack_end (GTK_BOX (box), sonar, FALSE, TRUE, 0);
-    }
+  if (sonar != NULL)
+    gtk_box_pack_end (GTK_BOX (box), sonar, FALSE, TRUE, 0);
+  if (tvg != NULL)
+    gtk_box_pack_end (GTK_BOX (box), tvg, FALSE, FALSE, 0);
 
   return box;
 }
