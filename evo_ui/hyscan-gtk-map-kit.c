@@ -987,6 +987,9 @@ list_store_insert (HyScanGtkMapKit *kit,
       gchar *time_str;
       gchar *type_name;
 
+      if (mark->type == HYSCAN_MARK_WATERFALL && ((HyScanMarkWaterfall*)mark)->track == NULL)
+        continue;
+
       /* Добавляем в список меток. */
       local = g_date_time_new_from_unix_local (mark->mtime / 1000000);
       time_str = g_date_time_format (local, "%d.%m %H:%M");

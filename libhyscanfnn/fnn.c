@@ -1259,7 +1259,7 @@ get_mark_coords (GHashTable * locstores,
 
   if (mark->waterfall.track == NULL)
     {
-      G_BREAKPOINT();
+      // G_BREAKPOINT();
       return NULL;
     }
 
