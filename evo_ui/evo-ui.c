@@ -498,11 +498,11 @@ run_offset_setup (GObject *emitter,
 
 GObject *
 get_from_builder (GtkBuilder * builder,
-                         const gchar *name)
+                  const gchar *name)
 {
-  GObject *obj;
+  GObject *obj = NULL;
 
-  if (obj == NULL)
+  if (name == NULL)
     return NULL;
 
   obj = gtk_builder_get_object (builder, name);
@@ -819,7 +819,7 @@ make_tvg_control (Global *global,
           tvg_control_name = "const_tvg_control";
           panel->gui.consttvg_value  = get_label_from_builder  (b, "consttvg_value");      add_to_sg (sg, b, "consttvg_label");
         }
-      else /* if (log_ok) */
+      else
         {
           tvg_control_name = NULL;
           return NULL;
@@ -851,7 +851,7 @@ make_tvg_control (Global *global,
           tvg_control_name = "const_tvg_control";
           panel->gui.consttvg_value  = get_label_from_builder  (b, "consttvg_value");      add_to_sg (sg, b, "consttvg_label");
         }
-      else /* if (log_ok) */
+      else
         {
           tvg_control_name = NULL;
           return NULL;
