@@ -298,7 +298,8 @@ hyscan_gtk_con_run_scan (GObject *emitter,
         hyscan_profile_read (HYSCAN_PROFILE (pfl));
         g_free (pf_file);
 
-        hyscan_gtk_con_selected_hw (self->priv->hw_page, pfl, self);
+        hyscan_gtk_con_selected_hw (HYSCAN_GTK_PROFILE (self->priv->hw_page),
+                                    HYSCAN_PROFILE (pfl), self);
         gtk_assistant_set_current_page (GTK_ASSISTANT (self), self->priv->connect_page);
       }
   }
@@ -318,9 +319,9 @@ hyscan_gtk_con_make_intro_page (HyScanGtkCon *self)
   priv->project_label = GTK_LABEL(gtk_builder_get_object (b, "pj_name"));
   priv->hw_label = GTK_LABEL(gtk_builder_get_object (b, "hw_name"));
 
-  gtk_builder_add_callback_symbol (b, "hyscan_gtk_con_run_project_manager", hyscan_gtk_con_run_project_manager);
-  gtk_builder_add_callback_symbol (b, "hyscan_gtk_con_run_view", hyscan_gtk_con_run_view);
-  gtk_builder_add_callback_symbol (b, "hyscan_gtk_con_run_scan", hyscan_gtk_con_run_scan);
+  gtk_builder_add_callback_symbol (b, "hyscan_gtk_con_run_project_manager", G_CALLBACK (hyscan_gtk_con_run_project_manager));
+  gtk_builder_add_callback_symbol (b, "hyscan_gtk_con_run_view", G_CALLBACK (hyscan_gtk_con_run_view));
+  gtk_builder_add_callback_symbol (b, "hyscan_gtk_con_run_scan", G_CALLBACK (hyscan_gtk_con_run_scan));
   gtk_builder_connect_signals (b, self);
 
   {
@@ -455,13 +456,13 @@ hyscan_gtk_con_apply (HyScanGtkCon *self)
 
   gtk_label_set_text (GTK_LABEL (self->priv->progress.label), _("Connecting..."));
 
-  if (!hyscan_profile_hw_check (priv->hw_profile))
+  if (!hyscan_profile_hw_check (HYSCAN_PROFILE_HW (priv->hw_profile)))
     {
       hyscan_gtk_con_finished (self, FALSE);
       return;
     }
 
-  priv->control = hyscan_profile_hw_connect (priv->hw_profile);
+  priv->control = hyscan_profile_hw_connect (HYSCAN_PROFILE_HW (priv->hw_profile));
 
   if (priv->control == NULL)
     {
@@ -495,7 +496,7 @@ hyscan_gtk_con_finished (HyScanGtkCon *self,
   if (success)
     {
       gtk_label_set_text (label, _("Connection completed. HyScan will launch shortly. "));
-      g_timeout_add (500, hyscan_gtk_con_closer, self);
+      g_timeout_add (500, (GSourceFunc)hyscan_gtk_con_closer, self);
     }
   else
     {
@@ -503,8 +504,8 @@ hyscan_gtk_con_finished (HyScanGtkCon *self,
 
       gtk_label_set_text (label, _("Connection failed. "));
       vm = gtk_button_new_with_label (_("Continue in view mode"));
-      g_signal_connect (vm, "clicked", gtk_widget_hide, NULL);
-      g_signal_connect (vm, "clicked", hyscan_gtk_con_run_view, self);
+      g_signal_connect (vm, "clicked", G_CALLBACK (gtk_widget_hide), NULL);
+      g_signal_connect (vm, "clicked", G_CALLBACK (hyscan_gtk_con_run_view), self);
       gtk_box_pack_start (self->priv->connect_box, vm, TRUE, TRUE, 0);
       gtk_widget_show (vm);
     }
@@ -530,7 +531,7 @@ hyscan_gtk_con_new (const gchar  *sysfolder,
 gboolean
 hyscan_gtk_con_get_result (HyScanGtkCon *self)
 {
-  g_return_val_if_fail (HYSCAN_IS_GTK_CON (self), NULL);
+  g_return_val_if_fail (HYSCAN_IS_GTK_CON (self), FALSE);
 
   return self->priv->result;
 }

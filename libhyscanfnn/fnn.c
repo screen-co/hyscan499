@@ -2740,7 +2740,7 @@ white_down (GtkWidget *widget,
           else if (new_white <= 50.0)
             step = -5.0;
           else
-            new_white -= 10.0;
+            step = -10.0;
         }
         break;
 

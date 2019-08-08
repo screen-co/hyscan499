@@ -70,9 +70,9 @@ enum
   X_SIDE_HIGH = 609583,
 };
 
-typedef struct FnnPanel _FnnPanel;
+typedef struct _FnnPanel FnnPanel;
 
-typedef gboolean (*ui_pack_fn) (_FnnPanel *, gint);
+typedef gboolean (*ui_pack_fn) (FnnPanel *, gint);
 typedef void (*ui_vadjust_fn) (HyScanTrackInfo *);
 
 /* структура: локейшн + прожекторы */
@@ -200,7 +200,7 @@ typedef struct
   GtkSwitch                     * mode_target;
 } VisualFL;
 
-typedef struct
+struct _FnnPanel
 {
   gchar            *short_name;
   gchar            *name;
@@ -221,7 +221,7 @@ typedef struct
     VisualFL     fl;
   } vis_gui; */
 
-} FnnPanel;
+};
 
 typedef struct _Global Global;
 struct _Global
