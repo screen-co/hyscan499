@@ -68,6 +68,7 @@ enum
   X_ECHOSOUND = 429878,
   X_SIDE_LOW = 568351,
   X_SIDE_HIGH = 609583,
+  X_ECHO_HIGH = 771575,
 };
 
 typedef struct _FnnPanel FnnPanel;

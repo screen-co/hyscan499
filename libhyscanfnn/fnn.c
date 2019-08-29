@@ -157,20 +157,29 @@ fnn_ensure_panel (gint    panelx,
       gtk_widget_show_all (main_widget);
     }
 
-  else if (/*need_es*/ panelx == X_ECHOSOUND)
+  else if (/*need_es*/ panelx == X_ECHOSOUND || panelx == X_ECHO_HIGH)
     { /* Эхолот */
       GtkWidget *main_widget;
       VisualWF *vwf = g_new0 (VisualWF, 1);
 
-      panel->name = g_strdup ("Echosounder");
-      panel->name_local = g_strdup (_("Echosounder"));
-      panel->short_name = g_strdup ("ES");
       panel->type = FNN_PANEL_ECHO;
-
-
       panel->sources = g_new0 (HyScanSourceType, 2);
-      panel->sources[0] = HYSCAN_SOURCE_ECHOSOUNDER;
       panel->sources[1] = HYSCAN_SOURCE_INVALID;
+
+      if (panelx == X_ECHOSOUND)
+        {
+          panel->name = g_strdup ("Echosounder");
+          panel->name_local = g_strdup (_("Echosounder"));
+          panel->short_name = g_strdup ("ES");
+          panel->sources[0] = HYSCAN_SOURCE_ECHOSOUNDER;
+        }
+      else if (panelx == X_ECHO_HIGH)
+        {
+          panel->name = g_strdup ("EchosounderHigh");
+          panel->name_local = g_strdup (_("EchosounderHigh"));
+          panel->short_name = g_strdup ("ESHigh");
+          panel->sources[0] = HYSCAN_SOURCE_ECHOSOUNDER_HI;
+        }
 
       panel->vis_gui = (VisualCommon*)vwf;
 
@@ -3367,9 +3376,12 @@ update_panels (Global          *global,
     {HYSCAN_SOURCE_SIDE_SCAN_PORT,           X_SIDESCAN},
     {HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_LOW,  X_SIDE_LOW},
     {HYSCAN_SOURCE_SIDE_SCAN_PORT_LOW,       X_SIDE_LOW},
+    {HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_HI,   X_SIDE_HIGH},
+    {HYSCAN_SOURCE_SIDE_SCAN_PORT_HI,        X_SIDE_HIGH},
     {HYSCAN_SOURCE_PROFILER,                 X_PROFILER},
     {HYSCAN_SOURCE_PROFILER_ECHO,            X_PROFILER},
     {HYSCAN_SOURCE_ECHOSOUNDER,              X_ECHOSOUND},
+    {HYSCAN_SOURCE_ECHOSOUNDER_HI,           X_ECHO_HIGH},
     {HYSCAN_SOURCE_FORWARD_LOOK,             X_FORWARDL},
   };
 
