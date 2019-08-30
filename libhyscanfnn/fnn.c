@@ -340,6 +340,47 @@ fnn_ensure_panel (gint    panelx,
   return TRUE;
 }
 
+
+void
+update_panels (Global          *global,
+               HyScanTrackInfo *track_info)
+{
+  guint i;
+  struct SrcToPan
+  {
+    HyScanSourceType source;
+    gint             panelx;
+  } src_to_pan[] =
+  {
+    {HYSCAN_SOURCE_SIDE_SCAN_STARBOARD,      X_SIDESCAN},
+    {HYSCAN_SOURCE_SIDE_SCAN_PORT,           X_SIDESCAN},
+    {HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_LOW,  X_SIDE_LOW},
+    {HYSCAN_SOURCE_SIDE_SCAN_PORT_LOW,       X_SIDE_LOW},
+    {HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_HI,   X_SIDE_HIGH},
+    {HYSCAN_SOURCE_SIDE_SCAN_PORT_HI,        X_SIDE_HIGH},
+    {HYSCAN_SOURCE_PROFILER,                 X_PROFILER},
+    {HYSCAN_SOURCE_PROFILER_ECHO,            X_PROFILER},
+    {HYSCAN_SOURCE_ECHOSOUNDER,              X_ECHOSOUND},
+    {HYSCAN_SOURCE_ECHOSOUNDER_HI,           X_ECHO_HIGH},
+    {HYSCAN_SOURCE_ECHOSOUNDER_LOW,          X_ECHO_LOW},
+    {HYSCAN_SOURCE_FORWARD_LOOK,             X_FORWARDL},
+  };
+
+  for (i = 0; i < G_N_ELEMENTS(src_to_pan); ++i)
+    {
+      struct SrcToPan s2p = src_to_pan[i];
+
+      /* ХайСканСорсТайп есть либо в галсе, либо в ГЛ.
+       * Либо его нет, но тогда и показывать нечего. */
+      if (track_info != NULL && track_info->sources[s2p.source])
+        fnn_ensure_panel(s2p.panelx, global);
+      else if (global->control != NULL && g_hash_table_lookup (global->infos, GINT_TO_POINTER (s2p.source)))
+        fnn_ensure_panel(s2p.panelx, global);
+    }
+
+  global->ui.adjust_visibility(track_info);
+}
+
 void
 fnn_panel_destroy (gpointer data)
 {
@@ -3366,45 +3407,6 @@ fnn_make_color_maps (gboolean profiler)
   g_array_append_vals (colormaps, &new_map, 1);
 
   return colormaps;
-}
-
-void
-update_panels (Global          *global,
-               HyScanTrackInfo *track_info)
-{
-  guint i;
-  struct SrcToPan
-  {
-    HyScanSourceType source;
-    gint             panelx;
-  } src_to_pan[] =
-  {
-    {HYSCAN_SOURCE_SIDE_SCAN_STARBOARD,      X_SIDESCAN},
-    {HYSCAN_SOURCE_SIDE_SCAN_PORT,           X_SIDESCAN},
-    {HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_LOW,  X_SIDE_LOW},
-    {HYSCAN_SOURCE_SIDE_SCAN_PORT_LOW,       X_SIDE_LOW},
-    {HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_HI,   X_SIDE_HIGH},
-    {HYSCAN_SOURCE_SIDE_SCAN_PORT_HI,        X_SIDE_HIGH},
-    {HYSCAN_SOURCE_PROFILER,                 X_PROFILER},
-    {HYSCAN_SOURCE_PROFILER_ECHO,            X_PROFILER},
-    {HYSCAN_SOURCE_ECHOSOUNDER,              X_ECHOSOUND},
-    {HYSCAN_SOURCE_ECHOSOUNDER_HI,           X_ECHO_HIGH},
-    {HYSCAN_SOURCE_FORWARD_LOOK,             X_FORWARDL},
-  };
-
-  for (i = 0; i < G_N_ELEMENTS(src_to_pan); ++i)
-    {
-      struct SrcToPan s2p = src_to_pan[i];
-
-      /* ХайСканСорсТайп есть либо в галсе, либо в ГЛ.
-       * Либо его нет, но тогда и показывать нечего. */
-      if (track_info != NULL && track_info->sources[s2p.source])
-        fnn_ensure_panel(s2p.panelx, global);
-      else if (global->control != NULL && g_hash_table_lookup (global->infos, GINT_TO_POINTER (s2p.source)))
-        fnn_ensure_panel(s2p.panelx, global);
-    }
-
-  global->ui.adjust_visibility(track_info);
 }
 
 gboolean
