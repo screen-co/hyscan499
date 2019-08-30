@@ -1095,7 +1095,7 @@ build_interface (Global *global)
             gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
 
             mitem = gtk_menu_item_new_with_label (_("Params"));
-            g_signal_connect (mitem, "activate", G_CALLBACK (run_show_sonar_info), "/params");
+            g_signal_connect (mitem, "activate", G_CALLBACK (run_param), "/params");
             gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
 
             mitem = gtk_menu_item_new_with_label (_("Sonar"));
