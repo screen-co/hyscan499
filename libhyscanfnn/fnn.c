@@ -144,7 +144,7 @@ fnn_ensure_panel (gint    panelx,
       hyscan_gtk_waterfall_grid_set_grid_color (vwf->wf_grid, hyscan_tile_color_converter_c2i (32, 32, 32, 255));
 
       g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), global);
-      g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_PROFILER));
+      g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (panelx));
 
       hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), PROFILER);
       hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), global->ship_speed / 10);
@@ -157,7 +157,7 @@ fnn_ensure_panel (gint    panelx,
       gtk_widget_show_all (main_widget);
     }
 
-  else if (/*need_es*/ panelx == X_ECHOSOUND || panelx == X_ECHO_HIGH)
+  else if (/*need_es*/ panelx == X_ECHOSOUND || panelx == X_ECHO_HIGH || panelx == X_ECHO_LOW)
     { /* Эхолот */
       GtkWidget *main_widget;
       VisualWF *vwf = g_new0 (VisualWF, 1);
@@ -180,6 +180,13 @@ fnn_ensure_panel (gint    panelx,
           panel->short_name = g_strdup ("ESHigh");
           panel->sources[0] = HYSCAN_SOURCE_ECHOSOUNDER_HI;
         }
+      else if (panelx == X_ECHO_LOW)
+        {
+          panel->name = g_strdup ("EchosounderLow");
+          panel->name_local = g_strdup (_("EchosounderLow"));
+          panel->short_name = g_strdup ("ESLow");
+          panel->sources[0] = HYSCAN_SOURCE_ECHOSOUNDER_LOW;
+        }
 
       panel->vis_gui = (VisualCommon*)vwf;
 
@@ -195,9 +202,9 @@ fnn_ensure_panel (gint    panelx,
                                   global->marks.model);
 
       g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), global);
-      g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (X_ECHOSOUND));
+      g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (panelx));
 
-      hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), ECHOSOUNDER);
+      hyscan_gtk_waterfall_state_echosounder (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), panel->sources[0]);
       hyscan_gtk_waterfall_state_set_ship_speed (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), global->ship_speed / 10);
       hyscan_gtk_waterfall_state_set_sound_velocity (HYSCAN_GTK_WATERFALL_STATE (vwf->wf), svp);
       hyscan_gtk_waterfall_set_automove_period (HYSCAN_GTK_WATERFALL (vwf->wf), 100000);

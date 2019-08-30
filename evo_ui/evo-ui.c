@@ -32,106 +32,7 @@ EvoUI global_ui = {0,};
 Global *_global = NULL;
 
 /* OVERRIDES */
-/*
-gboolean
-evo_brightness_set_override (Global  *global,
-                             gdouble  new_brightness,
-                             gdouble  new_black,
-                             gint     panelx)
-{
-  VisualWF *wf;
-  VisualFL *fl;
-  gchar *text_bright;
-  gchar *text_black;
-  gdouble b, g, w;
-  FnnPanel *panel;
 
-  panel = get_panel (global, panelx);
-
-  if (new_brightness < 0.0)
-    return FALSE;
-  if (new_brightness > 100.0)
-    return FALSE;
-  if (new_black < 0.0)
-    return FALSE;
-  if (new_black > 100.0)
-    return FALSE;
-
-  text_bright = g_strdup_printf ("<small><b>%.0f%%</b></small>", new_brightness);
-  text_black = g_strdup_printf ("<small><b>%.0f%%</b></small>", new_black);
-
-  switch (panel->type)
-    {
-    case FNN_PANEL_WATERFALL:
-      {
-        EvoUI *ui = &global_ui;
-        GtkAdjustment *balance_adj;
-        HyScanSourceType lsource, rsource;
-        gdouble lw, rw, balance;
-
-        w = 1 - 0.99 * new_brightness / 100.0;
-        b = w * 0.99 * new_black / 100.0;
-        g = 1.25 - 0.5 * (new_brightness / 100.0);
-
-
-        balance_adj = g_hash_table_lookup (ui->balance_table, GINT_TO_POINTER (panelx));
-        balance = gtk_adjustment_get_value (balance_adj);
-        lw = balance < 0 ? b + (w - b) * (1 - 0.99 * ABS (balance)) : w;
-        rw = balance > 0 ? b + (w - b) * (1 - 0.99 * ABS (balance)) : w;
-
-        wf = (VisualWF*)panel->vis_gui;
-        hyscan_gtk_waterfall_state_get_sources (HYSCAN_GTK_WATERFALL_STATE (wf->wf), &lsource, &rsource);
-        hyscan_gtk_waterfall_set_levels (HYSCAN_GTK_WATERFALL (wf->wf), lsource, b, g, lw);
-        hyscan_gtk_waterfall_set_levels (HYSCAN_GTK_WATERFALL (wf->wf), rsource, b, g, rw);
-        gtk_label_set_markup (wf->common.white_value, text_bright);
-        gtk_label_set_markup (wf->common.black_value, text_black);
-        break;
-      }
-
-    case FNN_PANEL_ECHO:
-      w = 1 - 0.99 * new_brightness / 100.0;
-      b = w * new_black / 100.0;
-      g = 1.25 - 0.5 * (new_brightness / 100.0);
-
-      wf = (VisualWF*)panel->vis_gui;
-      hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), b, g, w);
-      gtk_label_set_markup (wf->common.white_value, text_bright);
-      gtk_label_set_markup (wf->common.black_value, text_black);
-      break;
-
-    case FNN_PANEL_PROFILER:
-      b = new_black / 250000;
-      w = b + (1 - 0.99 * new_brightness / 100.0) * (1 - b);
-      g = 1;
-      if (b >= w)
-        {
-          g_message ("BBC error");
-          return FALSE;
-        }
-
-      wf = (VisualWF*)panel->vis_gui;
-      hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), b, g, w);
-
-      gtk_label_set_markup (wf->common.white_value, text_bright);
-      gtk_label_set_markup (wf->common.black_value, text_black);
-      break;
-
-    case FNN_PANEL_FORWARDLOOK:
-      fl = (VisualFL*)panel->vis_gui;
-      hyscan_gtk_forward_look_set_brightness (fl->fl, new_brightness);
-      gtk_label_set_markup (fl->common.white_value, text_bright);
-      break;
-
-    default:
-      g_warning ("brightness_set: wrong panel type!");
-    }
-
-  g_free (text_bright);
-  g_free (text_black);
-
-  return TRUE;
-}
-*/
 
 gboolean
 evo_brightness_set_override (Global  *global,
@@ -167,20 +68,10 @@ evo_brightness_set_override (Global  *global,
     case FNN_PANEL_WATERFALL:
     case FNN_PANEL_ECHO:
       {
-        // EvoUI *ui = &global_ui;
-        // GtkAdjustment *balance_adj;
         HyScanSourceType lsource, rsource;
-        // gdouble lw, rw, balance;
 
         new_contrast *= .99 * 0.01;
         new_shrink *= .99 * 0.01;
-
-
-        // balance_adj = g_hash_table_lookup (ui->balance_table, GINT_TO_POINTER (panelx));
-        // balance = gtk_adjustment_get_value (balance_adj);
-        // lw = balance < 0 ? b + (w - b) * (1 - 0.99 * ABS (balance)) : w;
-        // rw = balance > 0 ? b + (w - b) * (1 - 0.99 * ABS (balance)) : w;
-
         wf = (VisualWF*)panel->vis_gui;
         hyscan_gtk_waterfall_state_get_sources (HYSCAN_GTK_WATERFALL_STATE (wf->wf), &lsource, &rsource);
         hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), new_shrink, 1.0, new_contrast);
@@ -188,16 +79,6 @@ evo_brightness_set_override (Global  *global,
         gtk_label_set_markup (wf->common.black_value, text_black);
         break;
       }
-
-      // w = 1 - 0.99 * new_brightness / 100.0;
-      // b = w * new_black / 100.0;
-      // g = 1.25 - 0.5 * (new_brightness / 100.0);
-
-      // wf = (VisualWF*)panel->vis_gui;
-      // hyscan_gtk_waterfall_set_levels_for_all (HYSCAN_GTK_WATERFALL (wf->wf), b, g, w);
-      // gtk_label_set_markup (wf->common.white_value, text_bright);
-      // gtk_label_set_markup (wf->common.black_value, text_black);
-      // break;
 
     case FNN_PANEL_PROFILER:
       b = new_black / 250000;
@@ -793,7 +674,7 @@ make_tvg_control (Global *global,
   g_message ("Panel <%s>, TVG: AUTO %i; LIN %i; LOG %i CONST %i",
              panel->name, auto_ok, lin_ok, log_ok, const_ok);
 
-  if (panel->panelx == X_ECHOSOUND)
+  if (panel->panelx == X_ECHOSOUND || panel->panelx == X_ECHO_LOW || panel->panelx == X_ECHO_HIGH)
     {
       if (auto_ok)
         {
