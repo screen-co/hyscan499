@@ -1387,6 +1387,7 @@ build_interface (Global *global)
       }
     hyscan_gtk_map_kit_add_marks_wf (ui->mapkit);
     hyscan_gtk_map_kit_add_marks_geo (ui->mapkit);
+    hyscan_gtk_map_kit_add_planner (ui->mapkit);
 
     gtk_stack_add_named (GTK_STACK (ui->control_stack), ui->mapkit->control, EVO_MAP);
     gtk_stack_add_named (GTK_STACK (ui->nav_stack), ui->mapkit->navigation, EVO_MAP);

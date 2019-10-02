@@ -50,6 +50,8 @@ void              hyscan_gtk_map_kit_add_marks_wf     (HyScanGtkMapKit          
 
 void              hyscan_gtk_map_kit_add_marks_geo    (HyScanGtkMapKit            *kit);
 
+void              hyscan_gtk_map_kit_add_planner      (HyScanGtkMapKit            *kit);
+
 gboolean          hyscan_gtk_map_kit_get_offline      (HyScanGtkMapKit            *kit);
 
 void              hyscan_gtk_map_kit_set_offline      (HyScanGtkMapKit            *kit,
