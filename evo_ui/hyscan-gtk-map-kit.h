@@ -57,6 +57,9 @@ gboolean          hyscan_gtk_map_kit_get_offline      (HyScanGtkMapKit          
 void              hyscan_gtk_map_kit_set_offline      (HyScanGtkMapKit            *kit,
                                                        gboolean                    offline);
 
+void              hyscan_gtk_map_kit_set_smooth       (HyScanGtkMapKit            *kit,
+                                                       gboolean                    smooth);
+
 void              hyscan_gtk_map_kit_free             (HyScanGtkMapKit            *kit);
 
 GtkTreeView *     hyscan_gtk_map_kit_get_track_view   (HyScanGtkMapKit            *kit,

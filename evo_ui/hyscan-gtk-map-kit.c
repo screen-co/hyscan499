@@ -2165,6 +2165,23 @@ hyscan_gtk_map_kit_set_offline (HyScanGtkMapKit   *kit,
 }
 
 /**
+ * hyscan_gtk_map_kit_set_smooth:
+ * @kit: указатель на #HyScanGtkMapKit
+ * @smooth: сглаживать данные GPS или нет
+ *
+ *
+ */
+void
+hyscan_gtk_map_kit_set_smooth (HyScanGtkMapKit   *kit,
+                               gboolean           smooth)
+{
+  if (kit->priv->nav_model == NULL)
+    return;
+
+  hyscan_nav_model_set_delay (kit->priv->nav_model, smooth ? 1.0 : 0.0);
+}
+
+/**
  * hyscan_gtk_map_kit_free:
  * @kit: указатель на структуру #HyScanGtkMapKit
  */
