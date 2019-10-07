@@ -1248,6 +1248,7 @@ create_parallel_track_options (HyScanGtkMapPlanner *planner_layer)
   GtkWidget *grid;
   GtkWidget *distance, *alternate;
   GBindingFlags binding_flags;
+  GtkWidget *label_dist, *label_alter;
 
   grid = gtk_grid_new ();
   gtk_grid_set_row_spacing (GTK_GRID (grid), 3);
@@ -1256,10 +1257,15 @@ create_parallel_track_options (HyScanGtkMapPlanner *planner_layer)
   distance = gtk_spin_button_new_with_range (0, 100, 0.1);
   alternate = gtk_switch_new ();
 
-  gtk_grid_attach (GTK_GRID (grid), gtk_label_new (_("Distance")),  0, 0, 1, 1);
-  gtk_grid_attach (GTK_GRID (grid), distance,                       1, 0, 1, 1);
-  gtk_grid_attach (GTK_GRID (grid), gtk_label_new (_("Alternate")), 0, 1, 1, 1);
-  gtk_grid_attach (GTK_GRID (grid), alternate,                      1, 1, 1, 1);
+  label_dist = gtk_label_new (_("Distance"));
+  gtk_widget_set_halign (label_dist, GTK_ALIGN_END);
+  label_alter = gtk_label_new (_("Alternate"));
+  gtk_widget_set_halign (label_alter, GTK_ALIGN_END);
+
+  gtk_grid_attach (GTK_GRID (grid), label_dist,  0, 0, 1, 1);
+  gtk_grid_attach (GTK_GRID (grid), distance,    1, 0, 1, 1);
+  gtk_grid_attach (GTK_GRID (grid), label_alter, 0, 1, 1, 1);
+  gtk_grid_attach (GTK_GRID (grid), alternate,   1, 1, 1, 1);
 
   binding_flags = G_BINDING_BIDIRECTIONAL | G_BINDING_SYNC_CREATE;
   g_object_bind_property (G_OBJECT (planner_layer), "parallel-distance",
@@ -1282,6 +1288,7 @@ create_planner_zeditor (HyScanGtkMapKit *kit)
   label = gtk_label_new (_("Geodetic coordinates"));
 
   grid = gtk_grid_new ();
+  gtk_grid_set_column_homogeneous (GTK_GRID (grid), TRUE);
   gtk_grid_set_column_spacing (GTK_GRID (grid), 6);
   gtk_grid_set_row_spacing (GTK_GRID (grid), 6);
   gtk_grid_attach (GTK_GRID (grid), label,       0, 0, 1, 1);
@@ -1307,10 +1314,10 @@ create_planner_toolbox (HyScanGtkMapKit *kit)
   gtk_stack_set_vhomogeneous (GTK_STACK (priv->planner_stack), FALSE);
 
   tab_switch = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
-  zone_mode = create_planner_mode_btn (kit, NULL, "folder-new-symbolic", _("Add zone"),
-                                       HYSCAN_GTK_MAP_PLANNER_MODE_ZONE);
-  track_mode = create_planner_mode_btn (kit, zone_mode, "document-new-symbolic", _("Add track"),
+  track_mode = create_planner_mode_btn (kit, NULL, "document-new-symbolic", _("Add track"),
                                         HYSCAN_GTK_MAP_PLANNER_MODE_TRACK);
+  zone_mode = create_planner_mode_btn (kit, track_mode, "folder-new-symbolic", _("Add zone"),
+                                       HYSCAN_GTK_MAP_PLANNER_MODE_ZONE);
   select_mode = create_planner_mode_btn (kit, zone_mode, "find-location-symbolic", _("Select tracks"),
                                          HYSCAN_GTK_MAP_PLANNER_MODE_SELECT);
   origin_mode = create_planner_mode_btn (kit, zone_mode, "go-home-symbolic", _("Set origin"),
@@ -1319,8 +1326,8 @@ create_planner_toolbox (HyScanGtkMapKit *kit)
                                            HYSCAN_GTK_MAP_PLANNER_MODE_TRACK_PARALLEL);
 
   gtk_style_context_add_class (gtk_widget_get_style_context (tab_switch), GTK_STYLE_CLASS_LINKED);
-  gtk_box_pack_start (GTK_BOX (tab_switch), zone_mode, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (tab_switch), track_mode, TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (tab_switch), zone_mode, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (tab_switch), origin_mode, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (tab_switch), select_mode, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (tab_switch), parallel_mode, TRUE, TRUE, 0);
@@ -1331,8 +1338,11 @@ create_planner_toolbox (HyScanGtkMapKit *kit)
   tab_parallel = create_parallel_track_options (HYSCAN_GTK_MAP_PLANNER (priv->planner_layer));
   tab_origin = hyscan_gtk_planner_origin_new (priv->planner_model);
 
-  gtk_stack_add_named (GTK_STACK (priv->planner_stack), tab_zeditor, PLANNER_TAB_ZEDITOR);
+  gtk_widget_set_halign (tab_editor, GTK_ALIGN_CENTER);
+  gtk_widget_set_halign (tab_parallel, GTK_ALIGN_CENTER);
+
   gtk_stack_add_named (GTK_STACK (priv->planner_stack), tab_status, PLANNER_TAB_STATUS);
+  gtk_stack_add_named (GTK_STACK (priv->planner_stack), tab_zeditor, PLANNER_TAB_ZEDITOR);
   gtk_stack_add_named (GTK_STACK (priv->planner_stack), tab_editor, PLANNER_TAB_EDITOR);
   gtk_stack_add_named (GTK_STACK (priv->planner_stack), tab_origin, PLANNER_TAB_ORIGIN);
   gtk_stack_add_named (GTK_STACK (priv->planner_stack), tab_parallel, PLANNER_TAB_PARALLEL);
