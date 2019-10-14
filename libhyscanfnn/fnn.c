@@ -1514,7 +1514,7 @@ get_active_track (HyScanDBInfo *db_info)
     {
       current = val;
 
-      if (current->active)
+      if (current->record)
         {
           active = g_strdup (current->name);
           break;
@@ -1544,7 +1544,7 @@ track_is_active (HyScanDBInfo *db_info,
 
       if (g_str_equal (current->name, name))
         {
-          active = current->active;
+          active = current->record;
           break;
         }
 
