@@ -2079,7 +2079,7 @@ hyscan_gtk_map_kit_add_marks_wf (HyScanGtkMapKit *kit)
   g_signal_connect_swapped (priv->mark_model, "changed", G_CALLBACK (on_marks_changed), kit);
 
   /* Слой с метками. */
-  priv->wfmark_layer = hyscan_gtk_map_wfmark_new (priv->ml_model);
+  priv->wfmark_layer = hyscan_gtk_map_wfmark_new (priv->ml_model, priv->db, priv->cache);
   add_layer_row (kit, priv->wfmark_layer, "wfmark", _("Waterfall Marks"));
 
   /* Виджет навигации по меткам. */
