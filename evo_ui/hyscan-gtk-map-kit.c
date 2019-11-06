@@ -2039,13 +2039,15 @@ hyscan_gtk_map_kit_load_profiles (HyScanGtkMapKit *kit,
  * @kit:
  * @sensor: датчик GPS-ресивера
  * @sensor_name: имя датчика
+ * @offset: (nullable): смещение антенны
  * @delay_time: время задержки навигационных данных
  */
 void
-hyscan_gtk_map_kit_add_nav (HyScanGtkMapKit *kit,
-                            HyScanSensor    *sensor,
-                            const gchar     *sensor_name,
-                            gdouble          delay_time)
+hyscan_gtk_map_kit_add_nav (HyScanGtkMapKit           *kit,
+                            HyScanSensor              *sensor,
+                            const gchar               *sensor_name,
+                            const HyScanAntennaOffset *offset,
+                            gdouble                    delay_time)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
 
@@ -2055,6 +2057,7 @@ hyscan_gtk_map_kit_add_nav (HyScanGtkMapKit *kit,
   priv->nav_model = hyscan_nav_model_new ();
   hyscan_nav_model_set_sensor (priv->nav_model, sensor);
   hyscan_nav_model_set_sensor_name (priv->nav_model, sensor_name);
+  hyscan_nav_model_set_offset (priv->nav_model, offset);
   hyscan_nav_model_set_delay (priv->nav_model, delay_time);
 
   /* Определение местоположения. */

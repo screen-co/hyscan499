@@ -955,9 +955,6 @@ build_interface (Global *global)
     hyscan_gtk_map_kit_add_marks_wf (ui->mapkit);
     hyscan_gtk_map_kit_add_marks_geo (ui->mapkit);
 
-    if (global->control != NULL)
-      hyscan_gtk_map_kit_add_nav (ui->mapkit, HYSCAN_SENSOR (global->control), "nmea", 0);
-
     gtk_stack_add_named (GTK_STACK (ui->control_stack), ui->mapkit->control, EVO_MAP);
     gtk_stack_add_named (GTK_STACK (ui->nav_stack), ui->mapkit->navigation, EVO_MAP);
     // gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), ui->mapkit->map, EVO_MAP, _("Map"));
@@ -1170,6 +1167,20 @@ build_interface (Global *global)
         g_message ("didn't read offsets");
       else if (!hyscan_fnn_offsets_execute (o))
         g_message ("didn't apply offsets");
+
+      /* Включаем на карте навигацию по датчику "nmea" с учётом его смещения. */
+      HyScanAntennaOffset offset, *offset_ptr = NULL;
+      const gchar *sensor_name = "nmea";
+      GList *link;
+      for (link = hyscan_fnn_offsets_get_keys (o); link != NULL && offset_ptr == NULL; link = link->next)
+        {
+          if (!g_str_equal (link->data, sensor_name))
+            continue;
+
+          offset = hyscan_fnn_offsets_get_offset (o, sensor_name);
+          offset_ptr = &offset;
+        }
+      hyscan_gtk_map_kit_add_nav (ui->mapkit, HYSCAN_SENSOR (global->control), sensor_name, offset_ptr, 0);
 
       g_object_unref (o);
       g_free (file);
