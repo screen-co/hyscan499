@@ -624,14 +624,14 @@ main (int argc, char **argv)
   gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (global.gui.track.list), 0, GTK_SORT_DESCENDING);
 
   /* Список меток. */
-  global.marks.model = hyscan_mark_model_new (HYSCAN_MARK_WATERFALL);
+  global.marks.model = hyscan_object_model_new (HYSCAN_TYPE_OBJECT_DATA_WFMARK);
   // TODO: перепроверить, что в ран-менеджере, что в трек-чейнджед, что здесь
   global.marks.loc_storage = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
                                                     (GDestroyNotify) loc_store_free);
   global.gui.mark_view = hyscan_gtk_project_viewer_new ();
   global.gui.meditor = hyscan_gtk_mark_editor_new ();
 
-  hyscan_mark_model_set_project (global.marks.model, global.db, global.project_name);
+  hyscan_object_model_set_project (global.marks.model, global.db, global.project_name);
   g_signal_connect (global.marks.model, "changed", G_CALLBACK (mark_model_changed), &global);
   g_signal_connect (global.gui.meditor, "mark-modified", G_CALLBACK (mark_modified), &global);
   g_signal_connect (global.gui.mark_view, "item-changed", G_CALLBACK (active_mark_changed), &global);

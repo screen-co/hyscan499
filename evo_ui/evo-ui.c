@@ -946,7 +946,7 @@ build_interface (Global *global)
     GtkTreeView * tv;
     gchar *profile_dir = g_build_filename (g_get_user_config_dir (), "hyscan", "map-profiles", NULL);
     gchar *cache_dir = g_build_filename (g_get_user_cache_dir (), "hyscan", NULL);
-    HyScanGeoGeodetic center = {0, 0};
+    HyScanGeoGeodetic center = {0, 0, 0};
 
     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     ui->mapkit = hyscan_gtk_map_kit_new (&center, global->db, cache_dir);

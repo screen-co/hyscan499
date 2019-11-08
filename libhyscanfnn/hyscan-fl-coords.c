@@ -230,7 +230,7 @@ hyscan_fl_coords_button (GtkWidget      *widget,
       hyscan_forward_look_data_get_doa (priv->fl_data, index, &n_points, &priv->time_for_val);
     }
 
-  status = hyscan_mloc_get (priv->loc, priv->time_for_val, &priv->apos,
+  status = hyscan_mloc_get (priv->loc, NULL, priv->time_for_val, &priv->apos,
                             x_val, y_val, 0, &geo);
 
   priv->coords = geo;

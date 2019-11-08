@@ -502,7 +502,7 @@ run_manager (GObject *emitter)
       tglobal->marks.loc_storage = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
                                                         (GDestroyNotify) loc_store_free);
 
-      hyscan_mark_model_set_project (tglobal->marks.model, tglobal->db, project);
+      hyscan_object_model_set_project (tglobal->marks.model, tglobal->db, project);
 
       if (tglobal->override.project_changed != NULL)
         tglobal->override.project_changed (tglobal, project);
@@ -994,9 +994,9 @@ active_mark_changed (HyScanGtkProjectViewer *marks_viewer,
     {
       hyscan_gtk_mark_editor_set_mark (HYSCAN_GTK_MARK_EDITOR (global->gui.meditor),
                                        mark_id,
-                                       mark->mark->waterfall.name,
-                                       mark->mark->waterfall.operator_name,
-                                       mark->mark->waterfall.description,
+                                       mark->mark->name,
+                                       mark->mark->operator_name,
+                                       mark->mark->description,
                                        mark->lat, mark->lon);
     }
 }
@@ -1023,8 +1023,8 @@ marks_equal (MarkAndLocation *a,
 
   coords = fnn_float_equal (a->lat, b->lat) && fnn_float_equal (a->lon, b->lon);
   // name = g_strcmp0 (a->mark->name, b->mark->name) == 0;
-  name = g_strcmp0 (a->mark->waterfall.name, b->mark->waterfall.name) == 0;
-  size = (a->mark->waterfall.width == b->mark->waterfall.width) && (a->mark->waterfall.height == b->mark->waterfall.height);
+  name = g_strcmp0 (a->mark->name, b->mark->name) == 0;
+  size = (a->mark->width == b->mark->width) && (a->mark->height == b->mark->height);
 
   return (coords && name && size);
 }
@@ -1056,17 +1056,17 @@ mark_processor (gpointer        key,
 
   if (their == NULL)
     {
-      gdouble radius = sqrt (pow (our->mark->waterfall.width, 2) + pow (our->mark->waterfall.height, 2)) / 1e3;
-      hyscan_mark_sync_set (sync, key, our->mark->waterfall.name, our->lat, our->lon, radius);
+      gdouble radius = sqrt (pow (our->mark->width, 2) + pow (our->mark->height, 2)) / 1e3;
+      hyscan_mark_sync_set (sync, key, our->mark->name, our->lat, our->lon, radius);
       return;
     }
 
   /* Если была, но изменилась - удалить и переотправить*/
   if (!marks_equal (our, their))
     {
-      gdouble radius = sqrt (pow (our->mark->waterfall.width, 2) + pow (our->mark->waterfall.height, 2)) / 1e3;
+      gdouble radius = sqrt (pow (our->mark->width, 2) + pow (our->mark->height, 2)) / 1e3;
       hyscan_mark_sync_remove (sync, key);
-      hyscan_mark_sync_set (sync, key, our->mark->waterfall.name, our->lat, our->lon, radius);
+      hyscan_mark_sync_set (sync, key, our->mark->name, our->lat, our->lon, radius);
       return;
     }
 }
@@ -1148,8 +1148,8 @@ loc_store_new (HyScanDB    *db,
   loc->mloc = hyscan_mloc_new (db, cache, project, track);
   loc->projectors = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL,
                                            (GDestroyNotify)g_object_unref);
-  loc->factory = hyscan_amplitude_factory_new (cache);
-  hyscan_amplitude_factory_set_track (loc->factory, db, project, loc->track);
+  loc->factory = hyscan_factory_amplitude_new (cache);
+  hyscan_factory_amplitude_set_project (loc->factory, db, project);
 
   if (loc->mloc == NULL || loc->factory == NULL)
     {
@@ -1189,7 +1189,7 @@ get_projector (GHashTable       *locstores,
   /* Если не нашли, создаем с помощью фабрики. */
   if (pj == NULL)
     {
-      amp = hyscan_amplitude_factory_produce (store->factory, source);
+      amp = hyscan_factory_amplitude_produce (store->factory, store->track, source);
 
       if (amp == NULL)
         {
@@ -1233,13 +1233,13 @@ loc_store_free (gpointer data)
 
 /* Создание структуры MarkAndLocation */
 MarkAndLocation *
-mark_and_location_new (HyScanMark *mark,
-                       gboolean    ok,
-                       gdouble     lat,
-                       gdouble     lon)
+mark_and_location_new (HyScanMarkWaterfall *mark,
+                       gboolean             ok,
+                       gdouble              lat,
+                       gdouble              lon)
 {
   MarkAndLocation *dst = g_new (MarkAndLocation, 1);
-  dst->mark = hyscan_mark_copy (mark);
+  dst->mark = hyscan_mark_waterfall_copy (mark);
   dst->ok  = ok;
   dst->lat = ok ? lat : 0.0;
   dst->lon = ok ? lon : 0.0;
@@ -1253,7 +1253,7 @@ mark_and_location_copy (gpointer data)
 {
   MarkAndLocation *src = data;
   MarkAndLocation *dst = g_new (MarkAndLocation, 1);
-  dst->mark = hyscan_mark_copy (src->mark);
+  dst->mark = hyscan_mark_waterfall_copy (src->mark);
   dst->ok  = src->ok;
   dst->lat = src->lat;
   dst->lon = src->lon;
@@ -1266,7 +1266,7 @@ void
 mark_and_location_free (gpointer data)
 {
   MarkAndLocation *loc = data;
-  hyscan_mark_free (loc->mark);
+  hyscan_mark_waterfall_free (loc->mark);
   g_free (loc);
 }
 
@@ -1300,9 +1300,9 @@ add_mark_update (Global *global)
 
 /* Функция определяет координаты метки. */
 MarkAndLocation *
-get_mark_coords (GHashTable * locstores,
-                 HyScanMark * mark,
-                 Global     * global)
+get_mark_coords (GHashTable          * locstores,
+                 HyScanMarkWaterfall * mark,
+                 Global              * global)
 {
   HyScanSourceType source;
   gdouble across;
@@ -1314,19 +1314,19 @@ get_mark_coords (GHashTable * locstores,
   HyScanGeoGeodetic position;
   HyScanmLoc *mloc;
 
-  if (mark->waterfall.track == NULL)
+  if (mark->track == NULL)
     {
       // G_BREAKPOINT();
       return NULL;
     }
 
   /* Определяем название галса по айди. */
-  if (!g_hash_table_contains (locstores, mark->waterfall.track))
+  if (!g_hash_table_contains (locstores, mark->track))
     {
       LocStore *ls;
       gchar * track_name = NULL;
 
-      track_name = get_track_name_by_id (global->db_info, mark->waterfall.track);
+      track_name = get_track_name_by_id (global->db_info, mark->track);
       if (track_name == NULL)
         {
           add_mark_update (global);
@@ -1341,25 +1341,25 @@ get_mark_coords (GHashTable * locstores,
           return NULL;
         }
 
-      g_hash_table_insert (locstores, g_strdup (mark->waterfall.track), ls);
+      g_hash_table_insert (locstores, g_strdup (mark->track), ls);
     }
 
-  source = hyscan_source_get_type_by_id (mark->waterfall.source);
-  pj = get_projector (locstores, mark->waterfall.track, source, &mloc, &amp);
+  source = hyscan_source_get_type_by_id (mark->source);
+  pj = get_projector (locstores, mark->track, source, &mloc, &amp);
 
   if (pj == NULL || amp == NULL)
     return NULL;
 
   // hyscan_projector_index_to_coord (pj, mark->index0, &along);
-  hyscan_projector_count_to_coord (pj, mark->waterfall.count, &across, 0);
+  hyscan_projector_count_to_coord (pj, mark->count, &across, 0);
 
   apos = hyscan_amplitude_get_offset (amp);
-  hyscan_amplitude_get_amplitude (amp, mark->waterfall.index, &n, &time, NULL);
+  hyscan_amplitude_get_amplitude (amp, NULL, mark->index, &n, &time, NULL);
 
   if (source == HYSCAN_SOURCE_SIDE_SCAN_PORT)
     across *= -1;
 
-  if (!hyscan_mloc_get (mloc, time, &apos, 0, across, 0, &position))
+  if (!hyscan_mloc_get (mloc, NULL, time, &apos, 0, across, 0, &position))
     return NULL;
 
   return mark_and_location_new (mark, TRUE, position.lat, position.lon);
@@ -1367,8 +1367,8 @@ get_mark_coords (GHashTable * locstores,
 
 /* Возвращает таблицу меток с координатами. */
 GHashTable *
-make_marks_with_coords (HyScanMarkModel *model,
-                        Global          *global)
+make_marks_with_coords (HyScanObjectModel *model,
+                        Global            *global)
 {
   GHashTable *pure_marks;
   GHashTable *marks;
@@ -1377,7 +1377,7 @@ make_marks_with_coords (HyScanMarkModel *model,
   gpointer key, value;
 
   /* Достаем голенькие метки. */
-  if ((pure_marks = hyscan_mark_model_get (model)) == NULL)
+  if ((pure_marks = hyscan_object_model_get (model)) == NULL)
     return NULL;
 
   /* Заводим таблицу под метки. */
@@ -1387,7 +1387,7 @@ make_marks_with_coords (HyScanMarkModel *model,
   g_hash_table_iter_init (&iter, pure_marks);
   while (g_hash_table_iter_next (&iter, &key, &value))
     {
-      HyScanMark *wfmark = value;
+      HyScanMarkWaterfall *wfmark = value;
       mark_ll = get_mark_coords (global->marks.loc_storage, wfmark, global);
 
       if (mark_ll != NULL)
@@ -1398,8 +1398,8 @@ make_marks_with_coords (HyScanMarkModel *model,
 }
 
 void
-mark_model_changed (HyScanMarkModel *model,
-                    Global          *global)
+mark_model_changed (HyScanObjectModel *model,
+                    Global            *global)
 {
   GtkTreeIter tree_iter;
   GHashTable *marks;
@@ -1422,15 +1422,15 @@ mark_model_changed (HyScanMarkModel *model,
       GDateTime *mtime;
       gchar *mtime_str;
 
-      mtime = g_date_time_new_from_unix_local (mark_ll->mark->waterfall.mtime / 1e6);
+      mtime = g_date_time_new_from_unix_local (mark_ll->mark->mtime / 1e6);
       mtime_str = g_date_time_format (mtime, "%d.%m %H:%M");
 
       gtk_list_store_append (ls, &tree_iter);
       gtk_list_store_set (ls, &tree_iter,
                           0, mark_id,
-                          1, mark_ll->mark->waterfall.name,
+                          1, mark_ll->mark->name,
                           2, mtime_str,
-                          3, mark_ll->mark->waterfall.mtime,
+                          3, mark_ll->mark->mtime,
                           -1);
 
       g_free (mtime_str);
@@ -1450,29 +1450,31 @@ mark_modified (HyScanGtkMarkEditor *med,
 {
   gchar *mark_id = NULL;
   GHashTable *marks;
-  HyScanMark *mark;
+  HyScanMarkWaterfall *mark;
 
   hyscan_gtk_mark_editor_get_mark (med, &mark_id, NULL, NULL, NULL);
 
-  if ((marks = hyscan_mark_model_get (global->marks.model)) == NULL)
+  if ((marks = hyscan_object_model_get (global->marks.model)) == NULL)
     return;
 
   if ((mark = g_hash_table_lookup (marks, mark_id)) != NULL)
     {
-      HyScanMark *modified_mark = hyscan_mark_copy (mark);
-      g_clear_pointer (&modified_mark->waterfall.name, g_free);
-      g_clear_pointer (&modified_mark->waterfall.operator_name, g_free);
-      g_clear_pointer (&modified_mark->waterfall.description, g_free);
+      HyScanMarkWaterfall *modified_mark = hyscan_mark_waterfall_copy (mark);
+      HyScanMarkWaterfall *wfmark = modified_mark;
+
+      g_clear_pointer (&wfmark->name, g_free);
+      g_clear_pointer (&wfmark->operator_name, g_free);
+      g_clear_pointer (&wfmark->description, g_free);
 
       hyscan_gtk_mark_editor_get_mark (med,
                                        NULL,
-                                       &modified_mark->waterfall.name,
-                                       &modified_mark->waterfall.operator_name,
-                                       &modified_mark->waterfall.description);
+                                       &wfmark->name,
+                                       &wfmark->operator_name,
+                                       &wfmark->description);
 
-      hyscan_mark_model_modify_mark (global->marks.model, mark_id, modified_mark);
+      hyscan_object_model_modify_object (global->marks.model, mark_id, (const HyScanObject *) modified_mark);
 
-      hyscan_mark_free (modified_mark);
+      hyscan_mark_waterfall_free (modified_mark);
     }
 
   g_free (mark_id);
@@ -3280,7 +3282,7 @@ make_overlay (HyScanGtkWaterfall          *wf,
               HyScanGtkWaterfallMark     **_mark,
               HyScanGtkWaterfallMeter    **_meter,
               HyScanGtkWaterfallPlayer   **_player,
-              HyScanMarkModel             *mark_model)
+              HyScanObjectModel           *mark_model)
 {
   GtkWidget * container = gtk_grid_new ();
 
