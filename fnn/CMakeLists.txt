@@ -40,6 +40,5 @@ if (${CMAKE_C_COMPILER_ID} STREQUAL MSVC)
 endif()
 
 target_link_libraries (hyscan499 ${TRIPLE_LIBS})
-target_link_libraries (configurator ${GLIB2_LIBRARIES}
-                                    ${GTK3_LIBRARIES})
+target_link_libraries (configurator ${TRIPLE_LIBS})
 

@@ -21,6 +21,7 @@ add_library (${HYSCAN_FNN_LIBRARY} SHARED
              hyscan-fnn-project.c
              hyscan-fnn-splash.c
              hyscan-fl-coords.c
+             hyscan-gtk-configurator.c
              hyscan-gtk-fnn-offsets.c
              hyscan-gtk-forward-look.c
              hyscan-gtk-mark-editor.c

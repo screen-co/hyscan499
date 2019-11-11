@@ -2200,17 +2200,19 @@ void
 hyscan_gtk_map_kit_kf_setup (HyScanGtkMapKit *kit,
                              GKeyFile        *kf)
 {
-  gchar *profile = NULL;
+  gchar *profile_name = NULL;
   gboolean offline;
   HyScanGeoGeodetic center;
   gchar **layers, **tracks;
+  gchar *cache_dir;
 
   /* Считываем настройки из файла конфигурации. */
-  center.lat = g_key_file_get_double      (kf, "evo-map", "lat", NULL);
-  center.lon = g_key_file_get_double      (kf, "evo-map", "lon", NULL);
-  profile    = g_key_file_get_string      (kf, "evo-map", "profile", NULL);
-  layers     = g_key_file_get_string_list (kf, "evo-map", "layers", NULL, NULL);
-  tracks     = g_key_file_get_string_list (kf, "evo-map", "tracks", NULL, NULL);
+  center.lat   = g_key_file_get_double      (kf, "evo-map", "lat", NULL);
+  center.lon   = g_key_file_get_double      (kf, "evo-map", "lon", NULL);
+  profile_name = g_key_file_get_string      (kf, "evo-map", "profile", NULL);
+  layers       = g_key_file_get_string_list (kf, "evo-map", "layers", NULL, NULL);
+  tracks       = g_key_file_get_string_list (kf, "evo-map", "tracks", NULL, NULL);
+  cache_dir    = g_key_file_get_string      (kf, "evo-map", "cache", NULL);
 
   if (g_key_file_has_key (kf, "evo-map", "offline", NULL))
     offline = g_key_file_get_boolean (kf, "evo-map", "offline", NULL);
@@ -2220,10 +2222,27 @@ hyscan_gtk_map_kit_kf_setup (HyScanGtkMapKit *kit,
   /* Применяем настройки. */
   hyscan_gtk_map_move_to (HYSCAN_GTK_MAP (kit->map), center);
 
-  if (profile != NULL)
+  if (cache_dir != NULL)
     {
-      hyscan_gtk_map_kit_set_profile_name (kit, profile);
-      g_free (profile);
+      GHashTableIter iter;
+      HyScanProfileMap *profile;
+
+      g_free (kit->priv->tile_cache_dir);
+      kit->priv->tile_cache_dir = cache_dir;
+
+      g_hash_table_iter_init (&iter, kit->priv->profiles);
+      while (g_hash_table_iter_next (&iter, NULL, (gpointer *) &profile))
+        hyscan_profile_map_set_cache_dir (profile, kit->priv->tile_cache_dir);
+
+      /* Инициируем повторное применение профиля, чтобы обновить настройки кэша. */
+      if (profile_name == NULL)
+        profile_name = g_strdup (kit->priv->profile_active);
+    }
+
+  if (profile_name != NULL)
+    {
+      hyscan_gtk_map_kit_set_profile_name (kit, profile_name);
+      g_free (profile_name);
     }
 
   if (layers != NULL)
@@ -2270,6 +2289,8 @@ hyscan_gtk_map_kit_kf_desetup (HyScanGtkMapKit *kit,
   g_key_file_set_double      (kf, "evo-map", "lat",     geod.lat);
   g_key_file_set_double      (kf, "evo-map", "lon",     geod.lon);
   g_key_file_set_string      (kf, "evo-map", "profile", proifle);
+  /* Не сохраняем "evo-map" > "cache", т.к. он настраивается через конфигуратор. */
+  /* g_key_file_set_string      (kf, "evo-map", "cache",   kit->priv->tile_cache_dir); */
   g_key_file_set_boolean     (kf, "evo-map", "offline", hyscan_gtk_map_kit_get_offline (kit));
   g_key_file_set_string_list (kf, "evo-map", "layers", (const gchar *const *) layers, g_strv_length (layers));
   g_key_file_set_string_list (kf, "evo-map", "tracks", (const gchar *const *) tracks, g_strv_length (tracks));
