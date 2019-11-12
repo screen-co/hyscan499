@@ -118,6 +118,7 @@ static gchar ** hyscan_gtk_map_kit_get_tracks   (HyScanGtkMapKit      *kit);
 static void     hyscan_gtk_map_kit_track_enable (HyScanGtkMapKit      *kit,
                                                  const gchar          *track_name,
                                                  gboolean              enable);
+static 					gint show_popup_menu(GtkWidget *widget, GdkEvent *event);
 #if !GLIB_CHECK_VERSION (2, 44, 0)
 static gboolean g_strv_contains               (const gchar * const  *strv,
                                                const gchar          *str);
@@ -700,6 +701,9 @@ create_mark_tree_view (HyScanGtkMapKit *kit,
   gtk_tree_view_append_column (tree_view, type_column);
 
   gtk_tree_view_set_grid_lines (tree_view, GTK_TREE_VIEW_GRID_LINES_HORIZONTAL);
+
+  /* Соединяем сигнал нажатия кнопки мышки с функцией-обработчиком */
+  g_signal_connect_swapped (G_OBJECT (tree_view), "button_press_event", G_CALLBACK (show_popup_menu), NULL);
 
   return tree_view;
 }
@@ -1897,6 +1901,39 @@ hyscan_gtk_map_kit_get_tracks (HyScanGtkMapKit  *kit)
     return hyscan_gtk_map_track_get_tracks (HYSCAN_GTK_MAP_TRACK (priv->track_layer));
 
   return g_new0 (gchar *, 1);
+}
+
+/* Функция-обработчик нажатия кнопки мыши. */
+static gint show_popup_menu(GtkWidget *widget, GdkEvent *event)
+{
+  GdkEventButton *event_button;
+
+  g_return_val_if_fail (event != NULL, FALSE);
+
+  if (event->type == GDK_BUTTON_PRESS)
+    {
+    	event_button = (GdkEventButton *) event;
+    	if (event_button->button == GDK_BUTTON_SECONDARY)
+        {
+          /* Создаём меню. */
+          //GtkWidget *menu = gtk_menu_new ();
+          /* Создаём пункт меню. */
+          //GtkWidget *item = gtk_menu_item_new_with_label ("Action");
+          /* добавляем пункт в меню. */
+          //gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+          /* Отображаем меню. */
+          //gtk_widget_show_all (menu);
+          //gtk_menu_popup_at_pointer (GTK_MENU (menu), event);
+          /* Соединяем сигнал выбора пункта меню с обработчиком. */
+          //g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK (action), widget);
+
+          g_print ("Button pressed\n");
+
+        	return TRUE;
+        }
+    }
+	return FALSE;
+
 }
 
 /**
