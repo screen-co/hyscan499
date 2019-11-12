@@ -111,12 +111,14 @@ hyscan_gtk_configurator_object_constructed (GObject *object)
 
 
   priv->db_dir_chooser = gtk_file_chooser_button_new (_("Database location"), GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
-  gtk_file_chooser_set_filename (GTK_FILE_CHOOSER (priv->db_dir_chooser), priv->db_profile_dir);
+  if (priv->db_profile_dir != NULL)
+    gtk_file_chooser_set_filename (GTK_FILE_CHOOSER (priv->db_dir_chooser), priv->db_profile_dir);
   g_signal_connect_swapped (priv->db_dir_chooser, "selection-changed",
                             G_CALLBACK (hyscan_gtk_configurator_update_config), configurator);
 
   priv->map_dir_chooser = gtk_file_chooser_button_new (_("Map cache location"), GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
-  gtk_file_chooser_set_filename (GTK_FILE_CHOOSER (priv->map_dir_chooser), priv->map_cache_dir);
+  if (priv->map_cache_dir != NULL)
+    gtk_file_chooser_set_filename (GTK_FILE_CHOOSER (priv->map_dir_chooser), priv->map_cache_dir);
   g_signal_connect_swapped (priv->map_dir_chooser, "selection-changed",
                             G_CALLBACK (hyscan_gtk_configurator_update_config), configurator);
 

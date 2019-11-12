@@ -1163,15 +1163,18 @@ build_interface (Global *global)
     {
       gchar * file = g_build_filename (g_get_user_config_dir(), "hyscan", "offsets.ini", NULL);
       HyScanFnnOffsets * o =  hyscan_fnn_offsets_new (global->control);
+      HyScanAntennaOffset offset, * offset_ptr;
+      const gchar * sensor_name;
+      GList * link;
+
       if (!hyscan_fnn_offsets_read (o, file))
         g_message ("didn't read offsets");
       else if (!hyscan_fnn_offsets_execute (o))
         g_message ("didn't apply offsets");
 
       /* Включаем на карте навигацию по датчику "nmea" с учётом его смещения. */
-      HyScanAntennaOffset offset, *offset_ptr = NULL;
-      const gchar *sensor_name = "nmea";
-      GList *link;
+      sensor_name = "nmea";
+      offset_ptr = NULL;
       for (link = hyscan_fnn_offsets_get_keys (o); link != NULL && offset_ptr == NULL; link = link->next)
         {
           if (!g_str_equal (link->data, sensor_name))
