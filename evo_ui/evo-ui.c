@@ -1041,7 +1041,7 @@ build_interface (Global *global)
     GtkTreeView * tv;
     gchar *profile_dir = g_build_filename (g_get_user_config_dir (), "hyscan", "map-profiles", NULL);
     gchar *cache_dir = g_build_filename (g_get_user_cache_dir (), "hyscan", NULL);
-    HyScanGeoGeodetic center = {0, 0};
+    HyScanGeoGeodetic center = {0, 0, 0};
 
     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     ui->mapkit = hyscan_gtk_map_kit_new (&center, global->db, cache_dir);
@@ -1049,9 +1049,6 @@ build_interface (Global *global)
     hyscan_gtk_map_kit_load_profiles (ui->mapkit, profile_dir);
     hyscan_gtk_map_kit_add_marks_wf (ui->mapkit);
     hyscan_gtk_map_kit_add_marks_geo (ui->mapkit);
-
-    if (global->control != NULL)
-      hyscan_gtk_map_kit_add_nav (ui->mapkit, HYSCAN_SENSOR (global->control), "nmea", 0);
 
     gtk_stack_add_named (GTK_STACK (ui->control_stack), ui->mapkit->control, EVO_MAP);
     gtk_stack_add_named (GTK_STACK (ui->nav_stack), ui->mapkit->navigation, EVO_MAP);
@@ -1266,10 +1263,27 @@ build_interface (Global *global)
     {
       gchar * file = g_build_filename (g_get_user_config_dir(), "hyscan", "offsets.ini", NULL);
       HyScanFnnOffsets * o =  hyscan_fnn_offsets_new (global->control);
+      HyScanAntennaOffset offset, * offset_ptr;
+      const gchar * sensor_name;
+      GList * link;
+
       if (!hyscan_fnn_offsets_read (o, file))
         g_message ("didn't read offsets");
       else if (!hyscan_fnn_offsets_execute (o))
         g_message ("didn't apply offsets");
+
+      /* Включаем на карте навигацию по датчику "nmea" с учётом его смещения. */
+      sensor_name = "nmea";
+      offset_ptr = NULL;
+      for (link = hyscan_fnn_offsets_get_keys (o); link != NULL && offset_ptr == NULL; link = link->next)
+        {
+          if (!g_str_equal (link->data, sensor_name))
+            continue;
+
+          offset = hyscan_fnn_offsets_get_offset (o, sensor_name);
+          offset_ptr = &offset;
+        }
+      hyscan_gtk_map_kit_add_nav (ui->mapkit, HYSCAN_SENSOR (global->control), sensor_name, offset_ptr, 0);
 
       g_object_unref (o);
       g_free (file);

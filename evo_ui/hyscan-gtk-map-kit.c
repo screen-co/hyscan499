@@ -14,7 +14,7 @@
 #include <hyscan-gtk-map-scale.h>
 #include <hyscan-gtk-param-list.h>
 #include <hyscan-gtk-map-wfmark.h>
-#include <hyscan-mark-model.h>
+#include <hyscan-object-model.h>
 #include <hyscan-gtk-map-geomark.h>
 
 #define GETTEXT_PACKAGE "hyscanfnn-evoui"
@@ -56,8 +56,8 @@ struct _HyScanGtkMapKitPrivate
 {
   /* Модели данных. */
   HyScanDBInfo          *db_info;          /* Доступ к данным БД. */
-  HyScanMarkModel       *mark_model;       /* Модель меток водопада. */
-  HyScanMarkModel       *mark_geo_model;   /* Модель геометок. */
+  HyScanObjectModel     *mark_model;       /* Модель меток водопада. */
+  HyScanObjectModel     *mark_geo_model;   /* Модель геометок. */
   HyScanMarkLocModel    *ml_model;         /* Модель местоположения меток водопада. */
   HyScanDB              *db;
   HyScanCache           *cache;
@@ -748,33 +748,36 @@ create_track_menu (HyScanGtkMapKit *kit)
 
 /* Ищет метку по её типу и идентификатору. */
 static HyScanMark *
-mark_find (HyScanGtkMapKit *kit,
-           HyScanMarkType   mark_type,
-           const gchar     *id)
+mark_find (HyScanGtkMapKit   *kit,
+           HyScanObjectType   mark_type,
+           const gchar       *id)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
   GHashTable *marks;
-  HyScanMark *mark;
-
-  HyScanMarkModel *model = NULL;
 
   if (mark_type == HYSCAN_MARK_WATERFALL)
-    model = priv->mark_model;
+    {
+      HyScanMarkWaterfall *mark;
+
+      marks = hyscan_object_model_get (priv->mark_model);
+      mark = hyscan_mark_waterfall_copy (g_hash_table_lookup (marks, id));
+      g_hash_table_unref (marks);
+
+      return (HyScanMark *) mark;
+    }
+
   else if (mark_type == HYSCAN_MARK_GEO)
-    model = priv->mark_geo_model;
+    {
+      HyScanMarkGeo *mark;
 
-  if (model == NULL)
-    return NULL;
+      marks = hyscan_object_model_get (priv->mark_geo_model);
+      mark = hyscan_mark_geo_copy (g_hash_table_lookup (marks, id));
+      g_hash_table_unref (marks);
 
-  marks = hyscan_mark_model_get (model);
-  if (marks == NULL)
-    return NULL;
+      return (HyScanMark *) mark;
+    }
 
-  mark = hyscan_mark_copy (g_hash_table_lookup (marks, id));
-
-  g_hash_table_unref (marks);
-
-  return mark;
+  return NULL;
 }
 
 static gboolean
@@ -789,8 +792,10 @@ mark_get_location (HyScanGtkMapKit *kit,
 
   if (mark->type == HYSCAN_MARK_GEO)
     {
-      *latitude = mark->geo.center.lat;
-      *longitude = mark->geo.center.lon;
+      HyScanMarkGeo *mark_geo = (HyScanMarkGeo *) mark;
+
+      *latitude = mark_geo->center.lat;
+      *longitude = mark_geo->center.lon;
 
       found = TRUE;
     }
@@ -827,7 +832,7 @@ on_marks_selected (GtkTreeSelection *selection,
   HyScanGtkMapKitPrivate *priv = kit->priv;
   GtkTreeIter iter;
   HyScanMark *mark;
-  HyScanMarkType mark_type;
+  HyScanObjectType mark_type;
 
   gchar *mark_id;
   gdouble latitude, longitude;
@@ -854,7 +859,7 @@ on_marks_selected (GtkTreeSelection *selection,
 
   /* Открываем редактор метки. */
   hyscan_gtk_mark_editor_set_mark (HYSCAN_GTK_MARK_EDITOR (priv->mark_editor), mark_id,
-                                   mark->any.name, mark->any.operator_name, mark->any.description,
+                                   mark->name, mark->operator_name, mark->description,
                                    latitude, longitude);
 
   /* Выделяем метку на карте. */
@@ -862,33 +867,32 @@ on_marks_selected (GtkTreeSelection *selection,
   hyscan_gtk_map_geomark_mark_highlight (HYSCAN_GTK_MAP_GEOMARK (priv->geomark_layer), mark_id);
 
 exit:
-  hyscan_mark_free (mark);
+  if (mark->type == HYSCAN_MARK_WATERFALL)
+    hyscan_mark_waterfall_free ((HyScanMarkWaterfall *) mark);
+  else if (mark->type == HYSCAN_MARK_GEO)
+    hyscan_mark_geo_free ((HyScanMarkGeo *) mark);
   g_free (mark_id);
 }
 
 /* Обновляет имя метки mark_id в модели меток model. */
 static void
-update_mark (HyScanMarkModel *model,
-             const gchar     *mark_id,
-             const gchar     *name)
+update_mark (HyScanObjectModel *model,
+             const gchar       *mark_id,
+             const gchar       *name)
 {
-  GHashTable *marks;
   HyScanMark *mark;
 
-  if ((marks = hyscan_mark_model_get (model)) == NULL)
+  mark = (HyScanMark *) hyscan_object_model_get_id (model, mark_id);
+  if (mark == NULL)
     return;
 
-  if ((mark = g_hash_table_lookup (marks, mark_id)) != NULL)
-    {
-      HyScanMark *modified_mark = hyscan_mark_copy (mark);
+  hyscan_mark_set_text (mark, name, mark->description, mark->operator_name);
+  hyscan_object_model_modify_object (model, mark_id, (const HyScanObject *) mark);
 
-      hyscan_mark_set_text (modified_mark, name, mark->any.description, mark->any.operator_name);
-      hyscan_mark_model_modify_mark (model, mark_id, modified_mark);
-
-      hyscan_mark_free (modified_mark);
-    }
-
-  g_hash_table_unref (marks);
+  if (mark->type == HYSCAN_MARK_WATERFALL)
+    hyscan_mark_waterfall_free ((HyScanMarkWaterfall *) mark);
+  else if (mark->type == HYSCAN_MARK_GEO)
+    hyscan_mark_geo_free ((HyScanMarkGeo *) mark);
 }
 
 /* Обработчик изменения метки в редакторе меток. */
@@ -925,7 +929,7 @@ on_marks_activated (GtkTreeView        *treeview,
   if (gtk_tree_model_get_iter (model, &iter, path))
   {
     gchar *mark_id;
-    HyScanMarkType mark_type;
+    HyScanObjectType mark_type;
 
     gtk_tree_model_get (model, &iter, MARK_ID_COLUMN, &mark_id, MARK_TYPE_COLUMN, &mark_type, -1);
     if (mark_type == HYSCAN_MARK_WATERFALL && priv->wfmark_layer != NULL)
@@ -962,9 +966,9 @@ on_track_activated (GtkTreeView        *treeview,
 }
 
 static void
-list_store_insert (HyScanGtkMapKit *kit,
-                   HyScanMarkModel *model,
-                   gchar           *selected_id)
+list_store_insert (HyScanGtkMapKit   *kit,
+                   HyScanObjectModel *model,
+                   gchar              *selected_id)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
 
@@ -972,10 +976,10 @@ list_store_insert (HyScanGtkMapKit *kit,
   GHashTable *marks;
   GHashTableIter hash_iter;
 
-  HyScanMarkAny *mark;
+  HyScanMark *mark;
   gchar *mark_id;
 
-  marks = hyscan_mark_model_get (model);
+  marks = hyscan_object_model_get (model);
   if (marks == NULL)
     return;
 
@@ -987,7 +991,7 @@ list_store_insert (HyScanGtkMapKit *kit,
       gchar *time_str;
       gchar *type_name;
 
-      if (mark->type == HYSCAN_MARK_WATERFALL && ((HyScanMarkWaterfall*)mark)->track == NULL)
+      if (mark->type == HYSCAN_MARK_WATERFALL && ((HyScanMarkWaterfall *) mark)->track == NULL)
         continue;
 
       /* Добавляем в список меток. */
@@ -1940,16 +1944,18 @@ hyscan_gtk_map_kit_set_project (HyScanGtkMapKit *kit,
 
   /* Устанавливаем проект во всех сущностях. */
   if (priv->mark_geo_model != NULL)
-    hyscan_mark_model_set_project (priv->mark_geo_model, priv->db, priv->project_name);
+    hyscan_object_model_set_project (priv->mark_geo_model, priv->db, priv->project_name);
 
   if (priv->mark_model != NULL)
-    hyscan_mark_model_set_project (priv->mark_model, priv->db, priv->project_name);
+    hyscan_object_model_set_project (priv->mark_model, priv->db, priv->project_name);
 
   if (priv->ml_model != NULL)
     hyscan_mark_loc_model_set_project (priv->ml_model, priv->project_name);
 
   if (priv->track_layer != NULL)
     hyscan_gtk_map_track_set_project (HYSCAN_GTK_MAP_TRACK (priv->track_layer), priv->project_name);
+  if (priv->wfmark_layer != NULL)
+    hyscan_gtk_map_wfmark_set_project ( HYSCAN_GTK_MAP_WFMARK (priv->wfmark_layer), priv->project_name);
 }
 
 
@@ -2033,13 +2039,15 @@ hyscan_gtk_map_kit_load_profiles (HyScanGtkMapKit *kit,
  * @kit:
  * @sensor: датчик GPS-ресивера
  * @sensor_name: имя датчика
+ * @offset: (nullable): смещение антенны
  * @delay_time: время задержки навигационных данных
  */
 void
-hyscan_gtk_map_kit_add_nav (HyScanGtkMapKit *kit,
-                            HyScanSensor    *sensor,
-                            const gchar     *sensor_name,
-                            gdouble          delay_time)
+hyscan_gtk_map_kit_add_nav (HyScanGtkMapKit           *kit,
+                            HyScanSensor              *sensor,
+                            const gchar               *sensor_name,
+                            const HyScanAntennaOffset *offset,
+                            gdouble                    delay_time)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
 
@@ -2049,6 +2057,7 @@ hyscan_gtk_map_kit_add_nav (HyScanGtkMapKit *kit,
   priv->nav_model = hyscan_nav_model_new ();
   hyscan_nav_model_set_sensor (priv->nav_model, sensor);
   hyscan_nav_model_set_sensor_name (priv->nav_model, sensor_name);
+  hyscan_nav_model_set_offset (priv->nav_model, offset);
   hyscan_nav_model_set_delay (priv->nav_model, delay_time);
 
   /* Определение местоположения. */
@@ -2069,13 +2078,13 @@ hyscan_gtk_map_kit_add_marks_wf (HyScanGtkMapKit *kit)
   g_return_if_fail (priv->db != NULL);
 
   /* Модели меток водопада и их местоположения. */
-  priv->mark_model = hyscan_mark_model_new (HYSCAN_MARK_WATERFALL);
+  priv->mark_model = hyscan_object_model_new (HYSCAN_TYPE_OBJECT_DATA_WFMARK);
   priv->ml_model = hyscan_mark_loc_model_new (priv->db, priv->cache);
 
   g_signal_connect_swapped (priv->mark_model, "changed", G_CALLBACK (on_marks_changed), kit);
 
   /* Слой с метками. */
-  priv->wfmark_layer = hyscan_gtk_map_wfmark_new (priv->ml_model);
+  priv->wfmark_layer = hyscan_gtk_map_wfmark_new (priv->ml_model, priv->db, priv->cache);
   add_layer_row (kit, priv->wfmark_layer, "wfmark", _("Waterfall Marks"));
 
   /* Виджет навигации по меткам. */
@@ -2084,8 +2093,9 @@ hyscan_gtk_map_kit_add_marks_wf (HyScanGtkMapKit *kit)
   /* Устанавливаем проект и БД. */
   if (priv->project_name != NULL)
     {
-      hyscan_mark_model_set_project (priv->mark_model, priv->db, priv->project_name);
+      hyscan_object_model_set_project (priv->mark_model, priv->db, priv->project_name);
       hyscan_mark_loc_model_set_project (priv->ml_model, priv->project_name);
+      hyscan_gtk_map_wfmark_set_project (HYSCAN_GTK_MAP_WFMARK (priv->wfmark_layer), priv->project_name);
     }
 }
 
@@ -2098,7 +2108,7 @@ hyscan_gtk_map_kit_add_marks_geo (HyScanGtkMapKit   *kit)
   g_return_if_fail (priv->db != NULL);
 
   /* Модель геометок. */
-  priv->mark_geo_model = hyscan_mark_model_new (HYSCAN_MARK_GEO);
+  priv->mark_geo_model = hyscan_object_model_new (HYSCAN_TYPE_OBJECT_DATA_GEOMARK);
   g_signal_connect_swapped (priv->mark_geo_model, "changed", G_CALLBACK (on_marks_changed), kit);
 
   /* Слой с геометками. */
@@ -2109,7 +2119,7 @@ hyscan_gtk_map_kit_add_marks_geo (HyScanGtkMapKit   *kit)
   create_wfmark_toolbox (kit);
 
   if (priv->project_name != NULL)
-    hyscan_mark_model_set_project (priv->mark_geo_model, priv->db, priv->project_name);
+    hyscan_object_model_set_project (priv->mark_geo_model, priv->db, priv->project_name);
 }
 
 /**
@@ -2193,17 +2203,19 @@ void
 hyscan_gtk_map_kit_kf_setup (HyScanGtkMapKit *kit,
                              GKeyFile        *kf)
 {
-  gchar *profile = NULL;
+  gchar *profile_name = NULL;
   gboolean offline;
   HyScanGeoGeodetic center;
   gchar **layers, **tracks;
+  gchar *cache_dir;
 
   /* Считываем настройки из файла конфигурации. */
-  center.lat = g_key_file_get_double      (kf, "evo-map", "lat", NULL);
-  center.lon = g_key_file_get_double      (kf, "evo-map", "lon", NULL);
-  profile    = g_key_file_get_string      (kf, "evo-map", "profile", NULL);
-  layers     = g_key_file_get_string_list (kf, "evo-map", "layers", NULL, NULL);
-  tracks     = g_key_file_get_string_list (kf, "evo-map", "tracks", NULL, NULL);
+  center.lat   = g_key_file_get_double      (kf, "evo-map", "lat", NULL);
+  center.lon   = g_key_file_get_double      (kf, "evo-map", "lon", NULL);
+  profile_name = g_key_file_get_string      (kf, "evo-map", "profile", NULL);
+  layers       = g_key_file_get_string_list (kf, "evo-map", "layers", NULL, NULL);
+  tracks       = g_key_file_get_string_list (kf, "evo-map", "tracks", NULL, NULL);
+  cache_dir    = g_key_file_get_string      (kf, "evo-map", "cache", NULL);
 
   if (g_key_file_has_key (kf, "evo-map", "offline", NULL))
     offline = g_key_file_get_boolean (kf, "evo-map", "offline", NULL);
@@ -2213,10 +2225,27 @@ hyscan_gtk_map_kit_kf_setup (HyScanGtkMapKit *kit,
   /* Применяем настройки. */
   hyscan_gtk_map_move_to (HYSCAN_GTK_MAP (kit->map), center);
 
-  if (profile != NULL)
+  if (cache_dir != NULL)
     {
-      hyscan_gtk_map_kit_set_profile_name (kit, profile);
-      g_free (profile);
+      GHashTableIter iter;
+      HyScanProfileMap *profile;
+
+      g_free (kit->priv->tile_cache_dir);
+      kit->priv->tile_cache_dir = cache_dir;
+
+      g_hash_table_iter_init (&iter, kit->priv->profiles);
+      while (g_hash_table_iter_next (&iter, NULL, (gpointer *) &profile))
+        hyscan_profile_map_set_cache_dir (profile, kit->priv->tile_cache_dir);
+
+      /* Инициируем повторное применение профиля, чтобы обновить настройки кэша. */
+      if (profile_name == NULL)
+        profile_name = g_strdup (kit->priv->profile_active);
+    }
+
+  if (profile_name != NULL)
+    {
+      hyscan_gtk_map_kit_set_profile_name (kit, profile_name);
+      g_free (profile_name);
     }
 
   if (layers != NULL)
@@ -2263,6 +2292,8 @@ hyscan_gtk_map_kit_kf_desetup (HyScanGtkMapKit *kit,
   g_key_file_set_double      (kf, "evo-map", "lat",     geod.lat);
   g_key_file_set_double      (kf, "evo-map", "lon",     geod.lon);
   g_key_file_set_string      (kf, "evo-map", "profile", proifle);
+  /* Не сохраняем "evo-map" > "cache", т.к. он настраивается через конфигуратор. */
+  /* g_key_file_set_string      (kf, "evo-map", "cache",   kit->priv->tile_cache_dir); */
   g_key_file_set_boolean     (kf, "evo-map", "offline", hyscan_gtk_map_kit_get_offline (kit));
   g_key_file_set_string_list (kf, "evo-map", "layers", (const gchar *const *) layers, g_strv_length (layers));
   g_key_file_set_string_list (kf, "evo-map", "tracks", (const gchar *const *) tracks, g_strv_length (tracks));

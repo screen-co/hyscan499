@@ -250,3 +250,39 @@ msgstr "Название"
 #: tmp/hyscan-gtk-project-viewer.ui.h:2
 msgid "Date"
 msgstr "Дата"
+
+#: hyscan-gtk-configurator.c:104
+msgid "Initial configuration"
+msgstr "Первоначальная конфигурация"
+
+#: hyscan-gtk-configurator.c:153
+msgid ""
+"You should create a database profile to run HyScan. Please, specify the name "
+"of the profile and the path to the database directory."
+msgstr ""
+"Необходимо создать профиль базы данных, чтобы запустить HyScan. Пожалуйста, "
+"укажите имя профиля и путь к директории с базой данных."
+
+#: hyscan-gtk-configurator.c:137
+msgid ""
+"Map cache stores tile images for the map offline work. "
+"Please, specify the path to map cache directory."
+msgstr ""
+"Кэш карты хранит изображения тайлов и позволяет карте работать в режиме "
+"оффлайн. Укажите ниже путь к папке для кэша карты."
+
+#: hyscan-gtk-configurator.c:138
+msgid "Name of DB-profile"
+msgstr "Имя профиля БД"
+
+#: hyscan-gtk-configurator.c:141
+msgid "DB directory"
+msgstr "Папка БД"
+
+#: hyscan-gtk-configurator.c:148
+msgid "Map cache directory"
+msgstr "Папка кэша карты"
+
+#: hyscan-gtk-configurator.c:98
+msgid "Default profile"
+msgstr "Стандартный профиль"

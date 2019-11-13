@@ -249,3 +249,35 @@ msgstr ""
 #: tmp/hyscan-gtk-project-viewer.ui.h:2
 msgid "Date"
 msgstr ""
+
+#: hyscan-gtk-configurator.c:104
+msgid "Initial configuration"
+msgstr ""
+
+#: hyscan-gtk-configurator.c:132
+msgid ""
+"You should create a database profile to run HyScan. Please, specify the name "
+"of the profile and the path to the database directory."
+msgstr ""
+
+#: hyscan-gtk-configurator.c:137
+msgid ""
+"Map cache stores tile images for the map offline work. "
+"Please, specify the path to map cache directory."
+msgstr ""
+
+#: hyscan-gtk-configurator.c:142
+msgid "Name of DB-profile"
+msgstr ""
+
+#: hyscan-gtk-configurator.c:145
+msgid "DB directory"
+msgstr ""
+
+#: hyscan-gtk-configurator.c:148
+msgid "Map cache directory"
+msgstr ""
+
+#: hyscan-gtk-configurator.c:98
+msgid "Default profile"
+msgstr ""

@@ -25,31 +25,3 @@ msgstr "Галс"
 #: common.ui.h:2 tmp/common.ui.h:2
 msgid "Date"
 msgstr "Дата"
-
-#: configurator.c:128
-msgid "Initial configuration"
-msgstr "Первоначальная конфигурация"
-
-#: configurator.c:150
-msgid "Apply"
-msgstr "Применить"
-
-#: configurator.c:153
-msgid ""
-"You should create a database profile to run HyScan. Please, specify the name "
-"of the profile and the path to the database directory."
-msgstr ""
-"Необходимо создать профиль базы данных, чтобы запустить HyScan. Пожалуйста, "
-"укажите имя профиля и путь к директории с базой данных."
-
-#: configurator.c:159
-msgid "Name of DB-profile"
-msgstr "Имя профиля БД"
-
-#: configurator.c:162
-msgid "Path to DB"
-msgstr "Путь к БД"
-
-#: configurator.c:247
-msgid "Default profile"
-msgstr "Стандартный профиль"

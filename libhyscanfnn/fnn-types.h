@@ -10,7 +10,7 @@
 #include <hyscan-gtk-waterfall-meter.h>
 #include <hyscan-gtk-waterfall-mark.h>
 #include <hyscan-gtk-waterfall-player.h>
-#include <hyscan-mark-model.h>
+#include <hyscan-object-model.h>
 #include <hyscan-gtk-project-viewer.h>
 #include <hyscan-gtk-mark-editor.h>
 #include <hyscan-gtk-nav-indicator.h>
@@ -80,21 +80,21 @@ typedef void (*ui_vadjust_fn) (HyScanTrackInfo *);
 /* структура: локейшн + прожекторы */
 typedef struct
 {
-  gchar               *track;      /* Название галса. */
-  HyScanmLoc          *mloc;   /* Объект для определения местоположения. */
+  gchar                  *track;      /* Название галса. */
+  HyScanmLoc             *mloc;       /* Объект для определения местоположения. */
 
-  HyScanAmplitudeFactory *factory; /* CСоздание новых каналов данных. */
-  GHashTable          *projectors; /* Проекторы (для каждого канала). */
+  HyScanFactoryAmplitude *factory;    /* CСоздание новых каналов данных. */
+  GHashTable             *projectors; /* Проекторы (для каждого канала). */
 } LocStore;
 
 /* структура метка + координаты. */
 typedef struct
 {
-  HyScanMark *mark;
+  HyScanMarkWaterfall *mark;
 
-  gdouble     lat;
-  gdouble     lon;
-  gboolean    ok;
+  gdouble              lat;
+  gdouble              lon;
+  gboolean             ok;
 } MarkAndLocation;
 
 typedef struct
@@ -259,7 +259,7 @@ struct _Global
 
   struct
     {
-      HyScanMarkModel    *model; /* модель */
+      HyScanObjectModel  *model; /* модель */
       HyScanMarkSync     *sync;  /* синхронизация */
 
       GHashTable         *loc_storage;  /* хранилище локейшенов и проекторов */
@@ -446,10 +446,10 @@ HYSCAN_API void
 loc_store_free (gpointer data);
 
 MarkAndLocation *
-mark_and_location_new (HyScanMark *mark,
-                       gboolean    ok,
-                       gdouble     lat,
-                       gdouble     lon);
+mark_and_location_new (HyScanMarkWaterfall *mark,
+                       gboolean             ok,
+                       gdouble              lat,
+                       gdouble              lon);
 
 MarkAndLocation *
 mark_and_location_copy (gpointer data);
@@ -458,12 +458,12 @@ void
 mark_and_location_free (gpointer data);
 
 MarkAndLocation *
-get_mark_coords (GHashTable  * locstores,
-                 HyScanMark  * mark,
-                 Global      * global);
+get_mark_coords (GHashTable           * locstores,
+                 HyScanMarkWaterfall  * mark,
+                 Global               * global);
 
 HYSCAN_API void
-mark_model_changed (HyScanMarkModel   *mark_model,
+mark_model_changed (HyScanObjectModel *mark_model,
                     Global            *global);
 
 HYSCAN_API void
@@ -744,7 +744,7 @@ make_overlay (HyScanGtkWaterfall          *wf,
               HyScanGtkWaterfallMark     **_mark,
               HyScanGtkWaterfallMeter    **_meter,
               HyScanGtkWaterfallPlayer   **_player,
-              HyScanMarkModel             *mark_model);
+              HyScanObjectModel           *mark_model);
 
 HYSCAN_API void
 fnn_colormap_free (gpointer data);
