@@ -5,14 +5,18 @@
 
 typedef struct
 {
-  FILE *file;
+  FILE      *file;
 
-  GMutex lock;
-  guint  size;
-  guint  max_size;
-  gchar *filename;
-  gchar *filename_old;
-  gint64 start_time;
+  GMutex     lock;
+  guint      size;
+  guint      max_size;
+  gchar     *filename;
+  gchar     *filename_old;
+#ifdef G_OS_WIN32
+  gunichar2 *wfilename;
+  gunichar2 *wfilename_old;
+#endif
+  gint64     start_time;
 } HyScanFnnFlog;
 
 static HyScanFnnFlog flog;
@@ -47,7 +51,13 @@ hyscan_fnn_flog_rotate (void)
     }
 
   if (flog.file == NULL)
-    flog.file = g_fopen (flog.filename, "a+");
+    {
+#ifdef G_OS_WIN32
+      _wfopen_s (&flog.file, flog.wfilename, L"a+");
+#else
+      flog.file = g_fopen (flog.filename, "a+");
+#endif
+    }
 }
 
 /* Обработчик вывода лог сообщений в файл. */
@@ -69,16 +79,22 @@ hyscan_fnn_flog_handler (const gchar    *log_domain,
 static void
 hyscan_fnn_flog_open_file ()
 {
+  FILE *file = NULL;
+
   /* Открываем файл в бинарном режиме, чтобы узнать его размер в байтах. */
-  flog.file = g_fopen (flog.filename, "rb");
-  if (flog.file != NULL)
+#ifdef G_OS_WIN32
+  _wfopen_s (&file, flog.wfilename, L"rb");
+#else
+  file = g_fopen (flog.filename, "rb");
+#endif
+  if (file != NULL)
     {
       /* Проверяем размер лога. */
-      fseek (flog.file, 0, SEEK_END);
-      flog.size = ftell (flog.file);
+      fseek (file, 0, SEEK_END);
+      flog.size = ftell (file);
       
       /* Закрываем файл. */
-      g_clear_pointer (&flog.file, fclose);
+      fclose (file);
     }
 
   hyscan_fnn_flog_rotate ();
@@ -119,6 +135,10 @@ hyscan_fnn_flog_open (const gchar *component,
   /* Открываем файл. */
   flog.filename = g_build_path (G_DIR_SEPARATOR_S, log_dir, base_name, NULL);
   flog.filename_old = g_build_path (G_DIR_SEPARATOR_S, log_dir, base_name_old, NULL);
+#ifdef G_OS_WIN32
+  flog.wfilename = g_utf8_to_utf16 (flog.filename, -1, NULL, NULL, NULL);
+  flog.wfilename_old = g_utf8_to_utf16 (flog.filename_old, -1, NULL, NULL, NULL);
+#endif
 
   hyscan_fnn_flog_open_file ();
   if (flog.file != NULL)
@@ -150,4 +170,8 @@ hyscan_fnn_flog_close (void)
   g_clear_pointer (&flog.file, fclose);
   g_free (flog.filename);
   g_free (flog.filename_old);
+#ifdef G_OS_WIN32
+  g_free (flog.wfilename);
+  g_free (flog.wfilename_old);
+#endif
 }
