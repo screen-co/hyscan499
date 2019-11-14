@@ -86,11 +86,11 @@ depth_writer (GObject *emitter)
       gchar lon_str[1024] = {'\0'};
       gchar dpt_str[1024] = {'\0'};
 
-      status = hyscan_nav_data_get (dpt, i, &time, &val);
+      status = hyscan_nav_data_get (dpt, NULL, i, &time, &val);
       if (!status)
         continue;
 
-      status = hyscan_mloc_get (mloc, time, &antenna, 0, 0, 0, &coord);
+      status = hyscan_mloc_get (mloc, NULL, time, &antenna, 0, 0, 0, &coord);
       if (!status)
         continue;
 
