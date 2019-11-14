@@ -65,6 +65,9 @@ void              hyscan_gtk_map_kit_free             (HyScanGtkMapKit          
 GtkTreeView *     hyscan_gtk_map_kit_get_track_view   (HyScanGtkMapKit            *kit,
                                                        gint                       *track_col);
 
+void              hyscan_gtk_map_kit_set_rec_switch   (HyScanGtkMapKit            *kit,
+                                                       GtkSwitch                  *widget);
+
 void              hyscan_gtk_map_kit_kf_setup         (HyScanGtkMapKit            *kit,
                                                        GKeyFile                   *kf);
 

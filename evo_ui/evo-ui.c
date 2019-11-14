@@ -1463,6 +1463,8 @@ build_interface (Global *global)
     gtk_box_pack_start (GTK_BOX (rbox), ui->control_stack, TRUE, TRUE, 0);
     if (record != NULL)
       gtk_box_pack_start (GTK_BOX (rbox), record, FALSE, FALSE, 0);
+
+    hyscan_gtk_map_kit_set_rec_switch (ui->mapkit, GTK_SWITCH (ui->starter.all));
   }
 
   /* Настройки 2.0. */

@@ -32,6 +32,7 @@
 #include <hyscan-planner-selection.h>
 #include <hyscan-gtk-map-steer.h>
 #include <hyscan-gtk-planner-list.h>
+#include <hyscan-gtk-map-direction.h>
 
 #define PROFILE_EXTENSION    ".ini"
 #define DEFAULT_PROFILE_NAME "default"    /* Имя профиля карты по умолчанию. */
@@ -117,7 +118,9 @@ struct _HyScanGtkMapKitPrivate
   GtkWidget               *planner_stack;    /* GtkStack с виджетами настроек планировщика. */
   GtkButton               *preload_button;   /* Кнопка загрузки тайлов. */
   GtkProgressBar          *preload_progress; /* Индикатор загрузки тайлов. */
-  GtkWidget               *steer_bin;        /* Контейнер для виджета навигации по отклонениям от плана. */
+  GtkWidget               *steer_box;        /* Контейнер для виджета навигации по отклонениям от плана. */
+  GtkWidget               *autorec_btn;      /* Чекбокс для старта автоматической записи. */
+  GtkSwitch               *rec_switch;       /* Включение / выключение записи. */
 
   GtkTreeView             *track_tree;       /* GtkTreeView со списком галсов. */
   GtkListStore            *track_store;      /* Модель данных для track_tree. */
@@ -1967,18 +1970,55 @@ hyscan_gtk_map_kit_load_profiles (HyScanGtkMapKit *kit,
   g_strfreev (config_files);
 }
 
-void
+static void
+hyscan_gtk_map_kit_start_rec (HyScanGtkMapSteer *steer,
+                              HyScanGtkMapKit   *kit)
+{
+  if (kit->priv->rec_switch == NULL)
+    return;
+
+  if (!gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (kit->priv->autorec_btn)))
+    return;
+
+  g_message ("Auto start rec");
+  gtk_switch_set_active (kit->priv->rec_switch, TRUE);
+  hyscan_gtk_map_steer_set_recording (steer, TRUE);
+}
+
+static void
+hyscan_gtk_map_kit_stop_rec (HyScanGtkMapSteer *steer,
+                             HyScanGtkMapKit   *kit)
+{
+  if (kit->priv->rec_switch == NULL)
+    return;
+
+  if (!gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (kit->priv->autorec_btn)))
+    return;
+
+  g_message ("Auto stop rec");
+  gtk_switch_set_active (kit->priv->rec_switch, FALSE);
+  hyscan_gtk_map_steer_set_recording (steer, FALSE);
+}
+
+static void
 add_steer (HyScanGtkMapKit *kit)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
-  GtkWidget *steer;
+  GtkWidget *steer, *direction;
 
   /* Отклонение от курса. */
   if (priv->nav_model == NULL || priv->planner_selection == NULL)
     return;
 
   steer = hyscan_gtk_map_steer_new (priv->nav_model, priv->planner_selection);
-  gtk_box_pack_start (GTK_BOX (priv->steer_bin), steer, TRUE, TRUE, 0);
+  g_signal_connect (steer, "start", G_CALLBACK (hyscan_gtk_map_kit_start_rec), kit);
+  g_signal_connect (steer, "stop",  G_CALLBACK (hyscan_gtk_map_kit_stop_rec),  kit);
+  direction = hyscan_gtk_map_direction_new (HYSCAN_GTK_MAP (kit->map), priv->planner_selection, priv->nav_model);
+  gtk_button_box_set_layout (GTK_BUTTON_BOX (direction), GTK_BUTTONBOX_END);
+  priv->autorec_btn = gtk_check_button_new_with_mnemonic (_("_Autorec"));
+  gtk_container_add (GTK_CONTAINER (direction), priv->autorec_btn);
+  gtk_box_pack_start (GTK_BOX (priv->steer_box), steer,     TRUE, TRUE, 0);
+  gtk_box_pack_start (GTK_BOX (priv->steer_box), direction, TRUE, TRUE, 0);
 }
 
 /**
@@ -2018,10 +2058,10 @@ hyscan_gtk_map_kit_add_nav (HyScanGtkMapKit           *kit,
   add_layer_row (kit, priv->way_layer, FALSE, "nav", _("Navigation"));
 
   /* Контейнер для виджета навигации по галсу (сам виджет может быть, а может не быть). */
-  priv->steer_bin = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+  priv->steer_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
 
   box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
-  gtk_box_pack_start (GTK_BOX (box), priv->steer_bin,     FALSE, TRUE, 6);
+  gtk_box_pack_start (GTK_BOX (box), priv->steer_box, FALSE, TRUE, 6);
   gtk_box_pack_start (GTK_BOX (box), priv->locate_button, FALSE, TRUE, 6);
 
   hyscan_gtk_layer_list_set_tools (HYSCAN_GTK_LAYER_LIST (priv->layer_list), "nav", box);
@@ -2199,6 +2239,20 @@ hyscan_gtk_map_kit_get_track_view (HyScanGtkMapKit *kit,
   if (track_col != NULL)
     *track_col = TRACK_COLUMN;
   return kit->priv->track_tree;
+}
+
+/**
+ * hyscan_gtk_map_kit_set_rec_switch:
+ * @kit
+ * @widget: GtkSwitch, включающий запись галса
+ *
+ * TODO: Эта функция костыльная, надо как-то включать запись не через дерганье виджета
+ */
+void
+hyscan_gtk_map_kit_set_rec_switch (HyScanGtkMapKit *kit,
+                                   GtkSwitch       *widget)
+{
+  kit->priv->rec_switch = widget;
 }
 
 /**
