@@ -16,6 +16,7 @@
 #include <hyscan-gtk-map-wfmark.h>
 #include <hyscan-object-model.h>
 #include <hyscan-gtk-map-geomark.h>
+#include <locale.h>
 
 #define GETTEXT_PACKAGE "hyscanfnn-evoui"
 #include <glib/gi18n-lib.h>
@@ -118,7 +119,9 @@ static gchar ** hyscan_gtk_map_kit_get_tracks   (HyScanGtkMapKit      *kit);
 static void     hyscan_gtk_map_kit_track_enable (HyScanGtkMapKit      *kit,
                                                  const gchar          *track_name,
                                                  gboolean              enable);
-static 					gint show_popup_menu(GtkWidget *widget, GdkEvent *event);
+static gint show_popup_menu (HyScanGtkMapKit *kit, GdkEvent *event, GtkWidget *widget);
+static void save_as_csv (GtkWidget *button, HyScanGtkMapKit *kit);
+static void put_to_buffer (GtkWidget *button, HyScanGtkMapKit *kit);
 #if !GLIB_CHECK_VERSION (2, 44, 0)
 static gboolean g_strv_contains               (const gchar * const  *strv,
                                                const gchar          *str);
@@ -668,7 +671,7 @@ static GtkTreeView *
 create_mark_tree_view (HyScanGtkMapKit *kit,
                        GtkTreeModel    *tree_model)
 {
-  GtkCellRenderer *renderer;
+	GtkCellRenderer *renderer;
   GtkTreeViewColumn *type_column, *name_column, *date_column;
   GtkTreeView *tree_view;
 
@@ -703,7 +706,8 @@ create_mark_tree_view (HyScanGtkMapKit *kit,
   gtk_tree_view_set_grid_lines (tree_view, GTK_TREE_VIEW_GRID_LINES_HORIZONTAL);
 
   /* Соединяем сигнал нажатия кнопки мышки с функцией-обработчиком */
-  g_signal_connect_swapped (G_OBJECT (tree_view), "button_press_event", G_CALLBACK (show_popup_menu), NULL);
+  g_signal_connect_swapped (G_OBJECT (tree_view), "button_press_event", G_CALLBACK (show_popup_menu), kit);
+  /*g_signal_connect (G_OBJECT (tree_view), "button_press_event", G_CALLBACK (show_popup_menu), kit);*/
 
   return tree_view;
 }
@@ -1904,9 +1908,12 @@ hyscan_gtk_map_kit_get_tracks (HyScanGtkMapKit  *kit)
 }
 
 /* Функция-обработчик нажатия кнопки мыши. */
-static gint show_popup_menu(GtkWidget *widget, GdkEvent *event)
+static gint show_popup_menu (HyScanGtkMapKit *kit, GdkEvent *event, GtkWidget *widget)
 {
   GdkEventButton *event_button;
+
+  HyScanGtkMapKitPrivate *priv = kit->priv;
+  if (!kit || !priv) return FALSE;
 
   g_return_val_if_fail (event != NULL, FALSE);
 
@@ -1916,24 +1923,185 @@ static gint show_popup_menu(GtkWidget *widget, GdkEvent *event)
     	if (event_button->button == GDK_BUTTON_SECONDARY)
         {
           /* Создаём меню. */
-          //GtkWidget *menu = gtk_menu_new ();
+          GtkWidget *menu = gtk_menu_new ();
           /* Создаём пункт меню. */
-          //GtkWidget *item = gtk_menu_item_new_with_label ("Action");
+          GtkWidget *item_save_as_csv = gtk_menu_item_new_with_label (_("Save as CSV"));
+          GtkWidget *item_put_to_buffer = gtk_menu_item_new_with_label (_("Put to buffer"));
           /* добавляем пункт в меню. */
-          //gtk_menu_shell_append(GTK_MENU_SHELL(menu), item);
+          gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_save_as_csv);
+          gtk_menu_shell_append(GTK_MENU_SHELL(menu), item_put_to_buffer);
           /* Отображаем меню. */
-          //gtk_widget_show_all (menu);
-          //gtk_menu_popup_at_pointer (GTK_MENU (menu), event);
+          gtk_widget_show_all (menu);
+          gtk_menu_popup_at_pointer (GTK_MENU (menu), event);
           /* Соединяем сигнал выбора пункта меню с обработчиком. */
-          //g_signal_connect (G_OBJECT (item), "activate", G_CALLBACK (action), widget);
-
-          g_print ("Button pressed\n");
+          g_signal_connect (G_OBJECT (item_save_as_csv), "activate", G_CALLBACK (save_as_csv), kit);
+          g_signal_connect (G_OBJECT (item_put_to_buffer), "activate", G_CALLBACK (put_to_buffer), kit);
 
         	return TRUE;
         }
     }
 	return FALSE;
+}
 
+/* Функция-обработчик выбора пункта контекстного меню "Save to CSV".*/
+static void save_as_csv (GtkWidget *button, HyScanGtkMapKit *kit)
+{
+	HyScanGtkMapKitPrivate *priv = kit->priv;
+
+	gchar *filename = g_strdup (priv->project_name);
+	filename = g_strconcat (filename, ".csv",(gchar*) NULL);
+	GtkWidget *dialog;
+
+  GtkFileChooser *chooser;
+  GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
+  gint res;
+  // Получаем водопадные метки с координатми.
+  GHashTable *wf_marks = hyscan_mark_loc_model_get (priv->ml_model);
+  GHashTable *geo_marks = hyscan_object_model_get (priv->mark_geo_model);
+
+  if (wf_marks == NULL || geo_marks == NULL)
+    	return;
+
+  dialog = gtk_file_chooser_dialog_new (_("Save File"),
+																				GTK_WINDOW (gtk_widget_get_toplevel (GTK_WIDGET (priv->mark_tree))),
+                                        action,
+                                        _("Cancel"),
+                                        GTK_RESPONSE_CANCEL,
+                                        _("Save"),
+                                        GTK_RESPONSE_ACCEPT,
+                                        NULL);
+  chooser = GTK_FILE_CHOOSER (dialog);
+
+  gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
+
+  gtk_file_chooser_set_current_name (chooser, filename);
+
+  res = gtk_dialog_run (GTK_DIALOG (dialog));
+
+  if (res == GTK_RESPONSE_ACCEPT)
+    {
+      filename = gtk_file_chooser_get_filename (chooser);
+
+      FILE *file = fopen (filename, "w");
+      if (file)
+        {
+          GHashTableIter hash_iter;
+          gchar *mark_id = NULL;
+
+          HyScanMarkGeo *geo_mark;
+          HyScanMarkLocation *location;
+
+          gchar *str = "LAT,LON,NAME,DESCRIPTION,COMMENT,NOTES,DATE,TIME\n";
+
+          fwrite(str , sizeof (gchar), g_utf8_strlen (str, -1) , file);
+          // Водопадные метки.
+          if (wf_marks)
+          	{
+          		g_hash_table_iter_init (&hash_iter, wf_marks);
+
+        	  	while (g_hash_table_iter_next (&hash_iter, (gpointer *) &mark_id, (gpointer *) &location))
+    		        {
+    		          GDateTime *local  = g_date_time_new_from_unix_local (1e-6 * location->mark->ctime);
+
+      		        gchar *lat         = g_strdup_printf ("%.6f", location->mark_geo.lat),
+      		      	  	  *lon         = g_strdup_printf ("%.6f", location->mark_geo.lon),
+		  							  	*name        = g_strdup (location->mark->name),
+    	  	              *description = g_strdup (location->mark->description),
+  			  							*comment     = g_strdup ("Empty"),
+	  			  						*notes       = g_strdup ("Empty"),
+		  			  					*date        = g_date_time_format (local, "%m/%d/%Y"),
+			  			  				*time        = g_date_time_format (local, "%H:%M:%S");
+
+      		        const gchar* delimiter = localeconv()->decimal_point;
+      		        g_strdelimit(lat, delimiter, '.');
+      		        g_strdelimit(lon, delimiter, '.');
+
+      		        if (location->mark->type == HYSCAN_MARK_WATERFALL)
+      		        	{
+        		          str = "";
+          		        str = g_strconcat (str, lat, ",", lon, ",", name, ",", description, ",",
+				  						      						 comment, ",", notes, ",", date, ",", time, "\n", (gchar*) NULL);
+        		          fwrite(str , sizeof (gchar), g_utf8_strlen(str, -1) , file);
+      		        	}
+
+        		      g_free (lon);
+      	  	      g_free (lat);
+    		          g_free (name);
+    		          g_free (description);
+    		          g_free (comment);
+    		          g_free (notes);
+      	  	      g_free (date);
+        		      g_free (time);
+        		      g_free (str);
+
+        		      lon = lat = name = description = comment = notes = date = time = str = NULL;
+
+          		    g_date_time_unref (local);
+        	  	  }
+
+          	  g_hash_table_unref (wf_marks);
+            }
+          // Гео-метки.
+          if (geo_marks)
+          	{
+          		g_hash_table_iter_init (&hash_iter, geo_marks);
+
+          		while (g_hash_table_iter_next (&hash_iter, (gpointer *) &mark_id, (gpointer *) &geo_mark))
+          			{
+          				GDateTime *local  = g_date_time_new_from_unix_local (1e-6 * geo_mark->ctime);
+
+      		        gchar *lat         = g_strdup_printf ("%.6f", geo_mark->center.lat),
+      		      	  	  *lon         = g_strdup_printf ("%.6f", geo_mark->center.lon),
+		  							  	*name        = g_strdup (geo_mark->name),
+    	  	              *description = g_strdup (geo_mark->description),
+  			  							*comment     = g_strdup ("Empty"),
+	  			  						*notes       = g_strdup ("Empty"),
+		  			  					*date        = g_date_time_format (local, "%m/%d/%Y"),
+			  			  				*time        = g_date_time_format (local, "%H:%M:%S");
+
+      		        const gchar* delimiter = localeconv()->decimal_point;
+      		        g_strdelimit(lat, delimiter, '.');
+      		        g_strdelimit(lon, delimiter, '.');
+
+      		        if (geo_mark->type == HYSCAN_MARK_GEO)
+      		        	{
+        		          str = "";
+          		        str = g_strconcat (str, lat, ",", lon, ",", name, ",", description, ",",
+				  						      						 comment, ",", notes, ",", date, ",", time, "\n", (gchar*) NULL);
+        		          fwrite(str , sizeof (gchar), g_utf8_strlen(str, -1) , file);
+      		        	}
+
+        		      g_free (lon);
+      	  	      g_free (lat);
+    		          g_free (name);
+    		          g_free (description);
+    		          g_free (comment);
+    		          g_free (notes);
+      	  	      g_free (date);
+        		      g_free (time);
+        		      g_free (str);
+
+        		      lon = lat = name = description = comment = notes = date = time = str = NULL;
+
+          		    g_date_time_unref (local);
+          			}
+          		g_hash_table_unref (geo_marks);
+          	}
+
+          fclose (file);
+        }
+      g_free (filename);
+    }
+  gtk_widget_destroy (dialog);
+}
+
+/* Функция-обработчик выбора пункта контекстного меню "Put to buffer".*/
+static void put_to_buffer (GtkWidget *button, HyScanGtkMapKit *kit)
+{
+	HyScanGtkMapKitPrivate *priv = kit->priv;
+  GtkClipboard* clipboard = gtk_clipboard_get(GDK_SELECTION_CLIPBOARD);
+  /*gtk_clipboard_set_text(clipboard, "A string from buffer.", -1);*/
+  gtk_clipboard_set_text(clipboard, priv->project_name, -1);
 }
 
 /**
