@@ -265,23 +265,23 @@ msgstr ""
 
 #: hyscan-gtk-configurator.c:137
 msgid ""
-"Map cache stores tile images to enable map offline work. "
+"Map cache stores tile images for the map offline work. "
 "Please, specify the path to map cache directory."
 msgstr ""
 "Кэш карты хранит изображения тайлов и позволяет карте работать в режиме "
-"оффлайн. Укажите ниже путь к директории, в которой необходимо хранить кэш карты."
+"оффлайн. Укажите ниже путь к папке для кэша карты."
 
 #: hyscan-gtk-configurator.c:138
 msgid "Name of DB-profile"
 msgstr "Имя профиля БД"
 
 #: hyscan-gtk-configurator.c:141
-msgid "Path to DB"
-msgstr "Путь к БД"
+msgid "DB directory"
+msgstr "Папка БД"
 
 #: hyscan-gtk-configurator.c:148
-msgid "Path to map cache"
-msgstr "Путь к кэшу карт"
+msgid "Map cache directory"
+msgstr "Папка кэша карты"
 
 #: hyscan-gtk-configurator.c:98
 msgid "Default profile"

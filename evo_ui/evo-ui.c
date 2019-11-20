@@ -32,6 +32,93 @@ EvoUI global_ui = {0,};
 Global *_global = NULL;
 
 /* OVERRIDES */
+void
+depth_writer (GObject *emitter)
+{
+  guint32 first, last, i;
+  HyScanAntennaOffset antenna;
+  HyScanGeoGeodetic coord;
+  GString *string = NULL;
+  gchar *words = NULL;
+  GError *error = NULL;
+  gchar *filename;
+
+  HyScanDB * db = _global->db;
+  HyScanCache * cache = _global->cache;
+  gchar *project = _global->project_name;
+  gchar *track = _global->track_name;
+
+  HyScanNavData * dpt;
+  HyScanmLoc * mloc;
+
+  dpt = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track,
+                                                 3, HYSCAN_NMEA_DATA_DPT,
+                                                 HYSCAN_NMEA_FIELD_DEPTH));
+
+  if (dpt == NULL)
+    {
+      g_warning ("Failed to open dpt parser.");
+      return;
+    }
+
+  mloc = hyscan_mloc_new (db, cache, project, track);
+  if (mloc == NULL)
+    {
+      g_warning ("Failed to open mLocation.");
+      g_clear_object (&dpt);
+      return;
+    }
+
+  string = g_string_new (NULL);
+  g_string_append_printf (string, "%s;%s\n", project, track);
+
+  hyscan_nav_data_get_range (dpt, &first, &last);
+  antenna = hyscan_nav_data_get_offset (dpt);
+  g_message ("Hello!");
+    g_message ("depth_writer: %u, %u", first, last);
+
+
+  for (i = first; i <= last; ++i)
+    {
+      gdouble val;
+      gint64 time;
+      gboolean status;
+      gchar lat_str[1024] = {'\0'};
+      gchar lon_str[1024] = {'\0'};
+      gchar dpt_str[1024] = {'\0'};
+
+      status = hyscan_nav_data_get (dpt, NULL, i, &time, &val);
+      if (!status)
+        continue;
+
+      status = hyscan_mloc_get (mloc, NULL, time, &antenna, 0, 0, 0, &coord);
+      if (!status)
+        continue;
+
+      g_ascii_formatd (lat_str, 1024, "%12.9f", coord.lat);
+      g_ascii_formatd (lon_str, 1024, "%12.9f", coord.lon);
+      g_ascii_formatd (dpt_str, 1024, "%12.9f", val);
+      g_string_append_printf (string, "%s;%s;%s\n", lat_str, lon_str, dpt_str);
+    }
+
+  words = g_string_free (string, FALSE);
+
+  if (words == NULL)
+    return;
+
+  filename = g_strdup_printf ("%s%s", "/tmp/", track);
+  g_file_set_contents (filename,
+                       words, strlen (words), &error);
+  g_free (filename);
+
+  if (error != NULL)
+    {
+      g_message ("Depth save failure: %s", error->message);
+      g_error_free (error);
+    }
+
+  g_free (words);
+}
 
 
 gboolean
@@ -650,7 +737,7 @@ make_tvg_control (Global *global,
                   GtkSizeGroup *sg)
 {
   const gchar * tvg_control_name;
-  HyScanSonarTVGModeType caps;
+  HyScanSonarTVGModeType caps, preferred = HYSCAN_SONAR_TVG_MODE_NONE;
   const HyScanSonarInfoSource * info;
   HyScanSourceType *sources = panel->sources;
   gboolean auto_ok = TRUE, log_ok = TRUE, lin_ok = TRUE, const_ok = TRUE;
@@ -681,6 +768,7 @@ make_tvg_control (Global *global,
           tvg_control_name = "auto_tvg_control";
           panel->gui.tvg_level_value = get_label_from_builder  (b, "tvg_level_value");     add_to_sg (sg, b, "tvg_level_label");
           panel->gui.tvg_sens_value  = get_label_from_builder  (b, "tvg_sens_value");      add_to_sg (sg, b, "tvg_sensitivity_label");
+          preferred = HYSCAN_SONAR_TVG_MODE_AUTO;
         }
       else if (log_ok)
         {
@@ -688,17 +776,20 @@ make_tvg_control (Global *global,
           panel->gui.logtvg_gain0_value = get_label_from_builder  (b, "logtvg_gain0_value");     add_to_sg (sg, b, "logtvg_gain0_label");
           panel->gui.logtvg_beta_value  = get_label_from_builder  (b, "logtvg_beta_value");      add_to_sg (sg, b, "logtvg_beta_label");
           panel->gui.logtvg_alpha_value  = get_label_from_builder  (b, "logtvg_alpha_value");    add_to_sg (sg, b, "logtvg_alpha_label");
+          preferred = HYSCAN_SONAR_TVG_MODE_LOGARITHMIC;
         }
       else if (lin_ok)
         {
           tvg_control_name = "lin_tvg_control";
           panel->gui.tvg_value  = get_label_from_builder  (b, "tvg_value");          add_to_sg (sg, b, "tvg_label");
           panel->gui.tvg0_value = get_label_from_builder  (b, "tvg0_value");         add_to_sg (sg, b, "tvg0_label");
+          preferred = HYSCAN_SONAR_TVG_MODE_LINEAR_DB;
         }
       else if (const_ok)
         {
           tvg_control_name = "const_tvg_control";
           panel->gui.consttvg_value  = get_label_from_builder  (b, "consttvg_value");      add_to_sg (sg, b, "consttvg_label");
+          preferred = HYSCAN_SONAR_TVG_MODE_CONSTANT;
         }
       else
         {
@@ -713,12 +804,14 @@ make_tvg_control (Global *global,
           tvg_control_name = "auto_tvg_control";
           panel->gui.tvg_level_value = get_label_from_builder  (b, "tvg_level_value");     add_to_sg (sg, b, "tvg_level_label");
           panel->gui.tvg_sens_value  = get_label_from_builder  (b, "tvg_sens_value");      add_to_sg (sg, b, "tvg_sensitivity_label");
+          preferred = HYSCAN_SONAR_TVG_MODE_AUTO;
         }
       else if (lin_ok)
         {
           tvg_control_name = "lin_tvg_control";
           panel->gui.tvg_value  = get_label_from_builder  (b, "tvg_value");          add_to_sg (sg, b, "tvg_label");
           panel->gui.tvg0_value = get_label_from_builder  (b, "tvg0_value");         add_to_sg (sg, b, "tvg0_label");
+          preferred = HYSCAN_SONAR_TVG_MODE_LINEAR_DB;
         }
       else if (log_ok)
         {
@@ -726,11 +819,13 @@ make_tvg_control (Global *global,
           panel->gui.logtvg_gain0_value = get_label_from_builder  (b, "logtvg_gain0_value");     add_to_sg (sg, b, "logtvg_gain0_label");
           panel->gui.logtvg_beta_value  = get_label_from_builder  (b, "logtvg_beta_value");      add_to_sg (sg, b, "logtvg_beta_label");
           panel->gui.logtvg_alpha_value  = get_label_from_builder  (b, "logtvg_alpha_value");    add_to_sg (sg, b, "logtvg_alpha_label");
+          preferred = HYSCAN_SONAR_TVG_MODE_LOGARITHMIC;
         }
       else if (const_ok)
         {
           tvg_control_name = "const_tvg_control";
           panel->gui.consttvg_value  = get_label_from_builder  (b, "consttvg_value");      add_to_sg (sg, b, "consttvg_label");
+          preferred = HYSCAN_SONAR_TVG_MODE_CONSTANT;
         }
       else
         {
@@ -739,6 +834,7 @@ make_tvg_control (Global *global,
         }
     }
 
+  tvg_set_preferred_mode (global, preferred, panel->panelx);
   return get_widget_from_builder (b, tvg_control_name);
 }
 
@@ -1042,6 +1138,11 @@ build_interface (Global *global)
     g_signal_connect (mitem, "activate", G_CALLBACK (run_manager), NULL);
     gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
+    /* unloader */
+    mitem = gtk_menu_item_new_with_label (_("Export XYZ"));
+    g_signal_connect (mitem, "activate", G_CALLBACK (depth_writer), NULL);
+    gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
+
     /* офлайн-карта */
     mitem = gtk_check_menu_item_new_with_label (_("Online Map"));
     ui->map_offline = g_object_ref (mitem);
@@ -1163,15 +1264,18 @@ build_interface (Global *global)
     {
       gchar * file = g_build_filename (g_get_user_config_dir(), "hyscan", "offsets.ini", NULL);
       HyScanFnnOffsets * o =  hyscan_fnn_offsets_new (global->control);
+      HyScanAntennaOffset offset, * offset_ptr;
+      const gchar * sensor_name;
+      GList * link;
+
       if (!hyscan_fnn_offsets_read (o, file))
         g_message ("didn't read offsets");
       else if (!hyscan_fnn_offsets_execute (o))
         g_message ("didn't apply offsets");
 
       /* Включаем на карте навигацию по датчику "nmea" с учётом его смещения. */
-      HyScanAntennaOffset offset, *offset_ptr = NULL;
-      const gchar *sensor_name = "nmea";
-      GList *link;
+      sensor_name = "nmea";
+      offset_ptr = NULL;
       for (link = hyscan_fnn_offsets_get_keys (o); link != NULL && offset_ptr == NULL; link = link->next)
         {
           if (!g_str_equal (link->data, sensor_name))

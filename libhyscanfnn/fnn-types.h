@@ -115,16 +115,17 @@ typedef enum
 
 typedef struct
 {
-  gdouble   distance;
-  gint      signal;
-  gdouble   gain0;       // lin
-  gdouble   gain_step;   // lin
-  gdouble   level;       // auto
-  gdouble   sensitivity; // auto
-  gdouble   log_gain0;   // log
-  gdouble   log_beta;    // log
-  gdouble   log_alpha;   // log
-  gdouble   const_gain0; // const
+  gdouble                distance;
+  gint                   signal;
+  gdouble                gain0;       // lin
+  gdouble                gain_step;   // lin
+  gdouble                level;       // auto
+  gdouble                sensitivity; // auto
+  gdouble                log_gain0;   // log
+  gdouble                log_beta;    // log
+  gdouble                log_alpha;   // log
+  gdouble                const_gain0; // const
+  HyScanSonarTVGModeType mode;        // current mode (not bitmask)
 } SonarCurrent;
 
 typedef struct
@@ -486,7 +487,6 @@ track_changed (GtkTreeView *list,
                Global      *global);
 
 HYSCAN_API gboolean
-// brightness_set (Global  *global,
 levels_set (Global  *global,
             gdouble  new_black,
             gdouble  new_gamma,
@@ -613,6 +613,11 @@ auto_tvg_set (Global  *global,
               gdouble  level,
               gdouble  sensitivity,
               gint     selector);
+
+HYSCAN_API gboolean
+tvg_set_preferred_mode (Global                 *global,
+                        HyScanSonarTVGModeType  mode,
+                        gint                    panelx);
 
 gboolean
 distance_set (Global  *global,

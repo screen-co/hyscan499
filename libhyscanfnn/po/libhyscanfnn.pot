@@ -271,11 +271,11 @@ msgid "Name of DB-profile"
 msgstr ""
 
 #: hyscan-gtk-configurator.c:145
-msgid "Path to DB"
+msgid "DB directory"
 msgstr ""
 
 #: hyscan-gtk-configurator.c:148
-msgid "Path to map cache"
+msgid "Map cache directory"
 msgstr ""
 
 #: hyscan-gtk-configurator.c:98

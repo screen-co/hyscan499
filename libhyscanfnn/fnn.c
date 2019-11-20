@@ -287,6 +287,7 @@ fnn_ensure_panel (gint    panelx,
       panel->current.log_beta =    keyfile_double_read_helper (global->settings, panel->name, "sonar.log_beta", 0.0);
       panel->current.log_alpha =   keyfile_double_read_helper (global->settings, panel->name, "sonar.log_alpha", 0.0);
       panel->current.const_gain0 = keyfile_double_read_helper (global->settings, panel->name, "sonar.const_gain0", 1);
+      panel->current.mode =        keyfile_double_read_helper (global->settings, panel->name, "sonar.tvg_mode", HYSCAN_SONAR_TVG_MODE_NONE);
 
       panel->vis_current.black =       keyfile_double_read_helper (global->settings, panel->name, "cur_black2",       0);
       panel->vis_current.gamma =       keyfile_double_read_helper (global->settings, panel->name, "cur_gamma2",       0.45);
@@ -319,8 +320,8 @@ fnn_ensure_panel (gint    panelx,
           auto_tvg_label (panel, panel->current.level, panel->current.sensitivity);
           log_tvg_label (panel, panel->current.log_gain0, panel->current.log_beta, panel->current.log_alpha);
           const_tvg_label (panel, panel->current.const_gain0);
-
           auto_tvg_label (panel, panel->current.level, panel->current.sensitivity);
+          tvg_set_preferred_mode (global, panel->current.mode, panelx);
 
           /* С сигналом чуть сложней, т.к. надо найти сигнал и вытащить из него имя. */
           {
@@ -2230,6 +2231,7 @@ log_tvg_set (Global  *global,
 
   log_tvg_label (panel, *gain0, beta, alpha);
   g_message ("  success");
+  panel->current.mode = HYSCAN_SONAR_TVG_MODE_LOGARITHMIC;
   return TRUE;
 }
 
@@ -2273,6 +2275,7 @@ const_tvg_set (Global  *global,
 
   const_tvg_label (panel, *gain0);
   g_message ("  success");
+  panel->current.mode = HYSCAN_SONAR_TVG_MODE_CONSTANT;
   return TRUE;
 }
 
@@ -2331,6 +2334,7 @@ lin_tvg_set (Global  *global,
 
   tvg_label (panel, *gain0, step);
   g_message ("  success");
+  panel->current.mode = HYSCAN_SONAR_TVG_MODE_LINEAR_DB;
   return TRUE;
 }
 
@@ -2370,9 +2374,19 @@ auto_tvg_set (Global   *global,
   /* Теперь печатаем что и куда надо. */
   auto_tvg_label (panel, level, sensitivity);
   g_message ("  success");
+  panel->current.mode = HYSCAN_SONAR_TVG_MODE_AUTO;
   return TRUE;
 }
 
+gboolean
+tvg_set_preferred_mode (Global                 *global,
+                        HyScanSonarTVGModeType  mode,
+                        gint                    panelx)
+{
+  FnnPanel *panel = get_panel (tglobal, panelx);
+  panel->current.mode = mode;
+  return TRUE;
+}
 
 #define CONST_TVG_FUNC(fname, sign, value, from_to)                             \
 TVG_FUNC_DEF(fname)                                                             \
@@ -3142,23 +3156,31 @@ start_stop (Global    *global,
           status &= distance_set (global, &panel->current.distance, panelx);
 
           /* TVG */
-          switch (panel->type)
+          switch (panel->current.mode)
             {
-              /* TODO: механизм определения, где автотвг, где просто твг.
-                 Сейчас пригодно только для АМЭ.
-               */
-            case FNN_PANEL_WATERFALL:
-              status &= auto_tvg_set (global, panel->current.level, panel->current.sensitivity, panelx);
-              break;
-            case FNN_PANEL_PROFILER:
-            case FNN_PANEL_ECHO:
-            case FNN_PANEL_FORWARDLOOK:
-              status &= lin_tvg_set (global, &panel->current.gain0, panel->current.gain_step, panelx);
-              break;
+              case HYSCAN_SONAR_TVG_MODE_LOGARITHMIC:
+                status &= log_tvg_set (global,
+                                       &panel->current.log_gain0,
+                                       panel->current.log_beta,
+                                       panel->current.log_alpha,
+                                       panelx);
+                break;
 
-            default:
-              g_warning ("start_stop: wrong panel type");
+              case HYSCAN_SONAR_TVG_MODE_CONSTANT:
+                status &= const_tvg_set (global, &panel->current.const_gain0, panelx);
+                break;
 
+              case HYSCAN_SONAR_TVG_MODE_LINEAR_DB:
+                status &= lin_tvg_set (global, &panel->current.gain0, panel->current.gain_step, panelx);
+                break;
+
+              case HYSCAN_SONAR_TVG_MODE_AUTO:
+                status &= auto_tvg_set (global, panel->current.level, panel->current.sensitivity, panelx);
+                break;
+
+              case HYSCAN_SONAR_TVG_MODE_NONE:
+              default:
+                g_warning ("start_stop: no tvg mode set");
             }
 
           /* Если не удалось запустить какую-либо подсистему. */
@@ -3462,6 +3484,7 @@ fnn_deinit (Global *ext_global)
               keyfile_double_write_helper (settings, panel->name, "sonar.log_beta",    panel->current.log_beta);
               keyfile_double_write_helper (settings, panel->name, "sonar.log_alpha",   panel->current.log_alpha);
               keyfile_double_write_helper (settings, panel->name, "sonar.const_gain0", panel->current.const_gain0);
+              keyfile_double_write_helper (settings, panel->name, "sonar.tvg_mode",    panel->current.mode);
 
               keyfile_double_write_helper (settings, panel->name, "cur_black2",            panel->vis_current.black);
               keyfile_double_write_helper (settings, panel->name, "cur_gamma2",            panel->vis_current.gamma);

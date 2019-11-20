@@ -18,7 +18,6 @@ struct _HyScanGtkConfiguratorPrivate
   gchar            *db_profile_dir;    /* Путь к директории БД. */
   gchar            *map_cache_dir;     /* Путь к директории с кэшом карт. */
 
-  GtkWidget        *grid;              /* Виджет-контейнер. */
   GtkWidget        *db_dir_chooser;    /* Виджет выбора директории БД. */
   GtkWidget        *map_dir_chooser;   /* Виджет выбора директории кэша карты. */
   GtkWidget        *name_entry;        /* Виджет ввод названия профиля БД.*/
@@ -85,7 +84,7 @@ hyscan_gtk_configurator_object_constructed (GObject *object)
 {
   HyScanGtkConfigurator *configurator = HYSCAN_GTK_CONFIGURATOR (object);
   HyScanGtkConfiguratorPrivate *priv = configurator->priv;
-  GtkWidget *db_description, *name_label, *db_dir_label, *map_description, *map_dir_label;
+  GtkWidget *box, *grid, *db_description, *name_label, *db_dir_label, *map_description, *map_dir_label, *action_bar;
   gint row;
 
   G_OBJECT_CLASS (hyscan_gtk_configurator_parent_class)->constructed (object);
@@ -100,23 +99,23 @@ hyscan_gtk_configurator_object_constructed (GObject *object)
     }
 
   gtk_window_set_position (GTK_WINDOW (configurator), GTK_WIN_POS_CENTER);
-  gtk_window_set_default_size (GTK_WINDOW (configurator), 600, -1);
+  gtk_window_set_default_size (GTK_WINDOW (configurator), 450, -1);
   gtk_window_set_title (GTK_WINDOW (configurator), _("Initial configuration"));
 
-  priv->grid = gtk_grid_new ();
-  g_object_set (priv->grid, "margin", 10, NULL);
-  gtk_grid_set_row_spacing (GTK_GRID (priv->grid), 10);
-  gtk_grid_set_column_spacing (GTK_GRID (priv->grid), 10);
-  gtk_grid_set_column_homogeneous (GTK_GRID (priv->grid), TRUE);
+  grid = gtk_grid_new ();
+  g_object_set (grid, "margin", 12, NULL);
+  gtk_grid_set_row_spacing (GTK_GRID (grid), 6);
+  gtk_grid_set_column_spacing (GTK_GRID (grid), 6);
 
-
-  priv->db_dir_chooser = gtk_file_chooser_button_new (_("Database location"), GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
-  gtk_file_chooser_set_filename (GTK_FILE_CHOOSER (priv->db_dir_chooser), priv->db_profile_dir);
+  priv->db_dir_chooser = gtk_file_chooser_button_new (_("DB directory"), GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
+  if (priv->db_profile_dir != NULL)
+    gtk_file_chooser_set_filename (GTK_FILE_CHOOSER (priv->db_dir_chooser), priv->db_profile_dir);
   g_signal_connect_swapped (priv->db_dir_chooser, "selection-changed",
                             G_CALLBACK (hyscan_gtk_configurator_update_config), configurator);
 
-  priv->map_dir_chooser = gtk_file_chooser_button_new (_("Map cache location"), GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
-  gtk_file_chooser_set_filename (GTK_FILE_CHOOSER (priv->map_dir_chooser), priv->map_cache_dir);
+  priv->map_dir_chooser = gtk_file_chooser_button_new (_("Map cache directory"), GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER);
+  if (priv->map_cache_dir != NULL)
+    gtk_file_chooser_set_filename (GTK_FILE_CHOOSER (priv->map_dir_chooser), priv->map_cache_dir);
   g_signal_connect_swapped (priv->map_dir_chooser, "selection-changed",
                             G_CALLBACK (hyscan_gtk_configurator_update_config), configurator);
 
@@ -131,37 +130,43 @@ hyscan_gtk_configurator_object_constructed (GObject *object)
 
   db_description = gtk_label_new (_("You should create a database profile to run HyScan. "
                                     "Please, specify the name of the profile and the path to the database directory."));
-  gtk_widget_set_halign (GTK_WIDGET (db_description), GTK_ALIGN_START);
+  gtk_widget_set_halign (db_description, GTK_ALIGN_START);
+  gtk_label_set_xalign (GTK_LABEL (db_description), 0.0);
   gtk_label_set_line_wrap (GTK_LABEL (db_description), TRUE);
 
   map_description = gtk_label_new (_("Map cache stores tile images for the map offline work. "
                                      "Please, specify the path to map cache directory."));
-  gtk_widget_set_halign (GTK_WIDGET (map_description), GTK_ALIGN_START);
+  gtk_widget_set_halign (map_description, GTK_ALIGN_START);
+  gtk_label_set_xalign (GTK_LABEL (map_description), 0.0);
   gtk_label_set_line_wrap (GTK_LABEL (map_description), TRUE);
 
   name_label = gtk_label_new (_("Name of DB-profile"));
   gtk_widget_set_halign (GTK_WIDGET (name_label), GTK_ALIGN_END);
 
-  db_dir_label = gtk_label_new (_("Path to DB"));
+  db_dir_label = gtk_label_new (_("DB directory"));
   gtk_widget_set_halign (GTK_WIDGET (db_dir_label), GTK_ALIGN_END);
 
-  map_dir_label = gtk_label_new (_("Path to map cache"));
+  map_dir_label = gtk_label_new (_("Map cache directory"));
   gtk_widget_set_halign (GTK_WIDGET (map_dir_label), GTK_ALIGN_END);
 
+  action_bar = gtk_action_bar_new ();
+  gtk_action_bar_pack_end (GTK_ACTION_BAR (action_bar), priv->apply_button);
+
   row = 0;
-  gtk_grid_attach (GTK_GRID (priv->grid), db_description, 1, ++row, 3, 1);
-  gtk_grid_attach (GTK_GRID (priv->grid), name_label, 1, ++row, 1, 1);
-  gtk_grid_attach (GTK_GRID (priv->grid), priv->name_entry, 2, row, 2, 1);
-  gtk_grid_attach (GTK_GRID (priv->grid), db_dir_label, 1, ++row, 1, 1);
-  gtk_grid_attach (GTK_GRID (priv->grid), priv->db_dir_chooser, 2, row, 2, 1);
+  gtk_grid_attach (GTK_GRID (grid), db_description,        0, ++row, 3, 1);
+  gtk_grid_attach (GTK_GRID (grid), name_label,            0, ++row, 1, 1);
+  gtk_grid_attach (GTK_GRID (grid), priv->name_entry,      1,   row, 2, 1);
+  gtk_grid_attach (GTK_GRID (grid), db_dir_label,          0, ++row, 1, 1);
+  gtk_grid_attach (GTK_GRID (grid), priv->db_dir_chooser,  1,   row, 2, 1);
+  gtk_widget_set_margin_top (map_description, 18);
+  gtk_grid_attach (GTK_GRID (grid), map_description,       0, ++row, 3, 1);
+  gtk_grid_attach (GTK_GRID (grid), map_dir_label,         0, ++row, 1, 1);
+  gtk_grid_attach (GTK_GRID (grid), priv->map_dir_chooser, 1,   row, 2, 1);
 
-  gtk_grid_attach (GTK_GRID (priv->grid), map_description, 1, ++row, 3, 1);
-  gtk_grid_attach (GTK_GRID (priv->grid), map_dir_label, 1, ++row, 1, 1);
-  gtk_grid_attach (GTK_GRID (priv->grid), priv->map_dir_chooser, 2, row, 2, 1);
-
-  gtk_grid_attach (GTK_GRID (priv->grid), priv->apply_button, 3, ++row, 1, 1);
-
-  gtk_container_add (GTK_CONTAINER (configurator), priv->grid);
+  box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 12);
+  gtk_box_pack_start (GTK_BOX (box), grid, TRUE, TRUE, 0);
+  gtk_box_pack_end (GTK_BOX (box), action_bar, FALSE, TRUE, 0);
+  gtk_container_add (GTK_CONTAINER (configurator), box);
 }
 
 static void
@@ -188,7 +193,10 @@ hyscan_gtk_configurator_update_view (HyScanGtkConfigurator *configurator)
 
   ok = priv->db_profile_dir != NULL &&
        priv->db_profile_name != NULL &&
-       strlen (priv->db_profile_name) > 0;
+       priv->map_cache_dir != NULL &&
+       strlen (priv->db_profile_dir) > 0 &&
+       strlen (priv->db_profile_name) > 0 &&
+       strlen (priv->map_cache_dir) > 0;
 
   gtk_widget_set_sensitive (priv->apply_button, ok);
 }

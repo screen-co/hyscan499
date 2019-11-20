@@ -71,8 +71,7 @@ cheese_flash_window_draw_event_cb (GtkWidget *widget,
                          priv->flash_color.green,
                          priv->flash_color.blue,
                          priv->flash_color.alpha);
-  cairo_rectangle (cr, priv->rect.x, priv->rect.y,
-                   priv->rect.width, priv->rect.height);
+  cairo_rectangle (cr, 0, 0, priv->rect.width, priv->rect.height);
   cairo_fill (cr);
   cairo_stroke (cr);
 
@@ -219,9 +218,8 @@ cheese_flash_fire (CheeseFlash  *flash,
 
   flash_priv->rect = *rect;
 
-  gtk_window_resize (flash_window, rect->width, rect->height);
   gtk_window_move (flash_window, rect->x, rect->y);
-
+  gtk_window_resize (flash_window, rect->width, rect->height);
   gtk_widget_set_opacity (GTK_WIDGET (flash_window), 0.99);
   gtk_widget_show_all (GTK_WIDGET (flash_window));
 
