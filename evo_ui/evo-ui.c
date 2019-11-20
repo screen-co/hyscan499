@@ -41,6 +41,7 @@ depth_writer (GObject *emitter)
   GString *string = NULL;
   gchar *words = NULL;
   GError *error = NULL;
+  gchar *filename;
 
   HyScanDB * db = _global->db;
   HyScanCache * cache = _global->cache;
@@ -105,7 +106,7 @@ depth_writer (GObject *emitter)
   if (words == NULL)
     return;
 
-  gchar *filename = g_strdup_printf ("%s%s", "/tmp/", track);
+  filename = g_strdup_printf ("%s%s", "/tmp/", track);
   g_file_set_contents (filename,
                        words, strlen (words), &error);
   g_free (filename);
