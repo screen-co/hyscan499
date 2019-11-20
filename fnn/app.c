@@ -727,7 +727,7 @@ exit:
 int WINAPI
 wWinMain (HINSTANCE hInst,
           HINSTANCE hPreInst,
-          LPSTR     lpCmdLine,
+          LPWSTR    lpCmdLine,
           int       nCmdShow)
 {
   int argc;

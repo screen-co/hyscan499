@@ -1,3 +1,68 @@
+/* launcher.c
+ *
+ * Copyright 2019 Screen LLC, Alexey Sakhnov <alexsakhnov@gmail.com>
+ *
+ * This file is part of HyScanFnn library.
+ *
+ * HyScanCore is dual-licensed: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * HyScanCore is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this library. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Alternatively, you can license this code under a commercial license.
+ * Contact the Screen LLC in this case - <info@screen-co.ru>.
+ */
+
+/* HyScanCore имеет двойную лицензию.
+ *
+ * Во-первых, вы можете распространять HyScanCore на условиях Стандартной
+ * Общественной Лицензии GNU версии 3, либо по любой более поздней версии
+ * лицензии (по вашему выбору). Полные положения лицензии GNU приведены в
+ * <http://www.gnu.org/licenses/>.
+ *
+ * Во-вторых, этот программный код можно использовать по коммерческой
+ * лицензии. Для этого свяжитесь с ООО Экран - <info@screen-co.ru>.
+ */
+
+/**
+ * launcher - программа для запуска других программ в Windows:
+ *
+ * - добавляет в %PATH% пути относительно положения launcher.exe,
+ * - загружает (LoadLibraryW) указанные DLL, чтобы они попали в кэш,
+ * - последовательно запускает указанные программы.
+ *
+ * Использование:
+ * launcher.exe [config.ini]
+ * config.ini - путь к конфигурационному файлу.
+ *
+ * Пример конфигурационного файла:
+ *
+ * |[
+ * [path]
+ * .
+ * ..\Runtime\bin
+ *
+ * [dll]
+ * foo.dll
+ * bar.dll
+ * baz.dll
+ * msvcr120.dll
+ *
+ * [cmd]
+ * prepare_env.exe --some-param
+ * my-application.exe
+ * ]|
+ *
+ */
+
 #include <Windows.h>
 #include <CommCtrl.h>
 #include <Shlwapi.h>
@@ -19,9 +84,9 @@ typedef struct
 /* Конфигурация запуска. */
 struct
 {
-  LauncherArray dlls;
-  LauncherArray paths;
-  LauncherArray cmds;
+  LauncherArray dlls;   /* Список dll для предварительной загрузки. */
+  LauncherArray paths;  /* Что надо добавить в путь. */
+  LauncherArray cmds;   /* Список исполняемых команд. */
 } config;
 
 
@@ -45,7 +110,7 @@ launcher_label ()
   LANGID langid;
   LPCSTR text_utf8;
   LPWSTR text_w;
-  int text_len = 100;
+  int text_len;
 
   langid = GetUserDefaultUILanguage ();
 
@@ -361,6 +426,7 @@ DWORD WINAPI
 launcher_process (LPVOID lpParam)
 {
   LPWSTR module_dir;
+  LPCWSTR filename = lpParam;
 
   module_dir = launcher_get_module_dir ();
 
@@ -369,7 +435,7 @@ launcher_process (LPVOID lpParam)
     WCHAR config_path[MAX_PATH];
 
     wcscpy_s (config_path, MAX_PATH, module_dir);
-    PathAppendW (config_path, CONFIG_FILENAME);
+    PathAppendW (config_path, filename);
 
     launcher_read_config (config_path);
   }
@@ -440,18 +506,24 @@ launcher_process (LPVOID lpParam)
 }
 
 INT WINAPI
-WinMain (HINSTANCE hInstance,
-         HINSTANCE hPrevInstance,
-         LPSTR     lpCmdLine,
-         INT       nCmdShow)
+wWinMain (HINSTANCE hInstance,
+          HINSTANCE hPrevInstance,
+          LPWSTR    lpCmdLine,
+          INT       nCmdShow)
 {
   MSG msg;
+  LPCWSTR filename;
+  LPWSTR *argv;
+  int argc;
+
+  argv = CommandLineToArgvW (GetCommandLineW(), &argc);
+  filename = (argc == 1) ? CONFIG_FILENAME : argv[1];
 
   /* Инициализируемся. */
   launcher_app_init (hInstance);
 
   /* Запускаем поток обработки конфигурации запуска. */
-  CreateThread ( NULL, 0, launcher_process, NULL, 0, NULL);
+  CreateThread (NULL, 0, launcher_process, (LPVOID) filename, 0, NULL);
 
   /* Запускаем message loop. */
   while (GetMessageW (&msg, NULL, 0, 0))
@@ -459,6 +531,8 @@ WinMain (HINSTANCE hInstance,
      TranslateMessage (&msg);
      DispatchMessageW (&msg);
    }
+
+  LocalFree (argv);
 
   return 0;
 }
