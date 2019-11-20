@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-15 17:25+0300\n"
+"POT-Creation-Date: 2019-11-20 11:52+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,15 +21,15 @@ msgstr ""
 msgid "m/s"
 msgstr ""
 
-#: evo-ui.c:546 hyscan-gtk-map-kit.c:1516
+#: evo-ui.c:546 hyscan-gtk-map-kit.c:1506
 msgid "Layer"
 msgstr ""
 
-#: evo-ui.c:557 hyscan-gtk-map-kit.c:654 hyscan-gtk-map-kit.c:1511
+#: evo-ui.c:557 hyscan-gtk-map-kit.c:648 hyscan-gtk-map-kit.c:1501
 msgid "Show"
 msgstr ""
 
-#: evo-ui.c:568 hyscan-gtk-map-kit.c:1719
+#: evo-ui.c:568 hyscan-gtk-map-kit.c:1709
 msgid "Grid"
 msgstr ""
 
@@ -89,158 +89,150 @@ msgstr ""
 msgid "Exit"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:443
+#: hyscan-gtk-map-kit.c:437
 msgid "OK"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:444 hyscan-gtk-map-kit.c:1973
+#: hyscan-gtk-map-kit.c:438 hyscan-gtk-mark-export.c:45
 msgid "Cancel"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:445
+#: hyscan-gtk-map-kit.c:439
 msgid "Restore"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:446
+#: hyscan-gtk-map-kit.c:440
 msgid "Apply"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:508 hyscan-gtk-map-kit.c:751
+#: hyscan-gtk-map-kit.c:502 hyscan-gtk-map-kit.c:741
 msgid "Track settings"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:638
+#: hyscan-gtk-map-kit.c:632
 msgid "Track"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:647 hyscan-gtk-map-kit.c:699
+#: hyscan-gtk-map-kit.c:641 hyscan-gtk-map-kit.c:693
 msgid "Date"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:689
+#: hyscan-gtk-map-kit.c:683
 msgid "Name"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:745
+#: hyscan-gtk-map-kit.c:735
 msgid "Find track on the map"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1253
+#: hyscan-gtk-map-kit.c:1243
 msgid "Done!"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1255
+#: hyscan-gtk-map-kit.c:1245
 #, c-format
 msgid "Done! Failed to load %d tiles"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1259 hyscan-gtk-map-kit.c:1419
+#: hyscan-gtk-map-kit.c:1249 hyscan-gtk-map-kit.c:1409
 msgid "Start download"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1318
+#: hyscan-gtk-map-kit.c:1308
 msgid "Stop download"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1389
+#: hyscan-gtk-map-kit.c:1379
 msgid "My location"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1398
+#: hyscan-gtk-map-kit.c:1388
 msgid "Go"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1401
+#: hyscan-gtk-map-kit.c:1391
 msgid "Lat"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1403
+#: hyscan-gtk-map-kit.c:1393
 msgid "Lon"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1425
+#: hyscan-gtk-map-kit.c:1415
 msgid ""
 "Download visible area of map\n"
 "to make it available when offline"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1590 tmp/evo.ui.h:3
+#: hyscan-gtk-map-kit.c:1580 tmp/evo.ui.h:3
 msgid "Scale"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1608
+#: hyscan-gtk-map-kit.c:1598
 msgid "Lock layers"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1621
+#: hyscan-gtk-map-kit.c:1611
 msgid "Remove ruler"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1625
+#: hyscan-gtk-map-kit.c:1615
 msgid "Remove all pins"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1649
+#: hyscan-gtk-map-kit.c:1639
 msgid "Go to"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1657
+#: hyscan-gtk-map-kit.c:1647
 msgid "Download"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1716
+#: hyscan-gtk-map-kit.c:1706
 msgid "Tracks"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1717
+#: hyscan-gtk-map-kit.c:1707
 msgid "Ruler"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1718
+#: hyscan-gtk-map-kit.c:1708
 msgid "Pin"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1932
-msgid "Save as CSV"
+#: hyscan-gtk-map-kit.c:1987
+msgid "Offline"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1933
-msgid "Copy to Clipboard"
+#: hyscan-gtk-map-kit.c:1987
+msgid "Online"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1970
+#: hyscan-gtk-map-kit.c:2070
+msgid "Navigation"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:2089
+msgid "Waterfall Marks"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:2117
+msgid "Geo Marks"
+msgstr ""
+
+#: hyscan-gtk-mark-export.c:42
 msgid "Save file"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1975
+#: hyscan-gtk-mark-export.c:47
 msgid "Save"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:2126
+#: hyscan-gtk-mark-export.c:202
 #, c-format
 msgid ""
 "%sProject: %s\n"
 "%s\n"
-msgstr ""
-
-#: hyscan-gtk-map-kit.c:2308
-msgid "Offline"
-msgstr ""
-
-#: hyscan-gtk-map-kit.c:2308
-msgid "Online"
-msgstr ""
-
-#: hyscan-gtk-map-kit.c:2391
-msgid "Navigation"
-msgstr ""
-
-#: hyscan-gtk-map-kit.c:2410
-msgid "Waterfall Marks"
-msgstr ""
-
-#: hyscan-gtk-map-kit.c:2438
-msgid "Geo Marks"
 msgstr ""
 
 #: tmp/evo.ui.h:1
