@@ -119,6 +119,9 @@ static gchar ** hyscan_gtk_map_kit_get_tracks   (HyScanGtkMapKit      *kit);
 static void     hyscan_gtk_map_kit_track_enable (HyScanGtkMapKit      *kit,
                                                  const gchar          *track_name,
                                                  gboolean              enable);
+static void    hyscan_gtk_map_kit_on_changed_combo_box (
+		                                             GtkComboBox          *combo,
+																				         HyScanGtkLayer       *layer);
 #if !GLIB_CHECK_VERSION (2, 44, 0)
 static gboolean g_strv_contains               (const gchar * const  *strv,
                                                const gchar          *str);
@@ -1350,7 +1353,6 @@ create_ruler_toolbox (HyScanGtkLayer *layer,
 
   return box;
 }
-
 /* Список галсов и меток. */
 static GtkWidget *
 create_navigation_box (HyScanGtkMapKit *kit)
@@ -1900,6 +1902,39 @@ hyscan_gtk_map_kit_get_tracks (HyScanGtkMapKit  *kit)
   return g_new0 (gchar *, 1);
 }
 
+/* @briefФункция create_wfmark_layer_toolbox создаёт панель инструментов для слоя меток с
+ * акустическим изображением.
+ * @param layer - указатель на слой с метками с акустическим изображением.
+ * */
+static GtkWidget *
+create_wfmark_layer_toolbox (HyScanGtkLayer *layer)
+{
+	GtkWidget *box, *combo;
+
+	combo = gtk_combo_box_text_new();
+  gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(combo), NULL, _("Show mark's acoustic image."));
+  gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(combo), NULL, _("Show only mark's border."));
+  gtk_combo_box_set_active(GTK_COMBO_BOX(combo), 0);
+
+  g_signal_connect (GTK_COMBO_BOX (combo), "changed",
+										G_CALLBACK (hyscan_gtk_map_kit_on_changed_combo_box), layer);
+
+  box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 5);
+  gtk_box_pack_start(GTK_BOX(box), combo, TRUE, TRUE, 10);
+
+  return box;
+}
+/* @brief Функция-обработчик hyscan_gtk_map_kit_on_changed_combo_box передёт режим отображения
+ * меток с акустическим изображением в соответствующий слой.
+ * @param combo - указатель на выпадающий список;
+ * @param data  - указатель на название проекта.
+ * */
+static void
+hyscan_gtk_map_kit_on_changed_combo_box (GtkComboBox *combo,
+																				 HyScanGtkLayer *layer)
+{
+	hyscan_gtk_map_wfmark_set_show_mode (layer, gtk_combo_box_get_active (combo));
+}
 /**
  * hyscan_gtk_map_kit_new_map:
  * @center: центр карты
@@ -2087,6 +2122,10 @@ hyscan_gtk_map_kit_add_marks_wf (HyScanGtkMapKit *kit)
   /* Слой с метками. */
   priv->wfmark_layer = hyscan_gtk_map_wfmark_new (priv->ml_model, priv->db, priv->cache);
   add_layer_row (kit, priv->wfmark_layer, "wfmark", _("Waterfall Marks"));
+
+  gtk_stack_add_titled (GTK_STACK (priv->layer_tool_stack),
+												create_wfmark_layer_toolbox (priv->wfmark_layer),
+												"wfmark", "Wfmark");
 
   /* Виджет навигации по меткам. */
   create_wfmark_toolbox (kit);
