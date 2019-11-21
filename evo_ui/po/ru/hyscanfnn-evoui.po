@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-08-01 17:08+0300\n"
+"POT-Creation-Date: 2019-11-20 11:52+0300\n"
 "PO-Revision-Date: 2019-06-20 15:00+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -18,148 +18,148 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: evo-ui.c:264
+#: evo-ui.c:147
 msgid "m/s"
 msgstr "м/с"
 
-#: evo-ui.c:658 hyscan-gtk-map-kit.c:1480
+#: evo-ui.c:546 hyscan-gtk-map-kit.c:1506
 msgid "Layer"
 msgstr "Слой"
 
-#: evo-ui.c:669 hyscan-gtk-map-kit.c:638 hyscan-gtk-map-kit.c:1475
+#: evo-ui.c:557 hyscan-gtk-map-kit.c:648 hyscan-gtk-map-kit.c:1501
 msgid "Show"
 msgstr "Вид."
 
-#: evo-ui.c:680 hyscan-gtk-map-kit.c:1684
+#: evo-ui.c:568 hyscan-gtk-map-kit.c:1709
 msgid "Grid"
 msgstr "Сетка"
 
-#: evo-ui.c:681
+#: evo-ui.c:569
 msgid "Marks"
 msgstr "Метки"
 
-#: evo-ui.c:682
+#: evo-ui.c:570
 msgid "Measurements"
 msgstr "Измерения"
 
-#: evo-ui.c:1043
+#: evo-ui.c:964
 msgid "Map"
 msgstr "Карта"
 
-#: evo-ui.c:1120
+#: evo-ui.c:1041
 msgid "Project Manager"
 msgstr "Менеджер проектов"
 
-#: evo-ui.c:1125
+#: evo-ui.c:1046
 msgid "Online Map"
 msgstr "Онлайн-карта"
 
-#: evo-ui.c:1153
+#: evo-ui.c:1074
 msgid "Sensors"
 msgstr "Датчики"
 
-#: evo-ui.c:1165
+#: evo-ui.c:1086
 msgid "Info"
 msgstr "Информация"
 
-#: evo-ui.c:1169
+#: evo-ui.c:1090
 msgid "State"
 msgstr "Состояние"
 
-#: evo-ui.c:1173
+#: evo-ui.c:1094
 msgid "Params"
 msgstr "Параметры"
 
-#: evo-ui.c:1177
+#: evo-ui.c:1098
 msgid "Sonar"
 msgstr "Локатор"
 
-#: evo-ui.c:1183
+#: evo-ui.c:1104
 msgid "Antennas offsets"
 msgstr "Смещения антенн"
 
-#: evo-ui.c:1188 tmp/record.ui.h:2
+#: evo-ui.c:1109 tmp/record.ui.h:2
 msgid "No beaming"
 msgstr "Без излучения"
 
-#: evo-ui.c:1201
+#: evo-ui.c:1122
 msgid "Hardware info"
 msgstr "Параметры оборудования"
 
-#: evo-ui.c:1210
+#: evo-ui.c:1131
 msgid "Exit"
 msgstr "Выход"
 
-#: hyscan-gtk-map-kit.c:429
+#: hyscan-gtk-map-kit.c:437
 msgid "OK"
 msgstr "Ок"
 
-#: hyscan-gtk-map-kit.c:430
+#: hyscan-gtk-map-kit.c:438 hyscan-gtk-mark-export.c:45
 msgid "Cancel"
 msgstr "Отмена"
 
-#: hyscan-gtk-map-kit.c:431
+#: hyscan-gtk-map-kit.c:439
 msgid "Restore"
 msgstr "Восстановить"
 
-#: hyscan-gtk-map-kit.c:432
+#: hyscan-gtk-map-kit.c:440
 msgid "Apply"
 msgstr "Применить"
 
-#: hyscan-gtk-map-kit.c:494 hyscan-gtk-map-kit.c:729
+#: hyscan-gtk-map-kit.c:502 hyscan-gtk-map-kit.c:741
 msgid "Track settings"
 msgstr "Настройки галса"
 
-#: hyscan-gtk-map-kit.c:622
+#: hyscan-gtk-map-kit.c:632
 msgid "Track"
 msgstr "Галс"
 
-#: hyscan-gtk-map-kit.c:631 hyscan-gtk-map-kit.c:683
+#: hyscan-gtk-map-kit.c:641 hyscan-gtk-map-kit.c:693
 msgid "Date"
 msgstr "Дата"
 
-#: hyscan-gtk-map-kit.c:673
+#: hyscan-gtk-map-kit.c:683
 msgid "Name"
 msgstr "Имя"
 
-#: hyscan-gtk-map-kit.c:723
+#: hyscan-gtk-map-kit.c:735
 msgid "Find track on the map"
 msgstr "Показать галс на карте"
 
-#: hyscan-gtk-map-kit.c:1226
+#: hyscan-gtk-map-kit.c:1243
 msgid "Done!"
 msgstr "Готово!"
 
-#: hyscan-gtk-map-kit.c:1228
+#: hyscan-gtk-map-kit.c:1245
 #, c-format
 msgid "Done! Failed to load %d tiles"
 msgstr "Не удалось загрузить %d тайлов"
 
-#: hyscan-gtk-map-kit.c:1232 hyscan-gtk-map-kit.c:1392
+#: hyscan-gtk-map-kit.c:1249 hyscan-gtk-map-kit.c:1409
 msgid "Start download"
 msgstr "Загрузить"
 
-#: hyscan-gtk-map-kit.c:1291
+#: hyscan-gtk-map-kit.c:1308
 msgid "Stop download"
 msgstr "Прервать"
 
-#: hyscan-gtk-map-kit.c:1362
+#: hyscan-gtk-map-kit.c:1379
 msgid "My location"
 msgstr "Где я"
 
-#: hyscan-gtk-map-kit.c:1371
+#: hyscan-gtk-map-kit.c:1388
 msgid "Go"
 msgstr "Перейти"
 
-#: hyscan-gtk-map-kit.c:1374
+#: hyscan-gtk-map-kit.c:1391
 msgid "Lat"
 msgstr "Шир."
 
-#: hyscan-gtk-map-kit.c:1376
+#: hyscan-gtk-map-kit.c:1393
 msgid "Lon"
 msgstr "Долг."
 
-#: hyscan-gtk-map-kit.c:1398
+#: hyscan-gtk-map-kit.c:1415
 msgid ""
 "Download visible area of map\n"
 "to make it available when offline"
@@ -168,61 +168,78 @@ msgstr ""
 "чтобы сделать её доступной\n"
 "в режиме оффлайн"
 
-#: hyscan-gtk-map-kit.c:1554 tmp/evo.ui.h:3
+#: hyscan-gtk-map-kit.c:1580 tmp/evo.ui.h:3
 msgid "Scale"
 msgstr "Масштаб"
 
-#: hyscan-gtk-map-kit.c:1572
+#: hyscan-gtk-map-kit.c:1598
 msgid "Lock layers"
 msgstr "Блокировать слои"
 
-#: hyscan-gtk-map-kit.c:1585
+#: hyscan-gtk-map-kit.c:1611
 msgid "Remove ruler"
 msgstr "Удалить линейку"
 
-#: hyscan-gtk-map-kit.c:1589
+#: hyscan-gtk-map-kit.c:1615
 msgid "Remove all pins"
 msgstr "Удалить все булавки"
 
-#: hyscan-gtk-map-kit.c:1613
+#: hyscan-gtk-map-kit.c:1639
 msgid "Go to"
 msgstr "Перейти"
 
-#: hyscan-gtk-map-kit.c:1621
+#: hyscan-gtk-map-kit.c:1647
 msgid "Download"
 msgstr "Загрузить"
 
-#: hyscan-gtk-map-kit.c:1681
+#: hyscan-gtk-map-kit.c:1706
 msgid "Tracks"
 msgstr "Галсы"
 
-#: hyscan-gtk-map-kit.c:1682
+#: hyscan-gtk-map-kit.c:1707
 msgid "Ruler"
 msgstr "Линейка"
 
-#: hyscan-gtk-map-kit.c:1683
+#: hyscan-gtk-map-kit.c:1708
 msgid "Pin"
 msgstr "Булавка"
 
-#: hyscan-gtk-map-kit.c:1904
+#: hyscan-gtk-map-kit.c:1987
 msgid "Offline"
 msgstr "Оффлайн"
 
-#: hyscan-gtk-map-kit.c:1904
+#: hyscan-gtk-map-kit.c:1987
 msgid "Online"
 msgstr "Онлайн"
 
-#: hyscan-gtk-map-kit.c:1984
+#: hyscan-gtk-map-kit.c:2070
 msgid "Navigation"
 msgstr "Навигация"
 
-#: hyscan-gtk-map-kit.c:2003
+#: hyscan-gtk-map-kit.c:2089
 msgid "Waterfall Marks"
 msgstr "Метки АИ"
 
-#: hyscan-gtk-map-kit.c:2030
+#: hyscan-gtk-map-kit.c:2117
 msgid "Geo Marks"
 msgstr "Геометки"
+
+#: hyscan-gtk-mark-export.c:42
+msgid "Save file"
+msgstr "Сохранить файл"
+
+#: hyscan-gtk-mark-export.c:47
+msgid "Save"
+msgstr "Сохранить"
+
+#: hyscan-gtk-mark-export.c:202
+#, c-format
+msgid ""
+"%sProject: %s\n"
+"%s\n"
+msgstr ""
+"%sПроект: %s\n"
+"%s\n"
 
 #: tmp/evo.ui.h:1
 msgid "Range"
@@ -307,6 +324,12 @@ msgstr "Альфа"
 #: tmp/record.ui.h:1
 msgid "Start"
 msgstr "Работа"
+
+#~ msgid "Save as CSV"
+#~ msgstr "Сохранить в формате CSV"
+
+#~ msgid "Copy to Clipboard"
+#~ msgstr "Копировать в буфер обмена"
 
 #~ msgid "Contrast"
 #~ msgstr "Контраст"

@@ -1,5 +1,6 @@
 #include "hyscan-gtk-map-kit.h"
 #include "hyscan-gtk-mark-editor.h"
+#include "hyscan-gtk-mark-export.h"
 #include <hyscan-gtk-map-base.h>
 #include <hyscan-gtk-map-control.h>
 #include <hyscan-gtk-map-ruler.h>
@@ -667,7 +668,7 @@ static GtkTreeView *
 create_mark_tree_view (HyScanGtkMapKit *kit,
                        GtkTreeModel    *tree_model)
 {
-  GtkCellRenderer *renderer;
+	GtkCellRenderer *renderer;
   GtkTreeViewColumn *type_column, *name_column, *date_column;
   GtkTreeView *tree_view;
 
