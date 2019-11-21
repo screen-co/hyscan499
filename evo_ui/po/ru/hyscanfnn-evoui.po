@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-21 12:52+0300\n"
+"POT-Creation-Date: 2019-11-21 18:09+0300\n"
 "PO-Revision-Date: 2019-06-20 15:00+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -22,15 +22,15 @@ msgstr ""
 msgid "m/s"
 msgstr "м/с"
 
-#: evo-ui.c:655 hyscan-gtk-map-kit.c:1506
+#: evo-ui.c:655 hyscan-gtk-map-kit.c:1508
 msgid "Layer"
 msgstr "Слой"
 
-#: evo-ui.c:666 hyscan-gtk-map-kit.c:648 hyscan-gtk-map-kit.c:1501
+#: evo-ui.c:666 hyscan-gtk-map-kit.c:651 hyscan-gtk-map-kit.c:1503
 msgid "Show"
 msgstr "Вид."
 
-#: evo-ui.c:677 hyscan-gtk-map-kit.c:1709
+#: evo-ui.c:677 hyscan-gtk-map-kit.c:1711
 msgid "Grid"
 msgstr "Сетка"
 
@@ -106,11 +106,11 @@ msgstr "Параметры оборудования"
 msgid "Exit"
 msgstr "Выход"
 
-#: hyscan-gtk-map-kit.c:437
+#: hyscan-gtk-map-kit.c:440
 msgid "OK"
 msgstr "Ок"
 
-#: hyscan-gtk-map-kit.c:438 hyscan-gtk-mark-export.c:153
+#: hyscan-gtk-map-kit.c:441 hyscan-gtk-mark-export.c:153
 msgid "Cancel"
 msgstr "Отмена"
 
@@ -228,23 +228,31 @@ msgstr "Показывать АИ меток"
 msgid "Show mark border only"
 msgstr "Показывать только границы"
 
-#: hyscan-gtk-map-kit.c:2022
+#: hyscan-gtk-map-kit.c:1981
+msgid "COG Predictor, min"
+msgstr "Линия ПУ, мин"
+
+#: hyscan-gtk-map-kit.c:1983
+msgid "HDG Predictor, km"
+msgstr "Линия ИК, км"
+
+#: hyscan-gtk-map-kit.c:2072
 msgid "Offline"
 msgstr "Оффлайн"
 
-#: hyscan-gtk-map-kit.c:2022
+#: hyscan-gtk-map-kit.c:2072
 msgid "Online"
 msgstr "Онлайн"
 
-#: hyscan-gtk-map-kit.c:2105
+#: hyscan-gtk-map-kit.c:2155
 msgid "Navigation"
 msgstr "Навигация"
 
-#: hyscan-gtk-map-kit.c:2124
+#: hyscan-gtk-map-kit.c:2175
 msgid "Waterfall Marks"
 msgstr "Метки АИ"
 
-#: hyscan-gtk-map-kit.c:2156
+#: hyscan-gtk-map-kit.c:2207
 msgid "Geo Marks"
 msgstr "Геометки"
 

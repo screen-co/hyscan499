@@ -1936,6 +1936,57 @@ hyscan_gtk_map_kit_on_changed_combo_box (GtkComboBox    *combo,
   hyscan_gtk_map_wfmark_set_show_mode (HYSCAN_GTK_MAP_WFMARK (layer),
                                        gtk_combo_box_get_active (combo));
 }
+
+static void
+on_cog_len_change (GtkSpinButton   *widget,
+                   GParamSpec      *pspec,
+                   HyScanGtkMapNav *nav_layer)
+{
+  gdouble minutes_value;
+
+  minutes_value = gtk_spin_button_get_value (widget);
+  hyscan_gtk_map_nav_set_cog_len (nav_layer, minutes_value * 60.0);
+}
+
+static void
+on_hdg_len_change (GtkSpinButton   *widget,
+                   GParamSpec      *pspec,
+                   HyScanGtkMapNav *nav_layer)
+{
+  gdouble km_value;
+
+  km_value = gtk_spin_button_get_value (widget);
+  hyscan_gtk_map_nav_set_hdg_len (nav_layer, km_value * 1000.0);
+}
+
+static GtkWidget*
+nav_tools (HyScanGtkMapKit *kit)
+{
+  GtkWidget *grid, *cog_spin, *hdg_spin;
+  gint t = -1;
+
+  grid = gtk_grid_new ();
+  gtk_widget_set_halign (GTK_WIDGET (grid), GTK_ALIGN_CENTER);
+  gtk_grid_set_column_spacing (GTK_GRID (grid), 6);
+  gtk_grid_set_row_spacing (GTK_GRID (grid), 6);
+
+  cog_spin = gtk_spin_button_new_with_range (0, 60, 1);
+  hdg_spin = gtk_spin_button_new_with_range (0, 100, 0.1);
+
+  g_signal_connect (cog_spin, "notify::value", G_CALLBACK (on_cog_len_change), kit->priv->way_layer);
+  g_signal_connect (hdg_spin, "notify::value", G_CALLBACK (on_hdg_len_change), kit->priv->way_layer);
+
+  gtk_spin_button_set_value (GTK_SPIN_BUTTON (cog_spin), 1);
+  gtk_spin_button_set_value (GTK_SPIN_BUTTON (hdg_spin), 0.2);
+
+  gtk_grid_attach (GTK_GRID (grid), gtk_label_new (_("COG Predictor, min")), 0, ++t, 1, 1);
+  gtk_grid_attach (GTK_GRID (grid), cog_spin, 1, t, 1, 1);
+  gtk_grid_attach (GTK_GRID (grid), gtk_label_new (_("HDG Predictor, km")), 0, ++t, 1, 1);
+  gtk_grid_attach (GTK_GRID (grid), hdg_spin, 1, t, 1, 1);
+
+  return grid;
+}
+
 /**
  * hyscan_gtk_map_kit_new_map:
  * @center: центр карты
@@ -2103,6 +2154,7 @@ hyscan_gtk_map_kit_add_nav (HyScanGtkMapKit           *kit,
   /* Слой с траекторией движения судна. */
   priv->way_layer = hyscan_gtk_map_nav_new (priv->nav_model);
   add_layer_row (kit, priv->way_layer, "nav", _("Navigation"));
+  gtk_stack_add_named (GTK_STACK (priv->layer_tool_stack), nav_tools (kit), "nav");
 }
 
 void

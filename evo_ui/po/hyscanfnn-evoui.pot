@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-21 12:52+0300\n"
+"POT-Creation-Date: 2019-11-21 18:09+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,15 +21,15 @@ msgstr ""
 msgid "m/s"
 msgstr ""
 
-#: evo-ui.c:655 hyscan-gtk-map-kit.c:1506
+#: evo-ui.c:655 hyscan-gtk-map-kit.c:1508
 msgid "Layer"
 msgstr ""
 
-#: evo-ui.c:666 hyscan-gtk-map-kit.c:648 hyscan-gtk-map-kit.c:1501
+#: evo-ui.c:666 hyscan-gtk-map-kit.c:651 hyscan-gtk-map-kit.c:1503
 msgid "Show"
 msgstr ""
 
-#: evo-ui.c:677 hyscan-gtk-map-kit.c:1709
+#: evo-ui.c:677 hyscan-gtk-map-kit.c:1711
 msgid "Grid"
 msgstr ""
 
@@ -105,11 +105,11 @@ msgstr ""
 msgid "Exit"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:437
+#: hyscan-gtk-map-kit.c:440
 msgid "OK"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:438 hyscan-gtk-mark-export.c:153
+#: hyscan-gtk-map-kit.c:441 hyscan-gtk-mark-export.c:153
 msgid "Cancel"
 msgstr ""
 
@@ -224,23 +224,31 @@ msgstr ""
 msgid "Show mark border only"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:2022
+#: hyscan-gtk-map-kit.c:1981
+msgid "COG Predictor, min"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1983
+msgid "HDG Predictor, km"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:2072
 msgid "Offline"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:2022
+#: hyscan-gtk-map-kit.c:2072
 msgid "Online"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:2105
+#: hyscan-gtk-map-kit.c:2155
 msgid "Navigation"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:2124
+#: hyscan-gtk-map-kit.c:2175
 msgid "Waterfall Marks"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:2156
+#: hyscan-gtk-map-kit.c:2207
 msgid "Geo Marks"
 msgstr ""
 
