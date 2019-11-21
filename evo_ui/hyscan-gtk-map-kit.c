@@ -120,8 +120,8 @@ static void     hyscan_gtk_map_kit_track_enable (HyScanGtkMapKit      *kit,
                                                  const gchar          *track_name,
                                                  gboolean              enable);
 static void    hyscan_gtk_map_kit_on_changed_combo_box (
-		                                             GtkComboBox          *combo,
-																				         HyScanGtkLayer       *layer);
+                                                 GtkComboBox          *combo,
+                                                 HyScanGtkLayer       *layer);
 #if !GLIB_CHECK_VERSION (2, 44, 0)
 static gboolean g_strv_contains               (const gchar * const  *strv,
                                                const gchar          *str);
@@ -671,7 +671,7 @@ static GtkTreeView *
 create_mark_tree_view (HyScanGtkMapKit *kit,
                        GtkTreeModel    *tree_model)
 {
-	GtkCellRenderer *renderer;
+  GtkCellRenderer *renderer;
   GtkTreeViewColumn *type_column, *name_column, *date_column;
   GtkTreeView *tree_view;
 
@@ -1912,8 +1912,8 @@ create_wfmark_layer_toolbox (HyScanGtkLayer *layer)
   GtkWidget *box, *combo;
 
   combo = gtk_combo_box_text_new();
-  gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(combo), NULL, _("Show mark's acoustic image."));
-  gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(combo), NULL, _("Show only mark's border."));
+  gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(combo), NULL, _("Show acoustic image"));
+  gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(combo), NULL, _("Show mark border only"));
   gtk_combo_box_set_active(GTK_COMBO_BOX(combo), 0);
 
   g_signal_connect (GTK_COMBO_BOX (combo), "changed",

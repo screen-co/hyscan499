@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-21 09:56+0300\n"
+"POT-Creation-Date: 2019-11-21 14:39+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -205,11 +205,11 @@ msgid "Pin"
 msgstr ""
 
 #: hyscan-gtk-map-kit.c:1915
-msgid "Show mark's acoustic image."
+msgid "Show acoustic image"
 msgstr ""
 
 #: hyscan-gtk-map-kit.c:1916
-msgid "Show only mark's border."
+msgid "Show mark border only"
 msgstr ""
 
 #: hyscan-gtk-map-kit.c:2022

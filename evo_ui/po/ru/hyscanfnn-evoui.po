@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-21 09:56+0300\n"
+"POT-Creation-Date: 2019-11-21 14:39+0300\n"
 "PO-Revision-Date: 2019-06-20 15:00+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -209,11 +209,11 @@ msgid "Pin"
 msgstr "Булавка"
 
 #: hyscan-gtk-map-kit.c:1915
-msgid "Show mark's acoustic image."
+msgid "Show acoustic image"
 msgstr "Показывать АИ меток."
 
 #: hyscan-gtk-map-kit.c:1916
-msgid "Show only mark's border."
+msgid "Show mark border only"
 msgstr "Показывать только границы."
 
 #: hyscan-gtk-map-kit.c:2022
