@@ -1909,15 +1909,15 @@ hyscan_gtk_map_kit_get_tracks (HyScanGtkMapKit  *kit)
 static GtkWidget *
 create_wfmark_layer_toolbox (HyScanGtkLayer *layer)
 {
-	GtkWidget *box, *combo;
+  GtkWidget *box, *combo;
 
-	combo = gtk_combo_box_text_new();
+  combo = gtk_combo_box_text_new();
   gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(combo), NULL, _("Show mark's acoustic image."));
   gtk_combo_box_text_append(GTK_COMBO_BOX_TEXT(combo), NULL, _("Show only mark's border."));
   gtk_combo_box_set_active(GTK_COMBO_BOX(combo), 0);
 
   g_signal_connect (GTK_COMBO_BOX (combo), "changed",
-										G_CALLBACK (hyscan_gtk_map_kit_on_changed_combo_box), layer);
+                    G_CALLBACK (hyscan_gtk_map_kit_on_changed_combo_box), layer);
 
   box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 5);
   gtk_box_pack_start(GTK_BOX(box), combo, TRUE, TRUE, 10);
@@ -1930,10 +1930,11 @@ create_wfmark_layer_toolbox (HyScanGtkLayer *layer)
  * @param data  - указатель на название проекта.
  * */
 static void
-hyscan_gtk_map_kit_on_changed_combo_box (GtkComboBox *combo,
-																				 HyScanGtkLayer *layer)
+hyscan_gtk_map_kit_on_changed_combo_box (GtkComboBox    *combo,
+                                         HyScanGtkLayer *layer)
 {
-	hyscan_gtk_map_wfmark_set_show_mode (layer, gtk_combo_box_get_active (combo));
+  hyscan_gtk_map_wfmark_set_show_mode (HYSCAN_GTK_MAP_WFMARK (layer),
+                                       gtk_combo_box_get_active (combo));
 }
 /**
  * hyscan_gtk_map_kit_new_map:
@@ -1993,7 +1994,6 @@ hyscan_gtk_map_kit_set_project (HyScanGtkMapKit *kit,
   if (priv->wfmark_layer != NULL)
     hyscan_gtk_map_wfmark_set_project ( HYSCAN_GTK_MAP_WFMARK (priv->wfmark_layer), priv->project_name);
 }
-
 
 gboolean
 hyscan_gtk_map_kit_set_profile_name (HyScanGtkMapKit *kit,
@@ -2124,8 +2124,8 @@ hyscan_gtk_map_kit_add_marks_wf (HyScanGtkMapKit *kit)
   add_layer_row (kit, priv->wfmark_layer, "wfmark", _("Waterfall Marks"));
 
   gtk_stack_add_titled (GTK_STACK (priv->layer_tool_stack),
-												create_wfmark_layer_toolbox (priv->wfmark_layer),
-												"wfmark", "Wfmark");
+                        create_wfmark_layer_toolbox (priv->wfmark_layer),
+                        "wfmark", "Wfmark");
 
   /* Виджет навигации по меткам. */
   create_wfmark_toolbox (kit);
