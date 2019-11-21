@@ -2303,3 +2303,14 @@ hyscan_gtk_map_kit_kf_desetup (HyScanGtkMapKit *kit,
   g_strfreev (tracks);
   g_strfreev (layers);
 }
+
+void
+hyscan_gtk_map_kit_get_mark_backends (HyScanGtkMapKit     *kit,
+                                      HyScanObjectModel  **geo,
+                                      HyScanMarkLocModel **wf)
+{
+  if (geo != NULL)
+    *geo = g_object_ref (kit->priv->mark_geo_model);
+  if (wf != NULL)
+    *wf = g_object_ref (kit->priv->ml_model);
+}

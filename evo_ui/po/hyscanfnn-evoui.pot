@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-20 11:52+0300\n"
+"POT-Creation-Date: 2019-11-21 12:52+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,75 +17,91 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: evo-ui.c:147
+#: evo-ui.c:256
 msgid "m/s"
 msgstr ""
 
-#: evo-ui.c:546 hyscan-gtk-map-kit.c:1506
+#: evo-ui.c:655 hyscan-gtk-map-kit.c:1506
 msgid "Layer"
 msgstr ""
 
-#: evo-ui.c:557 hyscan-gtk-map-kit.c:648 hyscan-gtk-map-kit.c:1501
+#: evo-ui.c:666 hyscan-gtk-map-kit.c:648 hyscan-gtk-map-kit.c:1501
 msgid "Show"
 msgstr ""
 
-#: evo-ui.c:568 hyscan-gtk-map-kit.c:1709
+#: evo-ui.c:677 hyscan-gtk-map-kit.c:1709
 msgid "Grid"
 msgstr ""
 
-#: evo-ui.c:569
+#: evo-ui.c:678
 msgid "Marks"
 msgstr ""
 
-#: evo-ui.c:570
+#: evo-ui.c:679
 msgid "Measurements"
 msgstr ""
 
-#: evo-ui.c:964
+#: evo-ui.c:1082
 msgid "Map"
 msgstr ""
 
-#: evo-ui.c:1041
+#: evo-ui.c:1159
 msgid "Project Manager"
 msgstr ""
 
-#: evo-ui.c:1046
+#: evo-ui.c:1170
+msgid "Marks as CSV"
+msgstr ""
+
+#: evo-ui.c:1174
+msgid "Marks to clipboard"
+msgstr ""
+
+#: evo-ui.c:1178
+msgid "XYZ"
+msgstr ""
+
+#: evo-ui.c:1182
+msgid "Export"
+msgstr ""
+
+#: evo-ui.c:1191
 msgid "Online Map"
 msgstr ""
 
-#: evo-ui.c:1074
+#: evo-ui.c:1219
 msgid "Sensors"
 msgstr ""
 
-#: evo-ui.c:1086
+#: evo-ui.c:1231
 msgid "Info"
 msgstr ""
 
-#: evo-ui.c:1090
+#: evo-ui.c:1235
 msgid "State"
 msgstr ""
 
-#: evo-ui.c:1094
+#: evo-ui.c:1239
 msgid "Params"
 msgstr ""
 
-#: evo-ui.c:1098
+#: evo-ui.c:1243
 msgid "Sonar"
 msgstr ""
 
-#: evo-ui.c:1104
+#: evo-ui.c:1249
 msgid "Antennas offsets"
 msgstr ""
 
-#: evo-ui.c:1109 tmp/record.ui.h:2
+#: evo-ui.c:1254 tmp/record.ui.h:2
 msgid "No beaming"
 msgstr ""
 
-#: evo-ui.c:1122
+#: evo-ui.c:1267
 msgid "Hardware info"
 msgstr ""
 
-#: evo-ui.c:1131
+#: evo-ui.c:1276
 msgid "Exit"
 msgstr ""
 
@@ -93,7 +109,7 @@ msgstr ""
 msgid "OK"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:438 hyscan-gtk-mark-export.c:45
+#: hyscan-gtk-map-kit.c:438 hyscan-gtk-mark-export.c:153
 msgid "Cancel"
 msgstr ""
 
@@ -220,19 +236,20 @@ msgstr ""
 msgid "Geo Marks"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:42
+#: hyscan-gtk-mark-export.c:150
 msgid "Save file"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:47
+#: hyscan-gtk-mark-export.c:155
 msgid "Save"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:202
+#: hyscan-gtk-mark-export.c:215
 #, c-format
 msgid ""
 "%sProject: %s\n"
 "%s\n"
+"%s"
 msgstr ""
 
 #: tmp/evo.ui.h:1

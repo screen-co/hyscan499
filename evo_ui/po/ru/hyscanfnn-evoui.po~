@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-21 12:52+0300\n"
+"POT-Creation-Date: 2019-11-20 11:52+0300\n"
 "PO-Revision-Date: 2019-06-20 15:00+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -18,92 +18,75 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: evo-ui.c:256
+#: evo-ui.c:147
 msgid "m/s"
 msgstr "м/с"
 
-#: evo-ui.c:655 hyscan-gtk-map-kit.c:1506
+#: evo-ui.c:546 hyscan-gtk-map-kit.c:1506
 msgid "Layer"
 msgstr "Слой"
 
-#: evo-ui.c:666 hyscan-gtk-map-kit.c:648 hyscan-gtk-map-kit.c:1501
+#: evo-ui.c:557 hyscan-gtk-map-kit.c:648 hyscan-gtk-map-kit.c:1501
 msgid "Show"
 msgstr "Вид."
 
-#: evo-ui.c:677 hyscan-gtk-map-kit.c:1709
+#: evo-ui.c:568 hyscan-gtk-map-kit.c:1709
 msgid "Grid"
 msgstr "Сетка"
 
-#: evo-ui.c:678
+#: evo-ui.c:569
 msgid "Marks"
 msgstr "Метки"
 
-#: evo-ui.c:679
+#: evo-ui.c:570
 msgid "Measurements"
 msgstr "Измерения"
 
-#: evo-ui.c:1082
+#: evo-ui.c:964
 msgid "Map"
 msgstr "Карта"
 
-#: evo-ui.c:1159
+#: evo-ui.c:1041
 msgid "Project Manager"
 msgstr "Менеджер проектов"
 
-#: evo-ui.c:1170
-msgid "Marks as CSV"
-msgstr "Метки в CSV"
-
-#: evo-ui.c:1174
-#, fuzzy
-msgid "Marks to clipboard"
-msgstr "Метки в буфер обмена"
-
-#: evo-ui.c:1178
-msgid "XYZ"
-msgstr "XYZ (координаты, глубина)"
-
-#: evo-ui.c:1182
-msgid "Export"
-msgstr "Экспорт"
-
-#: evo-ui.c:1191
+#: evo-ui.c:1046
 msgid "Online Map"
 msgstr "Онлайн-карта"
 
-#: evo-ui.c:1219
+#: evo-ui.c:1074
 msgid "Sensors"
 msgstr "Датчики"
 
-#: evo-ui.c:1231
+#: evo-ui.c:1086
 msgid "Info"
 msgstr "Информация"
 
-#: evo-ui.c:1235
+#: evo-ui.c:1090
 msgid "State"
 msgstr "Состояние"
 
-#: evo-ui.c:1239
+#: evo-ui.c:1094
 msgid "Params"
 msgstr "Параметры"
 
-#: evo-ui.c:1243
+#: evo-ui.c:1098
 msgid "Sonar"
 msgstr "Локатор"
 
-#: evo-ui.c:1249
+#: evo-ui.c:1104
 msgid "Antennas offsets"
 msgstr "Смещения антенн"
 
-#: evo-ui.c:1254 tmp/record.ui.h:2
+#: evo-ui.c:1109 tmp/record.ui.h:2
 msgid "No beaming"
 msgstr "Без излучения"
 
-#: evo-ui.c:1267
+#: evo-ui.c:1122
 msgid "Hardware info"
 msgstr "Параметры оборудования"
 
-#: evo-ui.c:1276
+#: evo-ui.c:1131
 msgid "Exit"
 msgstr "Выход"
 
@@ -111,7 +94,7 @@ msgstr "Выход"
 msgid "OK"
 msgstr "Ок"
 
-#: hyscan-gtk-map-kit.c:438 hyscan-gtk-mark-export.c:153
+#: hyscan-gtk-map-kit.c:438 hyscan-gtk-mark-export.c:45
 msgid "Cancel"
 msgstr "Отмена"
 
@@ -241,22 +224,21 @@ msgstr "Метки АИ"
 msgid "Geo Marks"
 msgstr "Геометки"
 
-#: hyscan-gtk-mark-export.c:150
+#: hyscan-gtk-mark-export.c:42
 msgid "Save file"
 msgstr "Сохранить файл"
 
-#: hyscan-gtk-mark-export.c:155
+#: hyscan-gtk-mark-export.c:47
 msgid "Save"
 msgstr "Сохранить"
 
-#: hyscan-gtk-mark-export.c:215
-#, fuzzy, c-format
+#: hyscan-gtk-mark-export.c:202
+#, c-format
 msgid ""
 "%sProject: %s\n"
 "%s\n"
-"%s"
 msgstr ""
-"%sProject: %s\n"
+"%sПроект: %s\n"
 "%s\n"
 
 #: tmp/evo.ui.h:1
@@ -342,6 +324,12 @@ msgstr "Альфа"
 #: tmp/record.ui.h:1
 msgid "Start"
 msgstr "Работа"
+
+#~ msgid "Save as CSV"
+#~ msgstr "Сохранить в формате CSV"
+
+#~ msgid "Copy to Clipboard"
+#~ msgstr "Копировать в буфер обмена"
 
 #~ msgid "Contrast"
 #~ msgstr "Контраст"

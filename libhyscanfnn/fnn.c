@@ -1412,6 +1412,7 @@ mark_model_changed (HyScanObjectModel *model,
 
   /* Получаем крутецкий список меток с координатами. */
   marks = make_marks_with_coords (model, global);
+
   ls = hyscan_gtk_project_viewer_get_liststore (HYSCAN_GTK_PROJECT_VIEWER (global->gui.mark_view));
 
   /* Проходим по всем существующим меткам... */

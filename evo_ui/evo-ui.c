@@ -1,6 +1,7 @@
 #include <gmodule.h>
 #include <hyscan-gtk-area.h>
 #include <hyscan-gtk-fnn-offsets.h>
+#include "hyscan-gtk-mark-export.h"
 #include "evo-ui.h"
 
 #define GETTEXT_PACKAGE "hyscanfnn-evoui"
@@ -26,6 +27,12 @@ enum
   LAYER_KEY_COLUMN,
   LAYER_TITLE_COLUMN,
   LAYER_COLUMN
+};
+
+enum
+{
+  MARKS_TO_CSV,
+  MARKS_TO_CLIPBOARD,
 };
 
 EvoUI global_ui = {0,};
@@ -118,6 +125,21 @@ depth_writer (GObject *emitter)
     }
 
   g_free (words);
+}
+
+void
+mark_exporter (GObject  *emitter,
+               gpointer  _selector)
+{
+  gint selector = GPOINTER_TO_INT (_selector);
+  HyScanObjectModel *geo;
+  HyScanMarkLocModel *wf;
+
+  hyscan_gtk_map_kit_get_mark_backends (global_ui.mapkit, &geo, &wf);
+  if (selector == MARKS_TO_CSV)
+    hyscan_gtk_mark_export_save_as_csv (GTK_WINDOW (_global->gui.window), wf, geo, _global->project_name);
+  else if (selector == MARKS_TO_CLIPBOARD)
+    hyscan_gtk_mark_export_copy_to_clipboard (wf, geo, _global->project_name);
 }
 
 
@@ -1138,10 +1160,32 @@ build_interface (Global *global)
     g_signal_connect (mitem, "activate", G_CALLBACK (run_manager), NULL);
     gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
-    /* unloader */
-    mitem = gtk_menu_item_new_with_label (_("Export XYZ"));
-    g_signal_connect (mitem, "activate", G_CALLBACK (depth_writer), NULL);
-    gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
+    /* Exports */
+    {
+      gint subt = 0;
+      GtkWidget *submenu = gtk_menu_new ();
+      submenu = gtk_menu_new ();
+      subt = 0;
+
+      mitem = gtk_menu_item_new_with_label (_("Marks as CSV"));
+      g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (MARKS_TO_CSV));
+      gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
+      mitem = gtk_menu_item_new_with_label (_("Marks to clipboard"));
+      g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (MARKS_TO_CLIPBOARD));
+      gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
+      mitem = gtk_menu_item_new_with_label (_("XYZ"));
+      g_signal_connect (mitem, "activate", G_CALLBACK (depth_writer), NULL);
+      gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
+      mitem = gtk_menu_item_new_with_label (_("Export"));
+      gtk_menu_item_set_submenu (GTK_MENU_ITEM (mitem), submenu);
+      gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
+    }
+    // mitem = gtk_menu_item_new_with_label (_("Export XYZ"));
+    // g_signal_connect (mitem, "activate", G_CALLBACK (depth_writer), NULL);
+    // gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
     /* офлайн-карта */
     mitem = gtk_check_menu_item_new_with_label (_("Online Map"));

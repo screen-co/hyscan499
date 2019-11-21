@@ -4,7 +4,8 @@
 #include <hyscan-gtk-map.h>
 #include <hyscan-db.h>
 #include <hyscan-sensor.h>
-
+#include <hyscan-object-model.h>
+#include <hyscan-mark-loc-model.h>
 
 typedef struct _HyScanGtkMapKitPrivate HyScanGtkMapKitPrivate;
 
@@ -73,5 +74,10 @@ void              hyscan_gtk_map_kit_kf_setup         (HyScanGtkMapKit          
 HYSCAN_API
 void              hyscan_gtk_map_kit_kf_desetup       (HyScanGtkMapKit            *kit,
                                                        GKeyFile                   *keyfile);
+
+HYSCAN_API
+void              hyscan_gtk_map_kit_get_mark_backends(HyScanGtkMapKit            *kit,
+                                                       HyScanObjectModel         **geo,
+                                                       HyScanMarkLocModel        **wf);
 
 #endif /* __HYSCAN_GTK_MAP_KIT_H__ */
