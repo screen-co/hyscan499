@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-21 12:52+0300\n"
+"POT-Creation-Date: 2019-11-22 10:57+0300\n"
 "PO-Revision-Date: 2019-06-20 15:00+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -22,15 +22,15 @@ msgstr ""
 msgid "m/s"
 msgstr "м/с"
 
-#: evo-ui.c:655 hyscan-gtk-map-kit.c:1506
+#: evo-ui.c:655
 msgid "Layer"
 msgstr "Слой"
 
-#: evo-ui.c:666 hyscan-gtk-map-kit.c:648 hyscan-gtk-map-kit.c:1501
+#: evo-ui.c:666 hyscan-gtk-map-kit.c:612
 msgid "Show"
 msgstr "Вид."
 
-#: evo-ui.c:677 hyscan-gtk-map-kit.c:1709
+#: evo-ui.c:677 hyscan-gtk-map-kit.c:1547
 msgid "Grid"
 msgstr "Сетка"
 
@@ -55,7 +55,6 @@ msgid "Marks as CSV"
 msgstr "Метки в CSV"
 
 #: evo-ui.c:1174
-#, fuzzy
 msgid "Marks to clipboard"
 msgstr "Метки в буфер обмена"
 
@@ -107,76 +106,72 @@ msgstr "Параметры оборудования"
 msgid "Exit"
 msgstr "Выход"
 
-#: hyscan-gtk-map-kit.c:437
+#: hyscan-gtk-map-kit.c:401
 msgid "OK"
 msgstr "Ок"
 
-#: hyscan-gtk-map-kit.c:438 hyscan-gtk-mark-export.c:153
+#: hyscan-gtk-map-kit.c:402 hyscan-gtk-mark-export.c:153
 msgid "Cancel"
 msgstr "Отмена"
 
-#: hyscan-gtk-map-kit.c:439
+#: hyscan-gtk-map-kit.c:403
 msgid "Restore"
 msgstr "Восстановить"
 
-#: hyscan-gtk-map-kit.c:440
+#: hyscan-gtk-map-kit.c:404
 msgid "Apply"
 msgstr "Применить"
 
-#: hyscan-gtk-map-kit.c:502 hyscan-gtk-map-kit.c:741
+#: hyscan-gtk-map-kit.c:466 hyscan-gtk-map-kit.c:705
 msgid "Track settings"
 msgstr "Настройки галса"
 
-#: hyscan-gtk-map-kit.c:632
+#: hyscan-gtk-map-kit.c:596
 msgid "Track"
 msgstr "Галс"
 
-#: hyscan-gtk-map-kit.c:641 hyscan-gtk-map-kit.c:693
+#: hyscan-gtk-map-kit.c:605 hyscan-gtk-map-kit.c:657
 msgid "Date"
 msgstr "Дата"
 
-#: hyscan-gtk-map-kit.c:683
+#: hyscan-gtk-map-kit.c:647
 msgid "Name"
 msgstr "Имя"
 
-#: hyscan-gtk-map-kit.c:735
+#: hyscan-gtk-map-kit.c:699
 msgid "Find track on the map"
 msgstr "Показать галс на карте"
 
-#: hyscan-gtk-map-kit.c:1243
+#: hyscan-gtk-map-kit.c:1207
 msgid "Done!"
 msgstr "Готово!"
 
-#: hyscan-gtk-map-kit.c:1245
+#: hyscan-gtk-map-kit.c:1209
 #, c-format
 msgid "Done! Failed to load %d tiles"
 msgstr "Не удалось загрузить %d тайлов"
 
-#: hyscan-gtk-map-kit.c:1249 hyscan-gtk-map-kit.c:1409
+#: hyscan-gtk-map-kit.c:1213 hyscan-gtk-map-kit.c:1361
 msgid "Start download"
 msgstr "Загрузить"
 
-#: hyscan-gtk-map-kit.c:1308
+#: hyscan-gtk-map-kit.c:1272
 msgid "Stop download"
 msgstr "Прервать"
 
-#: hyscan-gtk-map-kit.c:1379
-msgid "My location"
-msgstr "Где я"
-
-#: hyscan-gtk-map-kit.c:1388
+#: hyscan-gtk-map-kit.c:1341
 msgid "Go"
 msgstr "Перейти"
 
-#: hyscan-gtk-map-kit.c:1391
+#: hyscan-gtk-map-kit.c:1344
 msgid "Lat"
 msgstr "Шир."
 
-#: hyscan-gtk-map-kit.c:1393
+#: hyscan-gtk-map-kit.c:1346
 msgid "Lon"
 msgstr "Долг."
 
-#: hyscan-gtk-map-kit.c:1415
+#: hyscan-gtk-map-kit.c:1367
 msgid ""
 "Download visible area of map\n"
 "to make it available when offline"
@@ -185,59 +180,83 @@ msgstr ""
 "чтобы сделать её доступной\n"
 "в режиме оффлайн"
 
-#: hyscan-gtk-map-kit.c:1580 tmp/evo.ui.h:3
+#: hyscan-gtk-map-kit.c:1454 tmp/evo.ui.h:3
 msgid "Scale"
 msgstr "Масштаб"
 
-#: hyscan-gtk-map-kit.c:1598
+#: hyscan-gtk-map-kit.c:1470
 msgid "Lock layers"
 msgstr "Блокировать слои"
 
-#: hyscan-gtk-map-kit.c:1611
+#: hyscan-gtk-map-kit.c:1479
 msgid "Remove ruler"
 msgstr "Удалить линейку"
 
-#: hyscan-gtk-map-kit.c:1615
+#: hyscan-gtk-map-kit.c:1481
 msgid "Remove all pins"
 msgstr "Удалить все булавки"
 
-#: hyscan-gtk-map-kit.c:1639
+#: hyscan-gtk-map-kit.c:1502
 msgid "Go to"
 msgstr "Перейти"
 
-#: hyscan-gtk-map-kit.c:1647
+#: hyscan-gtk-map-kit.c:1510
 msgid "Download"
 msgstr "Загрузить"
 
-#: hyscan-gtk-map-kit.c:1706
+#: hyscan-gtk-map-kit.c:1543
+msgid "Base Map"
+msgstr "Карта"
+
+#: hyscan-gtk-map-kit.c:1544
 msgid "Tracks"
 msgstr "Галсы"
 
-#: hyscan-gtk-map-kit.c:1707
+#: hyscan-gtk-map-kit.c:1545
 msgid "Ruler"
 msgstr "Линейка"
 
-#: hyscan-gtk-map-kit.c:1708
+#: hyscan-gtk-map-kit.c:1546
 msgid "Pin"
 msgstr "Булавка"
 
-#: hyscan-gtk-map-kit.c:1987
+#: hyscan-gtk-map-kit.c:1686
+msgid "Show acoustic image"
+msgstr "Показывать АИ меток"
+
+#: hyscan-gtk-map-kit.c:1687
+msgid "Show mark border only"
+msgstr "Показывать только границы"
+
+#: hyscan-gtk-map-kit.c:1753
+msgid "COG Predictor, min"
+msgstr "Линия ПУ, мин"
+
+#: hyscan-gtk-map-kit.c:1755
+msgid "HDG Predictor, km"
+msgstr "Линия ИК, км"
+
+#: hyscan-gtk-map-kit.c:1844
 msgid "Offline"
 msgstr "Оффлайн"
 
-#: hyscan-gtk-map-kit.c:1987
+#: hyscan-gtk-map-kit.c:1844
 msgid "Online"
 msgstr "Онлайн"
 
-#: hyscan-gtk-map-kit.c:2070
+#: hyscan-gtk-map-kit.c:1924
+msgid "My location"
+msgstr "Где я"
+
+#: hyscan-gtk-map-kit.c:1929
 msgid "Navigation"
 msgstr "Навигация"
 
-#: hyscan-gtk-map-kit.c:2089
+#: hyscan-gtk-map-kit.c:1954
 msgid "Waterfall Marks"
 msgstr "Метки АИ"
 
-#: hyscan-gtk-map-kit.c:2117
+#: hyscan-gtk-map-kit.c:1984
 msgid "Geo Marks"
 msgstr "Геометки"
 
@@ -250,7 +269,7 @@ msgid "Save"
 msgstr "Сохранить"
 
 #: hyscan-gtk-mark-export.c:215
-#, fuzzy, c-format
+#, c-format
 msgid ""
 "%sProject: %s\n"
 "%s\n"
@@ -258,6 +277,7 @@ msgid ""
 msgstr ""
 "%sProject: %s\n"
 "%s\n"
+"%s"
 
 #: tmp/evo.ui.h:1
 msgid "Range"
