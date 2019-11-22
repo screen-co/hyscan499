@@ -193,23 +193,38 @@ get_locale_dir (void)
   return locale_dir;
 }
 
-static const gchar *
+static gchar **
 get_profile_dir (void)
 {
-  static gchar *profile_dir = NULL;
+  static gchar **dirs = NULL;
+  gint dc = 0;
 
-  if (profile_dir == NULL)
+  if (dirs == NULL)
     {
-      #ifdef G_OS_WIN32
-        profile_dir = win32_build_path (1, "share", NULL);
-      #else
-        profile_dir = FNN_PROFILE_DIR;
+      gint i;
+
+      #ifdef DFNN_PROFILE_STANDALONE
+        dirs = g_realloc (dirs, ++dc);
+        dirs[dc - 1] = g_get_user_config_dir ();
       #endif
 
-      g_message ("profile_dir: <%s>", profile_dir);
+      dirs = g_realloc (dirs, ++dc);
+
+      #ifdef G_OS_WIN32
+        dirs[dc - 1] = win32_build_path (1, FNN_PROFILE_DIR, NULL);
+      #else
+        dirs[dc - 1] = FNN_PROFILE_DIR;
+      #endif
+
+      /* NULL-termination */
+      dirs = g_realloc (dirs, ++dc);
+      dirs[dc - 1] = NULL;
+
+      for (i = 0; dirs != NULL && dirs[i] != NULL; ++i)
+        g_message ("profile_dirs: %i. %s", i, dirs[i]);
     }
 
-  return profile_dir;
+  return dirs;
 }
 
 

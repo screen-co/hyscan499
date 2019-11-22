@@ -117,6 +117,13 @@ make_page (HyScanGtkFnnOffsets *self,
                            "gamma",
                            "theta",
                            NULL};
+  const gchar *hints[]  = {N_("Positive: starboard, negative: portside"),
+                           N_("Positive: bow, negative: stern"),
+                           N_("Positive: bottom, negative: sky"),
+                           N_("Yaw"),
+                           N_("Roll"),
+                           N_("Pitch"),
+                           NULL};
 
   grid = gtk_grid_new ();
 
@@ -135,6 +142,7 @@ make_page (HyScanGtkFnnOffsets *self,
   for (i = 0; i < 6; ++i)
     {
       GtkWidget * label = gtk_label_new (labels[i]);
+      gtk_widget_set_tooltip_text (label, gettext(hints[i]));
       gtk_grid_attach (GTK_GRID (grid), label, 0, i, 1, 1);
     }
 

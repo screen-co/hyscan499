@@ -60,7 +60,7 @@ struct _HyScanGtkConPrivate
 {
   GKeyFile      *kf;
   gchar        **drivers;
-  gchar         *sysfolder;
+  gchar        **folders;
   HyScanDB      *db;
 
   GtkLabel      *project_label;
@@ -134,7 +134,7 @@ hyscan_gtk_con_class_init (HyScanGtkConClass *klass)
     g_param_spec_pointer ("kf", "kf", "config kf",
                           G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
   g_object_class_install_property (oclass, PROP_SYSFOLDER,
-    g_param_spec_string ("sysfolder", "SysFolder", "Folder with system profiles", NULL,
+    g_param_spec_pointer ("folders", "Folders", "Folders with profiles",
                          G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
   g_object_class_install_property (oclass, PROP_DB,
     g_param_spec_object ("db", "db", "db",
@@ -167,7 +167,7 @@ hyscan_gtk_con_set_property (GObject      *object,
       break;
 
     case PROP_SYSFOLDER:
-      self->priv->sysfolder = g_value_dup_string (value);
+      self->priv->folders = g_strdupv (g_value_get_pointer (value));
       break;
 
     case PROP_DB:
@@ -212,7 +212,7 @@ hyscan_gtk_con_object_finalize (GObject *object)
 
   g_clear_pointer (&priv->kf, g_key_file_unref);
   g_clear_pointer (&priv->drivers, g_strfreev);
-  g_clear_pointer (&priv->sysfolder, g_free);
+  g_clear_pointer (&priv->folders, g_strfreev);
 
   G_OBJECT_CLASS (hyscan_gtk_con_parent_class)->finalize (object);
 }
@@ -375,7 +375,7 @@ hyscan_gtk_con_make_intro_page (HyScanGtkCon *self)
 static void
 hyscan_gtk_con_make_hw_page (HyScanGtkCon *self)
 {
-  GtkWidget *page = hyscan_gtk_profile_hw_new (self->priv->sysfolder, self->priv->drivers);
+  GtkWidget *page = hyscan_gtk_profile_hw_new (self->priv->folders, self->priv->drivers);
 
   g_signal_connect (page, "selected", G_CALLBACK (hyscan_gtk_con_selected_hw), self);
   self->priv->hw_page = page;
@@ -514,7 +514,7 @@ hyscan_gtk_con_finished (HyScanGtkCon *self,
 }
 
 GtkWidget *
-hyscan_gtk_con_new (const gchar  *sysfolder,
+hyscan_gtk_con_new (gchar       **folders,
                     gchar       **drivers,
                     GKeyFile     *kf,
                     HyScanDB     *db)
@@ -522,7 +522,7 @@ hyscan_gtk_con_new (const gchar  *sysfolder,
   return g_object_new (HYSCAN_TYPE_GTK_CON,
                        "use-header-bar", TRUE,
                        "drivers", drivers,
-                       "sysfolder", sysfolder,
+                       "folders", folders,
                        "kf", kf,
                        "db", db,
                        NULL);

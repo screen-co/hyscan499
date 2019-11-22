@@ -69,7 +69,7 @@ HYSCAN_API
 GType                  hyscan_gtk_con_get_type         (void);
 
 HYSCAN_API
-GtkWidget *            hyscan_gtk_con_new              (const gchar  *sysfolder,
+GtkWidget *            hyscan_gtk_con_new              (gchar       **folders,
                                                         gchar       **drivers,
                                                         GKeyFile     *kf,
                                                                             HyScanDB     *db);

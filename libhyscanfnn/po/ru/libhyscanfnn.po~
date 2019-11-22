@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-22 14:17+0300\n"
+"POT-Creation-Date: 2019-07-19 17:25+0300\n"
 "PO-Revision-Date: 2019-07-19 17:26+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -18,87 +18,79 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: fnn.c:66
+#: fnn.c:65
 msgid "SideScan"
 msgstr "ГБО"
 
-#: fnn.c:75
+#: fnn.c:74
 msgid "SideScanLow"
 msgstr "ГБО-НЧ"
 
-#: fnn.c:84
+#: fnn.c:83
 msgid "SideScanHigh"
 msgstr "ГБО-ВЧ"
 
-#: fnn.c:121 fnn.c:3380
+#: fnn.c:120 fnn.c:3170
 msgid "Profiler"
 msgstr "Профилограф"
 
-#: fnn.c:172
+#: fnn.c:165
 msgid "Echosounder"
 msgstr "Эхолот"
 
-#: fnn.c:179
-msgid "EchosounderHigh"
-msgstr "ВЧ эхолот"
-
-#: fnn.c:186
-msgid "EchosounderLow"
-msgstr "НЧ эхолот"
-
-#: fnn.c:228
+#: fnn.c:210
 msgid "ForwardLook"
 msgstr "ВСЛ"
 
-#: fnn.c:528 fnn.c:536
+#: fnn.c:457 fnn.c:465
 msgid "Hardware parameters"
 msgstr "Параметры оборудования"
 
-#: fnn.c:531 hyscan-gtk-configurator.c:127
+#: fnn.c:460
 msgid "Apply"
 msgstr "Применить"
 
-#: fnn.c:532
+#: fnn.c:461
 msgid "Reset"
 msgstr "Сбросить"
 
-#: fnn.c:533 fnn.c:569
+#: fnn.c:462 fnn.c:498
 msgid "Close"
 msgstr "Закрыть"
 
-#: fnn.c:566 fnn.c:572
+#: fnn.c:495 fnn.c:501
 msgid "Sonar info"
 msgstr "Информация о локаторе"
 
-#: fnn.c:3389
+#: fnn.c:3179
 msgid "Yellow"
 msgstr "Жёлтая"
 
-#: fnn.c:3397
+#: fnn.c:3187
 msgid "Brown"
 msgstr "Коричневая"
 
-#: fnn.c:3404
+#: fnn.c:3194
 msgid "Sepia"
 msgstr "Сепия"
 
-#: fnn.c:3411
+#: fnn.c:3201
 msgid "White"
 msgstr "Белая"
 
-#: fnn.c:3419
+#: fnn.c:3209
 msgid "Inverted"
 msgstr "Инверсная"
 
-#: fnn.c:3427
+#: fnn.c:3217
 msgid "Green"
 msgstr "Зеленая"
 
-#: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:521
+#: hyscan-fnn-project.c:136 hyscan-fnn-project.c:144 hyscan-fnn-project.c:518
 msgid "Delete project"
 msgstr "Удалить проект"
 
-#: hyscan-fnn-project.c:137 hyscan-fnn-project.c:145 hyscan-fnn-project.c:541
+#: hyscan-fnn-project.c:137 hyscan-fnn-project.c:145 hyscan-fnn-project.c:537
 msgid "Delete track"
 msgstr "Удалить галс"
 
@@ -122,136 +114,76 @@ msgstr "Это нельзя отменить"
 msgid "Do you really want to delete track"
 msgstr "Вы действительно хотите удалить галс"
 
-#: hyscan-fnn-project.c:442
+#: hyscan-fnn-project.c:440
 msgid "Enter project name"
 msgstr "Введите название проекта"
 
-#: hyscan-fnn-project.c:445
+#: hyscan-fnn-project.c:443
 msgid "OK"
 msgstr "Ок"
 
-#: hyscan-fnn-project.c:524 hyscan-fnn-project.c:568
+#: hyscan-fnn-project.c:521 hyscan-fnn-project.c:564
 msgid "Open project"
 msgstr "Открыть проект"
 
-#: hyscan-fnn-project.c:570
+#: hyscan-fnn-project.c:566
 msgid "New project"
 msgstr "Создать проект"
 
-#: hyscan-fnn-project.c:577
+#: hyscan-fnn-project.c:573
 msgctxt "widget_title"
 msgid "Project manager"
 msgstr "Менеджер проектов"
 
-#: hyscan-gtk-con.c:360
+#: hyscan-gtk-con.c:359
 msgid "Intro"
 msgstr "Начальная страница"
 
-#: hyscan-gtk-con.c:383
+#: hyscan-gtk-con.c:382
 msgid "Hardware"
 msgstr "Оборудование"
 
-#: hyscan-gtk-con.c:429
+#: hyscan-gtk-con.c:428
 msgid "Connection"
 msgstr "Подключение"
 
-#: hyscan-gtk-con.c:457
+#: hyscan-gtk-con.c:456
 msgid "Connecting..."
 msgstr "Подключение..."
 
-#: hyscan-gtk-con.c:498
+#: hyscan-gtk-con.c:497
 msgid "Connection completed. HyScan will launch shortly. "
 msgstr "Подключение завершено. HyScan скоро запустится. "
 
-#: hyscan-gtk-con.c:505
+#: hyscan-gtk-con.c:504
 msgid "Connection failed. "
 msgstr "Не удалось подключиться"
 
-#: hyscan-gtk-con.c:506
+#: hyscan-gtk-con.c:505
 msgid "Continue in view mode"
 msgstr "Продолжить в режиме просмотра"
 
-#: hyscan-gtk-configurator.c:97
-msgid "Default profile"
-msgstr "Стандартный профиль"
-
-#: hyscan-gtk-configurator.c:103
-msgid "Initial configuration"
-msgstr "Первоначальная конфигурация"
-
-#: hyscan-gtk-configurator.c:110 hyscan-gtk-configurator.c:146
-msgid "DB directory"
-msgstr "Папка БД"
-
-#: hyscan-gtk-configurator.c:116 hyscan-gtk-configurator.c:149
-msgid "Map cache directory"
-msgstr "Папка кэша карты"
-
-#: hyscan-gtk-configurator.c:131
-msgid ""
-"You should create a database profile to run HyScan. Please, specify the name "
-"of the profile and the path to the database directory."
-msgstr ""
-"Необходимо создать профиль базы данных, чтобы запустить HyScan. Пожалуйста, "
-"укажите имя профиля и путь к директории с базой данных."
-
-#: hyscan-gtk-configurator.c:137
-msgid ""
-"Map cache stores tile images for the map offline work. Please, specify the "
-"path to map cache directory."
-msgstr ""
-"Кэш карты хранит изображения тайлов и позволяет карте работать в режиме "
-"оффлайн. Укажите ниже путь к папке для кэша карты."
-
-#: hyscan-gtk-configurator.c:143
-msgid "Name of DB-profile"
-msgstr "Имя профиля БД"
-
-#: hyscan-gtk-fnn-offsets.c:120
-msgid "Positive: starboard, negative: portside"
-msgstr "+: на правый борт, -: на левый; в м."
-
-#: hyscan-gtk-fnn-offsets.c:121
-msgid "Positive: bow, negative: stern"
-msgstr "+: на нос, -: на корму; в м."
-
-#: hyscan-gtk-fnn-offsets.c:122
-msgid "Positive: bottom, negative: sky"
-msgstr "+: к дну, -: к небу; в м."
-
-#: hyscan-gtk-fnn-offsets.c:123
-msgid "Yaw"
-msgstr "поворот антенны по курсу; в рад"
-
-#: hyscan-gtk-fnn-offsets.c:124
-msgid "Roll"
-msgstr "поворот антенны по крену; в рад"
-
-#: hyscan-gtk-fnn-offsets.c:125
-msgid "Pitch"
-msgstr "поворот антенны по дифференту; в рад"
-
-#: hyscan-gtk-fnn-offsets.c:293
+#: hyscan-gtk-fnn-offsets.c:285
 msgid "Done"
 msgstr "Готово"
 
-#: hyscan-gtk-fnn-offsets.c:299
+#: hyscan-gtk-fnn-offsets.c:291
 msgid "Offset setup"
 msgstr "Местоположения антенн"
 
-#: hyscan-gtk-nav-indicator.c:255
+#: hyscan-gtk-mark-editor.c:126 hyscan-gtk-nav-indicator.c:255
 msgid "N"
 msgstr "С.Ш."
 
-#: hyscan-gtk-nav-indicator.c:255
+#: hyscan-gtk-mark-editor.c:126 hyscan-gtk-nav-indicator.c:255
 msgid "S"
 msgstr "Ю.Ш"
 
-#: hyscan-gtk-nav-indicator.c:256
+#: hyscan-gtk-mark-editor.c:127 hyscan-gtk-nav-indicator.c:256
 msgid "E"
 msgstr "В.Д."
 
-#: hyscan-gtk-nav-indicator.c:256
+#: hyscan-gtk-mark-editor.c:127 hyscan-gtk-nav-indicator.c:256
 msgid "W"
 msgstr "З.Д."
 
@@ -318,3 +250,39 @@ msgstr "Название"
 #: tmp/hyscan-gtk-project-viewer.ui.h:2
 msgid "Date"
 msgstr "Дата"
+
+#: hyscan-gtk-configurator.c:104
+msgid "Initial configuration"
+msgstr "Первоначальная конфигурация"
+
+#: hyscan-gtk-configurator.c:153
+msgid ""
+"You should create a database profile to run HyScan. Please, specify the name "
+"of the profile and the path to the database directory."
+msgstr ""
+"Необходимо создать профиль базы данных, чтобы запустить HyScan. Пожалуйста, "
+"укажите имя профиля и путь к директории с базой данных."
+
+#: hyscan-gtk-configurator.c:137
+msgid ""
+"Map cache stores tile images for the map offline work. "
+"Please, specify the path to map cache directory."
+msgstr ""
+"Кэш карты хранит изображения тайлов и позволяет карте работать в режиме "
+"оффлайн. Укажите ниже путь к папке для кэша карты."
+
+#: hyscan-gtk-configurator.c:138
+msgid "Name of DB-profile"
+msgstr "Имя профиля БД"
+
+#: hyscan-gtk-configurator.c:141
+msgid "DB directory"
+msgstr "Папка БД"
+
+#: hyscan-gtk-configurator.c:148
+msgid "Map cache directory"
+msgstr "Папка кэша карты"
+
+#: hyscan-gtk-configurator.c:98
+msgid "Default profile"
+msgstr "Стандартный профиль"

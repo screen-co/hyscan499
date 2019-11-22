@@ -39,6 +39,6 @@ case "$1" in
             ;;
 
         *)
-            echo $"Usage: $0 {ui|pot|po|mo} [LANG] [TARGET_DIR]"
+            echo $"Usage: $0 {pot|po|mo} [LANG] [TARGET_DIR]"
             exit 1
 esac
