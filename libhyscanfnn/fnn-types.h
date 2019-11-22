@@ -760,6 +760,11 @@ HYSCAN_API gboolean
 panel_sources_are_in_sonar (Global   *global,
                             FnnPanel *panel);
 
+HYSCAN_API const gchar *
+get_locale_dir (void);
+HYSCAN_API gchar **
+get_profile_dir (void);
+
 HYSCAN_API void
 fnn_init (Global *ext_global);
 
