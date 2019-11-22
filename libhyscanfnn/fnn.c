@@ -3454,6 +3454,31 @@ panel_sources_are_in_sonar (Global   *global,
   return TRUE;
 }
 
+gchar **
+va_to_strv (int           n,
+            const gchar * first,
+            va_list       args)
+{
+  gchar ** strv = NULL;
+  const gchar * str = NULL;
+  int count = 0;
+
+  strv = g_realloc (strv, (sizeof (gchar*)) * (count + 1));
+  strv[count] = g_strdup (first);
+  ++count;
+
+  do
+    {
+      str = va_arg (args, gchar*);
+      strv = g_realloc (strv, (sizeof (gchar*)) * (count + 1));
+      strv[count] = g_strdup (str);
+      ++count;
+    }
+  while (str != NULL);
+
+  return strv;
+}
+
 #ifdef G_OS_WIN32
 gchar *
 win32_build_path (int n, ...)
@@ -3521,12 +3546,12 @@ get_profile_dir (void)
     {
       gint i;
 
-      #ifdef DFNN_PROFILE_STANDALONE
-        dirs = g_realloc (dirs, ++dc);
+      #ifdef FNN_PROFILE_STANDALONE
+        dirs = g_realloc (dirs, ++dc * sizeof (*dirs));
         dirs[dc - 1] = g_get_user_config_dir ();
       #endif
 
-      dirs = g_realloc (dirs, ++dc);
+      dirs = g_realloc (dirs, ++dc * sizeof (*dirs));
 
       #ifdef G_OS_WIN32
         dirs[dc - 1] = win32_build_path (1, FNN_PROFILE_DIR, NULL);
@@ -3535,7 +3560,7 @@ get_profile_dir (void)
       #endif
 
       /* NULL-termination */
-      dirs = g_realloc (dirs, ++dc);
+      dirs = g_realloc (dirs, ++dc * sizeof (*dirs));
       dirs[dc - 1] = NULL;
 
       for (i = 0; dirs != NULL && dirs[i] != NULL; ++i)

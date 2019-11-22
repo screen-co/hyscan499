@@ -111,31 +111,6 @@ connector_finished (GtkAssistant *ass,
   gtk_main_quit();
 }
 
-gchar **
-va_to_strv (int           n,
-            const gchar * first,
-            va_list       args)
-{
-  gchar ** strv = NULL;
-  const gchar * str = NULL;
-  int count = 0;
-
-  strv = g_realloc (strv, (sizeof (gchar*)) * (count + 1));
-  strv[count] = g_strdup (first);
-  ++count;
-
-  do
-    {
-      str = va_arg (args, gchar*);
-      strv = g_realloc (strv, (sizeof (gchar*)) * (count + 1));
-      strv[count] = g_strdup (str);
-      ++count;
-    }
-  while (str != NULL);
-
-  return strv;
-}
-
 int
 main (int argc, char **argv)
 {

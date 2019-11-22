@@ -1062,14 +1062,22 @@ build_interface (Global *global)
   {
     GtkWidget *box;
     GtkTreeView * tv;
-    gchar *profile_dir = g_build_filename (g_get_user_config_dir (), "hyscan", "map-profiles", NULL);
+    gint i;
+    gchar **profile_dirs;
     gchar *cache_dir = g_build_filename (g_get_user_cache_dir (), "hyscan", NULL);
     HyScanGeoGeodetic center = {0, 0, 0};
 
     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     ui->mapkit = hyscan_gtk_map_kit_new (&center, global->db, cache_dir);
     hyscan_gtk_map_kit_set_project (ui->mapkit, global->project_name);
-    hyscan_gtk_map_kit_load_profiles (ui->mapkit, profile_dir);
+    profile_dirs = get_profile_dir ();
+    for (i = 0; profile_dirs[i] != NULL; ++i)
+      {
+        gchar *profile_dir;
+        profile_dir = g_build_filename (profile_dirs[i], "hyscan", "map-profiles", NULL);
+        hyscan_gtk_map_kit_load_profiles (ui->mapkit, profile_dir);
+        g_free (profile_dir);
+      }
     hyscan_gtk_map_kit_add_marks_wf (ui->mapkit);
     hyscan_gtk_map_kit_add_marks_geo (ui->mapkit);
 
@@ -1084,7 +1092,6 @@ build_interface (Global *global)
 
     tv = hyscan_gtk_map_kit_get_track_view (ui->mapkit, NULL);
     g_signal_connect_swapped (tv, "cursor-changed", G_CALLBACK (add_track_select), global);
-    g_free (profile_dir);
     g_free (cache_dir);
   }
 
