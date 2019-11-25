@@ -1,50 +1,26 @@
 #include <gtk/gtk.h>
-#include <string.h>
 #include <glib/gi18n.h>
 #include <locale.h>
 #include <hyscan-gtk-configurator.h>
 
 #define GETTEXT_PACKAGE "hyscan-499"
+#include <fnn-types.h>
 
 #ifdef G_OS_WIN32 /* Входная точка для GUI wWinMain. */
   #include <Windows.h>
 #endif
-
-static const gchar *
-configurator_get_locale_dir (void)
-{
-  static gchar *locale_dir = NULL;
-
-  if (locale_dir == NULL)
-    {
-#ifdef G_OS_WIN32
-      gchar *utf8_path;
-      gchar *install_dir;
-
-      install_dir = g_win32_get_package_installation_directory_of_module (NULL);
-      utf8_path = g_build_filename (install_dir, "share", "locale", NULL);
-      locale_dir = g_win32_locale_filename_from_utf8 (utf8_path);
-
-      g_free (install_dir);
-      g_free (utf8_path);
-#else
-      locale_dir = FNN_LOCALE_DIR;
-#endif
-    }
-
-  return locale_dir;
-}
 
 int
 main (int argc, char **argv)
 {
   GtkWidget *configurator;
   gchar *config_dir;
+  gchar **folders;
   gboolean exit_if_configured = FALSE;
 
   setlocale (LC_ALL, "");
-  bindtextdomain (GETTEXT_PACKAGE, configurator_get_locale_dir ());
-  bindtextdomain ("libhyscanfnn", configurator_get_locale_dir ());
+  bindtextdomain (GETTEXT_PACKAGE, get_locale_dir ());
+  bindtextdomain ("libhyscanfnn", get_locale_dir ());
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
   bind_textdomain_codeset ("libhyscanfnn", "UTF-8");
   textdomain (GETTEXT_PACKAGE);
@@ -82,7 +58,8 @@ main (int argc, char **argv)
     g_strfreev (args);
   }
 
-  config_dir = g_build_path (G_DIR_SEPARATOR_S, g_get_user_config_dir (), "hyscan",  NULL);
+  folders = get_profile_dir ();
+  config_dir = g_build_path (G_DIR_SEPARATOR_S, folders[0], "hyscan", NULL);
   configurator = hyscan_gtk_configurator_new (config_dir);
   g_free (config_dir);
 
@@ -105,7 +82,7 @@ main (int argc, char **argv)
 int WINAPI
 wWinMain (HINSTANCE hInst,
           HINSTANCE hPreInst,
-          LPSTR     lpCmdLine,
+          LPWSTR    lpCmdLine,
           int       nCmdShow)
 {
   int argc;

@@ -326,7 +326,7 @@ main (int argc, char **argv)
     }
   else
     {
-      gchar *folder;
+      gchar **folders, *folder;
       /* К О С Т Ы Л И
        * О С Т Ы Л И
        * С Т Ы Л И
@@ -336,7 +336,8 @@ main (int argc, char **argv)
        * И
        */
       /* беру первую попавшуюся БД. Мне насрать. */
-      folder = g_build_filename (g_get_user_config_dir (), "hyscan","db-profiles", NULL);
+      folders = get_profile_dir ();
+      folder = g_build_filename (folders[0], "hyscan","db-profiles", NULL);
       {
         const gchar *filename;
         GError *error = NULL;
