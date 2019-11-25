@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-22 10:57+0300\n"
+"POT-Creation-Date: 2019-11-25 14:57+0300\n"
 "PO-Revision-Date: 2019-06-20 15:00+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -42,67 +42,67 @@ msgstr "Метки"
 msgid "Measurements"
 msgstr "Измерения"
 
-#: evo-ui.c:1082
+#: evo-ui.c:1090
 msgid "Map"
 msgstr "Карта"
 
-#: evo-ui.c:1159
+#: evo-ui.c:1166
 msgid "Project Manager"
 msgstr "Менеджер проектов"
 
-#: evo-ui.c:1170
+#: evo-ui.c:1177
 msgid "Marks as CSV"
 msgstr "Метки в CSV"
 
-#: evo-ui.c:1174
+#: evo-ui.c:1181
 msgid "Marks to clipboard"
 msgstr "Метки в буфер обмена"
 
-#: evo-ui.c:1178
+#: evo-ui.c:1185
 msgid "XYZ"
 msgstr "XYZ (координаты, глубина)"
 
-#: evo-ui.c:1182
+#: evo-ui.c:1189
 msgid "Export"
 msgstr "Экспорт"
 
-#: evo-ui.c:1191
+#: evo-ui.c:1198
 msgid "Online Map"
 msgstr "Онлайн-карта"
 
-#: evo-ui.c:1219
+#: evo-ui.c:1226
 msgid "Sensors"
 msgstr "Датчики"
 
-#: evo-ui.c:1231
+#: evo-ui.c:1238
 msgid "Info"
 msgstr "Информация"
 
-#: evo-ui.c:1235
+#: evo-ui.c:1242
 msgid "State"
 msgstr "Состояние"
 
-#: evo-ui.c:1239
+#: evo-ui.c:1246
 msgid "Params"
 msgstr "Параметры"
 
-#: evo-ui.c:1243
+#: evo-ui.c:1250
 msgid "Sonar"
 msgstr "Локатор"
 
-#: evo-ui.c:1249
+#: evo-ui.c:1256
 msgid "Antennas offsets"
 msgstr "Смещения антенн"
 
-#: evo-ui.c:1254 tmp/record.ui.h:2
+#: evo-ui.c:1261 tmp/record.ui.h:2
 msgid "No beaming"
 msgstr "Без излучения"
 
-#: evo-ui.c:1267
+#: evo-ui.c:1274
 msgid "Hardware info"
 msgstr "Параметры оборудования"
 
-#: evo-ui.c:1276
+#: evo-ui.c:1283
 msgid "Exit"
 msgstr "Выход"
 
@@ -110,7 +110,7 @@ msgstr "Выход"
 msgid "OK"
 msgstr "Ок"
 
-#: hyscan-gtk-map-kit.c:402 hyscan-gtk-mark-export.c:153
+#: hyscan-gtk-map-kit.c:402 hyscan-gtk-mark-export.c:152
 msgid "Cancel"
 msgstr "Отмена"
 
@@ -260,24 +260,24 @@ msgstr "Метки АИ"
 msgid "Geo Marks"
 msgstr "Геометки"
 
-#: hyscan-gtk-mark-export.c:150
+#: hyscan-gtk-mark-export.c:149
 msgid "Save file"
 msgstr "Сохранить файл"
 
-#: hyscan-gtk-mark-export.c:155
+#: hyscan-gtk-mark-export.c:154
 msgid "Save"
 msgstr "Сохранить"
 
-#: hyscan-gtk-mark-export.c:215
+#: hyscan-gtk-mark-export.c:220
 #, c-format
 msgid ""
-"%sProject: %s\n"
 "%s\n"
-"%s"
+"Project: %s\n"
+"%s%s"
 msgstr ""
-"%sProject: %s\n"
 "%s\n"
-"%s"
+"Проект: %s\n"
+"%s%s"
 
 #: tmp/evo.ui.h:1
 msgid "Range"
