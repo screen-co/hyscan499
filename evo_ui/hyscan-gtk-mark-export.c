@@ -9,7 +9,6 @@
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <hyscan-mark.h>
-#include <locale.h>
 
 #define GETTEXT_PACKAGE "hyscanfnn-evoui"
 #include <glib/gi18n-lib.h>
@@ -31,7 +30,7 @@ hyscan_gtk_mark_export_formatter (gdouble      lat,
   gchar lon_str[128];
   GDateTime *dt = NULL;
 
-  dt = g_date_time_new_from_unix_local (unixtime);
+  dt = g_date_time_new_from_unix_local (1e-6 * unixtime);
 
   if (dt == NULL)
     return NULL;
@@ -80,11 +79,11 @@ hyscan_gtk_mark_export_print_marks (GHashTable *wf_marks,
             continue;
 
           line = hyscan_gtk_mark_export_formatter (location->mark_geo.lat,
-                                                  location->mark_geo.lon,
-                                                  location->mark->ctime * 1e-6,
-                                                  location->mark->name,
-                                                  location->mark->description,
-                                                  NULL, NULL);
+                                                   location->mark_geo.lon,
+                                                   location->mark->ctime,
+                                                   location->mark->name,
+                                                   location->mark->description,
+                                                   NULL, NULL);
 
           g_string_append (str, line);
           g_free (line);
@@ -104,11 +103,11 @@ hyscan_gtk_mark_export_print_marks (GHashTable *wf_marks,
             continue;
 
           line = hyscan_gtk_mark_export_formatter (geo_mark->center.lat,
-                                                  geo_mark->center.lon,
-                                                  geo_mark->ctime * 1e-6,
-                                                  geo_mark->name,
-                                                  geo_mark->description,
-                                                  NULL, NULL);
+                                                   geo_mark->center.lon,
+                                                   geo_mark->ctime,
+                                                   geo_mark->name,
+                                                   geo_mark->description,
+                                                   NULL, NULL);
 
           g_string_append (str, line);
           g_free (line);
@@ -134,7 +133,7 @@ hyscan_gtk_mark_export_save_as_csv (GtkWindow          *window,
                                     HyScanObjectModel  *mark_geo_model,
                                     gchar              *project_name)
 {
-  FILE *file;
+  FILE *file = NULL;
 	gchar *filename = NULL;
   GtkWidget *dialog;
   GHashTable *wf_marks, *geo_marks;
@@ -170,14 +169,20 @@ hyscan_gtk_mark_export_save_as_csv (GtkWindow          *window,
     }
 
   filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+#ifdef __linux__
   file = fopen (filename, "w");
+#else
+  fopen_s (&file, filename, "w");
+#endif
+  if (file != NULL)
+    {
+      fwrite (hyscan_gtk_mark_export_header, sizeof (gchar), g_utf8_strlen (hyscan_gtk_mark_export_header, -1), file);
 
-  fwrite (hyscan_gtk_mark_export_header, sizeof (gchar), g_utf8_strlen (hyscan_gtk_mark_export_header, -1), file);
+      marks = hyscan_gtk_mark_export_print_marks (wf_marks, geo_marks);
+      fwrite (marks, sizeof (gchar), g_utf8_strlen (marks, -1), file);
 
-  marks = hyscan_gtk_mark_export_print_marks (wf_marks, geo_marks);
-  fwrite (marks, sizeof (gchar), g_utf8_strlen (marks, -1), file);
-
-  fclose (file);
+      fclose (file);
+    }
 
   g_hash_table_unref (wf_marks);
   g_hash_table_unref (geo_marks);
@@ -200,7 +205,7 @@ hyscan_gtk_mark_export_copy_to_clipboard (HyScanMarkLocModel *ml_model,
 {
   GtkClipboard *clipboard;
   GHashTable *wf_marks, *geo_marks;
-  time_t nt;
+  GDateTime *local;
   gchar *str, *marks;
 
   wf_marks = hyscan_mark_loc_model_get (ml_model);
@@ -209,11 +214,11 @@ hyscan_gtk_mark_export_copy_to_clipboard (HyScanMarkLocModel *ml_model,
   if (wf_marks == NULL || geo_marks == NULL)
     return;
 
-  nt = time (NULL);
+  local = g_date_time_new_now_local ();
 
   marks = hyscan_gtk_mark_export_print_marks (wf_marks, geo_marks);
-  str = g_strdup_printf (_("%sProject: %s\n%s\n%s"),
-                         ctime (&nt),
+  str = g_strdup_printf (_("%s\nProject: %s\n%s%s"),
+                         g_date_time_format (local, "%A %B %e %T %Y"),
                          project_name, hyscan_gtk_mark_export_header, marks);
 
   g_hash_table_unref (wf_marks);
