@@ -2592,15 +2592,32 @@ distance_set (Global  *global,
   return TRUE;
 }
 
+static gfloat fnn_distances[] = {10., 20., 30., 50., 75., 100., 150., };
+
 void
 distance_up (GtkWidget *widget,
              gint       panelx)
 {
   gdouble desired;
+  gint i;
   FnnPanel *panel = get_panel (tglobal, panelx);
 
-  desired = panel->current.distance + 5.0;
-  desired = desired - fmod (desired, 5);
+  desired = panel->current.distance + 1.0;
+
+  for (i = 0; i < (gint)G_N_ELEMENTS (fnn_distances); ++i)
+    {
+      if (desired <= fnn_distances[i])
+        {
+          desired = fnn_distances[i];
+          break;
+        }
+    }
+  if (i == G_N_ELEMENTS (fnn_distances))
+    {
+      desired = panel->current.distance + 50.0;
+    }
+
+  // desired = desired - fmod (desired, 5);
 
   if (distance_set (tglobal, &desired, panelx))
     panel->current.distance = desired;
@@ -2608,21 +2625,69 @@ distance_up (GtkWidget *widget,
     g_warning ("distance_up failed");
 }
 
+// void
+// distance_up (GtkWidget *widget,
+//              gint       panelx)
+// {
+//   gdouble desired;
+//   FnnPanel *panel = get_panel (tglobal, panelx);
+
+//   desired = panel->current.distance + 5.0;
+//   desired = desired - fmod (desired, 5);
+
+//   if (distance_set (tglobal, &desired, panelx))
+//     panel->current.distance = desired;
+//   else
+//     g_warning ("distance_up failed");
+// }
+
 void
 distance_down (GtkWidget *widget,
                gint       panelx)
 {
   gdouble desired;
+  gint i;
   FnnPanel *panel = get_panel (tglobal, panelx);
 
-  desired = panel->current.distance - 5.0;
-  desired = desired - fmod (desired, 5);
+  desired = panel->current.distance - 1.0;
+
+  for (i = (gint)G_N_ELEMENTS (fnn_distances) - 1; i >= 0 ; --i)
+    {
+      if (desired >= fnn_distances[i])
+        {
+          desired = fnn_distances[i];
+          break;
+        }
+    }
+  if (i == -1)
+    {
+      desired = panel->current.distance - 50.0;
+    }
+
+  // desired = panel->current.distance - 5.0;
+  // desired = desired - fmod (desired, 5);
 
   if (distance_set (tglobal, &desired, panelx))
     panel->current.distance = desired;
   else
     g_warning ("distance_down failed");
 }
+
+// void
+// distance_down (GtkWidget *widget,
+//                gint       panelx)
+// {
+//   gdouble desired;
+//   FnnPanel *panel = get_panel (tglobal, panelx);
+
+//   desired = panel->current.distance - 5.0;
+//   desired = desired - fmod (desired, 5);
+
+//   if (distance_set (tglobal, &desired, panelx))
+//     panel->current.distance = desired;
+//   else
+//     g_warning ("distance_down failed");
+// }
 
 
 void
