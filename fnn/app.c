@@ -144,7 +144,7 @@ main (int argc, char **argv)
 
   /* Перенаправление логов в файл. */
   #ifdef FNN_LOGGING
-  hyscan_fnn_flog_open ("hyscan", 1000000);
+  hyscan_fnn_flog_open ("hyscan", 5000000);
   #endif
 
   gtk_init (&argc, &argv);
