@@ -134,7 +134,7 @@ hyscan_gtk_mark_export_save_as_csv (GtkWindow          *window,
                                     gchar              *project_name)
 {
   FILE *file = NULL;
-	gchar *filename = NULL;
+  gchar *filename = NULL;
   GtkWidget *dialog;
   GHashTable *wf_marks, *geo_marks;
   gint res;
@@ -169,10 +169,10 @@ hyscan_gtk_mark_export_save_as_csv (GtkWindow          *window,
     }
 
   filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-#ifdef __linux__
-  file = fopen (filename, "w");
-#else
+#ifdef G_OS_WIN32
   fopen_s (&file, filename, "w");
+#else
+  file = fopen (filename, "w");
 #endif
   if (file != NULL)
     {
