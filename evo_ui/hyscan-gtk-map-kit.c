@@ -1947,7 +1947,8 @@ hyscan_gtk_map_kit_add_marks_wf (HyScanGtkMapKit *kit)
   priv->mark_model = hyscan_object_model_new (HYSCAN_TYPE_OBJECT_DATA_WFMARK);
   priv->ml_model = hyscan_mark_loc_model_new (priv->db, priv->cache);
 
-  g_signal_connect_swapped (priv->mark_model, "changed", G_CALLBACK (on_marks_changed), kit);
+  /* Подключаемся к ml_model, т.к. нужны данные не только по списку меток, но и по их местоположению. */
+  g_signal_connect_swapped (priv->ml_model, "changed", G_CALLBACK (on_marks_changed), kit);
 
   /* Слой с метками. */
   priv->wfmark_layer = hyscan_gtk_map_wfmark_new (priv->ml_model, priv->db, priv->cache);
