@@ -390,6 +390,10 @@ HYSCAN_API void
 projects_changed (HyScanDBInfo *db_info,
                   Global       *global);
 
+HYSCAN_API void
+run_export_data (GObject     *emitter,
+                 gpointer     from_ui_params);
+
 GtkTreePath *
 ame_gtk_tree_model_get_last_path (GtkTreeView *tree);
 GtkTreePath *
