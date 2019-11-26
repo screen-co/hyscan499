@@ -439,6 +439,8 @@ main (int argc, char **argv)
    */
 
   /* SV. */
+restart:
+  global.request_restart = FALSE;
   global.sound_velocity = sound_velocity;
   global.ship_speed = ship_speed;
 
@@ -582,6 +584,8 @@ main (int argc, char **argv)
   // ui_desetup (global.settings);
   ui_destroy (&global);
 
+  if (global.request_restart)
+    goto restart;
 
 exit:
 

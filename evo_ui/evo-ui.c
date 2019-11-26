@@ -31,6 +31,7 @@ enum
 
 enum
 {
+  XYZ_TO_FILE,
   MARKS_TO_CSV,
   MARKS_TO_CLIPBOARD,
 };
@@ -81,9 +82,6 @@ depth_writer (GObject *emitter)
 
   hyscan_nav_data_get_range (dpt, &first, &last);
   antenna = hyscan_nav_data_get_offset (dpt);
-  g_message ("Hello!");
-    g_message ("depth_writer: %u, %u", first, last);
-
 
   for (i = first; i <= last; ++i)
     {
@@ -113,7 +111,34 @@ depth_writer (GObject *emitter)
   if (words == NULL)
     return;
 
-  filename = g_strdup_printf ("%s%s", "/tmp/", track);
+  {
+    GtkWidget *dialog;
+    gint res;
+
+    dialog = gtk_file_chooser_dialog_new (_("Save file"),
+                                          GTK_WINDOW (_global->gui.window),
+                                          GTK_FILE_CHOOSER_ACTION_SAVE,
+                                          _("Cancel"), GTK_RESPONSE_CANCEL,
+                                          _("Save"), GTK_RESPONSE_ACCEPT,
+                                          NULL);
+    gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
+    filename = g_strdup_printf ("%s-%s.txt", project, track);
+    gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (dialog), filename);
+    g_free (filename);
+
+    res = gtk_dialog_run (GTK_DIALOG (dialog));
+
+    if (res != GTK_RESPONSE_ACCEPT)
+      {
+        gtk_widget_destroy (dialog);
+        return;
+      }
+
+    filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+    gtk_widget_destroy (dialog);
+  }
+
+
   g_file_set_contents (filename,
                        words, strlen (words), &error);
   g_free (filename);
@@ -135,11 +160,19 @@ mark_exporter (GObject  *emitter,
   HyScanObjectModel *geo;
   HyScanMarkLocModel *wf;
 
-  hyscan_gtk_map_kit_get_mark_backends (global_ui.mapkit, &geo, &wf);
-  if (selector == MARKS_TO_CSV)
-    hyscan_gtk_mark_export_save_as_csv (GTK_WINDOW (_global->gui.window), wf, geo, _global->project_name);
-  else if (selector == MARKS_TO_CLIPBOARD)
-    hyscan_gtk_mark_export_copy_to_clipboard (wf, geo, _global->project_name);
+  if (selector == XYZ_TO_FILE)
+    {
+      depth_writer (NULL);
+    }
+  else
+    {
+      hyscan_gtk_map_kit_get_mark_backends (global_ui.mapkit, &geo, &wf);
+
+      if (selector == MARKS_TO_CSV)
+        hyscan_gtk_mark_export_save_as_csv (GTK_WINDOW (_global->gui.window), wf, geo, _global->project_name);
+      else if (selector == MARKS_TO_CLIPBOARD)
+        hyscan_gtk_mark_export_copy_to_clipboard (wf, geo, _global->project_name);
+    }
 }
 
 
@@ -239,6 +272,45 @@ evo_project_changed_override (Global *global,
  *      ## ##  #     # #     # #       #       ####### #     #  #####
  *
  */
+
+void
+exit_or_restart (gpointer _restart)
+{
+  if (GPOINTER_TO_INT (_restart))
+    _global->request_restart = TRUE;
+
+  gtk_widget_destroy (_global->gui.window);
+}
+
+void
+magnifier_x1 (GtkToggleButton             *button,
+              HyScanGtkWaterfallMagnifier *magn)
+{
+  if (!gtk_toggle_button_get_active (button))
+    return;
+
+  hyscan_gtk_waterfall_magnifier_set_zoom (magn, 1);
+}
+
+void
+magnifier_x2 (GtkToggleButton             *button,
+              HyScanGtkWaterfallMagnifier *magn)
+{
+  if (!gtk_toggle_button_get_active (button))
+    return;
+
+  hyscan_gtk_waterfall_magnifier_set_zoom (magn, 2);
+}
+
+void
+magnifier_x3 (GtkToggleButton             *button,
+              HyScanGtkWaterfallMagnifier *magn)
+{
+  if (!gtk_toggle_button_get_active (button))
+    return;
+
+  hyscan_gtk_waterfall_magnifier_set_zoom (magn, 3);
+}
 
 void
 player_adj_value_changed (GtkAdjustment            *adj,
@@ -901,6 +973,10 @@ make_page_for_panel (EvoUI     *ui,
         g_signal_connect_swapped (get_widget_from_builder(b, "ss_player_stop"), "clicked", G_CALLBACK (player_stop), adj);
         g_signal_connect_swapped (get_widget_from_builder(b, "ss_player_slower"), "clicked", G_CALLBACK (player_slower), adj);
         g_signal_connect_swapped (get_widget_from_builder(b, "ss_player_faster"), "clicked", G_CALLBACK (player_faster), adj);
+
+        g_signal_connect (get_widget_from_builder(b, "ss_magnifier_x1"), "toggled", G_CALLBACK (magnifier_x1), wf->wf_magn);
+        g_signal_connect (get_widget_from_builder(b, "ss_magnifier_x2"), "toggled", G_CALLBACK (magnifier_x2), wf->wf_magn);
+        g_signal_connect (get_widget_from_builder(b, "ss_magnifier_x3"), "toggled", G_CALLBACK (magnifier_x3), wf->wf_magn);
         player_adj_value_printer (adj, label);
       }
 
@@ -1183,7 +1259,7 @@ build_interface (Global *global)
       gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
 
       mitem = gtk_menu_item_new_with_label (_("XYZ"));
-      g_signal_connect (mitem, "activate", G_CALLBACK (depth_writer), NULL);
+      g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (XYZ_TO_FILE));
       gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
 
       mitem = gtk_menu_item_new_with_label (_("Export"));
@@ -1281,8 +1357,12 @@ build_interface (Global *global)
         }
     /* exit */
     mitem = gtk_menu_item_new_with_label (_("Exit"));
-    g_signal_connect_swapped (mitem, "activate", G_CALLBACK (gtk_widget_destroy), global->gui.window);
+    g_signal_connect_swapped (mitem, "activate", G_CALLBACK (exit_or_restart), GINT_TO_POINTER (FALSE));
     gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
+
+    // mitem = gtk_menu_item_new_with_label (_("Restart"));
+    // g_signal_connect_swapped (mitem, "activate", G_CALLBACK (exit_or_restart), GINT_TO_POINTER (TRUE));
+    // gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
     gtk_widget_show_all (settings);
     gtk_widget_show_all (menu);

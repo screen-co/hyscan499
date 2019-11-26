@@ -10,6 +10,7 @@
 #include <hyscan-gtk-waterfall-meter.h>
 #include <hyscan-gtk-waterfall-mark.h>
 #include <hyscan-gtk-waterfall-player.h>
+#include <hyscan-gtk-waterfall-magnifier.h>
 #include <hyscan-object-model.h>
 #include <hyscan-gtk-project-viewer.h>
 #include <hyscan-gtk-mark-editor.h>
@@ -185,6 +186,7 @@ typedef struct
   HyScanGtkWaterfallMeter       * wf_metr;
   HyScanGtkWaterfallMark        * wf_mark;
   HyScanGtkWaterfallPlayer      * wf_play;
+  HyScanGtkWaterfallMagnifier   * wf_magn;
 } VisualWF;
 
 typedef struct
@@ -309,7 +311,7 @@ struct _Global
     ui_vadjust_fn adjust_visibility;
   } ui;
 
-
+  gboolean request_restart;
 }; // Global
 
 
@@ -738,13 +740,14 @@ fl_coords_callback (HyScanFlCoords *coords,
                     GtkLabel       *label);
 
 HYSCAN_API  GtkWidget *
-make_overlay (HyScanGtkWaterfall          *wf,
-              HyScanGtkWaterfallGrid     **_grid,
-              HyScanGtkWaterfallControl  **_ctrl,
-              HyScanGtkWaterfallMark     **_mark,
-              HyScanGtkWaterfallMeter    **_meter,
-              HyScanGtkWaterfallPlayer   **_player,
-              HyScanObjectModel           *mark_model);
+make_overlay (HyScanGtkWaterfall           *wf,
+              HyScanGtkWaterfallGrid      **_grid,
+              HyScanGtkWaterfallControl   **_ctrl,
+              HyScanGtkWaterfallMark      **_mark,
+              HyScanGtkWaterfallMeter     **_meter,
+              HyScanGtkWaterfallPlayer    **_player,
+              HyScanGtkWaterfallMagnifier **_magnifier,
+              HyScanObjectModel            *mark_model);
 
 HYSCAN_API void
 fnn_colormap_free (gpointer data);
