@@ -5,8 +5,8 @@
  *      Author: Andrey Zakharov <zaharov@screen-co.ru>
  */
 
-#ifndef HYSCAN_GTK_MARK_EXPORT_H_
-#define HYSCAN_GTK_MARK_EXPORT_H_
+#ifndef __HYSCAN_GTK_MARK_EXPORT_H__
+#define __HYSCAN_GTK_MARK_EXPORT_H__
 
 #include <gtk/gtk.h>
 #include <hyscan-mark-loc-model.h>
@@ -23,4 +23,4 @@ hyscan_gtk_mark_export_copy_to_clipboard (HyScanMarkLocModel *ml_model,
                                           HyScanObjectModel  *mark_geo_model,
                                           gchar              *project_name);
 
-#endif /* HYSCAN_GTK_MARK_EXPORT_H_ */
+#endif /* __HYSCAN_GTK_MARK_EXPORT_H_ */
