@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-25 14:57+0300\n"
+"POT-Creation-Date: 2019-11-27 17:25+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,100 +17,120 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: evo-ui.c:256
+#: evo-ui.c:121 hyscan-gtk-mark-export.c:149
+msgid "Save file"
+msgstr ""
+
+#: evo-ui.c:124 hyscan-gtk-map-kit.c:402 hyscan-gtk-mark-export.c:152
+msgid "Cancel"
+msgstr ""
+
+#: evo-ui.c:125 hyscan-gtk-mark-export.c:154
+msgid "Save"
+msgstr ""
+
+#: evo-ui.c:321
 msgid "m/s"
 msgstr ""
 
-#: evo-ui.c:655
+#: evo-ui.c:720
 msgid "Layer"
 msgstr ""
 
-#: evo-ui.c:666 hyscan-gtk-map-kit.c:612
+#: evo-ui.c:731 hyscan-gtk-map-kit.c:612
 msgid "Show"
 msgstr ""
 
-#: evo-ui.c:677 hyscan-gtk-map-kit.c:1547
+#: evo-ui.c:742 hyscan-gtk-map-kit.c:1547
 msgid "Grid"
 msgstr ""
 
-#: evo-ui.c:678
+#: evo-ui.c:743
 msgid "Marks"
 msgstr ""
 
-#: evo-ui.c:679
+#: evo-ui.c:744
 msgid "Measurements"
 msgstr ""
 
-#: evo-ui.c:1090
+#: evo-ui.c:745
+msgid "Shadow measure"
+msgstr ""
+
+#: evo-ui.c:746
+msgid "Coordinates"
+msgstr ""
+
+#: evo-ui.c:747 tmp/evo.ui.h:20
+msgid "Magnifier"
+msgstr ""
+
+#: evo-ui.c:1163
 msgid "Map"
 msgstr ""
 
-#: evo-ui.c:1166
+#: evo-ui.c:1239
 msgid "Project Manager"
 msgstr ""
 
-#: evo-ui.c:1177
+#: evo-ui.c:1250
 msgid "Marks as CSV"
 msgstr ""
 
-#: evo-ui.c:1181
+#: evo-ui.c:1254
 msgid "Marks to clipboard"
 msgstr ""
 
-#: evo-ui.c:1185
+#: evo-ui.c:1258
 msgid "XYZ"
 msgstr ""
 
-#: evo-ui.c:1189
+#: evo-ui.c:1262
 msgid "Export"
 msgstr ""
 
-#: evo-ui.c:1198
+#: evo-ui.c:1271
 msgid "Online Map"
 msgstr ""
 
-#: evo-ui.c:1226
+#: evo-ui.c:1299
 msgid "Sensors"
 msgstr ""
 
-#: evo-ui.c:1238
+#: evo-ui.c:1311
 msgid "Info"
 msgstr ""
 
-#: evo-ui.c:1242
+#: evo-ui.c:1315
 msgid "State"
 msgstr ""
 
-#: evo-ui.c:1246
+#: evo-ui.c:1319
 msgid "Params"
 msgstr ""
 
-#: evo-ui.c:1250
+#: evo-ui.c:1323
 msgid "Sonar"
 msgstr ""
 
-#: evo-ui.c:1256
+#: evo-ui.c:1329
 msgid "Antennas offsets"
 msgstr ""
 
-#: evo-ui.c:1261 tmp/record.ui.h:2
+#: evo-ui.c:1334 tmp/record.ui.h:2
 msgid "No beaming"
 msgstr ""
 
-#: evo-ui.c:1274
+#: evo-ui.c:1347
 msgid "Hardware info"
 msgstr ""
 
-#: evo-ui.c:1283
+#: evo-ui.c:1356
 msgid "Exit"
 msgstr ""
 
 #: hyscan-gtk-map-kit.c:401
 msgid "OK"
-msgstr ""
-
-#: hyscan-gtk-map-kit.c:402 hyscan-gtk-mark-export.c:152
-msgid "Cancel"
 msgstr ""
 
 #: hyscan-gtk-map-kit.c:403
@@ -176,7 +196,7 @@ msgid ""
 "to make it available when offline"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1454 tmp/evo.ui.h:3
+#: hyscan-gtk-map-kit.c:1454 tmp/evo.ui.h:6
 msgid "Scale"
 msgstr ""
 
@@ -248,23 +268,15 @@ msgstr ""
 msgid "Navigation"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1954
+#: hyscan-gtk-map-kit.c:1955
 msgid "Waterfall Marks"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1984
+#: hyscan-gtk-map-kit.c:1985
 msgid "Geo Marks"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:149
-msgid "Save file"
-msgstr ""
-
-#: hyscan-gtk-mark-export.c:154
-msgid "Save"
-msgstr ""
-
-#: hyscan-gtk-mark-export.c:220
+#: hyscan-gtk-mark-export.c:220 hyscan-gtk-mark-export.c:253
 #, c-format
 msgid ""
 "%s\n"
@@ -273,83 +285,91 @@ msgid ""
 msgstr ""
 
 #: tmp/evo.ui.h:1
-msgid "Range"
+msgid "Start gain"
 msgstr ""
 
 #: tmp/evo.ui.h:2
 msgid "<small><b>xx</b></small>"
 msgstr ""
 
-#: tmp/evo.ui.h:4
-msgid "Autoscroll"
-msgstr ""
-
-#: tmp/evo.ui.h:5
-msgid "Black"
-msgstr ""
-
-#: tmp/evo.ui.h:6
-msgid "Profiler layers"
-msgstr ""
-
-#: tmp/evo.ui.h:7
-msgid "Player"
-msgstr ""
-
-#: tmp/evo.ui.h:8
-msgid "<small><b>0</b></small>"
-msgstr ""
-
-#: tmp/evo.ui.h:9
-msgid "Brightness"
-msgstr ""
-
-#: tmp/evo.ui.h:10
-msgid "Target mode"
-msgstr ""
-
-#: tmp/evo.ui.h:11
-msgid "Sensitivity"
-msgstr ""
-
-#: tmp/evo.ui.h:12
-msgid "Distance"
-msgstr ""
-
-#: tmp/evo.ui.h:13
-msgid "Signal"
-msgstr ""
-
-#: tmp/evo.ui.h:14
-msgid "White"
-msgstr ""
-
-#: tmp/evo.ui.h:15
-msgid "Gamma"
-msgstr ""
-
-#: tmp/evo.ui.h:16
-msgid "Color"
-msgstr ""
-
-#: tmp/evo.ui.h:17
-msgid "Start gain"
-msgstr ""
-
-#: tmp/evo.ui.h:18
-msgid "Gain"
-msgstr ""
-
-#: tmp/evo.ui.h:19
-msgid "Level"
-msgstr ""
-
-#: tmp/evo.ui.h:20
+#: tmp/evo.ui.h:3
 msgid "Beta"
 msgstr ""
 
-#: tmp/evo.ui.h:21
+#: tmp/evo.ui.h:4
 msgid "Alpha"
+msgstr ""
+
+#: tmp/evo.ui.h:5
+msgid "Range"
+msgstr ""
+
+#: tmp/evo.ui.h:7
+msgid "Autoscroll"
+msgstr ""
+
+#: tmp/evo.ui.h:8
+msgid "Black"
+msgstr ""
+
+#: tmp/evo.ui.h:9
+msgid "Profiler layers"
+msgstr ""
+
+#: tmp/evo.ui.h:10
+msgid "Player"
+msgstr ""
+
+#: tmp/evo.ui.h:11
+msgid "<small><b>0</b></small>"
+msgstr ""
+
+#: tmp/evo.ui.h:12
+msgid "Brightness"
+msgstr ""
+
+#: tmp/evo.ui.h:13
+msgid "Target mode"
+msgstr ""
+
+#: tmp/evo.ui.h:14
+msgid "Sensitivity"
+msgstr ""
+
+#: tmp/evo.ui.h:15
+msgid "Distance"
+msgstr ""
+
+#: tmp/evo.ui.h:16
+msgid "Signal"
+msgstr ""
+
+#: tmp/evo.ui.h:17
+msgid "White"
+msgstr ""
+
+#: tmp/evo.ui.h:18
+msgid "Gamma"
+msgstr ""
+
+#: tmp/evo.ui.h:19
+msgid "Color"
+msgstr ""
+
+#: tmp/evo.ui.h:21
+msgid "x2"
+msgstr ""
+
+#: tmp/evo.ui.h:22
+msgid "x3"
+msgstr ""
+
+#: tmp/evo.ui.h:23
+msgid "Gain"
+msgstr ""
+
+#: tmp/evo.ui.h:24
+msgid "Level"
 msgstr ""
 
 #: tmp/record.ui.h:1

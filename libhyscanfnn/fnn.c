@@ -97,6 +97,7 @@ fnn_ensure_panel (gint    panelx,
                                   &vwf->wf_grid, &vwf->wf_ctrl,
                                   &vwf->wf_mark, &vwf->wf_metr,
                                   &vwf->wf_play, &vwf->wf_magn,
+                                  &vwf->wf_shad, &vwf->wf_coor,
                                   global->marks.model);
 
       g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), global);
@@ -139,6 +140,7 @@ fnn_ensure_panel (gint    panelx,
                                   &vwf->wf_grid, &vwf->wf_ctrl,
                                   &vwf->wf_mark, &vwf->wf_metr,
                                   &vwf->wf_play, NULL,
+                                  &vwf->wf_shad, &vwf->wf_coor,
                                   global->marks.model);
 
       hyscan_gtk_waterfall_grid_set_condence (vwf->wf_grid, 10.0);
@@ -200,6 +202,7 @@ fnn_ensure_panel (gint    panelx,
                                   &vwf->wf_grid, &vwf->wf_ctrl,
                                   &vwf->wf_mark, &vwf->wf_metr,
                                   &vwf->wf_play, &vwf->wf_magn,
+                                  &vwf->wf_shad, &vwf->wf_coor,
                                   global->marks.model);
 
       g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), global);
@@ -1346,7 +1349,6 @@ get_mark_coords (GHashTable          * locstores,
 
   if (mark->track == NULL)
     {
-      // G_BREAKPOINT();
       return NULL;
     }
 
@@ -3400,6 +3402,8 @@ make_overlay (HyScanGtkWaterfall           *wf,
               HyScanGtkWaterfallMeter     **_meter,
               HyScanGtkWaterfallPlayer    **_player,
               HyScanGtkWaterfallMagnifier **_magnifier,
+              HyScanGtkWaterfallShadowm   **_shadow,
+              HyScanGtkWaterfallCoord     **_coord,
               HyScanObjectModel            *mark_model)
 {
   GtkWidget * container = gtk_grid_new ();
@@ -3410,12 +3414,16 @@ make_overlay (HyScanGtkWaterfall           *wf,
   HyScanGtkWaterfallMeter *meter = hyscan_gtk_waterfall_meter_new ();
   HyScanGtkWaterfallPlayer *player = hyscan_gtk_waterfall_player_new ();
   HyScanGtkWaterfallMagnifier *magnifier = hyscan_gtk_waterfall_magnifier_new ();
+  HyScanGtkWaterfallShadowm *shadow = hyscan_gtk_waterfall_shadowm_new ();
+  HyScanGtkWaterfallCoord *coord = hyscan_gtk_waterfall_coord_new ();
 
   hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (grid), "grid");
   hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (ctrl), "ctrl");
   hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (mark), "mark");
   hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (meter), "meter");
   hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (player), "player");
+  hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (shadow), "shadow");
+  hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (coord), "coordinates");
   hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (magnifier), "magnifier");
 
   GtkWidget *hscroll = gtk_scrollbar_new (GTK_ORIENTATION_HORIZONTAL,
@@ -3437,6 +3445,10 @@ make_overlay (HyScanGtkWaterfall           *wf,
     *_player = player;
   if (_magnifier != NULL)
     *_magnifier = magnifier;
+  if (_shadow != NULL)
+    *_shadow = shadow;
+  if (_coord != NULL)
+    *_coord = coord;
 
   gtk_grid_attach (GTK_GRID (container), GTK_WIDGET (wf), 0, 0, 1, 1);
   gtk_grid_attach (GTK_GRID (container), hscroll, 0, 1, 1, 1);

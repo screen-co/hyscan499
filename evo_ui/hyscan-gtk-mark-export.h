@@ -23,4 +23,8 @@ hyscan_gtk_mark_export_copy_to_clipboard (HyScanMarkLocModel *ml_model,
                                           HyScanObjectModel  *mark_geo_model,
                                           gchar              *project_name);
 
+gchar *
+hyscan_gtk_mark_export_to_str (HyScanMarkLocModel *ml_model,
+                               HyScanObjectModel  *mark_geo_model,
+                               gchar              *project_name);
 #endif /* HYSCAN_GTK_MARK_EXPORT_H_ */

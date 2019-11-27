@@ -19,6 +19,9 @@
 #define EVO_GRID_KEY "GRID"
 #define EVO_MARK_KEY "MARK"
 #define EVO_METR_KEY "METR"
+#define EVO_SHAD_KEY "SHAD"
+#define EVO_COOR_KEY "COOR"
+#define EVO_MAGN_KEY "MAGN"
 
 #define TVG_TEST(caps,concrete) ((caps & concrete) == concrete)
 enum
@@ -39,6 +42,60 @@ enum
 EvoUI global_ui = {0,};
 Global *_global = NULL;
 
+void
+filesave_dialog (const gchar *extension,
+                 const gchar *project,
+                 const gchar *track,
+                 const gchar *data)
+{
+  GtkWidget *dialog;
+  gint res;
+  gchar *folder = NULL;
+  gchar *filename = NULL;
+  GError *error = NULL;
+
+  dialog = gtk_file_chooser_dialog_new (_("Save file"),
+                                        GTK_WINDOW (_global->gui.window),
+                                        GTK_FILE_CHOOSER_ACTION_SAVE,
+                                        _("Cancel"), GTK_RESPONSE_CANCEL,
+                                        _("Save"), GTK_RESPONSE_ACCEPT,
+                                        NULL);
+  gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
+
+  folder = keyfile_string_read_helper (global_ui.settings, "EVO", "export_folder");
+
+  filename = g_strdup_printf ("%s-%s.%s", project, track, extension);
+  gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (dialog), filename);
+  gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (dialog), folder);
+  g_free (filename);
+  g_free (folder);
+
+  res = gtk_dialog_run (GTK_DIALOG (dialog));
+
+  if (res != GTK_RESPONSE_ACCEPT)
+    {
+      gtk_widget_destroy (dialog);
+      return;
+    }
+
+  filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+  folder = gtk_file_chooser_get_current_folder (GTK_FILE_CHOOSER (dialog));
+
+  keyfile_string_write_helper (global_ui.settings, "EVO", "export_folder", folder);
+
+  g_file_set_contents (filename, data, strlen (data), &error);
+
+  if (error != NULL)
+    {
+      g_message ("Depth save failure: %s", error->message);
+      g_error_free (error);
+    }
+
+  gtk_widget_destroy (dialog);
+  g_free (folder);
+  g_free (filename);
+}
+
 /* OVERRIDES */
 void
 depth_writer (GObject *emitter)
@@ -48,8 +105,6 @@ depth_writer (GObject *emitter)
   HyScanGeoGeodetic coord;
   GString *string = NULL;
   gchar *words = NULL;
-  GError *error = NULL;
-  gchar *filename;
 
   HyScanDB * db = _global->db;
   HyScanCache * cache = _global->cache;
@@ -78,7 +133,8 @@ depth_writer (GObject *emitter)
     }
 
   string = g_string_new (NULL);
-  g_string_append_printf (string, "%s;%s\n", project, track);
+  g_string_append_printf (string, "#%s;%s\n", project, track);
+  g_string_append_printf (string, "#LAT,LON,DPT\n");
 
   hyscan_nav_data_get_range (dpt, &first, &last);
   antenna = hyscan_nav_data_get_offset (dpt);
@@ -111,44 +167,7 @@ depth_writer (GObject *emitter)
   if (words == NULL)
     return;
 
-  {
-    GtkWidget *dialog;
-    gint res;
-
-    dialog = gtk_file_chooser_dialog_new (_("Save file"),
-                                          GTK_WINDOW (_global->gui.window),
-                                          GTK_FILE_CHOOSER_ACTION_SAVE,
-                                          _("Cancel"), GTK_RESPONSE_CANCEL,
-                                          _("Save"), GTK_RESPONSE_ACCEPT,
-                                          NULL);
-    gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
-    filename = g_strdup_printf ("%s-%s.txt", project, track);
-    gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (dialog), filename);
-    g_free (filename);
-
-    res = gtk_dialog_run (GTK_DIALOG (dialog));
-
-    if (res != GTK_RESPONSE_ACCEPT)
-      {
-        gtk_widget_destroy (dialog);
-        return;
-      }
-
-    filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
-    gtk_widget_destroy (dialog);
-  }
-
-
-  g_file_set_contents (filename,
-                       words, strlen (words), &error);
-  g_free (filename);
-
-  if (error != NULL)
-    {
-      g_message ("Depth save failure: %s", error->message);
-      g_error_free (error);
-    }
-
+  filesave_dialog ("xyz.txt", project, track, words);
   g_free (words);
 }
 
@@ -169,7 +188,10 @@ mark_exporter (GObject  *emitter,
       hyscan_gtk_map_kit_get_mark_backends (global_ui.mapkit, &geo, &wf);
 
       if (selector == MARKS_TO_CSV)
-        hyscan_gtk_mark_export_save_as_csv (GTK_WINDOW (_global->gui.window), wf, geo, _global->project_name);
+        {
+          gchar *data = hyscan_gtk_mark_export_to_str (wf, geo, _global->project_name);
+          filesave_dialog ("marks.txt", _global->project_name, _global->track_name, data);
+        }
       else if (selector == MARKS_TO_CLIPBOARD)
         hyscan_gtk_mark_export_copy_to_clipboard (wf, geo, _global->project_name);
     }
@@ -280,16 +302,6 @@ exit_or_restart (gpointer _restart)
     _global->request_restart = TRUE;
 
   gtk_widget_destroy (_global->gui.window);
-}
-
-void
-magnifier_x1 (GtkToggleButton             *button,
-              HyScanGtkWaterfallMagnifier *magn)
-{
-  if (!gtk_toggle_button_get_active (button))
-    return;
-
-  hyscan_gtk_waterfall_magnifier_set_zoom (magn, 1);
 }
 
 void
@@ -745,10 +757,15 @@ make_layer_list (EvoUI *ui,
   selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (tree_view));
   g_signal_connect (selection, "changed", G_CALLBACK (layer_changed), vwf->wf);
 
+  hyscan_gtk_layer_set_visible (HYSCAN_GTK_LAYER (vwf->wf_magn), FALSE);
+
   /* Регистрируем слой в layer_store. */
   add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_grid), _("Grid"), EVO_GRID_KEY);
   add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_mark), _("Marks"), EVO_MARK_KEY);
   add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_metr), _("Measurements"), EVO_METR_KEY);
+  add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_shad), _("Shadow measure"), EVO_SHAD_KEY);
+  add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_coor), _("Coordinates"), EVO_COOR_KEY);
+  add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_magn), _("Magnifier"), EVO_MAGN_KEY);
 
   gtk_widget_show_all (tree_view);
   return tree_view;
@@ -974,9 +991,10 @@ make_page_for_panel (EvoUI     *ui,
         g_signal_connect_swapped (get_widget_from_builder(b, "ss_player_slower"), "clicked", G_CALLBACK (player_slower), adj);
         g_signal_connect_swapped (get_widget_from_builder(b, "ss_player_faster"), "clicked", G_CALLBACK (player_faster), adj);
 
-        g_signal_connect (get_widget_from_builder(b, "ss_magnifier_x1"), "toggled", G_CALLBACK (magnifier_x1), wf->wf_magn);
+                                                                                              add_to_sg (sg, b, "ss_magnifier_label");
         g_signal_connect (get_widget_from_builder(b, "ss_magnifier_x2"), "toggled", G_CALLBACK (magnifier_x2), wf->wf_magn);
         g_signal_connect (get_widget_from_builder(b, "ss_magnifier_x3"), "toggled", G_CALLBACK (magnifier_x3), wf->wf_magn);
+
         player_adj_value_printer (adj, label);
       }
 
@@ -1544,7 +1562,6 @@ panel_pack (FnnPanel *panel,
   child_name = gtk_stack_get_visible_child_name (GTK_STACK (ui->acoustic_stack));
   gtk_stack_add_titled (GTK_STACK (ui->control_stack), control, panel->name, panel->name_local);
   gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), visual, panel->name, panel->name_local);
-  g_message ("%s %s", __FUNCTION__, child_name);
   widget_swap (NULL, NULL, child_name);
 
   /* Нижняя панель содержит виджет управления впередсмотрящим. */

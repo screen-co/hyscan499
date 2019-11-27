@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-25 14:57+0300\n"
+"POT-Creation-Date: 2019-11-27 17:25+0300\n"
 "PO-Revision-Date: 2019-06-20 15:00+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -18,101 +18,121 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: evo-ui.c:256
+#: evo-ui.c:121 hyscan-gtk-mark-export.c:149
+msgid "Save file"
+msgstr "Сохранить файл"
+
+#: evo-ui.c:124 hyscan-gtk-map-kit.c:402 hyscan-gtk-mark-export.c:152
+msgid "Cancel"
+msgstr "Отмена"
+
+#: evo-ui.c:125 hyscan-gtk-mark-export.c:154
+msgid "Save"
+msgstr "Сохранить"
+
+#: evo-ui.c:321
 msgid "m/s"
 msgstr "м/с"
 
-#: evo-ui.c:655
+#: evo-ui.c:720
 msgid "Layer"
 msgstr "Слой"
 
-#: evo-ui.c:666 hyscan-gtk-map-kit.c:612
+#: evo-ui.c:731 hyscan-gtk-map-kit.c:612
 msgid "Show"
 msgstr "Вид."
 
-#: evo-ui.c:677 hyscan-gtk-map-kit.c:1547
+#: evo-ui.c:742 hyscan-gtk-map-kit.c:1547
 msgid "Grid"
 msgstr "Сетка"
 
-#: evo-ui.c:678
+#: evo-ui.c:743
 msgid "Marks"
 msgstr "Метки"
 
-#: evo-ui.c:679
+#: evo-ui.c:744
 msgid "Measurements"
 msgstr "Измерения"
 
-#: evo-ui.c:1090
+#: evo-ui.c:745
+msgid "Shadow measure"
+msgstr "Высота по тени"
+
+#: evo-ui.c:746
+msgid "Coordinates"
+msgstr "Координаты"
+
+#: evo-ui.c:747 tmp/evo.ui.h:20
+msgid "Magnifier"
+msgstr "Лупа"
+
+#: evo-ui.c:1163
 msgid "Map"
 msgstr "Карта"
 
-#: evo-ui.c:1166
+#: evo-ui.c:1239
 msgid "Project Manager"
 msgstr "Менеджер проектов"
 
-#: evo-ui.c:1177
+#: evo-ui.c:1250
 msgid "Marks as CSV"
 msgstr "Метки в CSV"
 
-#: evo-ui.c:1181
+#: evo-ui.c:1254
 msgid "Marks to clipboard"
 msgstr "Метки в буфер обмена"
 
-#: evo-ui.c:1185
+#: evo-ui.c:1258
 msgid "XYZ"
 msgstr "XYZ (координаты, глубина)"
 
-#: evo-ui.c:1189
+#: evo-ui.c:1262
 msgid "Export"
 msgstr "Экспорт"
 
-#: evo-ui.c:1198
+#: evo-ui.c:1271
 msgid "Online Map"
 msgstr "Онлайн-карта"
 
-#: evo-ui.c:1226
+#: evo-ui.c:1299
 msgid "Sensors"
 msgstr "Датчики"
 
-#: evo-ui.c:1238
+#: evo-ui.c:1311
 msgid "Info"
 msgstr "Информация"
 
-#: evo-ui.c:1242
+#: evo-ui.c:1315
 msgid "State"
 msgstr "Состояние"
 
-#: evo-ui.c:1246
+#: evo-ui.c:1319
 msgid "Params"
 msgstr "Параметры"
 
-#: evo-ui.c:1250
+#: evo-ui.c:1323
 msgid "Sonar"
 msgstr "Локатор"
 
-#: evo-ui.c:1256
+#: evo-ui.c:1329
 msgid "Antennas offsets"
 msgstr "Смещения антенн"
 
-#: evo-ui.c:1261 tmp/record.ui.h:2
+#: evo-ui.c:1334 tmp/record.ui.h:2
 msgid "No beaming"
 msgstr "Без излучения"
 
-#: evo-ui.c:1274
+#: evo-ui.c:1347
 msgid "Hardware info"
 msgstr "Параметры оборудования"
 
-#: evo-ui.c:1283
+#: evo-ui.c:1356
 msgid "Exit"
 msgstr "Выход"
 
 #: hyscan-gtk-map-kit.c:401
 msgid "OK"
 msgstr "Ок"
-
-#: hyscan-gtk-map-kit.c:402 hyscan-gtk-mark-export.c:152
-msgid "Cancel"
-msgstr "Отмена"
 
 #: hyscan-gtk-map-kit.c:403
 msgid "Restore"
@@ -180,7 +200,7 @@ msgstr ""
 "чтобы сделать её доступной\n"
 "в режиме оффлайн"
 
-#: hyscan-gtk-map-kit.c:1454 tmp/evo.ui.h:3
+#: hyscan-gtk-map-kit.c:1454 tmp/evo.ui.h:6
 msgid "Scale"
 msgstr "Масштаб"
 
@@ -252,23 +272,15 @@ msgstr "Где я"
 msgid "Navigation"
 msgstr "Навигация"
 
-#: hyscan-gtk-map-kit.c:1954
+#: hyscan-gtk-map-kit.c:1955
 msgid "Waterfall Marks"
 msgstr "Метки АИ"
 
-#: hyscan-gtk-map-kit.c:1984
+#: hyscan-gtk-map-kit.c:1985
 msgid "Geo Marks"
 msgstr "Геометки"
 
-#: hyscan-gtk-mark-export.c:149
-msgid "Save file"
-msgstr "Сохранить файл"
-
-#: hyscan-gtk-mark-export.c:154
-msgid "Save"
-msgstr "Сохранить"
-
-#: hyscan-gtk-mark-export.c:220
+#: hyscan-gtk-mark-export.c:220 hyscan-gtk-mark-export.c:253
 #, c-format
 msgid ""
 "%s\n"
@@ -280,84 +292,92 @@ msgstr ""
 "%s%s"
 
 #: tmp/evo.ui.h:1
-msgid "Range"
-msgstr "Диапазон"
+msgid "Start gain"
+msgstr "Усиление-0"
 
 #: tmp/evo.ui.h:2
 msgid "<small><b>xx</b></small>"
 msgstr "<small><b>xx</b></small>"
 
-#: tmp/evo.ui.h:4
-msgid "Autoscroll"
-msgstr "Автопрокрутка"
-
-#: tmp/evo.ui.h:5
-msgid "Black"
-msgstr "Черный"
-
-#: tmp/evo.ui.h:6
-msgid "Profiler layers"
-msgstr "Выделение слоев"
-
-#: tmp/evo.ui.h:7
-msgid "Player"
-msgstr "Плеер"
-
-#: tmp/evo.ui.h:8
-msgid "<small><b>0</b></small>"
-msgstr "<small><b>0</b></small>"
-
-#: tmp/evo.ui.h:9
-msgid "Brightness"
-msgstr "Яркость"
-
-#: tmp/evo.ui.h:10
-msgid "Target mode"
-msgstr "Режим \"цель\""
-
-#: tmp/evo.ui.h:11
-msgid "Sensitivity"
-msgstr "Чувствительность"
-
-#: tmp/evo.ui.h:12
-msgid "Distance"
-msgstr "Дальность"
-
-#: tmp/evo.ui.h:13
-msgid "Signal"
-msgstr "Сигнал"
-
-#: tmp/evo.ui.h:14
-msgid "White"
-msgstr "Белый"
-
-#: tmp/evo.ui.h:15
-msgid "Gamma"
-msgstr "Гамма"
-
-#: tmp/evo.ui.h:16
-msgid "Color"
-msgstr "Палитра"
-
-#: tmp/evo.ui.h:17
-msgid "Start gain"
-msgstr "Усиление-0"
-
-#: tmp/evo.ui.h:18
-msgid "Gain"
-msgstr "Усиление"
-
-#: tmp/evo.ui.h:19
-msgid "Level"
-msgstr "Уровень"
-
-#: tmp/evo.ui.h:20
+#: tmp/evo.ui.h:3
 msgid "Beta"
 msgstr "Бета"
 
-#: tmp/evo.ui.h:21
+#: tmp/evo.ui.h:4
 msgid "Alpha"
 msgstr "Альфа"
+
+#: tmp/evo.ui.h:5
+msgid "Range"
+msgstr "Диапазон"
+
+#: tmp/evo.ui.h:7
+msgid "Autoscroll"
+msgstr "Автопрокрутка"
+
+#: tmp/evo.ui.h:8
+msgid "Black"
+msgstr "Черный"
+
+#: tmp/evo.ui.h:9
+msgid "Profiler layers"
+msgstr "Выделение слоев"
+
+#: tmp/evo.ui.h:10
+msgid "Player"
+msgstr "Плеер"
+
+#: tmp/evo.ui.h:11
+msgid "<small><b>0</b></small>"
+msgstr "<small><b>0</b></small>"
+
+#: tmp/evo.ui.h:12
+msgid "Brightness"
+msgstr "Яркость"
+
+#: tmp/evo.ui.h:13
+msgid "Target mode"
+msgstr "Режим \"цель\""
+
+#: tmp/evo.ui.h:14
+msgid "Sensitivity"
+msgstr "Чувствительность"
+
+#: tmp/evo.ui.h:15
+msgid "Distance"
+msgstr "Дальность"
+
+#: tmp/evo.ui.h:16
+msgid "Signal"
+msgstr "Сигнал"
+
+#: tmp/evo.ui.h:17
+msgid "White"
+msgstr "Белый"
+
+#: tmp/evo.ui.h:18
+msgid "Gamma"
+msgstr "Гамма"
+
+#: tmp/evo.ui.h:19
+msgid "Color"
+msgstr "Палитра"
+
+#: tmp/evo.ui.h:21
+msgid "x2"
+msgstr "x2"
+
+#: tmp/evo.ui.h:22
+msgid "x3"
+msgstr "x3"
+
+#: tmp/evo.ui.h:23
+msgid "Gain"
+msgstr "Усиление"
+
+#: tmp/evo.ui.h:24
+msgid "Level"
+msgstr "Уровень"
 
 #: tmp/record.ui.h:1
 msgid "Start"

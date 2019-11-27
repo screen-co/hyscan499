@@ -231,12 +231,11 @@ hyscan_gtk_mark_export_copy_to_clipboard (HyScanMarkLocModel *ml_model,
   g_free (marks);
 }
 
-void
+gchar *
 hyscan_gtk_mark_export_to_str (HyScanMarkLocModel *ml_model,
                                HyScanObjectModel  *mark_geo_model,
                                gchar              *project_name)
 {
-  GtkClipboard *clipboard;
   GHashTable *wf_marks, *geo_marks;
   GDateTime *local;
   gchar *str, *marks;
@@ -245,7 +244,7 @@ hyscan_gtk_mark_export_to_str (HyScanMarkLocModel *ml_model,
   geo_marks = hyscan_object_model_get (mark_geo_model);
 
   if (wf_marks == NULL || geo_marks == NULL)
-    return;
+    return NULL;
 
   local = g_date_time_new_now_local ();
 
@@ -257,9 +256,7 @@ hyscan_gtk_mark_export_to_str (HyScanMarkLocModel *ml_model,
   g_hash_table_unref (wf_marks);
   g_hash_table_unref (geo_marks);
 
-  clipboard = gtk_clipboard_get (GDK_SELECTION_CLIPBOARD);
-  gtk_clipboard_set_text (clipboard, str, -1);
-
-  g_free (str);
   g_free (marks);
+
+  return str;
 }
