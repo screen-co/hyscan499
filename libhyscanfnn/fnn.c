@@ -6,6 +6,7 @@
 #include "hyscan-fnn-button.h"
 #include <hyscan-gtk-param-tree.h>
 #include <hyscan-gtk-param-cc.h>
+#include <hyscan-gtk-export.h>
 #include <hyscan-data-schema-builder.h>
 #include <gmodule.h>
 #include <math.h>
@@ -844,6 +845,34 @@ projects_changed (HyScanDBInfo *db_info,
       hyscan_db_info_set_project (db_info, global->project_name);
 
   g_hash_table_unref (projects);
+}
+
+void
+run_export_data (GObject     *emitter,
+                 gpointer     from_ui_params)
+{
+  Global *gl = from_ui_params;
+
+  GtkWidget *dialog, *content, *hsx_export;
+
+  dialog = gtk_dialog_new_with_buttons (_("Export data"),
+                                        GTK_WINDOW (tglobal->gui.window),
+                                        GTK_DIALOG_USE_HEADER_BAR,
+                                        _("Close"), GTK_RESPONSE_CLOSE,
+                                        NULL);
+  gtk_header_bar_set_title (GTK_HEADER_BAR (gtk_dialog_get_header_bar (GTK_DIALOG (dialog))),
+                            _("Export data"));
+  content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+
+  hsx_export = hyscan_gtk_export_new (gl->db, gl->project_name, gl->track_name);
+  hyscan_gtk_export_set_watch_period (HYSCAN_GTK_EXPORT (hsx_export), 100);
+
+  gtk_container_add (GTK_CONTAINER (content), hsx_export);
+  gtk_widget_set_size_request (dialog, 800, 600);
+  gtk_widget_show_all (dialog);
+
+  gtk_dialog_run (GTK_DIALOG (dialog));
+  gtk_widget_destroy (dialog);
 }
 
 GtkTreePath *

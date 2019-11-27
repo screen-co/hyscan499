@@ -1243,6 +1243,12 @@ build_interface (Global *global)
     g_signal_connect (mitem, "activate", G_CALLBACK (run_manager), NULL);
     gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
+    /* офлайн-карта */
+    mitem = gtk_check_menu_item_new_with_label (_("Online Map"));
+    ui->map_offline = g_object_ref (mitem);
+    g_signal_connect (mitem, "toggled", G_CALLBACK (map_offline_wrapper), ui->mapkit);
+    gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
+    
     /* Exports */
     {
       gint subt = 0;
@@ -1262,19 +1268,15 @@ build_interface (Global *global)
       g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (XYZ_TO_FILE));
       gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
 
+      mitem = gtk_menu_item_new_with_label (_("HSX"));
+      g_signal_connect (mitem, "activate", G_CALLBACK (run_export_data), _global);
+      gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
       mitem = gtk_menu_item_new_with_label (_("Export"));
       gtk_menu_item_set_submenu (GTK_MENU_ITEM (mitem), submenu);
       gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
     }
-    // mitem = gtk_menu_item_new_with_label (_("Export XYZ"));
-    // g_signal_connect (mitem, "activate", G_CALLBACK (depth_writer), NULL);
-    // gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
-    /* офлайн-карта */
-    mitem = gtk_check_menu_item_new_with_label (_("Online Map"));
-    ui->map_offline = g_object_ref (mitem);
-    g_signal_connect (mitem, "toggled", G_CALLBACK (map_offline_wrapper), ui->mapkit);
-    gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
       if (global->control != NULL)
         {
