@@ -115,7 +115,7 @@ depth_writer (GObject *emitter)
   HyScanmLoc * mloc;
 
   dpt = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track,
-                                                 3, HYSCAN_NMEA_DATA_DPT,
+                                                 2, HYSCAN_NMEA_DATA_DPT,
                                                  HYSCAN_NMEA_FIELD_DEPTH));
 
   if (dpt == NULL)

@@ -142,7 +142,7 @@ make_page (HyScanGtkFnnOffsets *self,
   for (i = 0; i < 6; ++i)
     {
       GtkWidget * label = gtk_label_new (labels[i]);
-      gtk_widget_set_tooltip_text (label, gettext(hints[i]));
+      gtk_widget_set_tooltip_text (label, _(hints[i]));
       gtk_grid_attach (GTK_GRID (grid), label, 0, i, 1, 1);
     }
 
