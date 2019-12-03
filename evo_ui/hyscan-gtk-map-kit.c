@@ -2376,3 +2376,30 @@ hyscan_gtk_map_kit_get_mark_backends (HyScanGtkMapKit     *kit,
   if (wf != NULL)
     *wf = g_object_ref (kit->priv->ml_model);
 }
+
+HyScanTrackPlan *
+hyscan_gtk_map_kit_get_track_plan (HyScanGtkMapKit *kit)
+{
+  HyScanGtkMapKitPrivate *priv = kit->priv;
+  gchar *active_track;
+  HyScanPlannerTrack *track;
+  HyScanTrackPlan *track_plan;
+
+  if (priv->planner_selection == NULL)
+    return NULL;
+
+  active_track = hyscan_planner_selection_get_active_track (priv->planner_selection);
+  if (active_track == NULL)
+    return NULL;
+
+  track = (HyScanPlannerTrack *) hyscan_object_model_get_id (HYSCAN_OBJECT_MODEL (priv->planner_model), active_track);
+  g_free (active_track);
+
+  if (track == NULL || track->type != HYSCAN_PLANNER_TRACK)
+    return NULL;
+
+  track_plan = hyscan_planner_track_get_plan (track);
+  hyscan_planner_track_free (track);
+
+  return track_plan;
+}

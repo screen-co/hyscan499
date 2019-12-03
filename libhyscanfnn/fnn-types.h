@@ -751,8 +751,9 @@ panel_turn_on_off (Global   *global,
                    FnnPanel *panel);
 
 HYSCAN_API gboolean
-start_stop (Global    *global,
-            gboolean   state);
+start_stop (Global                *global,
+            const HyScanTrackPlan *track_plan,
+            gboolean               state);
 
 HYSCAN_API gboolean
 set_dry (Global    *global,

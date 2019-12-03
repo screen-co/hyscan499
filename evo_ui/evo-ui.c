@@ -628,9 +628,12 @@ ui_start_stop (GtkSwitch *button,
 {
   EvoUI *ui = &global_ui;
   gboolean status;
+  HyScanTrackPlan *track_plan;
 
   // set_dry (_global, FALSE);
-  status = start_stop (_global, state);
+  track_plan = hyscan_gtk_map_kit_get_track_plan (ui->mapkit);
+  status = start_stop (_global, track_plan, state);
+  hyscan_track_plan_free (track_plan);
 
   if (!status)
     return TRUE;

@@ -78,4 +78,6 @@ void              hyscan_gtk_map_kit_get_mark_backends(HyScanGtkMapKit          
                                                        HyScanObjectModel         **geo,
                                                        HyScanMarkLocModel        **wf);
 
+HyScanTrackPlan * hyscan_gtk_map_kit_get_track_plan     (HyScanGtkMapKit           *kit);
+
 #endif /* __HYSCAN_GTK_MAP_KIT_H__ */

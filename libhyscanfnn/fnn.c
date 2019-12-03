@@ -487,7 +487,7 @@ run_manager (GObject *emitter)
   gint res;
 
   if (tglobal->control_s != NULL)
-    start_stop (tglobal, FALSE);
+    start_stop (tglobal, NULL, FALSE);
 
   info = hyscan_db_info_new (tglobal->db);
   dialog = hyscan_fnn_project_new (tglobal->db, info, GTK_WINDOW (tglobal->gui.window));
@@ -3301,8 +3301,9 @@ panel_turn_on_off (Global   *global,
 
 /* Функция включает/выключает излучение. */
 gboolean
-start_stop (Global    *global,
-            gboolean   state)
+start_stop (Global                *global,
+            const HyScanTrackPlan *track_plan,
+            gboolean               state)
 {
   GHashTableIter iter;
   gpointer k, v;
@@ -3361,7 +3362,7 @@ start_stop (Global    *global,
       global->track_name = g_strdup_printf ("%d%s", track_num, global->dry ? DRY_TRACK_SUFFIX : "");
 
       status = hyscan_sonar_start (global->control_s, global->project_name,
-                                   global->track_name, HYSCAN_TRACK_SURVEY);
+                                   global->track_name, HYSCAN_TRACK_SURVEY, track_plan);
 
       if (!status)
         {
