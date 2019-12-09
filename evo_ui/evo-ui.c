@@ -1,4 +1,5 @@
 #include <gmodule.h>
+#include <hyscan-geo.h>
 #include <hyscan-gtk-area.h>
 #include <hyscan-gtk-fnn-offsets.h>
 #include "hyscan-gtk-mark-export.h"
@@ -6,6 +7,7 @@
 
 #define GETTEXT_PACKAGE "hyscanfnn-evoui"
 #include <glib/gi18n-lib.h>
+#include <proj_api.h>
 
 // #define EVO_EMPTY_PAGE "empty_page"
 #define EVO_NOT_MAP "evo-not-map"
@@ -24,6 +26,8 @@
 #define EVO_MAGN_KEY "MAGN"
 
 #define TVG_TEST(caps,concrete) ((caps & concrete) == concrete)
+#define DEG2RAD(x) ((x) * G_PI / 180.0)
+
 enum
 {
   LAYER_VISIBLE_COLUMN,
@@ -35,6 +39,7 @@ enum
 enum
 {
   XYZ_TO_FILE,
+  UTM_TO_FILE,
   MARKS_TO_CSV,
   MARKS_TO_CLIPBOARD,
 };
@@ -171,6 +176,175 @@ depth_writer (GObject *emitter)
   g_free (words);
 }
 
+/* честно украдено у Пылаева */
+static guint
+convert_zone_number_by_pylaev (const gdouble  lat,
+                               const gdouble  lon,
+                               gint          *err)
+{
+  guint zone_number = 0;
+  gint er = 0;
+
+  if ((lat < -80.) || (lat > 84.))
+    er = -1;
+
+  if ((lon < -180.) || ( lon >= 180.))
+    er = -2;
+
+  if (er != 0)
+    {
+      if (err != NULL)
+        *err = er;
+      return zone_number;
+    }
+
+  zone_number = (gint)((lon + 180.) / 6.) + 1;
+
+  if ((lat >= 56.0) && (lat < 64.0) && ( lon >= 3.0) && ( lon < 12.0))
+    zone_number = 32;
+
+  /* Special zones for Svalbard */
+  if ((lat >= 72.0) && (lat < 84.0))
+    {
+      if ((lon >= 0.0) && (lon <  9.0))
+        zone_number = 31;
+      else if ((lon >= 9.0) && (lon < 21.0))
+        zone_number = 33;
+      else if ((lon >= 21.0) && (lon < 33.0))
+        zone_number = 35;
+      else if ((lon >= 33.0) && (lon < 42.0))
+        zone_number = 37;
+    }
+
+  if (err != NULL)
+    *err = er;
+
+  return zone_number;
+}
+
+void
+utm_xyz (GObject *emitter)
+{
+  guint32 first, last, i;
+  HyScanAntennaOffset antenna;
+  HyScanGeoGeodetic coord;
+  GString *string = NULL;
+  gchar *words = NULL;
+
+  HyScanDB * db = _global->db;
+  HyScanCache * cache = _global->cache;
+  gchar *project = _global->project_name;
+  gchar *track = _global->track_name;
+
+  HyScanNavData * dpt;
+  HyScanNavData * alt;
+  HyScanNavData * hog;
+  HyScanmLoc * mloc;
+
+  dpt = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track, 3, HYSCAN_NMEA_DATA_DPT, HYSCAN_NMEA_FIELD_DEPTH));
+  alt = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track, 1, HYSCAN_NMEA_DATA_GGA, HYSCAN_NMEA_FIELD_ALTITUDE));
+  hog = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track, 1, HYSCAN_NMEA_DATA_GGA, HYSCAN_NMEA_FIELD_HOG));
+
+  if (dpt == NULL)
+    {
+      g_warning ("Failed to open dpt parser.");
+      return;
+    }
+
+  mloc = hyscan_mloc_new (db, cache, project, track);
+  if (mloc == NULL)
+    {
+      g_warning ("Failed to open mLocation.");
+      g_clear_object (&dpt);
+      return;
+    }
+
+  string = g_string_new (NULL);
+  g_string_append_printf (string, "#%s;%s\n", project, track);
+  g_string_append_printf (string, "#LAT,LON,DPT\n");
+
+  hyscan_nav_data_get_range (dpt, &first, &last);
+  antenna = hyscan_nav_data_get_offset (dpt);
+
+  for (i = first; i <= last; ++i)
+    {
+      gdouble depth, altitude, height;
+      gint64 time;
+      gboolean status;
+      gchar lat_str[1024] = {'\0'};
+      gchar lon_str[1024] = {'\0'};
+      gchar dpt_str[1024] = {'\0'};
+
+      status = hyscan_nav_data_get (dpt, NULL, i, &time, &depth);
+      if (!status)
+        continue;
+
+      status = hyscan_mloc_get (mloc, NULL, time, &antenna, 0, 0, 0, &coord);
+      if (!status)
+        continue;
+
+      {
+        HyScanDBFindStatus fstatus;
+        guint32 index;
+
+        fstatus = hyscan_nav_data_find_data (alt, time, &index, NULL, NULL, NULL);
+        if (fstatus != HYSCAN_DB_FIND_OK)
+          continue;
+
+        status  = hyscan_nav_data_get (alt, NULL, index, NULL, &altitude);
+        status &= hyscan_nav_data_get (hog, NULL, index, NULL, &height);
+
+        if (!status)
+          continue;
+
+        HyScanGeoGeodetic in = {.lat = coord.lat, .lon = coord.lon, .h = altitude + height};
+        HyScanGeoGeodetic out;
+        hyscan_geo_cs_transform (&out, in, HYSCAN_GEO_CS_WGS84, HYSCAN_GEO_CS_PZ90);
+      }
+
+      /* переносим дно*/
+      depth = altitude + height - depth;
+
+      {
+        projPJ proj_src;
+        projPJ proj_dst;
+        gchar *init_str;
+
+        init_str = g_strdup_printf ("+proj=utm +datum=WGS84 +zone=%i", convert_zone_number_by_pylaev (coord.lat, coord.lon, NULL));
+        proj_src = pj_init_plus ("+proj=latlon +datum=WGS84");
+        proj_dst = pj_init_plus (init_str);
+
+        coord.lat = DEG2RAD (coord.lat);
+        coord.lon = DEG2RAD (coord.lon);
+
+        if (0 != pj_transform (proj_src, proj_dst, 1, 1, &coord.lon, &coord.lat, NULL))
+          {
+            g_free (init_str);
+            pj_free (proj_dst);
+            pj_free (proj_src);
+            continue;
+          }
+
+        g_free (init_str);
+        pj_free (proj_dst);
+        pj_free (proj_src);
+      }
+
+      g_ascii_formatd (lat_str, 1024, "%12.9f", coord.lat);
+      g_ascii_formatd (lon_str, 1024, "%12.9f", coord.lon);
+      g_ascii_formatd (dpt_str, 1024, "%12.9f", depth);
+      g_string_append_printf (string, "%s;%s;%s\n", lat_str, lon_str, dpt_str);
+    }
+
+  words = g_string_free (string, FALSE);
+
+  if (words == NULL)
+    return;
+
+  filesave_dialog ("utm.txt", project, track, words);
+  g_free (words);
+}
+
 void
 mark_exporter (GObject  *emitter,
                gpointer  _selector)
@@ -182,6 +356,10 @@ mark_exporter (GObject  *emitter,
   if (selector == XYZ_TO_FILE)
     {
       depth_writer (NULL);
+    }
+  else if (selector == UTM_TO_FILE)
+    {
+      utm_xyz (NULL);
     }
   else
     {
@@ -1266,7 +1444,7 @@ build_interface (Global *global)
     ui->map_offline = g_object_ref (mitem);
     g_signal_connect (mitem, "toggled", G_CALLBACK (map_offline_wrapper), ui->mapkit);
     gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
-    
+
     /* Exports */
     {
       gint subt = 0;
@@ -1284,6 +1462,10 @@ build_interface (Global *global)
 
       mitem = gtk_menu_item_new_with_label (_("XYZ"));
       g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (XYZ_TO_FILE));
+      gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
+      mitem = gtk_menu_item_new_with_label (_("UTM"));
+      g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (UTM_TO_FILE));
       gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
 
       mitem = gtk_menu_item_new_with_label (_("HSX"));

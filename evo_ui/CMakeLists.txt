@@ -27,7 +27,8 @@ target_link_libraries (${UI_NAME}
                        ${GTK3_LIBRARIES}
                        ${HYSCAN_LIBRARIES}
                        ${HYSCAN_FNN_LIBRARY}
-                       ${MATH_LIBRARIES})
+                       ${MATH_LIBRARIES}
+                       ${PROJ4_LIBRARIES})
 
 set_target_properties (${UI_NAME} PROPERTIES PREFIX "")
 set_target_properties (${UI_NAME} PROPERTIES SUFFIX ".ui")

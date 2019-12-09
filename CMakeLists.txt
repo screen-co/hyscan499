@@ -44,8 +44,9 @@ endif ()
 
 pkg_check_modules (GLIB2 REQUIRED "glib-2.0 gobject-2.0 gthread-2.0 gio-2.0 gmodule-2.0")
 pkg_check_modules (GTK3 REQUIRED "gtk+-3.0")
-add_definitions (${GLIB2_CFLAGS} ${GTK3_CFLAGS})
-link_directories (${GLIB2_LIBRARY_DIRS} ${GTK3_LIBRARY_DIRS})
+pkg_check_modules (PROJ4 REQUIRED proj)
+add_definitions (${GLIB2_CFLAGS} ${GTK3_CFLAGS} ${PROJ4_CFLAGS})
+link_directories (${GLIB2_LIBRARY_DIRS} ${GTK3_LIBRARY_DIRS} ${PROJ4_LIBRARY_DIRS})
 
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../urpc/urpc")
 include_directories ("${CMAKE_CURRENT_SOURCE_DIR}/../gtkcifroarea/gtkcifroarea")
