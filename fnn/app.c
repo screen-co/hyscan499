@@ -346,7 +346,6 @@ main (int argc, char **argv)
         if (!g_file_test (folder, G_FILE_TEST_IS_DIR | G_FILE_TEST_EXISTS))
           {
             g_warning ("HyScanFNN: directory %s doesn't exist", folder);
-            // return;
           }
 
         dir = g_dir_open (folder, 0, &error);
@@ -354,7 +353,6 @@ main (int argc, char **argv)
           {
             g_warning ("HyScanFNN: %s", error->message);
             g_clear_pointer (&error, g_error_free);
-            // return;
           }
 
         while ((filename = g_dir_read_name (dir)) != NULL)

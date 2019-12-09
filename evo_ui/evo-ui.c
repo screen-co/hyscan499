@@ -242,8 +242,8 @@ utm_xyz (GObject *emitter)
   HyScanmLoc * mloc;
 
   dpt = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track, 3, HYSCAN_NMEA_DATA_DPT, HYSCAN_NMEA_FIELD_DEPTH));
-  alt = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track, 1, HYSCAN_NMEA_DATA_GGA, HYSCAN_NMEA_FIELD_ALTITUDE));
-  hog = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track, 1, HYSCAN_NMEA_DATA_GGA, HYSCAN_NMEA_FIELD_HOG));
+  alt = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track, 2, HYSCAN_NMEA_DATA_GGA, HYSCAN_NMEA_FIELD_ALTITUDE));
+  hog = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track, 2, HYSCAN_NMEA_DATA_GGA, HYSCAN_NMEA_FIELD_HOG));
 
   if (dpt == NULL)
     {
