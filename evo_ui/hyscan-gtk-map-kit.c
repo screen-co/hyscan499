@@ -51,6 +51,11 @@ enum
   MARK_MTIME_SORT_COLUMN,
   MARK_TYPE_COLUMN,
   MARK_TYPE_NAME_COLUMN,
+  MARK_OPERATOR_COLUMN,
+  MARK_DESCRIPTION_COLUMN,
+  MARK_LAT_COLUMN,
+  MARK_LON_COLUMN,
+  MARK_N_COLUMNS,
 };
 
 struct _HyScanGtkMapKitPrivate
@@ -711,83 +716,6 @@ create_track_menu (HyScanGtkMapKit *kit)
   g_signal_connect_swapped (gtk_tree_view_get_selection (priv->track_tree), "changed", G_CALLBACK (on_track_change), kit);
 }
 
-/* Ищет метку по её типу и идентификатору. */
-static HyScanMark *
-mark_find (HyScanGtkMapKit   *kit,
-           HyScanObjectType   mark_type,
-           const gchar       *id)
-{
-  HyScanGtkMapKitPrivate *priv = kit->priv;
-  GHashTable *marks;
-
-  if (mark_type == HYSCAN_MARK_WATERFALL)
-    {
-      HyScanMarkWaterfall *mark;
-
-      marks = hyscan_object_model_get (priv->mark_model);
-      mark = hyscan_mark_waterfall_copy (g_hash_table_lookup (marks, id));
-      g_hash_table_unref (marks);
-
-      return (HyScanMark *) mark;
-    }
-
-  else if (mark_type == HYSCAN_MARK_GEO)
-    {
-      HyScanMarkGeo *mark;
-
-      marks = hyscan_object_model_get (priv->mark_geo_model);
-      mark = hyscan_mark_geo_copy (g_hash_table_lookup (marks, id));
-      g_hash_table_unref (marks);
-
-      return (HyScanMark *) mark;
-    }
-
-  return NULL;
-}
-
-static gboolean
-mark_get_location (HyScanGtkMapKit *kit,
-                   const gchar     *mark_id,
-                   HyScanMark      *mark,
-                   gdouble         *latitude,
-                   gdouble         *longitude)
-{
-  HyScanGtkMapKitPrivate *priv = kit->priv;
-  gboolean found = FALSE;
-
-  if (mark->type == HYSCAN_MARK_GEO)
-    {
-      HyScanMarkGeo *mark_geo = (HyScanMarkGeo *) mark;
-
-      *latitude = mark_geo->center.lat;
-      *longitude = mark_geo->center.lon;
-
-      found = TRUE;
-    }
-
-  /* Положение метки из hyscan-mark-loc-model */
-  else if (mark->type == HYSCAN_MARK_WATERFALL)
-    {
-      GHashTable *mark_locations;
-      HyScanMarkLocation *location;
-
-      mark_locations = hyscan_mark_loc_model_get (priv->ml_model);
-
-      location = g_hash_table_lookup (mark_locations, mark_id);
-      if (location != NULL && location->loaded)
-        {
-          *latitude = location->mark_geo.lat;
-          *longitude = location->mark_geo.lon;
-
-          found = TRUE;
-        }
-
-      g_hash_table_unref (mark_locations);
-    }
-
-  return found;
-}
-
 /* Обработчик выделения строки в списке меток:
  * устанавливает выбранную метку в редактор меток. */
 static void
@@ -796,10 +724,9 @@ on_marks_selected (GtkTreeSelection *selection,
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
   GtkTreeIter iter;
-  HyScanMark *mark;
   HyScanObjectType mark_type;
 
-  gchar *mark_id;
+  gchar *mark_id, *mark_name, *operator_name, *description;
   gdouble latitude, longitude;
 
   if (!gtk_tree_selection_get_selected (selection, NULL, &iter))
@@ -810,21 +737,19 @@ on_marks_selected (GtkTreeSelection *selection,
 
   gtk_tree_model_get (GTK_TREE_MODEL (priv->mark_store), &iter,
                       MARK_ID_COLUMN, &mark_id,
+                      MARK_NAME_COLUMN, &mark_name,
+                      MARK_OPERATOR_COLUMN, &operator_name,
+                      MARK_DESCRIPTION_COLUMN, &description,
+                      MARK_LAT_COLUMN, &latitude,
+                      MARK_LON_COLUMN, &longitude,
                       MARK_TYPE_COLUMN, &mark_type, -1);
 
-  mark = mark_find (kit, mark_type, mark_id);
-  if (mark == NULL)
+  if (mark_id == NULL)
     goto exit;
-
-  if (!mark_get_location (kit, mark_id, mark, &latitude, &longitude))
-    {
-      latitude = 0.0;
-      longitude = 0.0;
-    }
 
   /* Открываем редактор метки. */
   hyscan_gtk_mark_editor_set_mark (HYSCAN_GTK_MARK_EDITOR (priv->mark_editor), mark_id,
-                                   mark->name, mark->operator_name, mark->description,
+                                   mark_name, operator_name, description,
                                    latitude, longitude);
 
   /* Выделяем метку на карте. */
@@ -832,11 +757,10 @@ on_marks_selected (GtkTreeSelection *selection,
   hyscan_gtk_map_geomark_mark_highlight (HYSCAN_GTK_MAP_GEOMARK (priv->geomark_layer), mark_id);
 
 exit:
-  if (mark->type == HYSCAN_MARK_WATERFALL)
-    hyscan_mark_waterfall_free ((HyScanMarkWaterfall *) mark);
-  else if (mark->type == HYSCAN_MARK_GEO)
-    hyscan_mark_geo_free ((HyScanMarkGeo *) mark);
   g_free (mark_id);
+  g_free (mark_name);
+  g_free (operator_name);
+  g_free (description);
 }
 
 /* Обновляет имя метки mark_id в модели меток model. */
@@ -930,64 +854,54 @@ on_track_activated (GtkTreeView        *treeview,
   }
 }
 
+/* Добавляет метку в список меток. */
 static void
-list_store_insert (HyScanGtkMapKit   *kit,
-                   HyScanObjectModel *model,
-                   gchar              *selected_id)
+mark_tree_append (HyScanGtkMapKit *kit,
+                  const gchar     *mark_id,
+                  HyScanMark      *mark,
+                  gdouble          lat,
+                  gdouble          lon,
+                  gboolean         selected)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
 
   GtkTreeIter tree_iter;
-  GHashTable *marks;
-  GHashTableIter hash_iter;
 
-  HyScanMark *mark;
-  gchar *mark_id;
+  GDateTime *local;
+  gchar *time_str;
+  gchar *type_name;
 
-  marks = hyscan_object_model_get (model);
-  if (marks == NULL)
+  if (mark->type == HYSCAN_MARK_WATERFALL && ((HyScanMarkWaterfall *) mark)->track == NULL)
     return;
 
-  g_hash_table_iter_init (&hash_iter, marks);
+  /* Добавляем в список меток. */
+  local = g_date_time_new_from_unix_local (mark->mtime / 1000000);
+  time_str = g_date_time_format (local, "%d.%m %H:%M");
 
-  while (g_hash_table_iter_next (&hash_iter, (gpointer *) &mark_id, (gpointer *) &mark))
-    {
-      GDateTime *local;
-      gchar *time_str;
-      gchar *type_name;
+  if (mark->type == HYSCAN_MARK_WATERFALL)
+    type_name = "W";
+  else if (mark->type == HYSCAN_MARK_GEO)
+    type_name = "G";
+  else
+    type_name = "?";
 
-      if (mark->type == HYSCAN_MARK_WATERFALL && ((HyScanMarkWaterfall *) mark)->track == NULL)
-        continue;
+  gtk_list_store_append (priv->mark_store, &tree_iter);
+  gtk_list_store_set (priv->mark_store, &tree_iter,
+                      MARK_ID_COLUMN, mark_id,
+                      MARK_NAME_COLUMN, mark->name,
+                      MARK_MTIME_COLUMN, time_str,
+                      MARK_MTIME_SORT_COLUMN, mark->mtime,
+                      MARK_TYPE_COLUMN, mark->type,
+                      MARK_TYPE_NAME_COLUMN, type_name,
+                      MARK_LAT_COLUMN, lat,
+                      MARK_LON_COLUMN, lon,
+                      -1);
 
-      /* Добавляем в список меток. */
-      local = g_date_time_new_from_unix_local (mark->mtime / 1000000);
-      time_str = g_date_time_format (local, "%d.%m %H:%M");
+  if (selected)
+    gtk_tree_selection_select_iter (gtk_tree_view_get_selection (priv->mark_tree), &tree_iter);
 
-      if (mark->type == HYSCAN_MARK_WATERFALL)
-        type_name = "W";
-      else if (mark->type == HYSCAN_MARK_GEO)
-        type_name = "G";
-      else
-        type_name = "?";
-
-      gtk_list_store_append (priv->mark_store, &tree_iter);
-      gtk_list_store_set (priv->mark_store, &tree_iter,
-                          MARK_ID_COLUMN, mark_id,
-                          MARK_NAME_COLUMN, mark->name,
-                          MARK_MTIME_COLUMN, time_str,
-                          MARK_MTIME_SORT_COLUMN, mark->mtime,
-                          MARK_TYPE_COLUMN, mark->type,
-                          MARK_TYPE_NAME_COLUMN, type_name,
-                          -1);
-
-      if (g_strcmp0 (selected_id, mark_id) == 0)
-        gtk_tree_selection_select_iter (gtk_tree_view_get_selection (priv->mark_tree), &tree_iter);
-
-      g_free (time_str);
-      g_date_time_unref (local);
-    }
-
-  g_hash_table_unref (marks);
+  g_free (time_str);
+  g_date_time_unref (local);
 }
 
 static gchar *
@@ -1013,6 +927,9 @@ on_marks_changed (HyScanGtkMapKit *kit)
   HyScanGtkMapKitPrivate *priv = kit->priv;
   gchar *selected_id;
   GtkTreeSelection *selection;
+  GHashTable *marks;
+  GHashTableIter hash_iter;
+  gchar *mark_id;
 
   /* Блокируем обработку изменения выделения в списке меток. */
   selection = gtk_tree_view_get_selection (priv->mark_tree);
@@ -1024,10 +941,35 @@ on_marks_changed (HyScanGtkMapKit *kit)
   gtk_list_store_clear (priv->mark_store);
 
   /* Добавляем метки из всех моделей. */
-  if (priv->mark_model != NULL)
-    list_store_insert (kit, priv->mark_model, selected_id);
-  if (priv->mark_geo_model != NULL)
-    list_store_insert (kit, priv->mark_geo_model, selected_id);
+  if (priv->ml_model != NULL && (marks = hyscan_mark_loc_model_get (priv->ml_model)) != NULL)
+    {
+      HyScanMarkLocation *location;
+
+      g_hash_table_iter_init (&hash_iter, marks);
+      while (g_hash_table_iter_next (&hash_iter, (gpointer *) &mark_id, (gpointer *) &location))
+        {
+          mark_tree_append (kit, mark_id, (HyScanMark *) location->mark,
+                            location->mark_geo.lat, location->mark_geo.lon,
+                            g_strcmp0 (mark_id, selected_id) == 0);
+        }
+
+      g_hash_table_unref (marks);
+    }
+
+  if (priv->mark_geo_model != NULL && (marks = hyscan_object_model_get (priv->mark_geo_model)) != NULL)
+    {
+      HyScanMarkGeo *mark;
+
+      g_hash_table_iter_init (&hash_iter, marks);
+      while (g_hash_table_iter_next (&hash_iter, (gpointer *) &mark_id, (gpointer *) &mark))
+        {
+          mark_tree_append (kit, mark_id, (HyScanMark *) mark,
+                            mark->center.lat, mark->center.lon,
+                            g_strcmp0 (mark_id, selected_id) == 0);
+        }
+
+      g_hash_table_unref (marks);
+    }
 
   /* Разблокируем обработку выделения. */
   g_signal_handlers_unblock_by_func (selection, on_marks_selected, kit);
@@ -1066,13 +1008,17 @@ create_wfmark_toolbox (HyScanGtkMapKit *kit)
   if (priv->mark_tree != NULL)
     return;
 
-  priv->mark_store = gtk_list_store_new (6,
+  priv->mark_store = gtk_list_store_new (MARK_N_COLUMNS,
                                          G_TYPE_STRING,  /* MARK_ID_COLUMN   */
                                          G_TYPE_STRING,  /* MARK_NAME_COLUMN   */
                                          G_TYPE_STRING,  /* MARK_MTIME_COLUMN */
                                          G_TYPE_INT64,   /* MARK_MTIME_SORT_COLUMN */
                                          G_TYPE_UINT,    /* MARK_TYPE_COLUMN */
                                          G_TYPE_STRING,  /* MARK_TYPE_NAME_COLUMN */
+                                         G_TYPE_STRING,  /* MARK_OPERATOR_COLUMN */
+                                         G_TYPE_STRING,  /* MARK_DESCRIPTION_COLUMN */
+                                         G_TYPE_DOUBLE,  /* MARK_LAT_COLUMN */
+                                         G_TYPE_DOUBLE,  /* MARK_LON_COLUMN */
                                          -1);
   priv->mark_tree = create_mark_tree_view (kit, GTK_TREE_MODEL (priv->mark_store));
   priv->mark_editor = create_mark_editor (kit, priv->mark_tree);
@@ -1947,7 +1893,7 @@ hyscan_gtk_map_kit_add_marks_wf (HyScanGtkMapKit *kit)
   priv->mark_model = hyscan_object_model_new (HYSCAN_TYPE_OBJECT_DATA_WFMARK);
   priv->ml_model = hyscan_mark_loc_model_new (priv->db, priv->cache);
 
-  /* Подключаемся к ml_model, т.к. нужны данные не только по списку меток, но и по их местоположению. */
+  /* Подключаемся к ml_model и mark_model, т.к. нужны данные по списку меток, и по их местоположению. */
   g_signal_connect_swapped (priv->ml_model, "changed", G_CALLBACK (on_marks_changed), kit);
 
   /* Слой с метками. */

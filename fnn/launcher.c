@@ -68,6 +68,7 @@
 #include <Shlwapi.h>
 #include <stdio.h>
 #include <strsafe.h>
+#include <wchar.h>
 
 #define IDI_ICON  L"IDI_ICON1"
 #define BITMAP_ID L"BITMAP_ID"
@@ -429,6 +430,9 @@ launcher_process (LPVOID lpParam)
   LPCWSTR filename = lpParam;
 
   module_dir = launcher_get_module_dir ();
+
+  /* Меняем текущую директорию. */
+  _wchdir (module_dir);
 
   /* Читаем конфиг. */
   {
