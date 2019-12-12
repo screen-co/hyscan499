@@ -118,6 +118,7 @@ typedef enum
 
 typedef struct
 {
+  gboolean               disabled;
   gdouble                distance;
   gint                   signal;
   gdouble                gain0;       // lin
@@ -689,6 +690,15 @@ HYSCAN_API void
 color_map_cyclic (GtkWidget *widget,
                   gint       panelx);
 
+HYSCAN_API void 
+enable_switched (GtkWidget *widget,
+                 gint       panelx);
+
+HYSCAN_API gboolean
+disable_changed (GtkWidget *widget,
+                 gboolean   disabled,
+                 gint       panelx);
+
 HYSCAN_API gboolean
 mode_changed (GtkWidget *widget,
               gboolean   state,
@@ -734,6 +744,10 @@ HYSCAN_API void
 signal_down (GtkWidget *widget,
              gint       selector);
 
+HYSCAN_API gboolean
+panel_turn_on_off (Global   *global,
+                   gboolean on_air,
+                   FnnPanel *panel);
 
 HYSCAN_API gboolean
 start_stop (Global    *global,

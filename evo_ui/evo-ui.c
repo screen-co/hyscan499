@@ -1144,6 +1144,16 @@ make_page_for_panel (EvoUI     *ui,
   b = get_builder_for_panel (ui, panelx);
 
   box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
+
+  if (panel_sources_are_in_sonar (global, panel))
+    {
+      sonar = get_widget_from_builder (b, "sonar_control");
+      tvg = make_tvg_control (global, panel, b, sg);
+      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");      add_to_sg (sg, b, "distance_label");
+      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");        add_to_sg (sg, b, "signal_label");
+                                                                                              add_to_sg (sg, b, "disable_label");
+    }
+
   switch (panel->type)
     {
     case FNN_PANEL_WATERFALL:
@@ -1176,13 +1186,13 @@ make_page_for_panel (EvoUI     *ui,
         player_adj_value_printer (adj, label);
       }
 
-      if (!panel_sources_are_in_sonar (global, panel))
-        break;
+      // if (!panel_sources_are_in_sonar (global, panel))
+      //   break;
 
-      sonar = get_widget_from_builder (b, "sonar_control");
-      tvg = make_tvg_control (global, panel, b, sg);
-      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");      add_to_sg (sg, b, "distance_label");
-      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");        add_to_sg (sg, b, "signal_label");
+      // sonar = get_widget_from_builder (b, "sonar_control");
+      // tvg = make_tvg_control (global, panel, b, sg);
+      // panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");      add_to_sg (sg, b, "distance_label");
+      // panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");        add_to_sg (sg, b, "signal_label");
 
       break;
 
@@ -1209,13 +1219,13 @@ make_page_for_panel (EvoUI     *ui,
         player_adj_value_printer (adj, label);
       }
 
-      if (!panel_sources_are_in_sonar (global, panel))
-        break;
+      // if (!panel_sources_are_in_sonar (global, panel))
+      //   break;
 
-      sonar = get_widget_from_builder (b, "sonar_control");
-      tvg = make_tvg_control (global, panel, b, sg);
-      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");     add_to_sg (sg, b, "distance_label");
-      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");       add_to_sg (sg, b, "signal_label");
+      // sonar = get_widget_from_builder (b, "sonar_control");
+      // tvg = make_tvg_control (global, panel, b, sg);
+      // panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");     add_to_sg (sg, b, "distance_label");
+      // panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");       add_to_sg (sg, b, "signal_label");
 
       break;
 
@@ -1244,13 +1254,13 @@ make_page_for_panel (EvoUI     *ui,
         player_adj_value_printer (adj, label);
       }
 
-      if (!panel_sources_are_in_sonar (global, panel))
-        break;
+      // if (!panel_sources_are_in_sonar (global, panel))
+      //   break;
 
-      sonar = get_widget_from_builder (b, "sonar_control");
-      tvg = make_tvg_control (global, panel, b, sg);
-      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");      add_to_sg (sg, b, "distance_label");
-      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");        add_to_sg (sg, b, "signal_label");
+      // sonar = get_widget_from_builder (b, "sonar_control");
+      // tvg = make_tvg_control (global, panel, b, sg);
+      // panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");      add_to_sg (sg, b, "distance_label");
+      // panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");        add_to_sg (sg, b, "signal_label");
 
       break;
 
@@ -1262,13 +1272,13 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->sensitivity_value = get_label_from_builder (b, "fl_sensitivity_value"); add_to_sg (sg, b, "fl_sensitivity_label");
 
       g_message ("fl %i", panel_sources_are_in_sonar (global, panel));
-      if (!panel_sources_are_in_sonar (global, panel))
-        break;
+      // if (!panel_sources_are_in_sonar (global, panel))
+      //   break;
 
-      sonar = get_widget_from_builder (b, "sonar_control");
-      tvg = make_tvg_control (global, panel, b, sg);
-      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");       add_to_sg (sg, b, "distance_label");
-      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");         add_to_sg (sg, b, "signal_label");
+      // sonar = get_widget_from_builder (b, "sonar_control");
+      // tvg = make_tvg_control (global, panel, b, sg);
+      // panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");       add_to_sg (sg, b, "distance_label");
+      // panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");         add_to_sg (sg, b, "signal_label");
 
       break;
 
@@ -1281,10 +1291,10 @@ make_page_for_panel (EvoUI     *ui,
   gtk_box_pack_start (GTK_BOX (box), view, FALSE, FALSE, 0);
   if (layers != NULL)
     gtk_box_pack_start (GTK_BOX (box), layers, FALSE, FALSE, 0);
-  if (sonar != NULL)
-    gtk_box_pack_end (GTK_BOX (box), sonar, FALSE, TRUE, 0);
   if (tvg != NULL)
     gtk_box_pack_end (GTK_BOX (box), tvg, FALSE, FALSE, 0);
+  if (sonar != NULL)
+    gtk_box_pack_end (GTK_BOX (box), sonar, FALSE, TRUE, 0);
 
   return box;
 }

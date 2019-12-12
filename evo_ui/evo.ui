@@ -1041,6 +1041,7 @@
   <object class="GtkGrid" id="sonar_control">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <property name="valign">start</property>
     <property name="hexpand">False</property>
     <property name="column_spacing">1</property>
     <child>
@@ -1049,13 +1050,12 @@
         <property name="can_focus">False</property>
         <property name="halign">end</property>
         <property name="valign">center</property>
-        <property name="margin_left">1</property>
         <property name="label" translatable="yes">Distance</property>
         <property name="justify">center</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">0</property>
+        <property name="top_attach">2</property>
       </packing>
     </child>
     <child>
@@ -1070,7 +1070,7 @@
       </object>
       <packing>
         <property name="left_attach">2</property>
-        <property name="top_attach">0</property>
+        <property name="top_attach">2</property>
       </packing>
     </child>
     <child>
@@ -1085,7 +1085,7 @@
       </object>
       <packing>
         <property name="left_attach">3</property>
-        <property name="top_attach">0</property>
+        <property name="top_attach">2</property>
       </packing>
     </child>
     <child>
@@ -1100,7 +1100,7 @@
       </object>
       <packing>
         <property name="left_attach">1</property>
-        <property name="top_attach">0</property>
+        <property name="top_attach">2</property>
       </packing>
     </child>
     <child>
@@ -1112,7 +1112,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">1</property>
+        <property name="top_attach">3</property>
         <property name="width">4</property>
       </packing>
     </child>
@@ -1127,7 +1127,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">2</property>
+        <property name="top_attach">4</property>
       </packing>
     </child>
     <child>
@@ -1142,7 +1142,7 @@
       </object>
       <packing>
         <property name="left_attach">2</property>
-        <property name="top_attach">2</property>
+        <property name="top_attach">4</property>
       </packing>
     </child>
     <child>
@@ -1158,7 +1158,7 @@
       </object>
       <packing>
         <property name="left_attach">1</property>
-        <property name="top_attach">2</property>
+        <property name="top_attach">4</property>
       </packing>
     </child>
     <child>
@@ -1173,7 +1173,7 @@
       </object>
       <packing>
         <property name="left_attach">3</property>
-        <property name="top_attach">2</property>
+        <property name="top_attach">4</property>
       </packing>
     </child>
     <child>
@@ -1184,9 +1184,53 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">3</property>
+        <property name="top_attach">5</property>
         <property name="width">4</property>
       </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="disable_separator">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">1</property>
+        <property name="width">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="disable_label">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">end</property>
+        <property name="valign">center</property>
+        <property name="label" translatable="yes">Disable</property>
+        <property name="justify">center</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSwitch" id="disable">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <signal name="state-set" handler="disable_changed" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">0</property>
+        <property name="width">2</property>
+      </packing>
+    </child>
+    <child>
+      <placeholder/>
     </child>
   </object>
   <object class="GtkAdjustment" id="ss_balance_adjustment">

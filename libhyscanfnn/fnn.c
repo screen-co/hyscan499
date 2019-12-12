@@ -2040,6 +2040,33 @@ signal_label (FnnPanel    *panel,
 }
 
 gboolean
+rec_disable (Global   *global,
+             gint      panelx)
+{
+  HyScanSourceType *iter;
+  FnnPanel *panel = get_panel_quiet (global, panelx);
+
+  g_message ("rec_disable: %s (%i)", panel->name, panelx);
+
+  for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
+    {
+      gboolean status;
+      source_informer ("  disabling receiver", *iter);
+      status = hyscan_sonar_receiver_disable (global->control_s, *iter);
+
+      if (!status)
+        {
+          g_message ("  failure!");
+          return FALSE;
+        }
+    }
+
+  sync_sonar (global);
+  g_message ("  success");
+  return TRUE;
+}
+
+gboolean
 gen_disable (Global   *global,
              gint      panelx)
 {
@@ -2623,7 +2650,8 @@ distance_set (Global  *global,
   return TRUE;
 }
 
-static gfloat fnn_distances[] = {10., 20., 30., 50., 75., 100., 150., };
+static gfloat fnn_distances[] = {0., 10., 20., 30., 50., 75., 100., 150., };
+static gint n_fnn_distances = (gint)G_N_ELEMENTS (fnn_distances);
 
 void
 distance_up (GtkWidget *widget,
@@ -2635,7 +2663,7 @@ distance_up (GtkWidget *widget,
 
   desired = panel->current.distance + 1.0;
 
-  for (i = 0; i < (gint)G_N_ELEMENTS (fnn_distances); ++i)
+  for (i = 0; i < n_fnn_distances; ++i)
     {
       if (desired <= fnn_distances[i])
         {
@@ -2643,7 +2671,7 @@ distance_up (GtkWidget *widget,
           break;
         }
     }
-  if (i == G_N_ELEMENTS (fnn_distances))
+  if (i == n_fnn_distances)
     {
       desired = panel->current.distance + 50.0;
     }
@@ -2656,22 +2684,6 @@ distance_up (GtkWidget *widget,
     g_warning ("distance_up failed");
 }
 
-// void
-// distance_up (GtkWidget *widget,
-//              gint       panelx)
-// {
-//   gdouble desired;
-//   FnnPanel *panel = get_panel (tglobal, panelx);
-
-//   desired = panel->current.distance + 5.0;
-//   desired = desired - fmod (desired, 5);
-
-//   if (distance_set (tglobal, &desired, panelx))
-//     panel->current.distance = desired;
-//   else
-//     g_warning ("distance_up failed");
-// }
-
 void
 distance_down (GtkWidget *widget,
                gint       panelx)
@@ -2682,44 +2694,31 @@ distance_down (GtkWidget *widget,
 
   desired = panel->current.distance - 1.0;
 
-  for (i = (gint)G_N_ELEMENTS (fnn_distances) - 1; i >= 0 ; --i)
-    {
-      if (desired >= fnn_distances[i])
-        {
-          desired = fnn_distances[i];
-          break;
-        }
-    }
-  if (i == -1)
+  if (desired > fnn_distances[n_fnn_distances - 1])
     {
       desired = panel->current.distance - 50.0;
     }
-
-  // desired = panel->current.distance - 5.0;
-  // desired = desired - fmod (desired, 5);
+  else
+    {
+      for (i = (gint)n_fnn_distances - 2; i >= 0 ; --i)
+        {
+          if (desired >= fnn_distances[i])
+            {
+              desired = fnn_distances[i];
+              break;
+            }
+        }
+      if (i == -1)
+        {
+          desired = panel->current.distance - 50.0;
+        }
+    }
 
   if (distance_set (tglobal, &desired, panelx))
     panel->current.distance = desired;
   else
     g_warning ("distance_down failed");
 }
-
-// void
-// distance_down (GtkWidget *widget,
-//                gint       panelx)
-// {
-//   gdouble desired;
-//   FnnPanel *panel = get_panel (tglobal, panelx);
-
-//   desired = panel->current.distance - 5.0;
-//   desired = desired - fmod (desired, 5);
-
-//   if (distance_set (tglobal, &desired, panelx))
-//     panel->current.distance = desired;
-//   else
-//     g_warning ("distance_down failed");
-// }
-
 
 void
 void_callback (gpointer data)
@@ -3085,6 +3084,36 @@ scale_down (GtkWidget *widget,
   scale_set (tglobal, FALSE, panelx);
 }
 
+/* Функция включает и выключает борт
+ * Попрошу заметить, возвращается ЛОЖЬ для того, чтобы свитчер нормально переключился. */
+gboolean
+disable_changed (GtkWidget *widget,
+                 gboolean   disabled,
+                 gint       panelx)
+{
+  FnnPanel *panel = get_panel_quiet (tglobal, panelx);
+
+  g_message ("disable_changed: %s (%i) %s", panel->name, panelx, disabled ? "OFF" : "ON");
+
+  if (panel == NULL)
+    {
+      g_warning ("  disable_changed: panel %i not found!", panelx);
+      return TRUE;
+    }
+
+  panel->current.disabled = disabled;
+
+  if (!panel_turn_on_off (tglobal, tglobal->on_air, panel))
+    {
+      g_warning ("  failure!");
+      return TRUE;
+    }
+
+  sync_sonar (tglobal);
+  g_message ("  success");
+  return FALSE;
+}
+
 /* Функция переключает режим отображения виджета ВС.
  * Попрошу заметить, возвращается ЛОЖЬ для того, чтобы свитчер нормально переключился. */
 gboolean
@@ -3207,6 +3236,68 @@ automove_state_changed (GtkWidget  *widget,
     live_view (NULL, state, GPOINTER_TO_INT (k));
 }
 
+gboolean
+panel_turn_on_off (Global   *global,
+                   gboolean  on_air,
+                   FnnPanel *panel)
+{
+  gint panelx = panel->panelx;
+  gboolean status = TRUE;
+
+  /* Не настраиваем те панели, которых нет в ГЛ. */
+  if (!panel_sources_are_in_sonar (global, panel))
+    return TRUE;
+
+  /* Отключенные панели не включаем (но ведем себя так, будто они включены) */
+  if (panel->current.disabled)
+    {
+      status  = gen_disable (global, panelx);
+      status &= rec_disable (global, panelx);
+      return status;
+    }
+
+  if (!on_air)
+    return TRUE;
+
+  status &= distance_set (global, &panel->current.distance, panelx);
+
+  /* Излучение НЕ в режиме сух. пов. */
+  if (global->dry)
+    status &= gen_disable (global, panelx);
+  else
+    status &= signal_set (global, panel->current.signal, panelx);
+
+
+  /* TVG */
+  switch (panel->current.mode)
+    {
+      case HYSCAN_SONAR_TVG_MODE_LOGARITHMIC:
+        status &= log_tvg_set (global,
+                               &panel->current.log_gain0,
+                               panel->current.log_beta,
+                               panel->current.log_alpha,
+                               panelx);
+        break;
+
+      case HYSCAN_SONAR_TVG_MODE_CONSTANT:
+        status &= const_tvg_set (global, &panel->current.const_gain0, panelx);
+        break;
+
+      case HYSCAN_SONAR_TVG_MODE_LINEAR_DB:
+        status &= lin_tvg_set (global, &panel->current.gain0, panel->current.gain_step, panelx);
+        break;
+
+      case HYSCAN_SONAR_TVG_MODE_AUTO:
+        status &= auto_tvg_set (global, panel->current.level, panel->current.sensitivity, panelx);
+        break;
+
+      case HYSCAN_SONAR_TVG_MODE_NONE:
+      default:
+        g_warning ("start_stop: no tvg mode set");
+    }
+
+  return status;
+}
 
 /* Функция включает/выключает излучение. */
 gboolean
@@ -3237,48 +3328,7 @@ start_stop (Global    *global,
       while (g_hash_table_iter_next (&iter, &k, &v))
         {
           FnnPanel *panel = v;
-          gint panelx = GPOINTER_TO_INT (k);
-
-          /* Не настраиваем те панели, которых нет в ГЛ. */
-          if (!panel_sources_are_in_sonar (global, panel))
-            continue;
-
-          /* Излучение НЕ в режиме сух. пов. */
-          if (global->dry)
-            status &= gen_disable (global, panelx);
-          else
-            status &= signal_set (global, panel->current.signal, panelx);
-
-          /* Приемник. */
-          status &= distance_set (global, &panel->current.distance, panelx);
-
-          /* TVG */
-          switch (panel->current.mode)
-            {
-              case HYSCAN_SONAR_TVG_MODE_LOGARITHMIC:
-                status &= log_tvg_set (global,
-                                       &panel->current.log_gain0,
-                                       panel->current.log_beta,
-                                       panel->current.log_alpha,
-                                       panelx);
-                break;
-
-              case HYSCAN_SONAR_TVG_MODE_CONSTANT:
-                status &= const_tvg_set (global, &panel->current.const_gain0, panelx);
-                break;
-
-              case HYSCAN_SONAR_TVG_MODE_LINEAR_DB:
-                status &= lin_tvg_set (global, &panel->current.gain0, panel->current.gain_step, panelx);
-                break;
-
-              case HYSCAN_SONAR_TVG_MODE_AUTO:
-                status &= auto_tvg_set (global, panel->current.level, panel->current.sensitivity, panelx);
-                break;
-
-              case HYSCAN_SONAR_TVG_MODE_NONE:
-              default:
-                g_warning ("start_stop: no tvg mode set");
-            }
+          status = panel_turn_on_off (global, TRUE, panel);
 
           /* Если не удалось запустить какую-либо подсистему. */
           if (!status)
