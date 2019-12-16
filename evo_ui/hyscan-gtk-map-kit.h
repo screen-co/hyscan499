@@ -35,6 +35,9 @@ gchar *           hyscan_gtk_map_kit_get_profile_name (HyScanGtkMapKit          
 void              hyscan_gtk_map_kit_load_profiles    (HyScanGtkMapKit            *kit,
                                                        const gchar                *profile_dir);
 
+void              hyscan_gtk_map_kit_set_user_dir     (HyScanGtkMapKit            *kit,
+                                                       const gchar                *profiles_dir);
+
 void              hyscan_gtk_map_kit_add_nav          (HyScanGtkMapKit            *kit,
                                                        HyScanSensor               *sensor,
                                                        const gchar                *sensor_name,

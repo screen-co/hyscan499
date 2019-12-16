@@ -1358,6 +1358,8 @@ build_interface (Global *global)
         gchar *profile_dir;
         profile_dir = g_build_filename (profile_dirs[i], "hyscan", "map-profiles", NULL);
         hyscan_gtk_map_kit_load_profiles (ui->mapkit, profile_dir);
+        if (i == 0)
+          hyscan_gtk_map_kit_set_user_dir (ui->mapkit, profile_dir);
         g_free (profile_dir);
       }
     hyscan_gtk_map_kit_add_marks_wf (ui->mapkit);
