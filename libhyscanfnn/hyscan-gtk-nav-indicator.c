@@ -24,6 +24,8 @@ struct _HyScanGtkNavIndicatorPrivate
     HyScanNMEAParser * gga_lat;
     HyScanNMEAParser * gga_lon;
     HyScanNMEAParser * gga_time;
+    HyScanNMEAParser * pitch;
+    HyScanNMEAParser * roll;
   } parser;
 
   struct
@@ -34,6 +36,8 @@ struct _HyScanGtkNavIndicatorPrivate
     gchar            * spd;
     gchar            * dpt;
     gchar            * tmd;
+    gchar            * pch;
+    gchar            * rll;
   } string;
 
   GtkLabel           * lat;
@@ -42,6 +46,8 @@ struct _HyScanGtkNavIndicatorPrivate
   GtkLabel           * spd;
   GtkLabel           * dpt;
   GtkLabel           * tmd;
+  GtkLabel           * pch;
+  GtkLabel           * rll;
 
   HyScanSensor       * sensor;
   guint                update_tag;
@@ -91,6 +97,8 @@ hyscan_gtk_nav_indicator_class_init (HyScanGtkNavIndicatorClass *klass)
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, spd);
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, dpt);
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, tmd);
+  gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, pch);
+  gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, rll);
 
   g_object_class_install_property (oclass, PROP_SENSOR,
     g_param_spec_object("sensor", "sensor", "sensor", HYSCAN_TYPE_SENSOR,
@@ -136,6 +144,8 @@ hyscan_gtk_nav_indicator_constructed (GObject *object)
   priv->parser.gga_time = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_GGA, HYSCAN_NMEA_FIELD_TIME);
   priv->parser.gga_lat = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_GGA, HYSCAN_NMEA_FIELD_LAT);
   priv->parser.gga_lon = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_GGA, HYSCAN_NMEA_FIELD_LON);
+  priv->parser.pitch = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_HPR, HYSCAN_NMEA_FIELD_PITCH);
+  priv->parser.roll = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_HPR, HYSCAN_NMEA_FIELD_ROLL);
 
   priv->update_tag = g_timeout_add (1000, (GSourceFunc)(hyscan_gtk_nav_indicator_update), self);
   priv->sensor_data_id = g_signal_connect (priv->sensor, "sensor-data", G_CALLBACK (hyscan_gtk_nav_indicator_sensor_data), self);
@@ -186,12 +196,12 @@ hyscan_gtk_nav_indicator_parse (HyScanGtkNavIndicator *self,
                                 HyScanBuffer          *data)
 {
   HyScanGtkNavIndicatorPrivate *priv;
-  const gchar * rmcs = NULL, *dpts = NULL, *ggas = NULL, *raw_data;
+  const gchar * rmcs = NULL, *dpts = NULL, *ggas = NULL, *hprs = NULL, *raw_data;
   gchar **nmea;
   guint32 size;
   guint i;
-  gdouble time, date, lat, lon, trk, spd, dpt;
-  gboolean tm_ok, dt_ok, ll_ok, trk_ok, spd_ok, dpt_ok;
+  gdouble time, date, lat, lon, trk, spd, dpt, pitch, roll;
+  gboolean tm_ok, dt_ok, ll_ok, trk_ok, spd_ok, dpt_ok, pitch_ok, roll_ok;
 
   g_return_if_fail (HYSCAN_IS_GTK_NAV_INDICATOR (self));
   priv = self->priv;
@@ -209,6 +219,8 @@ hyscan_gtk_nav_indicator_parse (HyScanGtkNavIndicator *self,
         ggas = nmea[i];
       else if (g_str_has_prefix (nmea[i]+3, "DPT"))
         dpts = nmea[i];
+      else if (g_str_has_prefix (nmea[i] + 1, "PTNTHPR"))
+        hprs = nmea[i];
     }
 
   /* Парсим строки. */
@@ -244,6 +256,15 @@ hyscan_gtk_nav_indicator_parse (HyScanGtkNavIndicator *self,
   else
     {
       dpt_ok = FALSE;
+    }
+  if (hprs != NULL)
+    {
+      pitch_ok = hyscan_nmea_parser_parse_string (priv->parser.pitch, hprs, &pitch);
+      roll_ok = hyscan_nmea_parser_parse_string (priv->parser.roll, hprs, &roll);
+    }
+  else
+    {
+      pitch_ok = roll_ok = FALSE;
     }
 
   /* Обновляем данные виджетов. */
@@ -283,6 +304,14 @@ hyscan_gtk_nav_indicator_parse (HyScanGtkNavIndicator *self,
   if (dpt_ok)
     {
       hyscan_gtk_nav_indicator_printer (&priv->string.dpt, "<b>%.2f</b> %s", dpt, _("m"));
+    }
+  if (pitch_ok)
+    {
+      hyscan_gtk_nav_indicator_printer (&priv->string.pch, "<b>%.2f</b>°", pitch);
+    }
+  if (roll_ok)
+    {
+      hyscan_gtk_nav_indicator_printer (&priv->string.rll, "<b>%.2f</b>°", roll);
     }
 
   g_mutex_unlock (&priv->lock);
@@ -324,6 +353,10 @@ hyscan_gtk_nav_indicator_update (HyScanGtkNavIndicator *self)
     gtk_label_set_markup (priv->dpt, priv->string.dpt);
   if (priv->string.tmd != NULL)
     gtk_label_set_markup (priv->tmd, priv->string.tmd);
+  if (priv->string.pch != NULL)
+    gtk_label_set_markup (priv->pch, priv->string.pch);
+  if (priv->string.rll != NULL)
+    gtk_label_set_markup (priv->rll, priv->string.rll);
 
   g_mutex_unlock (&priv->lock);
 

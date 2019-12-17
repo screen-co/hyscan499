@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.18.3 -->
+<!-- Generated with glade 3.20.0 -->
 <interface domain="libhyscanfnn">
   <requires lib="gtk+" version="3.12"/>
   <template class="HyScanGtkNavIndicator" parent="GtkBox">
@@ -16,8 +16,8 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="hexpand">False</property>
-            <property name="xalign">1</property>
             <property name="label" translatable="yes">Latitude</property>
+            <property name="xalign">1</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -30,8 +30,9 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="hexpand">True</property>
-            <property name="xalign">0</property>
             <property name="label" translatable="yes">--</property>
+            <property name="width_chars">9</property>
+            <property name="xalign">0</property>
           </object>
           <packing>
             <property name="expand">True</property>
@@ -56,8 +57,8 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="hexpand">False</property>
-            <property name="xalign">1</property>
             <property name="label" translatable="yes">Longitude</property>
+            <property name="xalign">1</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -70,8 +71,9 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="hexpand">True</property>
-            <property name="xalign">0</property>
             <property name="label" translatable="yes">--</property>
+            <property name="width_chars">9</property>
+            <property name="xalign">0</property>
           </object>
           <packing>
             <property name="expand">True</property>
@@ -96,8 +98,8 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="hexpand">False</property>
-            <property name="xalign">1</property>
             <property name="label" translatable="yes">Track</property>
+            <property name="xalign">1</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -110,8 +112,9 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="hexpand">True</property>
-            <property name="xalign">0</property>
             <property name="label" translatable="yes">--</property>
+            <property name="width_chars">5</property>
+            <property name="xalign">0</property>
           </object>
           <packing>
             <property name="expand">True</property>
@@ -136,8 +139,8 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="hexpand">False</property>
-            <property name="xalign">1</property>
             <property name="label" translatable="yes">Speed</property>
+            <property name="xalign">1</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -150,8 +153,9 @@
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="hexpand">True</property>
-            <property name="xalign">0</property>
             <property name="label" translatable="yes">--</property>
+            <property name="width_chars">5</property>
+            <property name="xalign">0</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -167,17 +171,17 @@
       </packing>
     </child>
     <child>
-      <object class="GtkBox" id="box5">
+      <object class="GtkBox" id="box7">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="spacing">2</property>
         <child>
-          <object class="GtkLabel" id="depth_label">
+          <object class="GtkLabel" id="pitch_label">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="hexpand">False</property>
+            <property name="label" translatable="yes" context="navindicator">Pitch</property>
             <property name="xalign">1</property>
-            <property name="label" translatable="yes">Depth</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -186,12 +190,14 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="dpt">
+          <object class="GtkLabel" id="pch">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="hexpand">True</property>
-            <property name="xalign">0</property>
             <property name="label" translatable="yes">--</property>
+            <property name="width_chars">5</property>
+            <property name="angle">2.2351741811588166e-10</property>
+            <property name="xalign">0</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -207,17 +213,17 @@
       </packing>
     </child>
     <child>
-      <object class="GtkBox" id="box6">
+      <object class="GtkBox" id="box8">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
         <property name="spacing">2</property>
         <child>
-          <object class="GtkLabel" id="time_label">
+          <object class="GtkLabel" id="roll_label">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="hexpand">False</property>
+            <property name="label" translatable="yes" context="navindicator">Roll</property>
             <property name="xalign">1</property>
-            <property name="label" translatable="yes">Time</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -226,13 +232,14 @@
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="tmd">
+          <object class="GtkLabel" id="rll">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
             <property name="hexpand">True</property>
-            <property name="xalign">0</property>
             <property name="label" translatable="yes">--</property>
+            <property name="width_chars">5</property>
             <property name="angle">2.2351741811588166e-10</property>
+            <property name="xalign">0</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -247,9 +254,92 @@
         <property name="position">5</property>
       </packing>
     </child>
+    <child>
+      <object class="GtkBox" id="box5">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="spacing">2</property>
+        <child>
+          <object class="GtkLabel" id="depth_label">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="hexpand">False</property>
+            <property name="label" translatable="yes">Depth</property>
+            <property name="xalign">1</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="dpt">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="hexpand">True</property>
+            <property name="label" translatable="yes">--</property>
+            <property name="width_chars">5</property>
+            <property name="xalign">0</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">6</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkBox" id="box6">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="spacing">2</property>
+        <child>
+          <object class="GtkLabel" id="time_label">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="hexpand">False</property>
+            <property name="label" translatable="yes">Time</property>
+            <property name="xalign">1</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel" id="tmd">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="hexpand">True</property>
+            <property name="label" translatable="yes">--</property>
+            <property name="width_chars">10</property>
+            <property name="angle">2.2351741811588166e-10</property>
+            <property name="xalign">0</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="expand">False</property>
+        <property name="fill">True</property>
+        <property name="position">7</property>
+      </packing>
+    </child>
   </template>
   <object class="GtkSizeGroup" id="labels_sg">
-    <property name="mode">both</property>
+    <property name="mode">vertical</property>
     <widgets>
       <widget name="lat_label"/>
       <widget name="lon_label"/>
@@ -257,6 +347,8 @@
       <widget name="speed_label"/>
       <widget name="depth_label"/>
       <widget name="time_label"/>
+      <widget name="pitch_label"/>
+      <widget name="roll_label"/>
     </widgets>
   </object>
 </interface>
