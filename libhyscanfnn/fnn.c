@@ -3709,7 +3709,7 @@ get_profile_dir (void)
 
       #ifdef FNN_PROFILE_STANDALONE
         dirs = g_realloc (dirs, ++dc * sizeof (*dirs));
-        dirs[dc - 1] = g_get_user_config_dir ();
+        dirs[dc - 1] = g_strdup (g_get_user_config_dir ());
       #endif
 
       dirs = g_realloc (dirs, ++dc * sizeof (*dirs));

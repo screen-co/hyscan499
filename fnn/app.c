@@ -8,6 +8,7 @@
 #include <hyscan-profile-hw.h>
 #include <hyscan-profile-offset.h>
 #include <hyscan-profile-db.h>
+#include <hyscan-gtk-dev-indicator.h>
 #include <gmodule.h>
 
 #ifdef G_OS_WIN32 /* Входная точка для GUI wWinMain. */
@@ -505,7 +506,10 @@ restart:
 
   /* Навигационные данные. */
   if (global.control != NULL)
-    global.gui.nav = hyscan_gtk_nav_indicator_new (HYSCAN_SENSOR (global.control));
+    {
+      global.gui.nav = hyscan_gtk_nav_indicator_new (HYSCAN_SENSOR (global.control));
+      gtk_box_pack_end (GTK_BOX (global.gui.nav), hyscan_gtk_dev_indicator_new (global.control), FALSE, FALSE, 0);
+    }
 
   /* Галсы. */
   global.gui.track.view = GTK_WIDGET (gtk_builder_get_object (common_builder, "track.view"));

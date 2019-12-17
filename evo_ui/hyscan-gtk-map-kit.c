@@ -547,9 +547,7 @@ on_button_press_event (GtkTreeView     *tree_view,
   HyScanGtkMapKitPrivate *priv = kit->priv;
 
   if ((event_button->type == GDK_BUTTON_PRESS) && (event_button->button == GDK_BUTTON_SECONDARY))
-    {
-      gtk_menu_popup (priv->track_menu, NULL, NULL, NULL, NULL, event_button->button, event_button->time);
-    }
+    gtk_menu_popup_at_pointer (priv->track_menu, (const GdkEvent *) event_button);
 
   return FALSE;
 }
@@ -1043,7 +1041,6 @@ create_wfmark_toolbox (HyScanGtkMapKit *kit)
   gtk_box_pack_start (GTK_BOX (kit->navigation), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
   gtk_box_pack_start (GTK_BOX (kit->navigation), scrolled_window, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (kit->navigation), priv->mark_editor, FALSE, FALSE, 0);
-  gtk_box_pack_start (GTK_BOX (kit->navigation), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
 }
 
 /* Выбор галсов проекта. */

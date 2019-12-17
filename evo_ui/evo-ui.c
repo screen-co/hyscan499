@@ -1410,7 +1410,7 @@ build_interface (Global *global)
     gtk_box_pack_start (GTK_BOX (lbox), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (lbox), mlist, TRUE, TRUE, 0);
     gtk_box_pack_start (GTK_BOX (lbox), meditor, FALSE, FALSE, 0);
-    gtk_box_pack_start (GTK_BOX (lbox), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
+    // gtk_box_pack_start (GTK_BOX (lbox), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
 
     gtk_stack_add_named (GTK_STACK (ui->nav_stack), lbox, EVO_NOT_MAP);
   }
@@ -1594,11 +1594,18 @@ build_interface (Global *global)
 
   if (global->gui.nav != NULL)
     {
-      gtk_orientable_set_orientation (GTK_ORIENTABLE (global->gui.nav), GTK_ORIENTATION_HORIZONTAL);
-      gtk_box_set_spacing (GTK_BOX (global->gui.nav), 10);
-      gtk_widget_set_halign (global->gui.nav, GTK_ALIGN_CENTER);
+      GtkWidget *separator;
 
-      gtk_grid_attach (GTK_GRID (ui->grid), global->gui.nav, 0, 2, 1, 1);
+      separator = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
+      gtk_widget_set_margin_top (separator, 6);
+
+      gtk_orientable_set_orientation (GTK_ORIENTABLE (global->gui.nav), GTK_ORIENTATION_HORIZONTAL);
+      gtk_widget_set_halign (global->gui.nav, GTK_ALIGN_END);
+      gtk_box_set_spacing (GTK_BOX (global->gui.nav), 12);
+      g_object_set (global->gui.nav, "margin", 3, NULL);
+
+      gtk_grid_attach (GTK_GRID (ui->grid), separator,       0, 2, 2, 1);
+      gtk_grid_attach (GTK_GRID (ui->grid), global->gui.nav, 0, 3, 2, 1);
     }
 
   gtk_stack_set_visible_child_name (GTK_STACK (ui->acoustic_stack), EVO_MAP);
