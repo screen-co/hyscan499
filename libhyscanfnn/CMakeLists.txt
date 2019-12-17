@@ -6,11 +6,20 @@ endif ()
 
 # Генерация ресурсного C-файла.
 file (MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/resources)
-execute_process (COMMAND ${RESOURCE_COMPILER}
-                 --generate-source
-                 --target ${CMAKE_BINARY_DIR}/resources/hyscan-fnn-resources.c
-                 hyscan-fnn-resources.xml
-                 WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+add_custom_command (OUTPUT ${CMAKE_BINARY_DIR}/resources/hyscan-fnn-resources.c
+                    COMMAND ${RESOURCE_COMPILER}
+                    --generate-source
+                    --target ${CMAKE_BINARY_DIR}/resources/hyscan-fnn-resources.c
+                    hyscan-fnn-resources.xml
+                    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+                    DEPENDS hyscan-fnn-resources.xml
+                            hyscan-gtk-mark-editor.ui
+                            hyscan-gtk-dev-indicator.css
+                            hyscan-gtk-nav-indicator.ui
+                            hyscan-gtk-project-viewer.ui
+                            hyscan-gtk-con.ui
+                            hyscan-fnn-fl.ui
+                    VERBATIM)
 
 add_library (${HYSCAN_FNN_LIBRARY} SHARED
              fnn-param-proxy.c
@@ -27,6 +36,7 @@ add_library (${HYSCAN_FNN_LIBRARY} SHARED
              hyscan-gtk-mark-editor.c
              hyscan-gtk-project-viewer.c
              hyscan-gtk-nav-indicator.c
+             hyscan-gtk-dev-indicator.c
              hyscan-gtk-fnn-box.c
              hyscan-gtk-con.c
              hyscan-mark-sync.c

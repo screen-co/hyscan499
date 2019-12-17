@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-22 14:17+0300\n"
+"POT-Creation-Date: 2019-12-16 18:12+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,79 +17,83 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: fnn.c:66
+#: fnn.c:67
 msgid "SideScan"
 msgstr ""
 
-#: fnn.c:75
+#: fnn.c:76
 msgid "SideScanLow"
 msgstr ""
 
-#: fnn.c:84
+#: fnn.c:85
 msgid "SideScanHigh"
 msgstr ""
 
-#: fnn.c:121 fnn.c:3380
+#: fnn.c:123 fnn.c:3491
 msgid "Profiler"
 msgstr ""
 
-#: fnn.c:172
+#: fnn.c:175
 msgid "Echosounder"
 msgstr ""
 
-#: fnn.c:179
+#: fnn.c:182
 msgid "EchosounderHigh"
 msgstr ""
 
-#: fnn.c:186
+#: fnn.c:189
 msgid "EchosounderLow"
 msgstr ""
 
-#: fnn.c:228
+#: fnn.c:232
 msgid "ForwardLook"
 msgstr ""
 
-#: fnn.c:528 fnn.c:536
+#: fnn.c:532 fnn.c:540
 msgid "Hardware parameters"
 msgstr ""
 
-#: fnn.c:531 hyscan-gtk-configurator.c:127
+#: fnn.c:535 hyscan-gtk-configurator.c:127
 msgid "Apply"
 msgstr ""
 
-#: fnn.c:532
+#: fnn.c:536
 msgid "Reset"
 msgstr ""
 
-#: fnn.c:533 fnn.c:569
+#: fnn.c:537 fnn.c:573 fnn.c:864
 msgid "Close"
 msgstr ""
 
-#: fnn.c:566 fnn.c:572
+#: fnn.c:570 fnn.c:576
 msgid "Sonar info"
 msgstr ""
 
-#: fnn.c:3389
+#: fnn.c:861 fnn.c:867
+msgid "Export data"
+msgstr ""
+
+#: fnn.c:3500
 msgid "Yellow"
 msgstr ""
 
-#: fnn.c:3397
+#: fnn.c:3508
 msgid "Brown"
 msgstr ""
 
-#: fnn.c:3404
+#: fnn.c:3515
 msgid "Sepia"
 msgstr ""
 
-#: fnn.c:3411
+#: fnn.c:3522
 msgid "White"
 msgstr ""
 
-#: fnn.c:3419
+#: fnn.c:3530
 msgid "Inverted"
 msgstr ""
 
-#: fnn.c:3427
+#: fnn.c:3538
 msgid "Green"
 msgstr ""
 
@@ -125,7 +129,7 @@ msgstr ""
 msgid "Enter project name"
 msgstr ""
 
-#: hyscan-fnn-project.c:445
+#: hyscan-fnn-project.c:445 hyscan-gtk-dev-indicator.c:154
 msgid "OK"
 msgstr ""
 
@@ -202,6 +206,30 @@ msgstr ""
 msgid "Name of DB-profile"
 msgstr ""
 
+#: hyscan-gtk-dev-indicator.c:157
+msgid "Warning"
+msgstr ""
+
+#: hyscan-gtk-dev-indicator.c:160
+msgid "Critical"
+msgstr ""
+
+#: hyscan-gtk-dev-indicator.c:163
+msgid "Error"
+msgstr ""
+
+#: hyscan-gtk-dev-indicator.c:166
+msgid "Unknown"
+msgstr ""
+
+#: hyscan-gtk-dev-indicator.c:213
+msgid "Device status"
+msgstr ""
+
+#: hyscan-gtk-dev-indicator.c:236
+msgid "No devices connected"
+msgstr ""
+
 #: hyscan-gtk-fnn-offsets.c:120
 msgid "Positive: starboard, negative: portside"
 msgstr ""
@@ -234,20 +262,12 @@ msgstr ""
 msgid "Offset setup"
 msgstr ""
 
-#: hyscan-gtk-nav-indicator.c:255
-msgid "N"
+#: hyscan-gtk-nav-indicator.c:302
+msgid "m/s"
 msgstr ""
 
-#: hyscan-gtk-nav-indicator.c:255
-msgid "S"
-msgstr ""
-
-#: hyscan-gtk-nav-indicator.c:256
-msgid "E"
-msgstr ""
-
-#: hyscan-gtk-nav-indicator.c:256
-msgid "W"
+#: hyscan-gtk-nav-indicator.c:306
+msgid "m"
 msgstr ""
 
 #: tmp/hyscan-gtk-con.ui.h:1
@@ -299,10 +319,20 @@ msgid "Speed"
 msgstr ""
 
 #: tmp/hyscan-gtk-nav-indicator.ui.h:6
-msgid "Depth"
+msgctxt "navindicator"
+msgid "Pitch"
 msgstr ""
 
 #: tmp/hyscan-gtk-nav-indicator.ui.h:7
+msgctxt "navindicator"
+msgid "Roll"
+msgstr ""
+
+#: tmp/hyscan-gtk-nav-indicator.ui.h:8
+msgid "Depth"
+msgstr ""
+
+#: tmp/hyscan-gtk-nav-indicator.ui.h:9
 msgid "Time"
 msgstr ""
 

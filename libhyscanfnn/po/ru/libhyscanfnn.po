@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-22 14:17+0300\n"
+"POT-Creation-Date: 2019-12-16 18:12+0300\n"
 "PO-Revision-Date: 2019-07-19 17:26+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -18,79 +18,83 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: fnn.c:66
+#: fnn.c:67
 msgid "SideScan"
 msgstr "ГБО"
 
-#: fnn.c:75
+#: fnn.c:76
 msgid "SideScanLow"
 msgstr "ГБО-НЧ"
 
-#: fnn.c:84
+#: fnn.c:85
 msgid "SideScanHigh"
 msgstr "ГБО-ВЧ"
 
-#: fnn.c:121 fnn.c:3380
+#: fnn.c:123 fnn.c:3491
 msgid "Profiler"
 msgstr "Профилограф"
 
-#: fnn.c:172
+#: fnn.c:175
 msgid "Echosounder"
 msgstr "Эхолот"
 
-#: fnn.c:179
+#: fnn.c:182
 msgid "EchosounderHigh"
 msgstr "ВЧ эхолот"
 
-#: fnn.c:186
+#: fnn.c:189
 msgid "EchosounderLow"
 msgstr "НЧ эхолот"
 
-#: fnn.c:228
+#: fnn.c:232
 msgid "ForwardLook"
 msgstr "ВСЛ"
 
-#: fnn.c:528 fnn.c:536
+#: fnn.c:532 fnn.c:540
 msgid "Hardware parameters"
 msgstr "Параметры оборудования"
 
-#: fnn.c:531 hyscan-gtk-configurator.c:127
+#: fnn.c:535 hyscan-gtk-configurator.c:127
 msgid "Apply"
 msgstr "Применить"
 
-#: fnn.c:532
+#: fnn.c:536
 msgid "Reset"
 msgstr "Сбросить"
 
-#: fnn.c:533 fnn.c:569
+#: fnn.c:537 fnn.c:573 fnn.c:864
 msgid "Close"
 msgstr "Закрыть"
 
-#: fnn.c:566 fnn.c:572
+#: fnn.c:570 fnn.c:576
 msgid "Sonar info"
 msgstr "Информация о локаторе"
 
-#: fnn.c:3389
+#: fnn.c:861 fnn.c:867
+msgid "Export data"
+msgstr "Экспорт данных"
+
+#: fnn.c:3500
 msgid "Yellow"
 msgstr "Жёлтая"
 
-#: fnn.c:3397
+#: fnn.c:3508
 msgid "Brown"
 msgstr "Коричневая"
 
-#: fnn.c:3404
+#: fnn.c:3515
 msgid "Sepia"
 msgstr "Сепия"
 
-#: fnn.c:3411
+#: fnn.c:3522
 msgid "White"
 msgstr "Белая"
 
-#: fnn.c:3419
+#: fnn.c:3530
 msgid "Inverted"
 msgstr "Инверсная"
 
-#: fnn.c:3427
+#: fnn.c:3538
 msgid "Green"
 msgstr "Зеленая"
 
@@ -126,9 +130,9 @@ msgstr "Вы действительно хотите удалить галс"
 msgid "Enter project name"
 msgstr "Введите название проекта"
 
-#: hyscan-fnn-project.c:445
+#: hyscan-fnn-project.c:445 hyscan-gtk-dev-indicator.c:154
 msgid "OK"
-msgstr "Ок"
+msgstr "OK"
 
 #: hyscan-fnn-project.c:524 hyscan-fnn-project.c:568
 msgid "Open project"
@@ -207,6 +211,30 @@ msgstr ""
 msgid "Name of DB-profile"
 msgstr "Имя профиля БД"
 
+#: hyscan-gtk-dev-indicator.c:157
+msgid "Warning"
+msgstr "Предупр."
+
+#: hyscan-gtk-dev-indicator.c:160
+msgid "Critical"
+msgstr "Критич."
+
+#: hyscan-gtk-dev-indicator.c:163
+msgid "Error"
+msgstr "Ошибка"
+
+#: hyscan-gtk-dev-indicator.c:166
+msgid "Unknown"
+msgstr "Неизвестно"
+
+#: hyscan-gtk-dev-indicator.c:213
+msgid "Device status"
+msgstr "Статус оборудования"
+
+#: hyscan-gtk-dev-indicator.c:236
+msgid "No devices connected"
+msgstr "Оборудование не подключено"
+
 #: hyscan-gtk-fnn-offsets.c:120
 msgid "Positive: starboard, negative: portside"
 msgstr "+: на правый борт, -: на левый; в м."
@@ -239,21 +267,13 @@ msgstr "Готово"
 msgid "Offset setup"
 msgstr "Местоположения антенн"
 
-#: hyscan-gtk-nav-indicator.c:255
-msgid "N"
-msgstr "С.Ш."
+#: hyscan-gtk-nav-indicator.c:302
+msgid "m/s"
+msgstr "м/с"
 
-#: hyscan-gtk-nav-indicator.c:255
-msgid "S"
-msgstr "Ю.Ш"
-
-#: hyscan-gtk-nav-indicator.c:256
-msgid "E"
-msgstr "В.Д."
-
-#: hyscan-gtk-nav-indicator.c:256
-msgid "W"
-msgstr "З.Д."
+#: hyscan-gtk-nav-indicator.c:306
+msgid "m"
+msgstr "м"
 
 #: tmp/hyscan-gtk-con.ui.h:1
 msgid "Welcome to connection manager"
@@ -304,10 +324,20 @@ msgid "Speed"
 msgstr "Скорость"
 
 #: tmp/hyscan-gtk-nav-indicator.ui.h:6
+msgctxt "navindicator"
+msgid "Pitch"
+msgstr "Дифф."
+
+#: tmp/hyscan-gtk-nav-indicator.ui.h:7
+msgctxt "navindicator"
+msgid "Roll"
+msgstr "Крен"
+
+#: tmp/hyscan-gtk-nav-indicator.ui.h:8
 msgid "Depth"
 msgstr "Глубина"
 
-#: tmp/hyscan-gtk-nav-indicator.ui.h:7
+#: tmp/hyscan-gtk-nav-indicator.ui.h:9
 msgid "Time"
 msgstr "Время"
 

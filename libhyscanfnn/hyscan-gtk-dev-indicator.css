@@ -1,0 +1,27 @@
+@keyframes blink {
+  0% { opacity: 1; }
+  50% { opacity: 0; }
+  100% { opacity: 0; }
+}
+
+devindicator {
+  padding: 0 6px; }
+  devindicator.status-error:not(:backdrop) {
+    animation-name: blink;
+    animation-timing-function: steps(2, start);
+    animation-duration: 1s;
+    animation-iteration-count: infinite;
+    background-color: @error_color;
+    color: #fff; }
+
+  devindicator.status-warning:not(:backdrop) {
+    background-color: @warning_color;
+    color: #fff; }
+
+  devindicator.status-critical:not(:backdrop) {
+    background-color: mix(@warning_color, @success_color, 0.5);
+    color: #fff; }
+
+  devindicator.status-ok:not(:backdrop) {
+    background-color: @success_color;
+    color: #fff; }
