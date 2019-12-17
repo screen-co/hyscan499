@@ -1,12 +1,12 @@
 #include "hyscan-fnn-offsets.h"
 
 #define HYSCAN_FNN_OFFSETS_MASTER "master"
-#define HYSCAN_FNN_OFFSETS_X "x"
-#define HYSCAN_FNN_OFFSETS_Y "y"
-#define HYSCAN_FNN_OFFSETS_Z "z"
-#define HYSCAN_FNN_OFFSETS_PSI "psi"
-#define HYSCAN_FNN_OFFSETS_GAMMA "gamma"
-#define HYSCAN_FNN_OFFSETS_THETA "theta"
+#define HYSCAN_FNN_OFFSETS_STARBOARD "starboard"
+#define HYSCAN_FNN_OFFSETS_FORWARD "forward"
+#define HYSCAN_FNN_OFFSETS_VERTICAL "vertical"
+#define HYSCAN_FNN_OFFSETS_YAW "yaw"
+#define HYSCAN_FNN_OFFSETS_PITCH "pitch"
+#define HYSCAN_FNN_OFFSETS_ROLL "roll"
 enum
 {
   PROP_0,
@@ -215,12 +215,12 @@ hyscan_fnn_offsets_read (HyScanFnnOffsets  *self,
 
       info->master = g_key_file_get_string (keyfile, *iter, HYSCAN_FNN_OFFSETS_MASTER, NULL);
 
-      info->offset.x     = g_key_file_get_double (keyfile, *iter, HYSCAN_FNN_OFFSETS_X, NULL);
-      info->offset.y     = g_key_file_get_double (keyfile, *iter, HYSCAN_FNN_OFFSETS_Y, NULL);
-      info->offset.z     = g_key_file_get_double (keyfile, *iter, HYSCAN_FNN_OFFSETS_Z, NULL);
-      info->offset.psi   = g_key_file_get_double (keyfile, *iter, HYSCAN_FNN_OFFSETS_PSI, NULL);
-      info->offset.gamma = g_key_file_get_double (keyfile, *iter, HYSCAN_FNN_OFFSETS_GAMMA, NULL);
-      info->offset.theta = g_key_file_get_double (keyfile, *iter, HYSCAN_FNN_OFFSETS_THETA, NULL);
+      info->offset.starboard = g_key_file_get_double (keyfile, *iter, HYSCAN_FNN_OFFSETS_STARBOARD, NULL);
+      info->offset.forward   = g_key_file_get_double (keyfile, *iter, HYSCAN_FNN_OFFSETS_FORWARD, NULL);
+      info->offset.vertical  = g_key_file_get_double (keyfile, *iter, HYSCAN_FNN_OFFSETS_VERTICAL, NULL);
+      info->offset.yaw       = g_key_file_get_double (keyfile, *iter, HYSCAN_FNN_OFFSETS_YAW, NULL);
+      info->offset.pitch     = g_key_file_get_double (keyfile, *iter, HYSCAN_FNN_OFFSETS_PITCH, NULL);
+      info->offset.roll      = g_key_file_get_double (keyfile, *iter, HYSCAN_FNN_OFFSETS_ROLL, NULL);
     }
 
   g_key_file_unref (keyfile);
@@ -251,12 +251,12 @@ hyscan_fnn_offsets_write (HyScanFnnOffsets *self,
       if (info->master != NULL)
         g_key_file_set_string (keyfile, key, HYSCAN_FNN_OFFSETS_MASTER, info->master);
 
-      g_key_file_set_double (keyfile, key, HYSCAN_FNN_OFFSETS_X, info->offset.x);
-      g_key_file_set_double (keyfile, key, HYSCAN_FNN_OFFSETS_Y, info->offset.y);
-      g_key_file_set_double (keyfile, key, HYSCAN_FNN_OFFSETS_Z, info->offset.z);
-      g_key_file_set_double (keyfile, key, HYSCAN_FNN_OFFSETS_PSI, info->offset.psi);
-      g_key_file_set_double (keyfile, key, HYSCAN_FNN_OFFSETS_GAMMA, info->offset.gamma);
-      g_key_file_set_double (keyfile, key, HYSCAN_FNN_OFFSETS_THETA, info->offset.theta);
+      g_key_file_set_double (keyfile, key, HYSCAN_FNN_OFFSETS_STARBOARD, info->offset.starboard);
+      g_key_file_set_double (keyfile, key, HYSCAN_FNN_OFFSETS_FORWARD, info->offset.forward);
+      g_key_file_set_double (keyfile, key, HYSCAN_FNN_OFFSETS_VERTICAL, info->offset.vertical);
+      g_key_file_set_double (keyfile, key, HYSCAN_FNN_OFFSETS_YAW, info->offset.yaw);
+      g_key_file_set_double (keyfile, key, HYSCAN_FNN_OFFSETS_PITCH, info->offset.pitch);
+      g_key_file_set_double (keyfile, key, HYSCAN_FNN_OFFSETS_ROLL, info->offset.roll);
     }
 
   /* Считываю файл. */
