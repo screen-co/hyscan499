@@ -144,8 +144,8 @@ hyscan_gtk_nav_indicator_constructed (GObject *object)
   priv->parser.gga_time = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_GGA, HYSCAN_NMEA_FIELD_TIME);
   priv->parser.gga_lat = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_GGA, HYSCAN_NMEA_FIELD_LAT);
   priv->parser.gga_lon = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_GGA, HYSCAN_NMEA_FIELD_LON);
-  priv->parser.pitch = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_HPR, HYSCAN_NMEA_FIELD_PITCH);
-  priv->parser.roll = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_HPR, HYSCAN_NMEA_FIELD_ROLL);
+  priv->parser.pitch = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_HYHPR, HYSCAN_NMEA_FIELD_PITCH);
+  priv->parser.roll = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_HYHPR, HYSCAN_NMEA_FIELD_ROLL);
 
   priv->update_tag = g_timeout_add (1000, (GSourceFunc)(hyscan_gtk_nav_indicator_update), self);
   priv->sensor_data_id = g_signal_connect (priv->sensor, "sensor-data", G_CALLBACK (hyscan_gtk_nav_indicator_sensor_data), self);
@@ -219,7 +219,7 @@ hyscan_gtk_nav_indicator_parse (HyScanGtkNavIndicator *self,
         ggas = nmea[i];
       else if (g_str_has_prefix (nmea[i]+3, "DPT"))
         dpts = nmea[i];
-      else if (g_str_has_prefix (nmea[i] + 1, "PTNTHPR"))
+      else if (g_str_has_prefix (nmea[i] + 1, "HYHPR"))
         hprs = nmea[i];
     }
 
