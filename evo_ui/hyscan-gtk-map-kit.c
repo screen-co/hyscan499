@@ -1,5 +1,7 @@
 #include "hyscan-gtk-map-kit.h"
 #include "hyscan-gtk-mark-editor.h"
+#include "hyscan-gtk-map-preload.h"
+#include "hyscan-gtk-map-go.h"
 #include <hyscan-gtk-map-base.h>
 #include <hyscan-gtk-map-control.h>
 #include <hyscan-gtk-map-ruler.h>
@@ -9,7 +11,6 @@
 #include <hyscan-gtk-map-track.h>
 #include <hyscan-cached.h>
 #include <hyscan-profile-map.h>
-#include <hyscan-map-tile-loader.h>
 #include <hyscan-db-info.h>
 #include <hyscan-gtk-map-scale.h>
 #include <hyscan-gtk-param-list.h>
@@ -93,16 +94,6 @@ struct _HyScanGtkMapKitPrivate
   /* Виджеты. */
   GtkWidget             *profiles_box;     /* Выпадающий список профилей карты. */
   GtkWidget             *profile_param;    /* Виджет редактирования параметров профиля. */
-  GtkButton             *preload_button;   /* Кнопка загрузки тайлов. */
-  GtkProgressBar        *preload_progress; /* Индикатор загрузки тайлов. */
-
-  HyScanMapTileLoader   *loader;
-  guint                  preload_tag;      /* Timeout-функция обновления виджета preload_progress. */
-  gint                   preload_state;    /* Статус загрузки тайлов.
-                                            * < 0                      - загрузка не началась,
-                                            * 0 - PRELOAD_STATE_DONE-1 - прогресс загрузки,
-                                            * >= PRELOAD_STATE_DONE    - загрузка завершена, не удалось загрузить
-                                            *                            PRELOAD_STATE_DONE - preload_state тайлов */
 
   GtkTreeView           *track_tree;       /* GtkTreeView со списком галсов. */
   GtkListStore          *track_store;      /* Модель данных для track_tree. */
@@ -113,8 +104,6 @@ struct _HyScanGtkMapKitPrivate
   GtkListStore          *mark_store;      /* Модель данных для track_tree. */
 
   GtkWidget             *locate_button;   /* Кнопка для определения текущего местоположения. */
-  GtkWidget             *lat_spin;        /* Поля для ввода широты. */
-  GtkWidget             *lon_spin;        /* Поля для ввода долготы. */
 
   GtkWidget             *mark_editor;     /* Редактор названия меток. */
   GtkWidget             *stbar_offline;   /* Статусбар оффлайн. */
@@ -1084,14 +1073,6 @@ create_track_box (HyScanGtkMapKit *kit,
 }
 
 static void
-on_coordinate_change (GtkSwitch  *widget,
-                      GParamSpec *pspec,
-                      gdouble    *value)
-{
-  *value = gtk_spin_button_get_value (GTK_SPIN_BUTTON (widget));
-}
-
-static void
 on_locate_click (HyScanGtkMapKit *kit)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
@@ -1099,14 +1080,6 @@ on_locate_click (HyScanGtkMapKit *kit)
 
   if (hyscan_nav_model_get (priv->nav_model, &data, NULL))
     hyscan_gtk_map_move_to (HYSCAN_GTK_MAP (kit->map), data.coord);
-}
-
-static void
-on_move_to_click (HyScanGtkMapKit *kit)
-{
-  HyScanGtkMapKitPrivate *priv = kit->priv;
-
-  hyscan_gtk_map_move_to (HYSCAN_GTK_MAP (kit->map), priv->center);
 }
 
 static gboolean
@@ -1122,124 +1095,6 @@ on_motion_show_coords (HyScanGtkMap    *map,
   gtk_statusbar_push (GTK_STATUSBAR (kit->priv->stbar_coord), 0, text);
 
   return FALSE;
-}
-
-static gboolean
-source_update_progress (gpointer data)
-{
-  HyScanGtkMapKit *kit = data;
-  HyScanGtkMapKitPrivate *priv = kit->priv;
-  gint state;
-
-  state = g_atomic_int_get (&priv->preload_state);
-  gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR (priv->preload_progress),
-                                 CLAMP ((gdouble) state / PRELOAD_STATE_DONE, 0.0, 1.0));
-
-  return G_SOURCE_CONTINUE;
-}
-
-static gboolean
-source_progress_done (gpointer data)
-{
-  HyScanGtkMapKit *kit = data;
-  HyScanGtkMapKitPrivate *priv = kit->priv;
-
-  gint state;
-  gchar *text = NULL;
-
-  state = g_atomic_int_get (&priv->preload_state);
-
-  if (state == PRELOAD_STATE_DONE)
-    text = g_strdup (_("Done!"));
-  else if (state > PRELOAD_STATE_DONE)
-    text = g_strdup_printf (_("Done! Failed to load %d tiles"), state - PRELOAD_STATE_DONE);
-  else
-    g_warn_if_reached ();
-
-  gtk_button_set_label (priv->preload_button, _("Start download"));
-  gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR (priv->preload_progress), 1.0);
-  gtk_progress_bar_set_text (GTK_PROGRESS_BAR (priv->preload_progress), text);
-  g_free (text);
-
-  g_signal_handlers_disconnect_by_data (priv->loader, kit);
-  g_clear_object (&priv->loader);
-
-  g_atomic_int_set (&priv->preload_state, -1);
-
-  return G_SOURCE_REMOVE;
-}
-
-static void
-on_preload_done (HyScanMapTileLoader *loader,
-                 guint                failed,
-                 HyScanGtkMapKit     *kit)
-{
-  HyScanGtkMapKitPrivate *priv = kit->priv;
-  g_atomic_int_set (&priv->preload_state, PRELOAD_STATE_DONE + failed);
-
-  g_source_remove (priv->preload_tag);
-  g_idle_add (source_progress_done, kit);
-}
-
-static void
-on_preload_progress (HyScanMapTileLoader *loader,
-                     gdouble              fraction,
-                     HyScanGtkMapKit     *kit)
-{
-  HyScanGtkMapKitPrivate *priv = kit->priv;
-
-  g_atomic_int_set (&priv->preload_state, CLAMP ((gint) (PRELOAD_STATE_DONE * fraction), 0, PRELOAD_STATE_DONE - 1));
-}
-
-static void
-preload_stop (HyScanGtkMapKit *kit)
-{
-  HyScanGtkMapKitPrivate *priv = kit->priv;
-
-  hyscan_map_tile_loader_stop (priv->loader);
-}
-
-static void
-preload_start (HyScanGtkMapKit *kit)
-{
-  HyScanGtkMapKitPrivate *priv = kit->priv;
-  HyScanGtkLayer *layer;
-  HyScanMapTileSource *source;
-  gdouble from_x, to_x, from_y, to_y;
-  GThread *thread;
-
-  layer = hyscan_gtk_layer_container_lookup (HYSCAN_GTK_LAYER_CONTAINER (kit->map), HYSCAN_PROFILE_MAP_BASE_ID);
-  g_return_if_fail (HYSCAN_IS_GTK_MAP_BASE (layer));
-
-  source = hyscan_gtk_map_base_get_source (HYSCAN_GTK_MAP_BASE (layer));
-  priv->loader = hyscan_map_tile_loader_new ();
-  g_object_unref (source);
-
-  gtk_button_set_label (priv->preload_button, _("Stop download"));
-  gtk_progress_bar_set_text (GTK_PROGRESS_BAR (priv->preload_progress), NULL);
-  gtk_progress_bar_set_fraction (GTK_PROGRESS_BAR (priv->preload_progress), 0.0);
-
-  /* Регистрируем обработчики сигналов для loader'а и обновление индикатора загрузки. */
-  g_signal_connect (priv->loader, "progress", G_CALLBACK (on_preload_progress), kit);
-  g_signal_connect (priv->loader, "done",     G_CALLBACK (on_preload_done),     kit);
-  priv->preload_tag = g_timeout_add (500, source_update_progress, kit);
-
-  /* Запускаем загрузку тайлов. */
-  gtk_cifro_area_get_view (GTK_CIFRO_AREA (kit->map), &from_x, &to_x, &from_y, &to_y);
-  thread = hyscan_map_tile_loader_start (priv->loader, source, from_x, to_x, from_y, to_y);
-  g_thread_unref (thread);
-}
-
-static void
-on_preload_click (GtkButton       *button,
-                  HyScanGtkMapKit *kit)
-{
-  HyScanGtkMapKitPrivate *priv = kit->priv;
-
-  if (g_atomic_int_compare_and_exchange (&priv->preload_state, -1, 0))
-    preload_start (kit);
-  else
-    preload_stop (kit);
 }
 
 /* Создаёт панель инструментов для слоя булавок и линейки. */
@@ -1270,52 +1125,24 @@ create_navigation_box (HyScanGtkMapKit *kit)
 }
 
 /* Текстовые поля для ввода координат. */
-static void
-create_nav_input (HyScanGtkMapKit *kit,
-                  GtkGrid         *grid)
-{
-  gint t=0;
-  HyScanGtkMapKitPrivate *priv = kit->priv;
-  GtkWidget *move_button;
-
-  priv->lat_spin = gtk_spin_button_new_with_range (-90.0, 90.0, 0.001);
-  g_signal_connect (priv->lat_spin, "notify::value", G_CALLBACK (on_coordinate_change), &priv->center.lat);
-
-  priv->lon_spin = gtk_spin_button_new_with_range (-180.0, 180.0, 0.001);
-  g_signal_connect (priv->lon_spin, "notify::value", G_CALLBACK (on_coordinate_change), &priv->center.lon);
-
-  move_button = gtk_button_new_with_label (_("Go"));
-  g_signal_connect_swapped (move_button, "clicked", G_CALLBACK (on_move_to_click), kit);
-
-  gtk_grid_attach (grid, gtk_label_new (_("Lat")), 0, ++t, 1, 1);
-  gtk_grid_attach (grid, priv->lat_spin, 1, t, 1, 1);
-  gtk_grid_attach (grid, gtk_label_new (_("Lon")), 0, ++t, 1, 1);
-  gtk_grid_attach (grid, priv->lon_spin, 1, t, 1, 1);
-  gtk_grid_attach (grid, move_button, 0, ++t, 2, 1);
-}
-
-/* Загрузка тайлов. */
-static void
-create_preloader (HyScanGtkMapKit *kit,
-                  GtkBox          *box)
+static GtkWidget *
+create_nav_input (HyScanGtkMapKit *kit)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
-  GtkWidget *description;
+  GtkWidget *preload, *go;
+  GtkWidget *toplevel;
 
-  priv->preload_state = -1;
+  toplevel = gtk_notebook_new ();
 
-  priv->preload_button = GTK_BUTTON (gtk_button_new_with_label (_("Start download")));
-  g_signal_connect (priv->preload_button, "clicked", G_CALLBACK (on_preload_click), kit);
+  go = hyscan_gtk_map_go_new (HYSCAN_GTK_MAP (kit->map));
+  g_object_set (go, "margin", 6, NULL);
+  gtk_notebook_append_page (GTK_NOTEBOOK (toplevel), go, gtk_label_new (_("Go to")));
 
-  priv->preload_progress = GTK_PROGRESS_BAR (gtk_progress_bar_new ());
-  gtk_progress_bar_set_show_text (priv->preload_progress, TRUE);
+  preload = hyscan_gtk_map_preload_new (HYSCAN_GTK_MAP (kit->map), HYSCAN_GTK_MAP_BASE (priv->base_layer));
+  g_object_set (preload, "margin", 6, NULL);
+  gtk_notebook_append_page (GTK_NOTEBOOK (toplevel), preload, gtk_label_new (_("Download")));
 
-  description = gtk_label_new (_("Download visible area of map\nto make it available when offline"));
-  gtk_label_set_line_wrap (GTK_LABEL (description), TRUE);
-
-  gtk_box_pack_start (box, description,                         TRUE, TRUE, 0);
-  gtk_box_pack_start (box, GTK_WIDGET (priv->preload_progress), TRUE, TRUE, 0);
-  gtk_box_pack_start (box, GTK_WIDGET (priv->preload_button),   TRUE, TRUE, 0);
+  return toplevel;
 }
 
 /* Текущие координаты. */
@@ -1523,47 +1350,11 @@ create_control_box (HyScanGtkMapKit *kit)
                                      create_ruler_toolbox (priv->ruler, _("Remove ruler")));
     hyscan_gtk_layer_list_set_tools (HYSCAN_GTK_LAYER_LIST (priv->layer_list), "pin",
                                      create_ruler_toolbox (priv->pin_layer, _("Remove all pins")));
+    hyscan_gtk_layer_list_set_tools (HYSCAN_GTK_LAYER_LIST (priv->layer_list), "base",
+                                     create_nav_input (kit));
   }
 
-  /* Стек с инструментами. */
-  {
-    GtkWidget *nav_box;
-    GtkWidget *stack_switcher, *stack, *stack_box;
-
-    nav_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
-    stack = gtk_stack_new ();
-
-    stack_box = gtk_grid_new ();
-    g_object_set (stack_box,
-                  "margin", 6,
-                  "row-spacing", 6,
-                  "column-spacing", 6,
-                  "halign", GTK_ALIGN_CENTER,
-                  NULL);
-    gtk_grid_set_column_spacing (GTK_GRID (stack_box), 2);
-    gtk_grid_set_row_spacing (GTK_GRID (stack_box), 2);
-    create_nav_input (kit, GTK_GRID (stack_box));
-    gtk_stack_add_titled (GTK_STACK (stack), stack_box, "navigate", _("Go to"));
-
-    stack_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
-    g_object_set (stack_box,
-                  "margin", 6,
-                  "halign", GTK_ALIGN_CENTER,
-                  NULL);
-    create_preloader (kit, GTK_BOX (stack_box));
-    gtk_stack_add_titled (GTK_STACK (stack), stack_box, "cache", _("Download"));
-
-    stack_switcher = gtk_stack_switcher_new ();
-    gtk_widget_set_halign (stack_switcher, GTK_ALIGN_CENTER);
-    gtk_widget_set_margin_top (stack_switcher, 5);
-    gtk_stack_switcher_set_stack (GTK_STACK_SWITCHER (stack_switcher), GTK_STACK (stack));
-
-    gtk_box_pack_start (GTK_BOX (nav_box), stack_switcher, FALSE, TRUE, 0);
-    gtk_box_pack_start (GTK_BOX (nav_box), stack, FALSE, TRUE, 0);
-    hyscan_gtk_layer_list_set_tools (HYSCAN_GTK_LAYER_LIST (priv->layer_list), "base", nav_box);
-
-    gtk_grid_attach (GTK_GRID (ctrl_box), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), 0, ++t, 5, 1);
-  }
+  gtk_grid_attach (GTK_GRID (ctrl_box), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), 0, ++t, 5, 1);
 
   return ctrl_box;
 }
@@ -1621,21 +1412,12 @@ hyscan_gtk_map_kit_view_create (HyScanGtkMapKit *kit)
 }
 
 static void
-hyscan_gtk_map_kit_model_init (HyScanGtkMapKit   *kit,
-                               HyScanGeoGeodetic *center)
+hyscan_gtk_map_kit_model_init (HyScanGtkMapKit   *kit)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
 
   if (priv->db_info != NULL && priv->project_name != NULL)
     hyscan_db_info_set_project (priv->db_info, priv->project_name);
-
-  /* Устанавливаем центр карты. */
-  {
-    priv->center = *center;
-    hyscan_gtk_map_move_to (HYSCAN_GTK_MAP (kit->map), priv->center);
-    gtk_spin_button_set_value (GTK_SPIN_BUTTON (priv->lat_spin), priv->center.lat);
-    gtk_spin_button_set_value (GTK_SPIN_BUTTON (priv->lon_spin), priv->center.lon);
-  }
 
   /* Добавляем профиль по умолчанию. */
   {
@@ -1822,10 +1604,11 @@ hyscan_gtk_map_kit_new (HyScanGeoGeodetic *center,
   kit = g_new0 (HyScanGtkMapKit, 1);
   kit->priv = g_new0 (HyScanGtkMapKitPrivate, 1);
   kit->priv->tile_cache_dir = g_strdup (cache_dir);
+  kit->priv->center = *center;
 
   hyscan_gtk_map_kit_model_create (kit, db);
   hyscan_gtk_map_kit_view_create (kit);
-  hyscan_gtk_map_kit_model_init (kit, center);
+  hyscan_gtk_map_kit_model_init (kit);
 
   return kit;
 }
