@@ -1331,6 +1331,14 @@ create_control_box (HyScanGtkMapKit *kit)
   /* Слои. */
   {
     GtkWidget *lock_switch;
+    GtkWidget *scrolled_wnd;
+
+    /* Контейнер с прокруткой для списка слоёв. */
+    scrolled_wnd = gtk_scrolled_window_new (NULL, NULL);
+    gtk_container_add (GTK_CONTAINER (scrolled_wnd), priv->layer_list);
+    gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scrolled_wnd), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
+    gtk_scrolled_window_set_propagate_natural_width (GTK_SCROLLED_WINDOW (scrolled_wnd), TRUE);
+    gtk_scrolled_window_set_propagate_natural_height (GTK_SCROLLED_WINDOW (scrolled_wnd), TRUE);
 
     lock_switch = gtk_switch_new ();
     gtk_switch_set_active (GTK_SWITCH (lock_switch),
@@ -1340,7 +1348,7 @@ create_control_box (HyScanGtkMapKit *kit)
 
     gtk_grid_attach (GTK_GRID (ctrl_box), gtk_label_new (_("Lock layers")), 0, ++t, 3, 1);
     gtk_grid_attach (GTK_GRID (ctrl_box), lock_switch,                      3,   t, 2, 1);
-    gtk_grid_attach (GTK_GRID (ctrl_box), priv->layer_list,                 0, ++t, 5, 1);
+    gtk_grid_attach (GTK_GRID (ctrl_box), scrolled_wnd,                     0, ++t, 5, 1);
   }
 
   /* Контейнер для панели инструментов каждого слоя. */
@@ -1517,8 +1525,8 @@ create_wfmark_layer_toolbox (HyScanGtkLayer *layer)
   g_signal_connect (GTK_COMBO_BOX (combo), "changed",
                     G_CALLBACK (hyscan_gtk_map_kit_on_changed_combo_box), layer);
 
-  box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 5);
-  gtk_box_pack_start(GTK_BOX(box), combo, TRUE, TRUE, 10);
+  box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+  gtk_box_pack_start (GTK_BOX(box), combo, TRUE, TRUE, 0);
 
   return box;
 }
