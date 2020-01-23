@@ -87,6 +87,7 @@ if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
 endif ()
 
 add_definitions (-DG_LOG_DOMAIN="Fnn")
+add_definitions (-DACCEPT_USE_OF_DEPRECATED_PROJ_API_H)
 add_definitions (-DFNN_DEFAULT_UI="evo.ui")
 add_definitions (-DFNN_LOCALE_DIR="/usr/share/locale")
 if (FNN_PROFILE_PORTABLE)
