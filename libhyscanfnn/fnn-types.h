@@ -10,6 +10,9 @@
 #include <hyscan-gtk-waterfall-meter.h>
 #include <hyscan-gtk-waterfall-mark.h>
 #include <hyscan-gtk-waterfall-player.h>
+#include <hyscan-gtk-waterfall-magnifier.h>
+#include <hyscan-gtk-waterfall-coord.h>
+#include <hyscan-gtk-waterfall-shadowm.h>
 #include <hyscan-object-model.h>
 #include <hyscan-gtk-project-viewer.h>
 #include <hyscan-gtk-mark-editor.h>
@@ -115,6 +118,7 @@ typedef enum
 
 typedef struct
 {
+  gboolean               disabled;
   gdouble                distance;
   gint                   signal;
   gdouble                gain0;       // lin
@@ -185,6 +189,9 @@ typedef struct
   HyScanGtkWaterfallMeter       * wf_metr;
   HyScanGtkWaterfallMark        * wf_mark;
   HyScanGtkWaterfallPlayer      * wf_play;
+  HyScanGtkWaterfallMagnifier   * wf_magn;
+  HyScanGtkWaterfallShadowm     * wf_shad;
+  HyScanGtkWaterfallCoord       * wf_coor;
 } VisualWF;
 
 typedef struct
@@ -309,7 +316,7 @@ struct _Global
     ui_vadjust_fn adjust_visibility;
   } ui;
 
-
+  gboolean request_restart;
 }; // Global
 
 
@@ -389,6 +396,10 @@ run_show_sonar_info (GObject     *emitter,
 HYSCAN_API void
 projects_changed (HyScanDBInfo *db_info,
                   Global       *global);
+
+HYSCAN_API void
+run_export_data (GObject     *emitter,
+                 gpointer     from_ui_params);
 
 GtkTreePath *
 ame_gtk_tree_model_get_last_path (GtkTreeView *tree);
@@ -679,6 +690,15 @@ HYSCAN_API void
 color_map_cyclic (GtkWidget *widget,
                   gint       panelx);
 
+HYSCAN_API void 
+enable_switched (GtkWidget *widget,
+                 gint       panelx);
+
+HYSCAN_API gboolean
+disable_changed (GtkWidget *widget,
+                 gboolean   disabled,
+                 gint       panelx);
+
 HYSCAN_API gboolean
 mode_changed (GtkWidget *widget,
               gboolean   state,
@@ -724,6 +744,10 @@ HYSCAN_API void
 signal_down (GtkWidget *widget,
              gint       selector);
 
+HYSCAN_API gboolean
+panel_turn_on_off (Global   *global,
+                   gboolean on_air,
+                   FnnPanel *panel);
 
 HYSCAN_API gboolean
 start_stop (Global    *global,
@@ -738,13 +762,16 @@ fl_coords_callback (HyScanFlCoords *coords,
                     GtkLabel       *label);
 
 HYSCAN_API  GtkWidget *
-make_overlay (HyScanGtkWaterfall          *wf,
-              HyScanGtkWaterfallGrid     **_grid,
-              HyScanGtkWaterfallControl  **_ctrl,
-              HyScanGtkWaterfallMark     **_mark,
-              HyScanGtkWaterfallMeter    **_meter,
-              HyScanGtkWaterfallPlayer   **_player,
-              HyScanObjectModel           *mark_model);
+make_overlay (HyScanGtkWaterfall           *wf,
+              HyScanGtkWaterfallGrid      **_grid,
+              HyScanGtkWaterfallControl   **_ctrl,
+              HyScanGtkWaterfallMark      **_mark,
+              HyScanGtkWaterfallMeter     **_meter,
+              HyScanGtkWaterfallPlayer    **_player,
+              HyScanGtkWaterfallMagnifier **_magnifier,
+              HyScanGtkWaterfallShadowm   **_shad,
+              HyScanGtkWaterfallCoord     **_coord,
+              HyScanObjectModel            *mark_model);
 
 HYSCAN_API void
 fnn_colormap_free (gpointer data);

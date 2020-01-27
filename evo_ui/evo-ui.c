@@ -1,4 +1,5 @@
 #include <gmodule.h>
+#include <hyscan-geo.h>
 #include <hyscan-gtk-area.h>
 #include <hyscan-gtk-fnn-offsets.h>
 #include "hyscan-gtk-mark-export.h"
@@ -6,6 +7,7 @@
 
 #define GETTEXT_PACKAGE "hyscanfnn-evoui"
 #include <glib/gi18n-lib.h>
+#include <proj_api.h>
 
 // #define EVO_EMPTY_PAGE "empty_page"
 #define EVO_NOT_MAP "evo-not-map"
@@ -19,8 +21,13 @@
 #define EVO_GRID_KEY "GRID"
 #define EVO_MARK_KEY "MARK"
 #define EVO_METR_KEY "METR"
+#define EVO_SHAD_KEY "SHAD"
+#define EVO_COOR_KEY "COOR"
+#define EVO_MAGN_KEY "MAGN"
 
 #define TVG_TEST(caps,concrete) ((caps & concrete) == concrete)
+#define DEG2RAD(x) ((x) * G_PI / 180.0)
+
 enum
 {
   LAYER_VISIBLE_COLUMN,
@@ -31,12 +38,68 @@ enum
 
 enum
 {
+  XYZ_TO_FILE,
+  UTM_TO_FILE,
   MARKS_TO_CSV,
   MARKS_TO_CLIPBOARD,
 };
 
 EvoUI global_ui = {0,};
 Global *_global = NULL;
+
+void
+filesave_dialog (const gchar *extension,
+                 const gchar *project,
+                 const gchar *track,
+                 const gchar *data)
+{
+  GtkWidget *dialog;
+  gint res;
+  gchar *folder = NULL;
+  gchar *filename = NULL;
+  GError *error = NULL;
+
+  dialog = gtk_file_chooser_dialog_new (_("Save file"),
+                                        GTK_WINDOW (_global->gui.window),
+                                        GTK_FILE_CHOOSER_ACTION_SAVE,
+                                        _("Cancel"), GTK_RESPONSE_CANCEL,
+                                        _("Save"), GTK_RESPONSE_ACCEPT,
+                                        NULL);
+  gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
+
+  folder = keyfile_string_read_helper (global_ui.settings, "EVO", "export_folder");
+
+  filename = g_strdup_printf ("%s-%s.%s", project, track, extension);
+  gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (dialog), filename);
+  gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (dialog), folder);
+  g_free (filename);
+  g_free (folder);
+
+  res = gtk_dialog_run (GTK_DIALOG (dialog));
+
+  if (res != GTK_RESPONSE_ACCEPT)
+    {
+      gtk_widget_destroy (dialog);
+      return;
+    }
+
+  filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+  folder = gtk_file_chooser_get_current_folder (GTK_FILE_CHOOSER (dialog));
+
+  keyfile_string_write_helper (global_ui.settings, "EVO", "export_folder", folder);
+
+  g_file_set_contents (filename, data, strlen (data), &error);
+
+  if (error != NULL)
+    {
+      g_message ("Depth save failure: %s", error->message);
+      g_error_free (error);
+    }
+
+  gtk_widget_destroy (dialog);
+  g_free (folder);
+  g_free (filename);
+}
 
 /* OVERRIDES */
 void
@@ -47,8 +110,6 @@ depth_writer (GObject *emitter)
   HyScanGeoGeodetic coord;
   GString *string = NULL;
   gchar *words = NULL;
-  GError *error = NULL;
-  gchar *filename;
 
   HyScanDB * db = _global->db;
   HyScanCache * cache = _global->cache;
@@ -59,7 +120,7 @@ depth_writer (GObject *emitter)
   HyScanmLoc * mloc;
 
   dpt = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track,
-                                                 3, HYSCAN_NMEA_DATA_DPT,
+                                                 2, HYSCAN_NMEA_DATA_DPT,
                                                  HYSCAN_NMEA_FIELD_DEPTH));
 
   if (dpt == NULL)
@@ -77,13 +138,11 @@ depth_writer (GObject *emitter)
     }
 
   string = g_string_new (NULL);
-  g_string_append_printf (string, "%s;%s\n", project, track);
+  g_string_append_printf (string, "#%s;%s\n", project, track);
+  g_string_append_printf (string, "#LAT,LON,DPT\n");
 
   hyscan_nav_data_get_range (dpt, &first, &last);
   antenna = hyscan_nav_data_get_offset (dpt);
-  g_message ("Hello!");
-    g_message ("depth_writer: %u, %u", first, last);
-
 
   for (i = first; i <= last; ++i)
     {
@@ -113,17 +172,176 @@ depth_writer (GObject *emitter)
   if (words == NULL)
     return;
 
-  filename = g_strdup_printf ("%s%s", "/tmp/", track);
-  g_file_set_contents (filename,
-                       words, strlen (words), &error);
-  g_free (filename);
+  filesave_dialog ("xyz.txt", project, track, words);
+  g_free (words);
+}
 
-  if (error != NULL)
+/* честно украдено у Пылаева */
+static guint
+convert_zone_number_by_pylaev (const gdouble  lat,
+                               const gdouble  lon,
+                               gint          *err)
+{
+  guint zone_number = 0;
+  gint er = 0;
+
+  if ((lat < -80.) || (lat > 84.))
+    er = -1;
+
+  if ((lon < -180.) || ( lon >= 180.))
+    er = -2;
+
+  if (er != 0)
     {
-      g_message ("Depth save failure: %s", error->message);
-      g_error_free (error);
+      if (err != NULL)
+        *err = er;
+      return zone_number;
     }
 
+  zone_number = (gint)((lon + 180.) / 6.) + 1;
+
+  if ((lat >= 56.0) && (lat < 64.0) && ( lon >= 3.0) && ( lon < 12.0))
+    zone_number = 32;
+
+  /* Special zones for Svalbard */
+  if ((lat >= 72.0) && (lat < 84.0))
+    {
+      if ((lon >= 0.0) && (lon <  9.0))
+        zone_number = 31;
+      else if ((lon >= 9.0) && (lon < 21.0))
+        zone_number = 33;
+      else if ((lon >= 21.0) && (lon < 33.0))
+        zone_number = 35;
+      else if ((lon >= 33.0) && (lon < 42.0))
+        zone_number = 37;
+    }
+
+  if (err != NULL)
+    *err = er;
+
+  return zone_number;
+}
+
+void
+utm_xyz (GObject *emitter)
+{
+  guint32 first, last, i;
+  HyScanAntennaOffset antenna;
+  HyScanGeoGeodetic coord;
+  GString *string = NULL;
+  gchar *words = NULL;
+
+  HyScanDB * db = _global->db;
+  HyScanCache * cache = _global->cache;
+  gchar *project = _global->project_name;
+  gchar *track = _global->track_name;
+
+  HyScanNavData * dpt;
+  HyScanNavData * alt;
+  HyScanNavData * hog;
+  HyScanmLoc * mloc;
+
+  dpt = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track, 3, HYSCAN_NMEA_DATA_DPT, HYSCAN_NMEA_FIELD_DEPTH));
+  alt = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track, 2, HYSCAN_NMEA_DATA_GGA, HYSCAN_NMEA_FIELD_ALTITUDE));
+  hog = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track, 2, HYSCAN_NMEA_DATA_GGA, HYSCAN_NMEA_FIELD_HOG));
+
+  if (dpt == NULL)
+    {
+      g_warning ("Failed to open dpt parser.");
+      return;
+    }
+
+  mloc = hyscan_mloc_new (db, cache, project, track);
+  if (mloc == NULL)
+    {
+      g_warning ("Failed to open mLocation.");
+      g_clear_object (&dpt);
+      return;
+    }
+
+  string = g_string_new (NULL);
+  g_string_append_printf (string, "#%s;%s\n", project, track);
+  g_string_append_printf (string, "#LAT,LON,DPT\n");
+
+  hyscan_nav_data_get_range (dpt, &first, &last);
+  antenna = hyscan_nav_data_get_offset (dpt);
+
+  for (i = first; i <= last; ++i)
+    {
+      gdouble depth, altitude, height;
+      gint64 time;
+      gboolean status;
+      gchar lat_str[1024] = {'\0'};
+      gchar lon_str[1024] = {'\0'};
+      gchar dpt_str[1024] = {'\0'};
+
+      status = hyscan_nav_data_get (dpt, NULL, i, &time, &depth);
+      if (!status)
+        continue;
+
+      status = hyscan_mloc_get (mloc, NULL, time, &antenna, 0, 0, 0, &coord);
+      if (!status)
+        continue;
+
+      {
+        HyScanDBFindStatus fstatus;
+        guint32 index;
+
+        fstatus = hyscan_nav_data_find_data (alt, time, &index, NULL, NULL, NULL);
+        if (fstatus != HYSCAN_DB_FIND_OK)
+          continue;
+
+        status  = hyscan_nav_data_get (alt, NULL, index, NULL, &altitude);
+        status &= hyscan_nav_data_get (hog, NULL, index, NULL, &height);
+
+        if (!status)
+          continue;
+
+        HyScanGeoGeodetic in = {.lat = coord.lat, .lon = coord.lon, .h = altitude + height};
+        HyScanGeoGeodetic out;
+        hyscan_geo_cs_transform (&out, in, HYSCAN_GEO_CS_WGS84, HYSCAN_GEO_CS_PZ90);
+      }
+
+      /* переносим дно*/
+      depth = altitude + height - depth;
+
+      {
+        projPJ proj_src;
+        projPJ proj_dst;
+        gchar *init_str;
+
+        init_str = g_strdup_printf ("+proj=utm +datum=WGS84 +zone=%i", convert_zone_number_by_pylaev (coord.lat, coord.lon, NULL));
+        proj_src = pj_init_plus ("+proj=latlon +datum=WGS84");
+        proj_dst = pj_init_plus (init_str);
+
+        coord.lat = DEG2RAD (coord.lat);
+        coord.lon = DEG2RAD (coord.lon);
+
+        if (0 != pj_transform (proj_src, proj_dst, 1, 1, &coord.lon, &coord.lat, NULL))
+          {
+            g_free (init_str);
+            pj_free (proj_dst);
+            pj_free (proj_src);
+            continue;
+          }
+
+        g_free (init_str);
+        pj_free (proj_dst);
+        pj_free (proj_src);
+      }
+
+      g_ascii_formatd (lat_str, 1024, "%12.9f", coord.lat);
+      g_ascii_formatd (lon_str, 1024, "%12.9f", coord.lon);
+      g_ascii_formatd (dpt_str, 1024, "%12.9f", depth);
+      g_string_append_printf (string, "%s;%s;%s\n", lat_str, lon_str, dpt_str);
+    }
+
+  words = g_string_free (string, FALSE);
+
+  if (words == NULL)
+    return;
+
+  filesave_dialog ("utm.txt", project, track, words);
   g_free (words);
 }
 
@@ -135,11 +353,26 @@ mark_exporter (GObject  *emitter,
   HyScanObjectModel *geo;
   HyScanMarkLocModel *wf;
 
-  hyscan_gtk_map_kit_get_mark_backends (global_ui.mapkit, &geo, &wf);
-  if (selector == MARKS_TO_CSV)
-    hyscan_gtk_mark_export_save_as_csv (GTK_WINDOW (_global->gui.window), wf, geo, _global->project_name);
-  else if (selector == MARKS_TO_CLIPBOARD)
-    hyscan_gtk_mark_export_copy_to_clipboard (wf, geo, _global->project_name);
+  if (selector == XYZ_TO_FILE)
+    {
+      depth_writer (NULL);
+    }
+  else if (selector == UTM_TO_FILE)
+    {
+      utm_xyz (NULL);
+    }
+  else
+    {
+      hyscan_gtk_map_kit_get_mark_backends (global_ui.mapkit, &geo, &wf);
+
+      if (selector == MARKS_TO_CSV)
+        {
+          gchar *data = hyscan_gtk_mark_export_to_str (wf, geo, _global->project_name);
+          filesave_dialog ("marks.txt", _global->project_name, _global->track_name, data);
+        }
+      else if (selector == MARKS_TO_CLIPBOARD)
+        hyscan_gtk_mark_export_copy_to_clipboard (wf, geo, _global->project_name);
+    }
 }
 
 
@@ -239,6 +472,35 @@ evo_project_changed_override (Global *global,
  *      ## ##  #     # #     # #       #       ####### #     #  #####
  *
  */
+
+void
+exit_or_restart (gpointer _restart)
+{
+  if (GPOINTER_TO_INT (_restart))
+    _global->request_restart = TRUE;
+
+  gtk_widget_destroy (_global->gui.window);
+}
+
+void
+magnifier_x2 (GtkToggleButton             *button,
+              HyScanGtkWaterfallMagnifier *magn)
+{
+  if (!gtk_toggle_button_get_active (button))
+    return;
+
+  hyscan_gtk_waterfall_magnifier_set_zoom (magn, 2);
+}
+
+void
+magnifier_x3 (GtkToggleButton             *button,
+              HyScanGtkWaterfallMagnifier *magn)
+{
+  if (!gtk_toggle_button_get_active (button))
+    return;
+
+  hyscan_gtk_waterfall_magnifier_set_zoom (magn, 3);
+}
 
 void
 player_adj_value_changed (GtkAdjustment            *adj,
@@ -673,10 +935,15 @@ make_layer_list (EvoUI *ui,
   selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (tree_view));
   g_signal_connect (selection, "changed", G_CALLBACK (layer_changed), vwf->wf);
 
+  hyscan_gtk_layer_set_visible (HYSCAN_GTK_LAYER (vwf->wf_magn), FALSE);
+
   /* Регистрируем слой в layer_store. */
   add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_grid), _("Grid"), EVO_GRID_KEY);
   add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_mark), _("Marks"), EVO_MARK_KEY);
   add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_metr), _("Measurements"), EVO_METR_KEY);
+  add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_shad), _("Shadow measure"), EVO_SHAD_KEY);
+  add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_coor), _("Coordinates"), EVO_COOR_KEY);
+  add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_magn), _("Magnifier"), EVO_MAGN_KEY);
 
   gtk_widget_show_all (tree_view);
   return tree_view;
@@ -877,6 +1144,16 @@ make_page_for_panel (EvoUI     *ui,
   b = get_builder_for_panel (ui, panelx);
 
   box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 2);
+
+  if (panel_sources_are_in_sonar (global, panel))
+    {
+      sonar = get_widget_from_builder (b, "sonar_control");
+      tvg = make_tvg_control (global, panel, b, sg);
+      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");      add_to_sg (sg, b, "distance_label");
+      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");        add_to_sg (sg, b, "signal_label");
+                                                                                              add_to_sg (sg, b, "disable_label");
+    }
+
   switch (panel->type)
     {
     case FNN_PANEL_WATERFALL:
@@ -901,16 +1178,21 @@ make_page_for_panel (EvoUI     *ui,
         g_signal_connect_swapped (get_widget_from_builder(b, "ss_player_stop"), "clicked", G_CALLBACK (player_stop), adj);
         g_signal_connect_swapped (get_widget_from_builder(b, "ss_player_slower"), "clicked", G_CALLBACK (player_slower), adj);
         g_signal_connect_swapped (get_widget_from_builder(b, "ss_player_faster"), "clicked", G_CALLBACK (player_faster), adj);
+
+                                                                                              add_to_sg (sg, b, "ss_magnifier_label");
+        g_signal_connect (get_widget_from_builder(b, "ss_magnifier_x2"), "toggled", G_CALLBACK (magnifier_x2), wf->wf_magn);
+        g_signal_connect (get_widget_from_builder(b, "ss_magnifier_x3"), "toggled", G_CALLBACK (magnifier_x3), wf->wf_magn);
+
         player_adj_value_printer (adj, label);
       }
 
-      if (!panel_sources_are_in_sonar (global, panel))
-        break;
+      // if (!panel_sources_are_in_sonar (global, panel))
+      //   break;
 
-      sonar = get_widget_from_builder (b, "sonar_control");
-      tvg = make_tvg_control (global, panel, b, sg);
-      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");      add_to_sg (sg, b, "distance_label");
-      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");        add_to_sg (sg, b, "signal_label");
+      // sonar = get_widget_from_builder (b, "sonar_control");
+      // tvg = make_tvg_control (global, panel, b, sg);
+      // panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");      add_to_sg (sg, b, "distance_label");
+      // panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");        add_to_sg (sg, b, "signal_label");
 
       break;
 
@@ -937,13 +1219,13 @@ make_page_for_panel (EvoUI     *ui,
         player_adj_value_printer (adj, label);
       }
 
-      if (!panel_sources_are_in_sonar (global, panel))
-        break;
+      // if (!panel_sources_are_in_sonar (global, panel))
+      //   break;
 
-      sonar = get_widget_from_builder (b, "sonar_control");
-      tvg = make_tvg_control (global, panel, b, sg);
-      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");     add_to_sg (sg, b, "distance_label");
-      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");       add_to_sg (sg, b, "signal_label");
+      // sonar = get_widget_from_builder (b, "sonar_control");
+      // tvg = make_tvg_control (global, panel, b, sg);
+      // panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");     add_to_sg (sg, b, "distance_label");
+      // panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");       add_to_sg (sg, b, "signal_label");
 
       break;
 
@@ -972,13 +1254,13 @@ make_page_for_panel (EvoUI     *ui,
         player_adj_value_printer (adj, label);
       }
 
-      if (!panel_sources_are_in_sonar (global, panel))
-        break;
+      // if (!panel_sources_are_in_sonar (global, panel))
+      //   break;
 
-      sonar = get_widget_from_builder (b, "sonar_control");
-      tvg = make_tvg_control (global, panel, b, sg);
-      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");      add_to_sg (sg, b, "distance_label");
-      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");        add_to_sg (sg, b, "signal_label");
+      // sonar = get_widget_from_builder (b, "sonar_control");
+      // tvg = make_tvg_control (global, panel, b, sg);
+      // panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");      add_to_sg (sg, b, "distance_label");
+      // panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");        add_to_sg (sg, b, "signal_label");
 
       break;
 
@@ -990,13 +1272,13 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->sensitivity_value = get_label_from_builder (b, "fl_sensitivity_value"); add_to_sg (sg, b, "fl_sensitivity_label");
 
       g_message ("fl %i", panel_sources_are_in_sonar (global, panel));
-      if (!panel_sources_are_in_sonar (global, panel))
-        break;
+      // if (!panel_sources_are_in_sonar (global, panel))
+      //   break;
 
-      sonar = get_widget_from_builder (b, "sonar_control");
-      tvg = make_tvg_control (global, panel, b, sg);
-      panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");       add_to_sg (sg, b, "distance_label");
-      panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");         add_to_sg (sg, b, "signal_label");
+      // sonar = get_widget_from_builder (b, "sonar_control");
+      // tvg = make_tvg_control (global, panel, b, sg);
+      // panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");       add_to_sg (sg, b, "distance_label");
+      // panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");         add_to_sg (sg, b, "signal_label");
 
       break;
 
@@ -1009,10 +1291,10 @@ make_page_for_panel (EvoUI     *ui,
   gtk_box_pack_start (GTK_BOX (box), view, FALSE, FALSE, 0);
   if (layers != NULL)
     gtk_box_pack_start (GTK_BOX (box), layers, FALSE, FALSE, 0);
-  if (sonar != NULL)
-    gtk_box_pack_end (GTK_BOX (box), sonar, FALSE, TRUE, 0);
   if (tvg != NULL)
     gtk_box_pack_end (GTK_BOX (box), tvg, FALSE, FALSE, 0);
+  if (sonar != NULL)
+    gtk_box_pack_end (GTK_BOX (box), sonar, FALSE, TRUE, 0);
 
   return box;
 }
@@ -1076,6 +1358,8 @@ build_interface (Global *global)
         gchar *profile_dir;
         profile_dir = g_build_filename (profile_dirs[i], "hyscan", "map-profiles", NULL);
         hyscan_gtk_map_kit_load_profiles (ui->mapkit, profile_dir);
+        if (i == 0)
+          hyscan_gtk_map_kit_set_user_dir (ui->mapkit, profile_dir);
         g_free (profile_dir);
       }
     hyscan_gtk_map_kit_add_marks_wf (ui->mapkit);
@@ -1126,7 +1410,7 @@ build_interface (Global *global)
     gtk_box_pack_start (GTK_BOX (lbox), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (lbox), mlist, TRUE, TRUE, 0);
     gtk_box_pack_start (GTK_BOX (lbox), meditor, FALSE, FALSE, 0);
-    gtk_box_pack_start (GTK_BOX (lbox), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
+    // gtk_box_pack_start (GTK_BOX (lbox), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
 
     gtk_stack_add_named (GTK_STACK (ui->nav_stack), lbox, EVO_NOT_MAP);
   }
@@ -1167,6 +1451,12 @@ build_interface (Global *global)
     g_signal_connect (mitem, "activate", G_CALLBACK (run_manager), NULL);
     gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
+    /* офлайн-карта */
+    mitem = gtk_check_menu_item_new_with_label (_("Online Map"));
+    ui->map_offline = g_object_ref (mitem);
+    g_signal_connect (mitem, "toggled", G_CALLBACK (map_offline_wrapper), ui->mapkit);
+    gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
+
     /* Exports */
     {
       gint subt = 0;
@@ -1183,22 +1473,22 @@ build_interface (Global *global)
       gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
 
       mitem = gtk_menu_item_new_with_label (_("XYZ"));
-      g_signal_connect (mitem, "activate", G_CALLBACK (depth_writer), NULL);
+      g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (XYZ_TO_FILE));
+      gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
+      mitem = gtk_menu_item_new_with_label (_("UTM"));
+      g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (UTM_TO_FILE));
+      gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
+      mitem = gtk_menu_item_new_with_label (_("HSX"));
+      g_signal_connect (mitem, "activate", G_CALLBACK (run_export_data), _global);
       gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
 
       mitem = gtk_menu_item_new_with_label (_("Export"));
       gtk_menu_item_set_submenu (GTK_MENU_ITEM (mitem), submenu);
       gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
     }
-    // mitem = gtk_menu_item_new_with_label (_("Export XYZ"));
-    // g_signal_connect (mitem, "activate", G_CALLBACK (depth_writer), NULL);
-    // gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
-    /* офлайн-карта */
-    mitem = gtk_check_menu_item_new_with_label (_("Online Map"));
-    ui->map_offline = g_object_ref (mitem);
-    g_signal_connect (mitem, "toggled", G_CALLBACK (map_offline_wrapper), ui->mapkit);
-    gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
       if (global->control != NULL)
         {
@@ -1281,8 +1571,12 @@ build_interface (Global *global)
         }
     /* exit */
     mitem = gtk_menu_item_new_with_label (_("Exit"));
-    g_signal_connect_swapped (mitem, "activate", G_CALLBACK (gtk_widget_destroy), global->gui.window);
+    g_signal_connect_swapped (mitem, "activate", G_CALLBACK (exit_or_restart), GINT_TO_POINTER (FALSE));
     gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
+
+    // mitem = gtk_menu_item_new_with_label (_("Restart"));
+    // g_signal_connect_swapped (mitem, "activate", G_CALLBACK (exit_or_restart), GINT_TO_POINTER (TRUE));
+    // gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
     gtk_widget_show_all (settings);
     gtk_widget_show_all (menu);
@@ -1300,11 +1594,18 @@ build_interface (Global *global)
 
   if (global->gui.nav != NULL)
     {
-      gtk_orientable_set_orientation (GTK_ORIENTABLE (global->gui.nav), GTK_ORIENTATION_HORIZONTAL);
-      gtk_box_set_spacing (GTK_BOX (global->gui.nav), 10);
-      gtk_widget_set_halign (global->gui.nav, GTK_ALIGN_CENTER);
+      GtkWidget *separator;
 
-      gtk_grid_attach (GTK_GRID (ui->grid), global->gui.nav, 0, 2, 1, 1);
+      separator = gtk_separator_new (GTK_ORIENTATION_HORIZONTAL);
+      gtk_widget_set_margin_top (separator, 6);
+
+      gtk_orientable_set_orientation (GTK_ORIENTABLE (global->gui.nav), GTK_ORIENTATION_HORIZONTAL);
+      gtk_widget_set_halign (global->gui.nav, GTK_ALIGN_END);
+      gtk_box_set_spacing (GTK_BOX (global->gui.nav), 12);
+      g_object_set (global->gui.nav, "margin", 3, NULL);
+
+      gtk_grid_attach (GTK_GRID (ui->grid), separator,       0, 2, 2, 1);
+      gtk_grid_attach (GTK_GRID (ui->grid), global->gui.nav, 0, 3, 2, 1);
     }
 
   gtk_stack_set_visible_child_name (GTK_STACK (ui->acoustic_stack), EVO_MAP);
@@ -1462,7 +1763,6 @@ panel_pack (FnnPanel *panel,
   child_name = gtk_stack_get_visible_child_name (GTK_STACK (ui->acoustic_stack));
   gtk_stack_add_titled (GTK_STACK (ui->control_stack), control, panel->name, panel->name_local);
   gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), visual, panel->name, panel->name_local);
-  g_message ("%s %s", __FUNCTION__, child_name);
   widget_swap (NULL, NULL, child_name);
 
   /* Нижняя панель содержит виджет управления впередсмотрящим. */

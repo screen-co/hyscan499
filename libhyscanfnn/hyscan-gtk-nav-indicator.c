@@ -21,6 +21,11 @@ struct _HyScanGtkNavIndicatorPrivate
     HyScanNMEAParser * dpt;
     HyScanNMEAParser * time;
     HyScanNMEAParser * date;
+    HyScanNMEAParser * gga_lat;
+    HyScanNMEAParser * gga_lon;
+    HyScanNMEAParser * gga_time;
+    HyScanNMEAParser * pitch;
+    HyScanNMEAParser * roll;
   } parser;
 
   struct
@@ -31,6 +36,8 @@ struct _HyScanGtkNavIndicatorPrivate
     gchar            * spd;
     gchar            * dpt;
     gchar            * tmd;
+    gchar            * pch;
+    gchar            * rll;
   } string;
 
   GtkLabel           * lat;
@@ -39,6 +46,8 @@ struct _HyScanGtkNavIndicatorPrivate
   GtkLabel           * spd;
   GtkLabel           * dpt;
   GtkLabel           * tmd;
+  GtkLabel           * pch;
+  GtkLabel           * rll;
 
   HyScanSensor       * sensor;
   guint                update_tag;
@@ -88,6 +97,8 @@ hyscan_gtk_nav_indicator_class_init (HyScanGtkNavIndicatorClass *klass)
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, spd);
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, dpt);
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, tmd);
+  gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, pch);
+  gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkNavIndicator, rll);
 
   g_object_class_install_property (oclass, PROP_SENSOR,
     g_param_spec_object("sensor", "sensor", "sensor", HYSCAN_TYPE_SENSOR,
@@ -130,6 +141,11 @@ hyscan_gtk_nav_indicator_constructed (GObject *object)
   priv->parser.trk = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_RMC, HYSCAN_NMEA_FIELD_TRACK);
   priv->parser.spd = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_RMC, HYSCAN_NMEA_FIELD_SPEED);
   priv->parser.dpt = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_DPT, HYSCAN_NMEA_FIELD_DEPTH);
+  priv->parser.gga_time = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_GGA, HYSCAN_NMEA_FIELD_TIME);
+  priv->parser.gga_lat = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_GGA, HYSCAN_NMEA_FIELD_LAT);
+  priv->parser.gga_lon = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_GGA, HYSCAN_NMEA_FIELD_LON);
+  priv->parser.pitch = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_HYHPR, HYSCAN_NMEA_FIELD_PITCH);
+  priv->parser.roll = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_HYHPR, HYSCAN_NMEA_FIELD_ROLL);
 
   priv->update_tag = g_timeout_add (1000, (GSourceFunc)(hyscan_gtk_nav_indicator_update), self);
   priv->sensor_data_id = g_signal_connect (priv->sensor, "sensor-data", G_CALLBACK (hyscan_gtk_nav_indicator_sensor_data), self);
@@ -152,6 +168,9 @@ hyscan_gtk_nav_indicator_finalize (GObject *object)
   g_object_unref (priv->parser.trk);
   g_object_unref (priv->parser.spd);
   g_object_unref (priv->parser.dpt);
+  g_object_unref (priv->parser.gga_time);
+  g_object_unref (priv->parser.gga_lat);
+  g_object_unref (priv->parser.gga_lon);
 
   if (priv->update_tag > 0)
     g_source_remove (priv->update_tag);
@@ -177,12 +196,12 @@ hyscan_gtk_nav_indicator_parse (HyScanGtkNavIndicator *self,
                                 HyScanBuffer          *data)
 {
   HyScanGtkNavIndicatorPrivate *priv;
-  const gchar * rmcs = NULL, *dpts = NULL, *raw_data;
+  const gchar * rmcs = NULL, *dpts = NULL, *ggas = NULL, *hprs = NULL, *raw_data;
   gchar **nmea;
   guint32 size;
   guint i;
-  gdouble time, date, lat, lon, trk, spd, dpt;
-  gboolean td_ok, ll_ok, trk_ok, spd_ok, dpt_ok;
+  gdouble time, date, lat, lon, trk, spd, dpt, pitch, roll;
+  gboolean tm_ok, dt_ok, ll_ok, trk_ok, spd_ok, dpt_ok, pitch_ok, roll_ok;
 
   g_return_if_fail (HYSCAN_IS_GTK_NAV_INDICATOR (self));
   priv = self->priv;
@@ -196,15 +215,19 @@ hyscan_gtk_nav_indicator_parse (HyScanGtkNavIndicator *self,
     {
       if (g_str_has_prefix (nmea[i]+3, "RMC"))
         rmcs = nmea[i];
+      else if (g_str_has_prefix (nmea[i]+3, "GGA"))
+        ggas = nmea[i];
       else if (g_str_has_prefix (nmea[i]+3, "DPT"))
         dpts = nmea[i];
+      else if (g_str_has_prefix (nmea[i] + 1, "HYHPR"))
+        hprs = nmea[i];
     }
 
   /* Парсим строки. */
   if (rmcs != NULL)
     {
-      td_ok = hyscan_nmea_parser_parse_string (priv->parser.time, rmcs, &time) &&
-              hyscan_nmea_parser_parse_string (priv->parser.date, rmcs, &date);
+      tm_ok = hyscan_nmea_parser_parse_string (priv->parser.time, rmcs, &time);
+      dt_ok = hyscan_nmea_parser_parse_string (priv->parser.date, rmcs, &date);
 
       ll_ok = hyscan_nmea_parser_parse_string (priv->parser.lat, rmcs, &lat) &&
               hyscan_nmea_parser_parse_string (priv->parser.lon, rmcs, &lon);
@@ -213,9 +236,18 @@ hyscan_gtk_nav_indicator_parse (HyScanGtkNavIndicator *self,
       spd_ok = hyscan_nmea_parser_parse_string (priv->parser.spd, rmcs, &spd);
 
     }
+  else if (ggas != NULL)
+    {
+      tm_ok = hyscan_nmea_parser_parse_string (priv->parser.gga_time, ggas, &time);
+
+      ll_ok = hyscan_nmea_parser_parse_string (priv->parser.gga_lat, ggas, &lat) &&
+              hyscan_nmea_parser_parse_string (priv->parser.gga_lon, ggas, &lon);
+
+      dt_ok = trk_ok = spd_ok = FALSE;
+    }
   else
     {
-      td_ok = ll_ok = trk_ok = spd_ok = FALSE;
+      tm_ok = dt_ok = ll_ok = trk_ok = spd_ok = FALSE;
     }
   if (dpts != NULL)
     {
@@ -225,26 +257,32 @@ hyscan_gtk_nav_indicator_parse (HyScanGtkNavIndicator *self,
     {
       dpt_ok = FALSE;
     }
+  if (hprs != NULL)
+    {
+      pitch_ok = hyscan_nmea_parser_parse_string (priv->parser.pitch, hprs, &pitch);
+      roll_ok = hyscan_nmea_parser_parse_string (priv->parser.roll, hprs, &roll);
+    }
+  else
+    {
+      pitch_ok = roll_ok = FALSE;
+    }
 
   /* Обновляем данные виджетов. */
   g_mutex_lock (&priv->lock);
 
-  if (td_ok)
+  if (tm_ok)
     {
       GTimeZone *tz;
       GDateTime *local, *utc;
-      gchar *dstr, *tstr;
+      gchar *tstr;
 
-      tz = g_time_zone_new ("+03:00");
-      utc = g_date_time_new_from_unix_utc (date + time);
+      tz = g_time_zone_new_local ();
+      utc = g_date_time_new_from_unix_utc ((dt_ok ? date : 0.0) + time);
       local = g_date_time_to_timezone (utc, tz);
 
-      dstr = g_date_time_format (local, "%d.%m.%y");
-      tstr = g_date_time_format (local, "%H:%M:%S");
+      tstr = g_date_time_format (local, dt_ok ? "<b>%d.%m.%y</b> %H:%M:%S" : "%H:%M:%S");
+      hyscan_gtk_nav_indicator_printer (&priv->string.tmd, "%s", tstr);
 
-      hyscan_gtk_nav_indicator_printer (&priv->string.tmd, "<b>%s</b> %s", tstr, dstr);
-
-      g_free (dstr);
       g_free (tstr);
       g_date_time_unref (local);
       g_date_time_unref (utc);
@@ -252,20 +290,28 @@ hyscan_gtk_nav_indicator_parse (HyScanGtkNavIndicator *self,
     }
   if (ll_ok)
     {
-      hyscan_gtk_nav_indicator_printer (&priv->string.lat, "<b>%f</b> °%s", lat, lat > 0 ? _("N") : _("S"));
-      hyscan_gtk_nav_indicator_printer (&priv->string.lon, "<b>%f</b> °%s", lon, lon > 0 ? _("E") : _("W"));
+      hyscan_gtk_nav_indicator_printer (&priv->string.lat, "<b>%.7f°</b>", lat);
+      hyscan_gtk_nav_indicator_printer (&priv->string.lon, "<b>%.7f°</b>", lon);
     }
   if (trk_ok)
     {
-      hyscan_gtk_nav_indicator_printer (&priv->string.trk, "<b>%f</b> °", trk);
+      hyscan_gtk_nav_indicator_printer (&priv->string.trk, "<b>%.2f</b>°", trk);
     }
   if (spd_ok)
     {
-      hyscan_gtk_nav_indicator_printer (&priv->string.spd, "<b>%f</b> м/с", spd * 0.514);
+      hyscan_gtk_nav_indicator_printer (&priv->string.spd, "<b>%.2f</b> %s", spd * 0.514, _("m/s"));
     }
   if (dpt_ok)
     {
-      hyscan_gtk_nav_indicator_printer (&priv->string.dpt, "<b>%f</b> м", dpt);
+      hyscan_gtk_nav_indicator_printer (&priv->string.dpt, "<b>%.2f</b> %s", dpt, _("m"));
+    }
+  if (pitch_ok)
+    {
+      hyscan_gtk_nav_indicator_printer (&priv->string.pch, "<b>%.2f</b>°", pitch);
+    }
+  if (roll_ok)
+    {
+      hyscan_gtk_nav_indicator_printer (&priv->string.rll, "<b>%.2f</b>°", roll);
     }
 
   g_mutex_unlock (&priv->lock);
@@ -307,6 +353,10 @@ hyscan_gtk_nav_indicator_update (HyScanGtkNavIndicator *self)
     gtk_label_set_markup (priv->dpt, priv->string.dpt);
   if (priv->string.tmd != NULL)
     gtk_label_set_markup (priv->tmd, priv->string.tmd);
+  if (priv->string.pch != NULL)
+    gtk_label_set_markup (priv->pch, priv->string.pch);
+  if (priv->string.rll != NULL)
+    gtk_label_set_markup (priv->rll, priv->string.rll);
 
   g_mutex_unlock (&priv->lock);
 

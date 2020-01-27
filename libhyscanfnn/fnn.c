@@ -6,6 +6,7 @@
 #include "hyscan-fnn-button.h"
 #include <hyscan-gtk-param-tree.h>
 #include <hyscan-gtk-param-cc.h>
+#include <hyscan-gtk-export.h>
 #include <hyscan-data-schema-builder.h>
 #include <gmodule.h>
 #include <math.h>
@@ -95,7 +96,8 @@ fnn_ensure_panel (gint    panelx,
       main_widget = make_overlay (vwf->wf,
                                   &vwf->wf_grid, &vwf->wf_ctrl,
                                   &vwf->wf_mark, &vwf->wf_metr,
-                                  &vwf->wf_play,
+                                  &vwf->wf_play, &vwf->wf_magn,
+                                  &vwf->wf_shad, &vwf->wf_coor,
                                   global->marks.model);
 
       g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), global);
@@ -137,7 +139,8 @@ fnn_ensure_panel (gint    panelx,
       main_widget = make_overlay (vwf->wf,
                                   &vwf->wf_grid, &vwf->wf_ctrl,
                                   &vwf->wf_mark, &vwf->wf_metr,
-                                  &vwf->wf_play,
+                                  &vwf->wf_play, NULL,
+                                  &vwf->wf_shad, &vwf->wf_coor,
                                   global->marks.model);
 
       hyscan_gtk_waterfall_grid_set_condence (vwf->wf_grid, 10.0);
@@ -198,7 +201,8 @@ fnn_ensure_panel (gint    panelx,
       main_widget = make_overlay (vwf->wf,
                                   &vwf->wf_grid, &vwf->wf_ctrl,
                                   &vwf->wf_mark, &vwf->wf_metr,
-                                  &vwf->wf_play,
+                                  &vwf->wf_play, &vwf->wf_magn,
+                                  &vwf->wf_shad, &vwf->wf_coor,
                                   global->marks.model);
 
       g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), global);
@@ -846,6 +850,34 @@ projects_changed (HyScanDBInfo *db_info,
   g_hash_table_unref (projects);
 }
 
+void
+run_export_data (GObject     *emitter,
+                 gpointer     from_ui_params)
+{
+  Global *gl = from_ui_params;
+
+  GtkWidget *dialog, *content, *hsx_export;
+
+  dialog = gtk_dialog_new_with_buttons (_("Export data"),
+                                        GTK_WINDOW (tglobal->gui.window),
+                                        GTK_DIALOG_USE_HEADER_BAR,
+                                        _("Close"), GTK_RESPONSE_CLOSE,
+                                        NULL);
+  gtk_header_bar_set_title (GTK_HEADER_BAR (gtk_dialog_get_header_bar (GTK_DIALOG (dialog))),
+                            _("Export data"));
+  content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
+
+  hsx_export = hyscan_gtk_export_new (gl->db, gl->project_name, gl->track_name);
+  hyscan_gtk_export_set_watch_period (HYSCAN_GTK_EXPORT (hsx_export), 100);
+
+  gtk_container_add (GTK_CONTAINER (content), hsx_export);
+  gtk_widget_set_size_request (dialog, 800, 600);
+  gtk_widget_show_all (dialog);
+
+  gtk_dialog_run (GTK_DIALOG (dialog));
+  gtk_widget_destroy (dialog);
+}
+
 GtkTreePath *
 fnn_gtk_tree_model_get_last_path (GtkTreeView *tree)
 {
@@ -1317,7 +1349,6 @@ get_mark_coords (GHashTable          * locstores,
 
   if (mark->track == NULL)
     {
-      // G_BREAKPOINT();
       return NULL;
     }
 
@@ -2009,6 +2040,33 @@ signal_label (FnnPanel    *panel,
 }
 
 gboolean
+rec_disable (Global   *global,
+             gint      panelx)
+{
+  HyScanSourceType *iter;
+  FnnPanel *panel = get_panel_quiet (global, panelx);
+
+  g_message ("rec_disable: %s (%i)", panel->name, panelx);
+
+  for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
+    {
+      gboolean status;
+      source_informer ("  disabling receiver", *iter);
+      status = hyscan_sonar_receiver_disable (global->control_s, *iter);
+
+      if (!status)
+        {
+          g_message ("  failure!");
+          return FALSE;
+        }
+    }
+
+  sync_sonar (global);
+  g_message ("  success");
+  return TRUE;
+}
+
+gboolean
 gen_disable (Global   *global,
              gint      panelx)
 {
@@ -2592,15 +2650,33 @@ distance_set (Global  *global,
   return TRUE;
 }
 
+static gfloat fnn_distances[] = {0., 10., 20., 30., 50., 75., 100., 150., };
+static gint n_fnn_distances = (gint)G_N_ELEMENTS (fnn_distances);
+
 void
 distance_up (GtkWidget *widget,
              gint       panelx)
 {
   gdouble desired;
+  gint i;
   FnnPanel *panel = get_panel (tglobal, panelx);
 
-  desired = panel->current.distance + 5.0;
-  desired = desired - fmod (desired, 5);
+  desired = panel->current.distance + 1.0;
+
+  for (i = 0; i < n_fnn_distances; ++i)
+    {
+      if (desired <= fnn_distances[i])
+        {
+          desired = fnn_distances[i];
+          break;
+        }
+    }
+  if (i == n_fnn_distances)
+    {
+      desired = panel->current.distance + 50.0;
+    }
+
+  // desired = desired - fmod (desired, 5);
 
   if (distance_set (tglobal, &desired, panelx))
     panel->current.distance = desired;
@@ -2613,17 +2689,36 @@ distance_down (GtkWidget *widget,
                gint       panelx)
 {
   gdouble desired;
+  gint i;
   FnnPanel *panel = get_panel (tglobal, panelx);
 
-  desired = panel->current.distance - 5.0;
-  desired = desired - fmod (desired, 5);
+  desired = panel->current.distance - 1.0;
+
+  if (desired > fnn_distances[n_fnn_distances - 1])
+    {
+      desired = panel->current.distance - 50.0;
+    }
+  else
+    {
+      for (i = (gint)n_fnn_distances - 2; i >= 0 ; --i)
+        {
+          if (desired >= fnn_distances[i])
+            {
+              desired = fnn_distances[i];
+              break;
+            }
+        }
+      if (i == -1)
+        {
+          desired = panel->current.distance - 50.0;
+        }
+    }
 
   if (distance_set (tglobal, &desired, panelx))
     panel->current.distance = desired;
   else
     g_warning ("distance_down failed");
 }
-
 
 void
 void_callback (gpointer data)
@@ -2989,6 +3084,36 @@ scale_down (GtkWidget *widget,
   scale_set (tglobal, FALSE, panelx);
 }
 
+/* Функция включает и выключает борт
+ * Попрошу заметить, возвращается ЛОЖЬ для того, чтобы свитчер нормально переключился. */
+gboolean
+disable_changed (GtkWidget *widget,
+                 gboolean   disabled,
+                 gint       panelx)
+{
+  FnnPanel *panel = get_panel_quiet (tglobal, panelx);
+
+  g_message ("disable_changed: %s (%i) %s", panel->name, panelx, disabled ? "OFF" : "ON");
+
+  if (panel == NULL)
+    {
+      g_warning ("  disable_changed: panel %i not found!", panelx);
+      return TRUE;
+    }
+
+  panel->current.disabled = disabled;
+
+  if (!panel_turn_on_off (tglobal, tglobal->on_air, panel))
+    {
+      g_warning ("  failure!");
+      return TRUE;
+    }
+
+  sync_sonar (tglobal);
+  g_message ("  success");
+  return FALSE;
+}
+
 /* Функция переключает режим отображения виджета ВС.
  * Попрошу заметить, возвращается ЛОЖЬ для того, чтобы свитчер нормально переключился. */
 gboolean
@@ -3111,6 +3236,68 @@ automove_state_changed (GtkWidget  *widget,
     live_view (NULL, state, GPOINTER_TO_INT (k));
 }
 
+gboolean
+panel_turn_on_off (Global   *global,
+                   gboolean  on_air,
+                   FnnPanel *panel)
+{
+  gint panelx = panel->panelx;
+  gboolean status = TRUE;
+
+  /* Не настраиваем те панели, которых нет в ГЛ. */
+  if (!panel_sources_are_in_sonar (global, panel))
+    return TRUE;
+
+  /* Отключенные панели не включаем (но ведем себя так, будто они включены) */
+  if (panel->current.disabled)
+    {
+      status  = gen_disable (global, panelx);
+      status &= rec_disable (global, panelx);
+      return status;
+    }
+
+  if (!on_air)
+    return TRUE;
+
+  status &= distance_set (global, &panel->current.distance, panelx);
+
+  /* Излучение НЕ в режиме сух. пов. */
+  if (global->dry)
+    status &= gen_disable (global, panelx);
+  else
+    status &= signal_set (global, panel->current.signal, panelx);
+
+
+  /* TVG */
+  switch (panel->current.mode)
+    {
+      case HYSCAN_SONAR_TVG_MODE_LOGARITHMIC:
+        status &= log_tvg_set (global,
+                               &panel->current.log_gain0,
+                               panel->current.log_beta,
+                               panel->current.log_alpha,
+                               panelx);
+        break;
+
+      case HYSCAN_SONAR_TVG_MODE_CONSTANT:
+        status &= const_tvg_set (global, &panel->current.const_gain0, panelx);
+        break;
+
+      case HYSCAN_SONAR_TVG_MODE_LINEAR_DB:
+        status &= lin_tvg_set (global, &panel->current.gain0, panel->current.gain_step, panelx);
+        break;
+
+      case HYSCAN_SONAR_TVG_MODE_AUTO:
+        status &= auto_tvg_set (global, panel->current.level, panel->current.sensitivity, panelx);
+        break;
+
+      case HYSCAN_SONAR_TVG_MODE_NONE:
+      default:
+        g_warning ("start_stop: no tvg mode set");
+    }
+
+  return status;
+}
 
 /* Функция включает/выключает излучение. */
 gboolean
@@ -3141,48 +3328,7 @@ start_stop (Global    *global,
       while (g_hash_table_iter_next (&iter, &k, &v))
         {
           FnnPanel *panel = v;
-          gint panelx = GPOINTER_TO_INT (k);
-
-          /* Не настраиваем те панели, которых нет в ГЛ. */
-          if (!panel_sources_are_in_sonar (global, panel))
-            continue;
-
-          /* Излучение НЕ в режиме сух. пов. */
-          if (global->dry)
-            status &= gen_disable (global, panelx);
-          else
-            status &= signal_set (global, panel->current.signal, panelx);
-
-          /* Приемник. */
-          status &= distance_set (global, &panel->current.distance, panelx);
-
-          /* TVG */
-          switch (panel->current.mode)
-            {
-              case HYSCAN_SONAR_TVG_MODE_LOGARITHMIC:
-                status &= log_tvg_set (global,
-                                       &panel->current.log_gain0,
-                                       panel->current.log_beta,
-                                       panel->current.log_alpha,
-                                       panelx);
-                break;
-
-              case HYSCAN_SONAR_TVG_MODE_CONSTANT:
-                status &= const_tvg_set (global, &panel->current.const_gain0, panelx);
-                break;
-
-              case HYSCAN_SONAR_TVG_MODE_LINEAR_DB:
-                status &= lin_tvg_set (global, &panel->current.gain0, panel->current.gain_step, panelx);
-                break;
-
-              case HYSCAN_SONAR_TVG_MODE_AUTO:
-                status &= auto_tvg_set (global, panel->current.level, panel->current.sensitivity, panelx);
-                break;
-
-              case HYSCAN_SONAR_TVG_MODE_NONE:
-              default:
-                g_warning ("start_stop: no tvg mode set");
-            }
+          status = panel_turn_on_off (global, TRUE, panel);
 
           /* Если не удалось запустить какую-либо подсистему. */
           if (!status)
@@ -3299,13 +3445,16 @@ fl_coords_callback (HyScanFlCoords *coords,
 }
 
 GtkWidget *
-make_overlay (HyScanGtkWaterfall          *wf,
-              HyScanGtkWaterfallGrid     **_grid,
-              HyScanGtkWaterfallControl  **_ctrl,
-              HyScanGtkWaterfallMark     **_mark,
-              HyScanGtkWaterfallMeter    **_meter,
-              HyScanGtkWaterfallPlayer   **_player,
-              HyScanObjectModel           *mark_model)
+make_overlay (HyScanGtkWaterfall           *wf,
+              HyScanGtkWaterfallGrid      **_grid,
+              HyScanGtkWaterfallControl   **_ctrl,
+              HyScanGtkWaterfallMark      **_mark,
+              HyScanGtkWaterfallMeter     **_meter,
+              HyScanGtkWaterfallPlayer    **_player,
+              HyScanGtkWaterfallMagnifier **_magnifier,
+              HyScanGtkWaterfallShadowm   **_shadow,
+              HyScanGtkWaterfallCoord     **_coord,
+              HyScanObjectModel            *mark_model)
 {
   GtkWidget * container = gtk_grid_new ();
 
@@ -3314,12 +3463,18 @@ make_overlay (HyScanGtkWaterfall          *wf,
   HyScanGtkWaterfallMark *mark = hyscan_gtk_waterfall_mark_new (mark_model);
   HyScanGtkWaterfallMeter *meter = hyscan_gtk_waterfall_meter_new ();
   HyScanGtkWaterfallPlayer *player = hyscan_gtk_waterfall_player_new ();
+  HyScanGtkWaterfallMagnifier *magnifier = hyscan_gtk_waterfall_magnifier_new ();
+  HyScanGtkWaterfallShadowm *shadow = hyscan_gtk_waterfall_shadowm_new ();
+  HyScanGtkWaterfallCoord *coord = hyscan_gtk_waterfall_coord_new ();
 
   hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (grid), "grid");
   hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (ctrl), "ctrl");
   hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (mark), "mark");
   hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (meter), "meter");
   hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (player), "player");
+  hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (shadow), "shadow");
+  hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (coord), "coordinates");
+  hyscan_gtk_layer_container_add (HYSCAN_GTK_LAYER_CONTAINER (wf), HYSCAN_GTK_LAYER (magnifier), "magnifier");
 
   GtkWidget *hscroll = gtk_scrollbar_new (GTK_ORIENTATION_HORIZONTAL,
                                            hyscan_gtk_waterfall_get_hadjustment (wf));
@@ -3338,6 +3493,12 @@ make_overlay (HyScanGtkWaterfall          *wf,
     *_meter = meter;
   if (_player != NULL)
     *_player = player;
+  if (_magnifier != NULL)
+    *_magnifier = magnifier;
+  if (_shadow != NULL)
+    *_shadow = shadow;
+  if (_coord != NULL)
+    *_coord = coord;
 
   gtk_grid_attach (GTK_GRID (container), GTK_WIDGET (wf), 0, 0, 1, 1);
   gtk_grid_attach (GTK_GRID (container), hscroll, 0, 1, 1, 1);
@@ -3548,7 +3709,7 @@ get_profile_dir (void)
 
       #ifdef FNN_PROFILE_STANDALONE
         dirs = g_realloc (dirs, ++dc * sizeof (*dirs));
-        dirs[dc - 1] = g_get_user_config_dir ();
+        dirs[dc - 1] = g_strdup (g_get_user_config_dir ());
       #endif
 
       dirs = g_realloc (dirs, ++dc * sizeof (*dirs));

@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.18.3 -->
+<!-- Generated with glade 3.20.0 -->
 <interface domain="hyscanfnn-evoui">
   <requires lib="gtk+" version="3.14"/>
+  <object class="GtkImage">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+  </object>
   <object class="GtkImage" id="color_map_image_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -41,6 +45,255 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="icon_name">list-add-symbolic</property>
+  </object>
+  <object class="GtkImage" id="logtvg_alpha_image_down">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">list-remove-symbolic</property>
+  </object>
+  <object class="GtkImage" id="logtvg_alpha_image_up">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">list-add-symbolic</property>
+  </object>
+  <object class="GtkImage" id="logtvg_beta_image_down">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">list-remove-symbolic</property>
+  </object>
+  <object class="GtkImage" id="logtvg_beta_image_down1">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">list-remove-symbolic</property>
+  </object>
+  <object class="GtkImage" id="logtvg_beta_image_up">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">list-add-symbolic</property>
+  </object>
+  <object class="GtkImage" id="logtvg_beta_image_up1">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">list-add-symbolic</property>
+  </object>
+  <object class="GtkGrid" id="log_tvg_control">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="hexpand">False</property>
+    <child>
+      <object class="GtkLabel" id="logtvg_gain0_label">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">end</property>
+        <property name="valign">center</property>
+        <property name="label" translatable="yes">Start gain</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="logtvg_beta_down1">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">logtvg_beta_image_down1</property>
+        <signal name="clicked" handler="logtvg_gain0_down" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="logtvg_gain0_value">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="valign">center</property>
+        <property name="hexpand">True</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="use_markup">True</property>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="logtvg_beta_up1">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">logtvg_beta_image_up1</property>
+        <signal name="clicked" handler="logtvg_gain0_up" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">3</property>
+        <property name="top_attach">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="tvg0_separator1">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">1</property>
+        <property name="width">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="logtvg_beta_label">
+        <property name="name">0</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">end</property>
+        <property name="valign">center</property>
+        <property name="label" translatable="yes">Beta</property>
+        <property name="justify">center</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="logtvg_beta_down">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">logtvg_beta_image_down</property>
+        <signal name="clicked" handler="logtvg_beta_down" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="logtvg_beta_value">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="valign">center</property>
+        <property name="hexpand">True</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="use_markup">True</property>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="logtvg_beta_up">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">logtvg_beta_image_up</property>
+        <signal name="clicked" handler="logtvg_beta_up" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">3</property>
+        <property name="top_attach">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="separator8">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">3</property>
+        <property name="width">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="separator9">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">5</property>
+        <property name="width">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="logtvg_alpha_label">
+        <property name="name">0</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">end</property>
+        <property name="valign">center</property>
+        <property name="label" translatable="yes">Alpha</property>
+        <property name="justify">center</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="logtvg_alpha_value">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="valign">center</property>
+        <property name="hexpand">True</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="use_markup">True</property>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="logtvg_alpha_down">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">logtvg_alpha_image_down</property>
+        <signal name="clicked" handler="logtvg_alpha_down" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="logtvg_alpha_up">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">logtvg_alpha_image_up</property>
+        <signal name="clicked" handler="logtvg_alpha_up" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">3</property>
+        <property name="top_attach">4</property>
+      </packing>
+    </child>
   </object>
   <object class="GtkImage" id="pf_black_image_down">
     <property name="visible">True</property>
@@ -788,6 +1041,7 @@
   <object class="GtkGrid" id="sonar_control">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
+    <property name="valign">start</property>
     <property name="hexpand">False</property>
     <property name="column_spacing">1</property>
     <child>
@@ -796,13 +1050,12 @@
         <property name="can_focus">False</property>
         <property name="halign">end</property>
         <property name="valign">center</property>
-        <property name="margin_left">1</property>
         <property name="label" translatable="yes">Distance</property>
         <property name="justify">center</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">0</property>
+        <property name="top_attach">2</property>
       </packing>
     </child>
     <child>
@@ -817,7 +1070,7 @@
       </object>
       <packing>
         <property name="left_attach">2</property>
-        <property name="top_attach">0</property>
+        <property name="top_attach">2</property>
       </packing>
     </child>
     <child>
@@ -832,7 +1085,7 @@
       </object>
       <packing>
         <property name="left_attach">3</property>
-        <property name="top_attach">0</property>
+        <property name="top_attach">2</property>
       </packing>
     </child>
     <child>
@@ -847,7 +1100,7 @@
       </object>
       <packing>
         <property name="left_attach">1</property>
-        <property name="top_attach">0</property>
+        <property name="top_attach">2</property>
       </packing>
     </child>
     <child>
@@ -859,7 +1112,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">1</property>
+        <property name="top_attach">3</property>
         <property name="width">4</property>
       </packing>
     </child>
@@ -874,7 +1127,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">2</property>
+        <property name="top_attach">4</property>
       </packing>
     </child>
     <child>
@@ -889,7 +1142,7 @@
       </object>
       <packing>
         <property name="left_attach">2</property>
-        <property name="top_attach">2</property>
+        <property name="top_attach">4</property>
       </packing>
     </child>
     <child>
@@ -905,7 +1158,7 @@
       </object>
       <packing>
         <property name="left_attach">1</property>
-        <property name="top_attach">2</property>
+        <property name="top_attach">4</property>
       </packing>
     </child>
     <child>
@@ -920,7 +1173,7 @@
       </object>
       <packing>
         <property name="left_attach">3</property>
-        <property name="top_attach">2</property>
+        <property name="top_attach">4</property>
       </packing>
     </child>
     <child>
@@ -931,9 +1184,53 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">3</property>
+        <property name="top_attach">5</property>
         <property name="width">4</property>
       </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="disable_separator">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">1</property>
+        <property name="width">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="disable_label">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">end</property>
+        <property name="valign">center</property>
+        <property name="label" translatable="yes">Disable</property>
+        <property name="justify">center</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">0</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSwitch" id="disable">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <signal name="state-set" handler="disable_changed" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">0</property>
+        <property name="width">2</property>
+      </packing>
+    </child>
+    <child>
+      <placeholder/>
     </child>
   </object>
   <object class="GtkAdjustment" id="ss_balance_adjustment">
@@ -1420,6 +1717,80 @@
       </packing>
     </child>
     <child>
+      <object class="GtkSeparator" id="ss_magnifier_separator">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">13</property>
+        <property name="width">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="ss_magnifier_label">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">end</property>
+        <property name="valign">center</property>
+        <property name="label" translatable="yes">Magnifier</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">12</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkBox" id="ss_magnifier_box">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkRadioButton" id="ss_magnifier_x2">
+            <property name="label" translatable="yes">x2</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">False</property>
+            <property name="active">True</property>
+            <property name="draw_indicator">False</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkRadioButton" id="ss_magnifier_x3">
+            <property name="label" translatable="yes">x3</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">False</property>
+            <property name="active">True</property>
+            <property name="draw_indicator">False</property>
+            <property name="group">ss_magnifier_x2</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <style>
+          <class name="linked"/>
+        </style>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">12</property>
+        <property name="width">2</property>
+      </packing>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
       <placeholder/>
     </child>
   </object>
@@ -1831,255 +2202,6 @@
         <property name="left_attach">0</property>
         <property name="top_attach">3</property>
         <property name="width">4</property>
-      </packing>
-    </child>
-  </object>
-  <object class="GtkImage" id="logtvg_alpha_image_down">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="icon_name">list-remove-symbolic</property>
-  </object>
-  <object class="GtkImage" id="logtvg_alpha_image_up">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="icon_name">list-add-symbolic</property>
-  </object>
-  <object class="GtkImage" id="logtvg_beta_image_down">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="icon_name">list-remove-symbolic</property>
-  </object>
-  <object class="GtkImage" id="logtvg_beta_image_down1">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="icon_name">list-remove-symbolic</property>
-  </object>
-  <object class="GtkImage" id="logtvg_beta_image_up">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="icon_name">list-add-symbolic</property>
-  </object>
-  <object class="GtkImage" id="logtvg_beta_image_up1">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="icon_name">list-add-symbolic</property>
-  </object>
-  <object class="GtkGrid" id="log_tvg_control">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="hexpand">False</property>
-    <child>
-      <object class="GtkLabel" id="logtvg_gain0_label">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">end</property>
-        <property name="valign">center</property>
-        <property name="label" translatable="yes">Start gain</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">0</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="logtvg_beta_down1">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">logtvg_beta_image_down1</property>
-        <signal name="clicked" handler="logtvg_gain0_down" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">0</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="logtvg_gain0_value">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="valign">center</property>
-        <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
-        <property name="use_markup">True</property>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">0</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="logtvg_beta_up1">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">logtvg_beta_image_up1</property>
-        <signal name="clicked" handler="logtvg_gain0_up" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">3</property>
-        <property name="top_attach">0</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkSeparator" id="tvg0_separator1">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="margin_top">3</property>
-        <property name="margin_bottom">3</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">1</property>
-        <property name="width">4</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="logtvg_beta_label">
-        <property name="name">0</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">end</property>
-        <property name="valign">center</property>
-        <property name="label" translatable="yes">Beta</property>
-        <property name="justify">center</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">2</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="logtvg_beta_down">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">logtvg_beta_image_down</property>
-        <signal name="clicked" handler="logtvg_beta_down" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">2</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="logtvg_beta_value">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="valign">center</property>
-        <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
-        <property name="use_markup">True</property>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">2</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="logtvg_beta_up">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">logtvg_beta_image_up</property>
-        <signal name="clicked" handler="logtvg_beta_up" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">3</property>
-        <property name="top_attach">2</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkSeparator" id="separator8">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="margin_top">3</property>
-        <property name="margin_bottom">3</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">3</property>
-        <property name="width">4</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkSeparator" id="separator9">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="margin_top">3</property>
-        <property name="margin_bottom">3</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">5</property>
-        <property name="width">4</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="logtvg_alpha_label">
-        <property name="name">0</property>
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">end</property>
-        <property name="valign">center</property>
-        <property name="label" translatable="yes">Alpha</property>
-        <property name="justify">center</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">4</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="logtvg_alpha_value">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="valign">center</property>
-        <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
-        <property name="use_markup">True</property>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">4</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="logtvg_alpha_down">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">logtvg_alpha_image_down</property>
-        <signal name="clicked" handler="logtvg_alpha_down" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">4</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="logtvg_alpha_up">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">logtvg_alpha_image_up</property>
-        <signal name="clicked" handler="logtvg_alpha_up" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">3</property>
-        <property name="top_attach">4</property>
       </packing>
     </child>
   </object>

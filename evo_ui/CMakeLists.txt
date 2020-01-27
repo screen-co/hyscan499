@@ -13,6 +13,8 @@ add_custom_command (OUTPUT ${CMAKE_BINARY_DIR}/resources/${UI_NAME}-resources.c
                     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
                     DEPENDS evo.ui
                             record.ui
+                            hyscan-gtk-map-preload.ui
+                            hyscan-gtk-map-go.ui
                     VERBATIM)
 
 
@@ -20,6 +22,8 @@ add_library (${UI_NAME} SHARED
              hyscan-gtk-map-kit.c
              evo-ui.c
              hyscan-gtk-mark-export.c
+             hyscan-gtk-map-preload.c
+             hyscan-gtk-map-go.c
              ${CMAKE_BINARY_DIR}/resources/${UI_NAME}-resources.c)
 
 target_link_libraries (${UI_NAME}
@@ -27,7 +31,8 @@ target_link_libraries (${UI_NAME}
                        ${GTK3_LIBRARIES}
                        ${HYSCAN_LIBRARIES}
                        ${HYSCAN_FNN_LIBRARY}
-                       ${MATH_LIBRARIES})
+                       ${MATH_LIBRARIES}
+                       ${PROJ4_LIBRARIES})
 
 set_target_properties (${UI_NAME} PROPERTIES PREFIX "")
 set_target_properties (${UI_NAME} PROPERTIES SUFFIX ".ui")

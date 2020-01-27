@@ -8,6 +8,7 @@
 #include <hyscan-profile-hw.h>
 #include <hyscan-profile-offset.h>
 #include <hyscan-profile-db.h>
+#include <hyscan-gtk-dev-indicator.h>
 #include <gmodule.h>
 
 #ifdef G_OS_WIN32 /* Входная точка для GUI wWinMain. */
@@ -144,7 +145,7 @@ main (int argc, char **argv)
 
   /* Перенаправление логов в файл. */
   #ifdef FNN_LOGGING
-  hyscan_fnn_flog_open ("hyscan", 1000000);
+  hyscan_fnn_flog_open ("hyscan", 5000000);
   #endif
 
   gtk_init (&argc, &argv);
@@ -326,7 +327,7 @@ main (int argc, char **argv)
     }
   else
     {
-      gchar *folder;
+      gchar **folders, *folder;
       /* К О С Т Ы Л И
        * О С Т Ы Л И
        * С Т Ы Л И
@@ -336,7 +337,8 @@ main (int argc, char **argv)
        * И
        */
       /* беру первую попавшуюся БД. Мне насрать. */
-      folder = g_build_filename (g_get_user_config_dir (), "hyscan","db-profiles", NULL);
+      folders = get_profile_dir ();
+      folder = g_build_filename (folders[0], "hyscan","db-profiles", NULL);
       {
         const gchar *filename;
         GError *error = NULL;
@@ -345,7 +347,6 @@ main (int argc, char **argv)
         if (!g_file_test (folder, G_FILE_TEST_IS_DIR | G_FILE_TEST_EXISTS))
           {
             g_warning ("HyScanFNN: directory %s doesn't exist", folder);
-            // return;
           }
 
         dir = g_dir_open (folder, 0, &error);
@@ -353,7 +354,6 @@ main (int argc, char **argv)
           {
             g_warning ("HyScanFNN: %s", error->message);
             g_clear_pointer (&error, g_error_free);
-            // return;
           }
 
         while ((filename = g_dir_read_name (dir)) != NULL)
@@ -438,6 +438,8 @@ main (int argc, char **argv)
    */
 
   /* SV. */
+restart:
+  global.request_restart = FALSE;
   global.sound_velocity = sound_velocity;
   global.ship_speed = ship_speed;
 
@@ -504,7 +506,10 @@ main (int argc, char **argv)
 
   /* Навигационные данные. */
   if (global.control != NULL)
-    global.gui.nav = hyscan_gtk_nav_indicator_new (HYSCAN_SENSOR (global.control));
+    {
+      global.gui.nav = hyscan_gtk_nav_indicator_new (HYSCAN_SENSOR (global.control));
+      gtk_box_pack_end (GTK_BOX (global.gui.nav), hyscan_gtk_dev_indicator_new (global.control), FALSE, FALSE, 0);
+    }
 
   /* Галсы. */
   global.gui.track.view = GTK_WIDGET (gtk_builder_get_object (common_builder, "track.view"));
@@ -581,6 +586,8 @@ main (int argc, char **argv)
   // ui_desetup (global.settings);
   ui_destroy (&global);
 
+  if (global.request_restart)
+    goto restart;
 
 exit:
 

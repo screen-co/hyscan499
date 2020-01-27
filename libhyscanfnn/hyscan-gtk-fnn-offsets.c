@@ -19,12 +19,12 @@ enum
 typedef struct
 {
   // gchar         *path;
-  GtkAdjustment *x;
-  GtkAdjustment *y;
-  GtkAdjustment *z;
-  GtkAdjustment *psi;
-  GtkAdjustment *gamma;
-  GtkAdjustment *theta;
+  GtkAdjustment *starboard;
+  GtkAdjustment *forward;
+  GtkAdjustment *vertical;
+  GtkAdjustment *yaw;
+  GtkAdjustment *pitch;
+  GtkAdjustment *roll;
 } HyScanGtkFnnOffsetsAdjustments;
 
 struct _HyScanGtkFnnOffsetsPrivate
@@ -110,19 +110,19 @@ make_page (HyScanGtkFnnOffsets *self,
   HyScanAntennaOffset offt;
   HyScanGtkFnnOffsetsAdjustments * adjs;
 
-  const gchar *labels[] = {"x",
-                           "y",
-                           "z",
-                           "psi",
-                           "gamma",
-                           "theta",
+  const gchar *labels[] = {"starboard",
+                           "forward",
+                           "vertical",
+                           "yaw",
+                           "pitch",
+                           "roll",
                            NULL};
   const gchar *hints[]  = {N_("Positive: starboard, negative: portside"),
                            N_("Positive: bow, negative: stern"),
                            N_("Positive: bottom, negative: sky"),
                            N_("Yaw"),
-                           N_("Roll"),
                            N_("Pitch"),
+                           N_("Roll"),
                            NULL};
 
   grid = gtk_grid_new ();
@@ -130,44 +130,44 @@ make_page (HyScanGtkFnnOffsets *self,
   adjs = adjustments_new (self);
 
   offt = hyscan_fnn_offsets_get_offset (self->priv->offset_man, label);
-  gtk_adjustment_set_value (adjs->x, offt.x);
-  gtk_adjustment_set_value (adjs->y, offt.y);
-  gtk_adjustment_set_value (adjs->z, offt.z);
-  gtk_adjustment_set_value (adjs->psi, offt.psi);
-  gtk_adjustment_set_value (adjs->gamma, offt.gamma);
-  gtk_adjustment_set_value (adjs->theta, offt.theta);
+  gtk_adjustment_set_value (adjs->starboard, offt.starboard);
+  gtk_adjustment_set_value (adjs->forward, offt.forward);
+  gtk_adjustment_set_value (adjs->vertical, offt.vertical);
+  gtk_adjustment_set_value (adjs->yaw, offt.yaw);
+  gtk_adjustment_set_value (adjs->pitch, offt.pitch);
+  gtk_adjustment_set_value (adjs->roll, offt.roll);
 
   g_hash_table_insert (self->priv->adjustments, g_strdup (label), adjs);
 
   for (i = 0; i < 6; ++i)
     {
       GtkWidget * label = gtk_label_new (labels[i]);
-      gtk_widget_set_tooltip_text (label, gettext(hints[i]));
+      gtk_widget_set_tooltip_text (label, _(hints[i]));
       gtk_grid_attach (GTK_GRID (grid), label, 0, i, 1, 1);
     }
 
   i = 0;
-  entry = gtk_spin_button_new (adjs->x, 1.0, 3);
+  entry = gtk_spin_button_new (adjs->starboard, 1.0, 3);
   gtk_entry_set_input_purpose (GTK_ENTRY (entry), GTK_INPUT_PURPOSE_DIGITS);
   gtk_grid_attach (GTK_GRID (grid), entry, 1, i++, 1, 1);
 
-  entry = gtk_spin_button_new (adjs->y, 1.0, 3);
+  entry = gtk_spin_button_new (adjs->forward, 1.0, 3);
   gtk_entry_set_input_purpose (GTK_ENTRY (entry), GTK_INPUT_PURPOSE_DIGITS);
   gtk_grid_attach (GTK_GRID (grid), entry, 1, i++, 1, 1);
 
-  entry = gtk_spin_button_new (adjs->z, 1.0, 3);
+  entry = gtk_spin_button_new (adjs->vertical, 1.0, 3);
   gtk_entry_set_input_purpose (GTK_ENTRY (entry), GTK_INPUT_PURPOSE_DIGITS);
   gtk_grid_attach (GTK_GRID (grid), entry, 1, i++, 1, 1);
 
-  entry = gtk_spin_button_new (adjs->psi, 1.0, 3);
+  entry = gtk_spin_button_new (adjs->yaw, 1.0, 3);
   gtk_entry_set_input_purpose (GTK_ENTRY (entry), GTK_INPUT_PURPOSE_DIGITS);
   gtk_grid_attach (GTK_GRID (grid), entry, 1, i++, 1, 1);
 
-  entry = gtk_spin_button_new (adjs->gamma, 1.0, 3);
+  entry = gtk_spin_button_new (adjs->pitch, 1.0, 3);
   gtk_entry_set_input_purpose (GTK_ENTRY (entry), GTK_INPUT_PURPOSE_DIGITS);
   gtk_grid_attach (GTK_GRID (grid), entry, 1, i++, 1, 1);
 
-  entry = gtk_spin_button_new (adjs->theta, 1.0, 3);
+  entry = gtk_spin_button_new (adjs->roll, 1.0, 3);
   gtk_entry_set_input_purpose (GTK_ENTRY (entry), GTK_INPUT_PURPOSE_DIGITS);
   gtk_grid_attach (GTK_GRID (grid), entry, 1, i++, 1, 1);
 
@@ -219,12 +219,12 @@ changed (GtkAdjustment    *src,
     {
       HyScanAntennaOffset offt;
 
-      offt.x = gtk_adjustment_get_value (adj->x);
-      offt.y = gtk_adjustment_get_value (adj->y);
-      offt.z = gtk_adjustment_get_value (adj->z);
-      offt.psi = gtk_adjustment_get_value (adj->psi);
-      offt.gamma = gtk_adjustment_get_value (adj->gamma);
-      offt.theta = gtk_adjustment_get_value (adj->theta);
+      offt.starboard = gtk_adjustment_get_value (adj->starboard);
+      offt.forward = gtk_adjustment_get_value (adj->forward);
+      offt.vertical = gtk_adjustment_get_value (adj->vertical);
+      offt.yaw = gtk_adjustment_get_value (adj->yaw);
+      offt.pitch = gtk_adjustment_get_value (adj->pitch);
+      offt.roll = gtk_adjustment_get_value (adj->roll);
 
       hyscan_fnn_offsets_set_offset (priv->offset_man, key, offt);
     }
@@ -318,19 +318,19 @@ adjustments_new (HyScanGtkFnnOffsets *self)
 {
   HyScanGtkFnnOffsetsAdjustments *adj = g_new (HyScanGtkFnnOffsetsAdjustments, 1);
 
-  adj->x = gtk_adjustment_new (0.0, -10000, 10000, 1.0, 10, 10);
-  adj->y = gtk_adjustment_new (0.0, -10000, 10000, 1.0, 10, 10);
-  adj->z = gtk_adjustment_new (0.0, -10000, 10000, 1.0, 10, 10);
-  adj->psi = gtk_adjustment_new (0.0, -10000, 10000, 1.0, 10, 10);
-  adj->gamma = gtk_adjustment_new (0.0, -10000, 10000, 1.0, 10, 10);
-  adj->theta = gtk_adjustment_new (0.0, -10000, 10000, 1.0, 10, 10);
+  adj->starboard = gtk_adjustment_new (0.0, -10000, 10000, 1.0, 10, 10);
+  adj->forward = gtk_adjustment_new (0.0, -10000, 10000, 1.0, 10, 10);
+  adj->vertical = gtk_adjustment_new (0.0, -10000, 10000, 1.0, 10, 10);
+  adj->yaw = gtk_adjustment_new (0.0, -10000, 10000, 1.0, 10, 10);
+  adj->pitch = gtk_adjustment_new (0.0, -10000, 10000, 1.0, 10, 10);
+  adj->roll = gtk_adjustment_new (0.0, -10000, 10000, 1.0, 10, 10);
 
-  g_signal_connect (adj->x, "value-changed", G_CALLBACK (changed), self);
-  g_signal_connect (adj->y, "value-changed", G_CALLBACK (changed), self);
-  g_signal_connect (adj->z, "value-changed", G_CALLBACK (changed), self);
-  g_signal_connect (adj->psi, "value-changed", G_CALLBACK (changed), self);
-  g_signal_connect (adj->gamma, "value-changed", G_CALLBACK (changed), self);
-  g_signal_connect (adj->theta, "value-changed", G_CALLBACK (changed), self);
+  g_signal_connect (adj->starboard, "value-changed", G_CALLBACK (changed), self);
+  g_signal_connect (adj->forward, "value-changed", G_CALLBACK (changed), self);
+  g_signal_connect (adj->vertical, "value-changed", G_CALLBACK (changed), self);
+  g_signal_connect (adj->yaw, "value-changed", G_CALLBACK (changed), self);
+  g_signal_connect (adj->pitch, "value-changed", G_CALLBACK (changed), self);
+  g_signal_connect (adj->roll, "value-changed", G_CALLBACK (changed), self);
 
   return adj;
 }
@@ -342,12 +342,12 @@ adjustments_free (gpointer data)
   if (adj == NULL)
     return;
 
-  g_object_unref (adj->x);
-  g_object_unref (adj->y);
-  g_object_unref (adj->z);
-  g_object_unref (adj->psi);
-  g_object_unref (adj->gamma);
-  g_object_unref (adj->theta);
+  g_object_unref (adj->starboard);
+  g_object_unref (adj->forward);
+  g_object_unref (adj->vertical);
+  g_object_unref (adj->yaw);
+  g_object_unref (adj->pitch);
+  g_object_unref (adj->roll);
   g_free (adj);
 }
 
