@@ -42,6 +42,7 @@ enum
   UTM_TO_FILE,
   MARKS_TO_CSV,
   MARKS_TO_CLIPBOARD,
+  MARKS_TO_HTML
 };
 
 EvoUI global_ui = {0,};
@@ -365,13 +366,28 @@ mark_exporter (GObject  *emitter,
     {
       hyscan_gtk_map_kit_get_mark_backends (global_ui.mapkit, &geo, &wf);
 
-      if (selector == MARKS_TO_CSV)
+      switch (selector)
         {
-          gchar *data = hyscan_gtk_mark_export_to_str (wf, geo, _global->project_name);
-          filesave_dialog ("marks.txt", _global->project_name, _global->track_name, data);
+           case MARKS_TO_CSV:
+             {
+                gchar *data = hyscan_gtk_mark_export_to_str (wf, geo, _global->project_name);
+                filesave_dialog ("marks.txt", _global->project_name, _global->track_name, data);
+             }
+           break;
+           case MARKS_TO_CLIPBOARD:
+             {
+               hyscan_gtk_mark_export_copy_to_clipboard (wf, geo, _global->project_name);
+             }
+           break;
+           case MARKS_TO_HTML:
+             {
+                gchar *folder = NULL;
+                folder = keyfile_string_read_helper (global_ui.settings, "EVO", "export_folder");
+                hyscan_gtk_mark_export_save_as_html (wf, geo, _global, folder);
+             }
+           break;
+           default: break;
         }
-      else if (selector == MARKS_TO_CLIPBOARD)
-        hyscan_gtk_mark_export_copy_to_clipboard (wf, geo, _global->project_name);
     }
 }
 
@@ -1466,6 +1482,10 @@ build_interface (Global *global)
 
       mitem = gtk_menu_item_new_with_label (_("Marks as CSV"));
       g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (MARKS_TO_CSV));
+      gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
+      mitem = gtk_menu_item_new_with_label (_("Marks as HTML"));
+      g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (MARKS_TO_HTML));
       gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
 
       mitem = gtk_menu_item_new_with_label (_("Marks to clipboard"));

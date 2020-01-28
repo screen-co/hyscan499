@@ -11,6 +11,8 @@
 #include <gtk/gtk.h>
 #include <hyscan-mark-loc-model.h>
 #include <hyscan-object-model.h>
+#include <hyscan-tile-queue.h>
+#include <fnn-types.h>
 
 void
 hyscan_gtk_mark_export_save_as_csv       (GtkWindow          *window,
@@ -23,10 +25,16 @@ hyscan_gtk_mark_export_copy_to_clipboard (HyScanMarkLocModel *ml_model,
                                           HyScanObjectModel  *mark_geo_model,
                                           gchar              *project_name);
 
-gchar *
-hyscan_gtk_mark_export_to_str (HyScanMarkLocModel *ml_model,
-                               HyScanObjectModel  *mark_geo_model,
-                               gchar              *project_name);
+gchar*
+hyscan_gtk_mark_export_to_str            (HyScanMarkLocModel *ml_model,
+                                          HyScanObjectModel  *mark_geo_model,
+                                          gchar              *project_name);
+
+void
+hyscan_gtk_mark_export_save_as_html      (HyScanMarkLocModel *ml_model,
+                                          HyScanObjectModel  *mark_geo_model,
+                                          Global             *global,
+                                          gchar              *export_folder);
 
 #endif /* __HYSCAN_GTK_MARK_EXPORT_H__ */
 
