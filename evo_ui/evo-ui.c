@@ -3,6 +3,7 @@
 #include <hyscan-gtk-area.h>
 #include <hyscan-gtk-fnn-offsets.h>
 #include "hyscan-gtk-mark-export.h"
+#include <hyscan-planner-export.h>
 #include "evo-ui.h"
 
 #define GETTEXT_PACKAGE "hyscanfnn-evoui"
@@ -42,7 +43,10 @@ enum
   UTM_TO_FILE,
   MARKS_TO_CSV,
   MARKS_TO_CLIPBOARD,
-  MARKS_TO_HTML
+  MARKS_TO_HTML,
+  PLANNER_TO_XML,
+  PLANNER_TO_KML,
+  IMPORT_PLANNER_XML,
 };
 
 EvoUI global_ui = {0,};
@@ -361,6 +365,40 @@ mark_exporter (GObject  *emitter,
   else if (selector == UTM_TO_FILE)
     {
       utm_xyz (NULL);
+    }
+  else if (selector == IMPORT_PLANNER_XML)
+    {
+      hyscan_gtk_map_kit_run_planner_import (global_ui.mapkit);
+    }
+  else if (selector == PLANNER_TO_XML || selector == PLANNER_TO_KML)
+    {
+      gchar *data;
+      GHashTable *objects;
+      HyScanObjectModel *planner;
+
+      planner = hyscan_gtk_map_kit_get_planner (global_ui.mapkit);
+      if (planner == NULL)
+        return;
+
+      objects = hyscan_object_model_get (planner);
+      g_object_unref (planner);
+
+      if (objects == NULL)
+        return;
+
+      if (selector == PLANNER_TO_XML)
+        {
+          data = hyscan_planner_export_xml_to_str (objects);
+          filesave_dialog ("plan.xml", _global->project_name, NULL, data);
+        }
+      else
+        {
+          data = hyscan_planner_export_kml_to_str (objects);
+          filesave_dialog ("plan.kml", _global->project_name, NULL, data);
+        }
+
+      g_hash_table_destroy (objects);
+      g_free (data);
     }
   else
     {
@@ -1403,9 +1441,10 @@ build_interface (Global *global)
     gtk_stack_add_named (GTK_STACK (ui->control_stack), ui->mapkit->control, EVO_MAP);
     gtk_stack_add_named (GTK_STACK (ui->nav_stack), ui->mapkit->navigation, EVO_MAP);
     // gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), ui->mapkit->map, EVO_MAP, _("Map"));
-    gtk_box_pack_start (GTK_BOX (box), ui->mapkit->map, TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (box), ui->mapkit->paned, TRUE, TRUE, 0);
     // gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), ui->mapkit->status_bar, EVO_MAP, _("Map"));
-    gtk_box_pack_start (GTK_BOX (box), ui->mapkit->status_bar, FALSE, FALSE, 0);
+    // gtk_box_pack_start (GTK_BOX (box), ui->mapkit->bottom_panel, FALSE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (box), ui->mapkit->status_bar, FALSE, TRUE, 0);
     gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), box, EVO_MAP, _("Map"));
     gtk_stack_set_visible_child_name(GTK_STACK (ui->acoustic_stack), EVO_MAP);
 
@@ -1502,7 +1541,7 @@ build_interface (Global *global)
     /* Exports */
     {
       gint subt = 0;
-      GtkWidget *submenu = gtk_menu_new ();
+      GtkWidget *submenu;
       submenu = gtk_menu_new ();
       subt = 0;
 
@@ -1518,6 +1557,14 @@ build_interface (Global *global)
       g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (MARKS_TO_CLIPBOARD));
       gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
 
+      mitem = gtk_menu_item_new_with_label (_("Track plan as XML"));
+      g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (PLANNER_TO_XML));
+      gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
+      mitem = gtk_menu_item_new_with_label (_("Track plan as KML"));
+      g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (PLANNER_TO_KML));
+      gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
       mitem = gtk_menu_item_new_with_label (_("XYZ"));
       g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (XYZ_TO_FILE));
       gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
@@ -1528,6 +1575,13 @@ build_interface (Global *global)
 
       mitem = gtk_menu_item_new_with_label (_("HSX"));
       g_signal_connect (mitem, "activate", G_CALLBACK (run_export_data), _global);
+      gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
+      mitem = gtk_separator_menu_item_new ();
+      gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
+      mitem = gtk_menu_item_new_with_label (_("Import track plan"));
+      g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (IMPORT_PLANNER_XML));
       gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
 
       mitem = gtk_menu_item_new_with_label (_("Export"));

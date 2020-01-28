@@ -16,6 +16,7 @@ typedef struct
   GtkWidget *map;                 /* Виджет карты. */
   GtkWidget *control;             /* Виджет с кнопками управления картой. */
   GtkWidget *status_bar;          /* Виджет со статусом. */
+  GtkWidget *paned;               /* Центральный виджет. */
 
   /* ## Private. ## */
   HyScanGtkMapKitPrivate *priv;
@@ -78,6 +79,11 @@ void              hyscan_gtk_map_kit_get_mark_backends(HyScanGtkMapKit          
                                                        HyScanObjectModel         **geo,
                                                        HyScanMarkLocModel        **wf);
 
-HyScanTrackPlan * hyscan_gtk_map_kit_get_track_plan     (HyScanGtkMapKit           *kit);
+HyScanObjectModel *
+                  hyscan_gtk_map_kit_get_planner      (HyScanGtkMapKit            *kit);
+
+void              hyscan_gtk_map_kit_run_planner_import (HyScanGtkMapKit          *kit);
+
+HyScanTrackPlan * hyscan_gtk_map_kit_get_track_plan   (HyScanGtkMapKit           *kit);
 
 #endif /* __HYSCAN_GTK_MAP_KIT_H__ */
