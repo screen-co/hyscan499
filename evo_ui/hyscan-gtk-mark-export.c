@@ -26,6 +26,8 @@ typedef struct _package
 
 static gchar hyscan_gtk_mark_export_header[] = "LAT,LON,NAME,DESCRIPTION,COMMENT,NOTES,DATE,TIME\n";
 
+static gchar *empty = N_("Empty");
+
 static void          hyscan_gtk_mark_export_tile_loaded      (Package           *package,
                                                               HyScanTile        *tile,
                                                               gfloat            *img,
@@ -36,7 +38,8 @@ static void          hyscan_gtk_mark_export_save_tile_as_png (HyScanTile        
                                                               Package           *package,
                                                               gfloat            *img,
                                                               gint               size,
-                                                              const gchar       *file_name);
+                                                              const gchar       *file_name,
+                                                              gboolean           echo);
 
 static void          hyscan_gtk_mark_export_generate_tile    (HyScanMarkLocation  *location,
                                                               HyScanTileQueue    *tile_queue,
@@ -157,29 +160,26 @@ hyscan_gtk_mark_export_print_marks (GHashTable *wf_marks,
 }
 
 /* Функция-обработчик завершения гененрации тайла.
- * По завершению генерации сохраняем тайл в файл.
+ * По завершению генерации уменьшает счётчик герируемых тайлов.
  * */
 static void
-hyscan_gtk_mark_export_tile_loaded    (Package           *package,
-                                       HyScanTile        *tile,
-                                       gfloat            *img,
-                                       gint               size,
-                                       gulong             hash)
+hyscan_gtk_mark_export_tile_loaded    (Package           *package, /* Пакет дополнительных данных. */
+                                       HyScanTile        *tile,    /* Тайл. */
+                                       gfloat            *img,     /* Акустическое изображение. */
+                                       gint               size,    /* Размер акустического изображения в байтах. */
+                                       gulong             hash)    /* Хэш состояния тайла. */
 {
-  g_print ("Тайл сгенерирован.\n");
-  g_mutex_lock (&package->mutex);
-  hyscan_gtk_mark_export_save_tile_as_png (tile, package, img, size, NULL);
-  g_mutex_unlock (&package->mutex);
   package->counter--;
 }
 
 /*
- *
+ * функция ищет тайл в кэше и если не находит, то запускает процесс генерации тайла.
  * */
 void
-hyscan_gtk_mark_export_generate_tile (HyScanMarkLocation *location,
-                                      HyScanTileQueue    *tile_queue,
-                                      guint              *counter)
+hyscan_gtk_mark_export_generate_tile (HyScanMarkLocation *location,   /* Метка. */
+                                      HyScanTileQueue    *tile_queue, /* Очередь для работы с акустическими
+                                                                       * изображениями. */
+                                      guint              *counter)    /* Счётчик генерируемых тайлов. */
 {
   if (location->mark->type == HYSCAN_MARK_WATERFALL)
     {
@@ -192,11 +192,7 @@ hyscan_gtk_mark_export_generate_tile (HyScanMarkLocation *location,
         {
           hyscan_gtk_mark_export_init_tile (tile, &tile_cacheable, location);
 
-          if (hyscan_tile_queue_check (tile_queue, tile, &tile_cacheable, NULL))
-            {
-              g_print ("Tile found in cache\n");
-            }
-          else
+          if (hyscan_tile_queue_check (tile_queue, tile, &tile_cacheable, NULL) == FALSE)
             {
               HyScanCancellable *cancellable;
               cancellable = hyscan_cancellable_new ();
@@ -211,13 +207,16 @@ hyscan_gtk_mark_export_generate_tile (HyScanMarkLocation *location,
     }
 }
 
+/*
+ * функция сохраняет метку в файл и добавляет запись в файл index.html.
+ */
 void
-hyscan_gtk_mark_export_save_tile (HyScanMarkLocation *location,
-                                  HyScanTileQueue    *tile_queue,
-                                  const gchar        *image_folder,
-                                  const gchar        *media,
-                                  FILE               *file,
-                                  Package            *package)
+hyscan_gtk_mark_export_save_tile (HyScanMarkLocation *location,     /* Метка. */
+                                  HyScanTileQueue    *tile_queue,   /* Очередь для работы с акустическими изображениями. */
+                                  const gchar        *image_folder, /* Полный путь до папки с изображениями. */
+                                  const gchar        *media,        /* Папка для сохранения изображений. */
+                                  FILE               *file,         /* Дескриптор файла для записи данных в index.html. */
+                                  Package            *package)      /* Пакет дополнительных данных. */
 {
   if (location->mark->type == HYSCAN_MARK_WATERFALL)
     {
@@ -237,15 +236,19 @@ hyscan_gtk_mark_export_save_tile (HyScanMarkLocation *location,
               guint32 size = 0;
               if (hyscan_tile_queue_get (tile_queue, tile, &tile_cacheable, &image, &size))
                 {
+                  gboolean echo = (location->direction == HYSCAN_MARK_LOCATION_BOTTOM)? TRUE : FALSE;
                   gint id = g_rand_int_range (rand, 0, INT32_MAX);
                   GDateTime *local = NULL;
                   gchar *lat, *lon, *name, *description, *comment,
                         *notes, *date, *time, *content, *file_name,
                         *format  = "\t\t\t<p><strong>%s</strong></p>\n"
-                                   "\t\t\t\t<img src=\"%s/%i.png\">\n"
+                                   "\t\t\t\t<img src=\"%s/%i.png\" alt=\"%s\" title=\"%s\">\n"
                                    "\t\t\t\t<p>Date: %s</p>\n"
                                    "\t\t\t\t<p>Time: %s</p>\n"
                                    "\t\t\t\t<p>Location: %s, %s</p>\n"
+                                   "\t\t\t\t<p>Description: %s</p>\n"
+                                   "\t\t\t\t<p>Comment: %s</p>\n"
+                                   "\t\t\t\t<p>Notes: %s</p>\n"
                                    "\t\t\t<br style=\"page-break-before: always\"/>\n";
 
                   lat = g_strdup_printf ("%.6f°", location->mark_geo.lat);
@@ -258,13 +261,14 @@ hyscan_gtk_mark_export_save_tile (HyScanMarkLocation *location,
                   date = g_date_time_format (local, "%m/%d/%Y");
                   time = g_date_time_format (local, "%H:%M:%S");
 
-                  name = (location->mark->name == NULL) ? "" : g_strdup (location->mark->name);
-                  description = (location->mark->description == NULL) ? "" : g_strdup (location->mark->description);
+                  name = (location->mark->name == NULL) ? empty : g_strdup (location->mark->name);
+                  description = (location->mark->description == NULL) ? empty : g_strdup (location->mark->description);
 
-                  comment = g_strdup ("");
-                  notes = g_strdup ("");
+                  comment = g_strdup (empty);
+                  notes   = g_strdup (empty);
 
-                  content = g_strdup_printf (format, name, media, id, date, time, lat, lon);
+                  content = g_strdup_printf (format, name, media, id, name, name, date,
+                                             time, lat, lon, description, comment, notes);
 
                   fwrite (content, sizeof (gchar), strlen (content), file);
 
@@ -284,11 +288,13 @@ hyscan_gtk_mark_export_save_tile (HyScanMarkLocation *location,
 
                   tile->cacheable = tile_cacheable;
                   file_name = g_strdup_printf ("%s/%i.png", image_folder, id);
+
                   hyscan_gtk_mark_export_save_tile_as_png (tile,
                                                            package,
                                                            image,
                                                            size,
-                                                           file_name);
+                                                           file_name,
+                                                           echo);
                   g_free (file_name);
                 }
             }
@@ -298,65 +304,124 @@ hyscan_gtk_mark_export_save_tile (HyScanMarkLocation *location,
     }
 }
 /*
- *
+ * функция сохраняет тайл в формате PNG.
  * */
 void
-hyscan_gtk_mark_export_save_tile_as_png (HyScanTile  *tile,
-                                         Package     *package,
-                                         gfloat      *img,
-                                         gint         size,
-                                         const gchar *file_name)
+hyscan_gtk_mark_export_save_tile_as_png (HyScanTile  *tile,       /* Тайл. */
+                                         Package     *package,    /* Пакет дополнительных данных. */
+                                         gfloat      *img,        /* Акустическое изображение. */
+                                         gint         size,       /* Размер акустического изображения в байтах. */
+                                         const gchar *file_name,  /* Имя файла. */
+                                         gboolean     echo)       /* Флаг "эхолотной" метки, которую нужно
+                                                                   * повернуть на 90 градусов и отразить
+                                                                   * по горизонтали. */
 {
-  cairo_surface_t   *surface = NULL;
+  cairo_surface_t   *surface    = NULL;
   HyScanTileSurface  tile_surface;
-  HyScanTileColor   *tile_color;
+  HyScanTileColor   *tile_color = NULL;
   guint32            background,
                      colors[2],
-                    *colormap;
+                    *colormap   = NULL;
   guint              cmap_len;
 
   if (file_name != NULL)
     {
-       tile_color = hyscan_tile_color_new (package->cache);
+      tile_color = hyscan_tile_color_new (package->cache);
 
-       background = hyscan_tile_color_converter_d2i (0.15, 0.15, 0.15, 1.0);
-       colors[0]  = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
-       colors[1]  = hyscan_tile_color_converter_d2i (package->color.red,
-                                                     package->color.green,
-                                                     package->color.blue,
-                                                     1.0);
+      background = hyscan_tile_color_converter_d2i (0.15, 0.15, 0.15, 1.0);
+      colors[0]  = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
+      colors[1]  = hyscan_tile_color_converter_d2i (package->color.red,
+                                                    package->color.green,
+                                                    package->color.blue,
+                                                    1.0);
 
-       colormap   = hyscan_tile_color_compose_colormap (colors, 2, &cmap_len);
+      colormap   = hyscan_tile_color_compose_colormap (colors, 2, &cmap_len);
 
-       hyscan_tile_color_set_colormap_for_all (tile_color, colormap, cmap_len, background);
+      hyscan_tile_color_set_colormap_for_all (tile_color, colormap, cmap_len, background);
 
-       /* 1.0 / 2.2 = 0.454545... */
-       hyscan_tile_color_set_levels (tile_color, tile->info.source, 0.0, 0.454545, 1.0);
+      /* 1.0 / 2.2 = 0.454545... */
+      hyscan_tile_color_set_levels (tile_color, tile->info.source, 0.0, 0.454545, 1.0);
 
-       tile_surface.width  = tile->cacheable.w;
-       tile_surface.height = tile->cacheable.h;
-       tile_surface.stride = cairo_format_stride_for_width (CAIRO_FORMAT_ARGB32,
-                                                       tile_surface.width);
-       tile_surface.data   = g_malloc0 (tile_surface.height * tile_surface.stride);
+      tile_surface.width  = tile->cacheable.w;
+      tile_surface.height = tile->cacheable.h;
+      tile_surface.stride = cairo_format_stride_for_width (CAIRO_FORMAT_ARGB32,
+                                                           tile_surface.width);
+      tile_surface.data   = g_malloc0 (tile_surface.height * tile_surface.stride);
 
-       hyscan_tile_color_add (tile_color, tile, img, size, &tile_surface);
+      hyscan_tile_color_add (tile_color, tile, img, size, &tile_surface);
 
-       if (hyscan_tile_color_check (tile_color, tile, &tile->cacheable))
-         {
-            hyscan_tile_color_get (tile_color, tile, &tile->cacheable, &tile_surface);
-            surface = cairo_image_surface_create_for_data ((guchar*)tile_surface.data,
-                                                          CAIRO_FORMAT_ARGB32,
-                                                          tile_surface.width,
-                                                          tile_surface.height,
-                                                          tile_surface.stride);
-            cairo_surface_write_to_png (surface, file_name);
-            g_print ("Тайл сохранён: %s.\n", file_name);
+      if (hyscan_tile_color_check (tile_color, tile, &tile->cacheable))
+        {
+          gpointer buffer = NULL;
+
+          if (echo == TRUE)
+            {
+              gint   i, j,
+                     height = tile_surface.width,
+                     width  = tile_surface.height,
+                     stride = cairo_format_stride_for_width (CAIRO_FORMAT_ARGB32, width);
+              guint *dest,
+                    *src;
+
+              buffer = g_malloc0 (tile_surface.height * tile_surface.stride);
+
+              hyscan_tile_color_get (tile_color, tile, &tile->cacheable, &tile_surface);
+
+              dest = (guint*)buffer,
+              src  = (guint*)tile_surface.data;
+              /* Поворот на 90 градусов */
+              for (j = 0; j < tile_surface.height; j++)
+                {
+                  for (i = 0; i < tile_surface.width; i++)
+                    {
+                      dest[i * tile_surface.height + j] = src[j * tile_surface.width + i];
+                    }
+                }
+              /* Отражение по горизонтали. */
+              for (j = 0; j <= (height - 1); j++)
+                {
+                  for (i = 0; i <= (width >> 1); i++)
+                    {
+                      gint  from = j * width + i,
+                            to   = j * width + width - 1 - i;
+                      guint tmp = dest[from];
+
+                      dest[from] = dest[to];
+                      dest[to] = tmp;
+                   }
+                }
+
+              surface = cairo_image_surface_create_for_data ( (guchar*)buffer,
+                                                              CAIRO_FORMAT_ARGB32,
+                                                              width,
+                                                              height,
+                                                              stride);
+            }
+          else
+            {
+              hyscan_tile_color_get (tile_color, tile, &tile->cacheable, &tile_surface);
+              surface = cairo_image_surface_create_for_data ( (guchar*)tile_surface.data,
+                                                              CAIRO_FORMAT_ARGB32,
+                                                              tile_surface.width,
+                                                              tile_surface.height,
+                                                              tile_surface.stride);
+            }
+          cairo_surface_write_to_png (surface, file_name);
+          if (buffer != NULL)
+            g_free (buffer);
         }
+      if (tile_surface.data != NULL)
+        g_free (tile_surface.data);
+      if (tile_color != NULL)
+        g_object_unref (tile_color);
+      if (surface != NULL)
+        cairo_surface_destroy (surface);
     }
 }
 
 /*
- *
+ * Функция инициализирует структуры HyScanTile и HyScanTileCacheable
+ * используя данные метки из location.
  * */
 void
 hyscan_gtk_mark_export_init_tile (HyScanTile          *tile,
@@ -364,15 +429,28 @@ hyscan_gtk_mark_export_init_tile (HyScanTile          *tile,
                                   HyScanMarkLocation  *location)
 {
   gfloat ppi = 1.0f;
+  gdouble width  = location->mark->width,
+          height = location->mark->height;
+
+  if (location->direction == HYSCAN_MARK_LOCATION_BOTTOM)
+    {
+      /* Если метка "эхолотная", то умножаем её габариты на 10.
+       * 10 это скорость движения при которой генерируются тайлы в Echosounder-е,
+       * но метка сохраняется без учёта этого коэфициента масштабирования.
+       * И меняем ширину и высоту местами, т.к. у Echosounder-а другая система координат.*/
+      width =  10.0 * location->mark->height;
+      height = 10.0 * location->mark->width;
+    }
+
   /* Для левого борта тайл надо отразить по оси X. */
   if (location->direction == HYSCAN_MARK_LOCATION_PORT)
     {
       /* Поэтому значения отрицательные, и start и end меняются местами. */
       tile->info.across_start = -round (
-            (location->across + location->mark->width) * 1000.0);
+            (location->across + width) * 1000.0);
       tile->info.across_end   = -round (
-            (location->across - location->mark->width) * 1000.0);
-      if (tile->info.across_end > 0)
+            (location->across - width) * 1000.0);
+      if (tile->info.across_start < 0 && tile->info.across_end > 0)
         {
           tile->info.across_end = 0;
         }
@@ -380,22 +458,28 @@ hyscan_gtk_mark_export_init_tile (HyScanTile          *tile,
   else
     {
       tile->info.across_start = round (
-            (location->across - location->mark->width) * 1000.0);
+            (location->across - width) * 1000.0);
       tile->info.across_end   = round (
-            (location->across + location->mark->width) * 1000.0);
-      if (tile->info.across_start < 0)
+            (location->across + width) * 1000.0);
+      if (tile->info.across_start < 0 && tile->info.across_end > 0)
         {
           tile->info.across_start = 0;
         }
     }
 
   tile->info.along_start = round (
-        (location->along - location->mark->height) * 1000.0);
+        (location->along - height) * 1000.0);
   tile->info.along_end   = round (
-        (location->along + location->mark->height) * 1000.0);
+        (location->along + height) * 1000.0);
 
   /* Нормировка тайлов по ширине в 600 пикселей. */
-  ppi = 600.0 / ((2.0 * 100.0 * location->mark->width) / 2.54);
+  ppi = 600.0 / ( (2.0 * 100.0 * width) / 2.54);
+  if (location->direction == HYSCAN_MARK_LOCATION_BOTTOM)
+    {
+      /* Если метка "эхолотная", то нормируем по высоте в 600 пикселей,
+       * т.к. сгенерированный тайл будет повёрнут на 90 градусов. */
+      ppi = 600.0 / ( (2.0 * 100.0 * height) / 2.54);
+    }
 
   tile->info.scale    = 1.0f;
   tile->info.ppi      = ppi;
@@ -640,11 +724,11 @@ hyscan_gtk_mark_export_save_as_html (HyScanMarkLocModel *ml_model,
                       "\t\t<title>Конвертация HTML с картинками в ODT, DOC, DOCX, RTF, PDF.</title>\n"
                       "\t</head>\n"
                       "\t<body>\n"
-                      "\t\t<p>Далее будут размещены картинки. А вообще весь файл необходимо конвертировать"
-                      " в ODT, DOC, DOCX, RTF, PDF.</p>\n"
+                      "\t\t<p>Далее будут размещены картинки. А вообще весь файл можно конвертировать"
+                      " в ODT, DOC, DOCX, RTF, PDF. <a href=\"#more\">Подробнее...</a></p>\n"
                       "\t\t<p>Сгенерировано в <a href=\"http://screen-co.ru/\">HyScan5</a>.</p>\n"
                       "\t\t<br style=\"page-break-before: always\"/>\n",
-            *footer = "\t\t<p><strong>Microsoft Word (DOC, DOCX, RTF, PDF)</strong></p>\n"
+            *footer = "\t\t<p><a name=\"more\"><strong>Microsoft Word (DOC, DOCX, RTF, PDF)</strong></a></p>\n"
                       "\t\t<p>Чтобы конвертировать этот файл в doc, необходимо открыть его в Microsoft"
                       " Word-е. Выполните Правый клик -> Контекстное меню -> Открыть с помощью ->"
                       " Microsoft Word. Если Word-a в открывшемся списке нет, то нужно \"Выбрать"
@@ -724,15 +808,21 @@ hyscan_gtk_mark_export_save_as_html (HyScanMarkLocModel *ml_model,
 
               local  = g_date_time_new_from_unix_local (1e-6 * geo_mark->ctime);
               if (local == NULL)
-                continue;
-              date = g_date_time_format (local, "%m/%d/%Y");
-              time = g_date_time_format (local, "%H:%M:%S");
+                {
+                  date = g_strdup (empty);
+                  time = g_strdup (empty);
+                }
+              else
+                {
+                  date = g_date_time_format (local, "%m/%d/%Y");
+                  time = g_date_time_format (local, "%H:%M:%S");
+                }
 
-              name = (geo_mark->name == NULL) ? "" : g_strdup (geo_mark->name);
-              description = (geo_mark->description == NULL) ? "" : g_strdup (geo_mark->description);
+              name = (geo_mark->name == NULL) ? empty : g_strdup (geo_mark->name);
+              description = (geo_mark->description == NULL) ? empty : g_strdup (geo_mark->description);
 
-              comment = g_strdup ("");
-              notes = g_strdup ("");
+              comment = g_strdup (empty);
+              notes = g_strdup (empty);
 
               if (geo_mark->type == HYSCAN_MARK_GEO)
                 {
@@ -740,8 +830,12 @@ hyscan_gtk_mark_export_save_as_html (HyScanMarkLocModel *ml_model,
                                     "\t\t\t\t<p>Date: %s</p>\n"
                                     "\t\t\t\t<p>Time: %s</p>\n"
                                     "\t\t\t\t<p>Location: %s, %s</p>\n"
+                                    "\t\t\t\t<p>Description: %s</p>\n"
+                                    "\t\t\t\t<p>Comment: %s</p>\n"
+                                    "\t\t\t\t<p>Notes: %s</p>\n"
                                     "\t\t\t<br style=\"page-break-before: always\"/>\n";
-                   gchar *content = g_strdup_printf (format, name, date, time, lat, lon);
+                   gchar *content = g_strdup_printf (format, name, date, time, lat, lon,
+                                                     description, comment, notes);
                    fwrite (content, sizeof (gchar), strlen (content), file);
                    g_free (content);
                 }
