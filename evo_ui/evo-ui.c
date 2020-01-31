@@ -583,6 +583,7 @@ sensor_toggle_wrapper (GtkCheckMenuItem *mitem,
 {
   gboolean active = gtk_check_menu_item_get_active (mitem);
 
+  g_signal_handlers_block_by_func (mitem, sensor_toggle_wrapper, (gpointer) name);
   if (hyscan_sensor_set_enable (HYSCAN_SENSOR (_global->control), name, active))
     {
       g_message ("Sensor %s is now %s", name, active ? "ON" : "OFF");
@@ -593,6 +594,7 @@ sensor_toggle_wrapper (GtkCheckMenuItem *mitem,
       g_message ("Couldn't turn sensor %s %s", name, active ? "ON" : "OFF");
       gtk_check_menu_item_set_active (mitem, !active);
     }
+  g_signal_handlers_unblock_by_func (mitem, sensor_toggle_wrapper, (gpointer) name);
 }
 
 gboolean
