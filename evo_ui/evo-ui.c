@@ -368,25 +368,25 @@ mark_exporter (GObject  *emitter,
 
       switch (selector)
         {
-           case MARKS_TO_CSV:
-             {
-                gchar *data = hyscan_gtk_mark_export_to_str (wf, geo, _global->project_name);
-                filesave_dialog ("marks.txt", _global->project_name, _global->track_name, data);
-             }
-           break;
-           case MARKS_TO_CLIPBOARD:
-             {
-               hyscan_gtk_mark_export_copy_to_clipboard (wf, geo, _global->project_name);
-             }
-           break;
-           case MARKS_TO_HTML:
-             {
-                gchar *folder = NULL;
-                folder = keyfile_string_read_helper (global_ui.settings, "EVO", "export_folder");
-                hyscan_gtk_mark_export_save_as_html (wf, geo, _global, folder);
-             }
-           break;
-           default: break;
+          case MARKS_TO_CSV:
+            {
+              gchar *data = hyscan_gtk_mark_export_to_str (wf, geo, _global->project_name);
+              filesave_dialog ("marks.txt", _global->project_name, _global->track_name, data);
+            }
+          break;
+          case MARKS_TO_CLIPBOARD:
+            {
+              hyscan_gtk_mark_export_copy_to_clipboard (wf, geo, _global->project_name);
+            }
+          break;
+          case MARKS_TO_HTML:
+            {
+              gchar *folder = NULL;
+              folder = keyfile_string_read_helper (global_ui.settings, "EVO", "export_folder");
+              hyscan_gtk_mark_export_save_as_html (wf, geo, _global, folder);
+            }
+          break;
+          default: break;
         }
     }
 }

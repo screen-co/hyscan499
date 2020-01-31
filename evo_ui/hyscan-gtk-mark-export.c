@@ -14,7 +14,16 @@
 #define GETTEXT_PACKAGE "hyscanfnn-evoui"
 #include <glib/gi18n-lib.h>
 
-/*Структура для передачи данных для сохранения тайла после генерации. */
+/* Структура для передачи данных в поток сохранения меток в формате HTML. */
+typedef struct _DataForHTML
+{
+  GHashTable  *wf_marks,      /* "Водопадные" метки. */
+              *geo_marks;     /* Гео-метки. */
+  Global      *global;        /* Структура с "глобальными" параметрами. */
+  gchar       *folder;        /* Папка для экспорта. */
+}DataForHTML;
+
+/* Структура для передачи данных для сохранения тайла после генерации. */
 typedef struct _package
 {
   GMutex       mutex;           /* Мьютекс для защиты данных во сохранения тайла. */
@@ -28,33 +37,35 @@ static gchar hyscan_gtk_mark_export_header[] = "LAT,LON,NAME,DESCRIPTION,COMMENT
 
 static gchar *empty = N_("Empty");
 
-static void          hyscan_gtk_mark_export_tile_loaded      (Package           *package,
-                                                              HyScanTile        *tile,
-                                                              gfloat            *img,
-                                                              gint               size,
-                                                              gulong             hash);
+static void          hyscan_gtk_mark_export_tile_loaded         (Package             *package,
+                                                                 HyScanTile          *tile,
+                                                                 gfloat              *img,
+                                                                 gint                 size,
+                                                                 gulong               hash);
 
-static void          hyscan_gtk_mark_export_save_tile_as_png (HyScanTile        *tile,
-                                                              Package           *package,
-                                                              gfloat            *img,
-                                                              gint               size,
-                                                              const gchar       *file_name,
-                                                              gboolean           echo);
+static void          hyscan_gtk_mark_export_save_tile_as_png    (HyScanTile          *tile,
+                                                                 Package             *package,
+                                                                 gfloat              *img,
+                                                                 gint                 size,
+                                                                 const gchar         *file_name,
+                                                                 gboolean             echo);
 
-static void          hyscan_gtk_mark_export_generate_tile    (HyScanMarkLocation  *location,
-                                                              HyScanTileQueue    *tile_queue,
-                                                              guint              *counter);
+static void          hyscan_gtk_mark_export_generate_tile       (HyScanMarkLocation  *location,
+                                                                 HyScanTileQueue     *tile_queue,
+                                                                 guint               *counter);
 
-static void          hyscan_gtk_mark_export_save_tile        (HyScanMarkLocation *location,
-                                                              HyScanTileQueue    *tile_queue,
-                                                              const gchar        *image_folder,
-                                                              const gchar        *media,
-                                                              FILE               *file,
-                                                              Package            *package);
+static void          hyscan_gtk_mark_export_save_tile           (HyScanMarkLocation  *location,
+                                                                 HyScanTileQueue     *tile_queue,
+                                                                 const gchar         *image_folder,
+                                                                 const gchar         *media,
+                                                                 FILE                *file,
+                                                                 Package             *package);
 
-static void          hyscan_gtk_mark_export_init_tile        (HyScanTile          *tile,
-                                                              HyScanTileCacheable *tile_cacheable,
-                                                              HyScanMarkLocation  *location);
+static void          hyscan_gtk_mark_export_init_tile           (HyScanTile          *tile,
+                                                                 HyScanTileCacheable *tile_cacheable,
+                                                                 HyScanMarkLocation  *location);
+
+static gpointer      hyscan_gtk_mark_export_save_as_html_thread (gpointer             user_data);
 
 /* Функция генерации строки. */
 static gchar *
@@ -159,10 +170,41 @@ hyscan_gtk_mark_export_print_marks (GHashTable *wf_marks,
   return g_string_free (str, FALSE);
 }
 
+
+gchar*
+hyscan_gtk_mark_export_to_str (HyScanMarkLocModel *ml_model,
+                               HyScanObjectModel  *mark_geo_model,
+                               gchar              *project_name)
+{
+  GHashTable *wf_marks, *geo_marks;
+  GDateTime *local;
+  gchar *str, *marks;
+
+  wf_marks = hyscan_mark_loc_model_get (ml_model);
+  geo_marks = hyscan_object_model_get (mark_geo_model);
+
+  if (wf_marks == NULL || geo_marks == NULL)
+    return NULL;
+
+  local = g_date_time_new_now_local ();
+
+  marks = hyscan_gtk_mark_export_print_marks (wf_marks, geo_marks);
+  str = g_strdup_printf (_("%s\nProject: %s\n%s%s"),
+                         g_date_time_format (local, "%A %B %e %T %Y"),
+                         project_name, hyscan_gtk_mark_export_header, marks);
+
+  g_hash_table_unref (wf_marks);
+  g_hash_table_unref (geo_marks);
+
+  g_free (marks);
+
+  return str;
+}
+
 /* Функция-обработчик завершения гененрации тайла.
  * По завершению генерации уменьшает счётчик герируемых тайлов.
  * */
-static void
+void
 hyscan_gtk_mark_export_tile_loaded    (Package           *package, /* Пакет дополнительных данных. */
                                        HyScanTile        *tile,    /* Тайл. */
                                        gfloat            *img,     /* Акустическое изображение. */
@@ -498,6 +540,239 @@ hyscan_gtk_mark_export_init_tile (HyScanTile          *tile,
   tile_cacheable->finalized = FALSE;   /* Будет заполнено генератором. */
 }
 
+/*
+ * Потоковая функция сохранения меток в формате HTML.
+ * */
+gpointer
+hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
+{
+  DataForHTML *data = (DataForHTML*)user_data;
+  FILE        *file           = NULL;    /* Дескриптор файла. */
+  GdkCursor  *cursor_watch    = NULL;
+  GdkDisplay *display         = gdk_display_get_default ();
+  gchar       *current_folder = NULL,   /* Полный путь до папки с проектом. */
+              *media          = "media", /* Папка для сохранения изображений. */
+              *image_folder   = NULL,    /* Полный путь до папки с изображениями. */
+              *file_name      = NULL;    /* Полный путь до файла index.html */
+
+  /* Создаём папку с названием проекта. */
+  current_folder = g_strconcat (data->folder, "/", data->global->project_name, (gchar*) NULL);
+  mkdir (current_folder, 0777);
+  /* HTML-файл. */
+  file_name = g_strdup_printf ("%s/index.html", current_folder);
+  /* Создаём папку для сохранения тайлов. */
+  image_folder = g_strdup_printf ("%s/%s", current_folder, media);
+  mkdir (image_folder, 0777);
+
+#ifdef G_OS_WIN32
+  fopen_s (&file, file_name, "w");
+#else
+  file = fopen (file_name, "w");
+#endif
+  if (file != NULL)
+    {
+      HyScanFactoryAmplitude  *factory_amp;  /* Фабрика объектов акустических данных. */
+      HyScanFactoryDepth      *factory_dpt;  /* Фабрика объектов глубины. */
+      HyScanTileQueue         *tile_queue;   /* Очередь для работы с акустическими изображениями. */
+      Package                  package;
+      gchar *header = "<!DOCTYPE html>\n"
+                      "<html lang=\"ru\">\n"
+                      "\t<head>\n"
+                      "\t\t<meta charset=\"utf-8\">\n"
+                      "\t\t<meta name=\"generator\" content=\"HyScan5\">\n"
+                      "\t\t<meta name=\"description\" content=\"description\">\n"
+                      "\t\t<meta name=\"author\" content=\"operator_name\">\n"
+                      "\t\t<meta name=\"document-state\" content=\"static\">\n"
+                      "\t\t<title>Конвертация HTML с картинками в ODT, DOC, DOCX, RTF, PDF.</title>\n"
+                      "\t</head>\n"
+                      "\t<body>\n"
+                      "\t\t<p>Далее будут размещены картинки. А вообще весь файл можно конвертировать"
+                      " в ODT, DOC, DOCX, RTF, PDF. <a href=\"#more\">Подробнее...</a></p>\n"
+                      "\t\t<p>Сгенерировано в <a href=\"http://screen-co.ru/\">HyScan5</a>.</p>\n"
+                      "\t\t<br style=\"page-break-before: always\"/>\n",
+            *footer = "\t\t<p><a name=\"more\"><strong>Microsoft Word (DOC, DOCX, RTF, PDF)</strong></a></p>\n"
+                      "\t\t<p>Чтобы конвертировать этот файл в doc, необходимо открыть его в Microsoft"
+                      " Word-е. Выполните Правый клик -> Контекстное меню -> Открыть с помощью ->"
+                      " Microsoft Word. Если Word-a в открывшемся списке нет, то нужно \"Выбрать"
+                      " программу...\" и там найти Word. Тогда файл откроется.</p>\n"
+                      "\t\t<p>После того как файл открылся Выберете в меню Файл -> Сведения -> Связаные"
+                      " документы -> Изменить связи с файлами. И в открывшемся окне для каждого файла"
+                      " поставить галочку в Параметры связи -> Хранить в документе и нажать OK. Затем"
+                      " выбрать Cохранить как и укажите нужный формат DOC, DOCX, RTF, PDF. Всё файл"
+                      " сконвертирован.</p>\n"
+                      "\t\t<br style=\"page-break-before: always\"/>\n"
+                      "\t\t<p><strong>LibreOffice Writer (ODT, DOC, DOCX, RTF, PDF)</strong></p>\n"
+                      "\t\t<p>Чтобы сконвертировать этот файл в odt, необходимо открыть его в LibreOffice"
+                      " Writer. Выполните Правый клик -> Контекстное меню -> Открыть в программе ->"
+                      " LibreOffice Writer. в меню выберите Правка -> Связи и для каждого файла нажать"
+                      " Разорвать связи. Затем можно сохранять файл в нужном формате ODT, DOC, DOCX, RTF."
+                      " Для сохранения в формате PDF Выберите в меню Файл -> Экспорт в PDF. Всё файл"
+                      " сконвертирован.</p>\n"
+                      "\t</body>\n"
+                      "</html>";
+
+      fwrite (header, sizeof (gchar), strlen (header), file);
+      /* Создаём фабрику объектов доступа к данным амплитуд. */
+      factory_amp = hyscan_factory_amplitude_new (data->global->cache);
+      hyscan_factory_amplitude_set_project (factory_amp,
+                                            data->global->db,
+                                            data->global->project_name);
+      /* Создаём фабрику объектов доступа к данным глубины. */
+      factory_dpt = hyscan_factory_depth_new (data->global->cache);
+      hyscan_factory_depth_set_project (factory_dpt,
+                                        data->global->db,
+                                        data->global->project_name);
+      /* Создаём очередь для генерации тайлов. */
+      tile_queue = hyscan_tile_queue_new (g_get_num_processors (),
+                                          data->global->cache,
+                                          factory_amp,
+                                          factory_dpt);
+      g_mutex_init (&package.mutex);
+      package.cache = data->global->cache;
+      gdk_rgba_parse (&package.color, "#FFFF00");
+      package.counter = 0;
+      /* Соединяем сигнал готовности тайла с функцией-обработчиком. */
+      g_signal_connect_swapped (G_OBJECT (tile_queue), "tile-queue-image",
+                                G_CALLBACK (hyscan_gtk_mark_export_tile_loaded), &package);
+
+      /* Водопадные метки. */
+      if (data->wf_marks != NULL)
+        {
+          HyScanMarkLocation *location   = NULL; /*  */
+          GHashTableIter      hash_iter;
+          gchar              *mark_id    = NULL; /* Идентификатор метки. */
+
+          g_hash_table_iter_init (&hash_iter, data->wf_marks);
+
+          while (g_hash_table_iter_next (&hash_iter, (gpointer *) &mark_id, (gpointer *) &location))
+            {
+              hyscan_gtk_mark_export_generate_tile (location, tile_queue, &package.counter);
+            }
+        }
+      if (data->geo_marks != NULL)
+        {
+          HyScanMarkGeo  *geo_mark   = NULL; /*  */
+          GHashTableIter  hash_iter;
+          gchar          *mark_id    = NULL, /* Идентификатор метки. */
+                         *category = "\t\t<p><strong>Geo marks</strong></p>\n";
+
+          fwrite (category, sizeof (gchar), strlen (category), file);
+
+          g_hash_table_iter_init (&hash_iter, data->geo_marks);
+
+          while (g_hash_table_iter_next (&hash_iter, (gpointer *) &mark_id, (gpointer *) &geo_mark))
+            {
+              GDateTime *local;
+              gchar *lat, *lon, *name, *description, *comment, *notes, *date, *time;
+
+              lat = g_strdup_printf ("%.6f°", geo_mark->center.lat);
+              lon = g_strdup_printf ("%.6f°", geo_mark->center.lon);
+
+              local  = g_date_time_new_from_unix_local (1e-6 * geo_mark->ctime);
+              if (local == NULL)
+                {
+                  date = g_strdup (empty);
+                  time = g_strdup (empty);
+                }
+              else
+                {
+                  date = g_date_time_format (local, "%m/%d/%Y");
+                  time = g_date_time_format (local, "%H:%M:%S");
+                }
+
+              name = (geo_mark->name == NULL) ? empty : g_strdup (geo_mark->name);
+              description = (geo_mark->description == NULL) ? empty : g_strdup (geo_mark->description);
+
+              comment = g_strdup (empty);
+              notes = g_strdup (empty);
+
+              if (geo_mark->type == HYSCAN_MARK_GEO)
+                {
+                   gchar *format  = "\t\t\t<p><strong>%s</strong></p>\n"
+                                    "\t\t\t\t<p>Date: %s</p>\n"
+                                    "\t\t\t\t<p>Time: %s</p>\n"
+                                    "\t\t\t\t<p>Location: %s, %s</p>\n"
+                                    "\t\t\t\t<p>Description: %s</p>\n"
+                                    "\t\t\t\t<p>Comment: %s</p>\n"
+                                    "\t\t\t\t<p>Notes: %s</p>\n"
+                                    "\t\t\t<br style=\"page-break-before: always\"/>\n";
+                   gchar *content = g_strdup_printf (format, name, date, time, lat, lon,
+                                                     description, comment, notes);
+                   fwrite (content, sizeof (gchar), strlen (content), file);
+                   g_free (content);
+                }
+
+              g_free (lat);
+              g_free (lon);
+              g_free (name);
+              g_free (description);
+              g_free (comment);
+              g_free (notes);
+              g_free (date);
+              g_free (time);
+
+              lat = lon = name = description = comment = notes = date = time = NULL;
+
+              g_date_time_unref (local);
+            }
+        }
+
+      if (package.counter)
+        {
+          GRand *rand = g_rand_new ();  /* Идентификатор для TileQueue. */
+          /* Запуск генерации тайлов. */
+          hyscan_tile_queue_add_finished (tile_queue, g_rand_int_range (rand, 0, INT32_MAX));
+          /* Устанавливаем курсор-часы. */
+          cursor_watch = gdk_cursor_new_for_display (display, GDK_WATCH);
+          gdk_window_set_cursor (gtk_widget_get_window (data->global->gui.window), cursor_watch);
+          g_free (rand);
+        }
+      while (package.counter)
+        {
+          /* Ждём пока сгенерируются и сохранятся все тайлы. */
+          /* g_usleep (1000); */
+        }
+
+      /* Водопадные метки. */
+      if (data->wf_marks != NULL)
+        {
+          HyScanMarkLocation *location   = NULL; /*  */
+          GHashTableIter  hash_iter;
+          gchar          *mark_id    = NULL, /* Идентификатор метки. */
+                         *category = "\t\t<p><strong>Waterfall marks</strong></p>\n";
+
+          fwrite (category, sizeof (gchar), strlen (category), file);
+
+          g_hash_table_iter_init (&hash_iter, data->wf_marks);
+
+          while (g_hash_table_iter_next (&hash_iter, (gpointer *) &mark_id, (gpointer *) &location))
+            {
+              hyscan_gtk_mark_export_save_tile (location,
+                                                tile_queue,
+                                                image_folder,
+                                                media,
+                                                file,
+                                                &package);
+            }
+        }
+
+      g_mutex_clear (&package.mutex);
+
+      g_object_unref (tile_queue);
+      g_object_unref (factory_dpt);
+      g_object_unref (factory_amp);
+
+      fwrite (footer, sizeof (gchar), strlen (footer), file);
+      fclose (file);
+    }
+
+  g_hash_table_unref (data->wf_marks);
+  g_hash_table_unref (data->geo_marks);
+  g_free (file_name);
+  gdk_window_set_cursor (gtk_widget_get_window (data->global->gui.window), NULL);
+  return NULL;
+}
+
 /**
  * hyscan_gtk_mark_export_save_as_csv:
  * @window: указатель на окно, которое вызывает диалог выбора файла для сохранения данных
@@ -611,36 +886,6 @@ hyscan_gtk_mark_export_copy_to_clipboard (HyScanMarkLocModel *ml_model,
   g_free (marks);
 }
 
-gchar*
-hyscan_gtk_mark_export_to_str (HyScanMarkLocModel *ml_model,
-                               HyScanObjectModel  *mark_geo_model,
-                               gchar              *project_name)
-{
-  GHashTable *wf_marks, *geo_marks;
-  GDateTime *local;
-  gchar *str, *marks;
-
-  wf_marks = hyscan_mark_loc_model_get (ml_model);
-  geo_marks = hyscan_object_model_get (mark_geo_model);
-
-  if (wf_marks == NULL || geo_marks == NULL)
-    return NULL;
-
-  local = g_date_time_new_now_local ();
-
-  marks = hyscan_gtk_mark_export_print_marks (wf_marks, geo_marks);
-  str = g_strdup_printf (_("%s\nProject: %s\n%s%s"),
-                         g_date_time_format (local, "%A %B %e %T %Y"),
-                         project_name, hyscan_gtk_mark_export_header, marks);
-
-  g_hash_table_unref (wf_marks);
-  g_hash_table_unref (geo_marks);
-
-  g_free (marks);
-
-  return str;
-}
-
 /**
  * hyscan_gtk_mark_export_save_as_html:
  * @ml_model: указатель на модель водопадных меток с данными о положении в пространстве
@@ -657,21 +902,10 @@ hyscan_gtk_mark_export_save_as_html (HyScanMarkLocModel *ml_model,
                                      Global             *global,
                                      gchar              *export_folder)
 {
-  FILE       *file           = NULL;    /* Дескриптор файла. */
-  GtkWidget  *dialog         = NULL;    /* Диалог выбора директории. */
-  GHashTable *wf_marks       = NULL,    /* "Водопадные" метки. */
-             *geo_marks      = NULL;    /* Гео-метки. */
-  gint        res;
-  gchar      *current_folder = NULL,    /* Полный путь до папки с проектом. */
-             *media          = "media", /* Папка для сохранения изображений. */
-             *image_folder   = NULL,    /* Полный путь до папки с изображениями. */
-             *file_name      = NULL;    /* Полный путь до файла index.html */
-
-  wf_marks = hyscan_mark_loc_model_get (ml_model);
-  geo_marks = hyscan_object_model_get (mark_geo_model);
-
-  if (wf_marks == NULL || geo_marks == NULL)
-    return;
+  GtkWidget   *dialog = NULL;   /* Диалог выбора директории. */
+  GThread     *thread = NULL;   /* Поток. */
+  DataForHTML *data   = NULL;   /* Данные для потока. */
+  gint         res;             /* Результат диалога. */
 
   dialog = gtk_file_chooser_dialog_new (_("Choose directory"),
                                         GTK_WINDOW (global->gui.window),
@@ -692,217 +926,18 @@ hyscan_gtk_mark_export_save_as_html (HyScanMarkLocModel *ml_model,
       return;
     }
 
-  current_folder = gtk_file_chooser_get_current_folder (GTK_FILE_CHOOSER (dialog));
-  /* Создаём папку с названием проекта. */
-  current_folder = g_strconcat (current_folder, "/", global->project_name, (gchar*) NULL);
-  mkdir (current_folder, 0777);
-  /* HTML-файл. */
-  file_name = g_strdup_printf ("%s/index.html", current_folder);
-  /* Создаём папку для сохранения тайлов. */
-  image_folder = g_strdup_printf ("%s/%s", current_folder, media);
-  mkdir (image_folder, 0777);
+  data = g_malloc0 (sizeof (DataForHTML));
+  data->wf_marks  = hyscan_mark_loc_model_get (ml_model);
+  data->geo_marks = hyscan_object_model_get (mark_geo_model);
 
-#ifdef G_OS_WIN32
-  fopen_s (&file, file_name, "w");
-#else
-  file = fopen (file_name, "w");
-#endif
-  if (file != NULL)
-    {
-      HyScanFactoryAmplitude  *factory_amp;  /* Фабрика объектов акустических данных. */
-      HyScanFactoryDepth      *factory_dpt;  /* Фабрика объектов глубины. */
-      HyScanTileQueue         *tile_queue;   /* Очередь для работы с акустическими изображениями. */
-      Package                  package;
-      gchar *header = "<!DOCTYPE html>\n"
-                      "<html lang=\"ru\">\n"
-                      "\t<head>\n"
-                      "\t\t<meta charset=\"utf-8\">\n"
-                      "\t\t<meta name=\"generator\" content=\"HyScan5\">\n"
-                      "\t\t<meta name=\"description\" content=\"description\">\n"
-                      "\t\t<meta name=\"author\" content=\"operator_name\">\n"
-                      "\t\t<meta name=\"document-state\" content=\"static\">\n"
-                      "\t\t<title>Конвертация HTML с картинками в ODT, DOC, DOCX, RTF, PDF.</title>\n"
-                      "\t</head>\n"
-                      "\t<body>\n"
-                      "\t\t<p>Далее будут размещены картинки. А вообще весь файл можно конвертировать"
-                      " в ODT, DOC, DOCX, RTF, PDF. <a href=\"#more\">Подробнее...</a></p>\n"
-                      "\t\t<p>Сгенерировано в <a href=\"http://screen-co.ru/\">HyScan5</a>.</p>\n"
-                      "\t\t<br style=\"page-break-before: always\"/>\n",
-            *footer = "\t\t<p><a name=\"more\"><strong>Microsoft Word (DOC, DOCX, RTF, PDF)</strong></a></p>\n"
-                      "\t\t<p>Чтобы конвертировать этот файл в doc, необходимо открыть его в Microsoft"
-                      " Word-е. Выполните Правый клик -> Контекстное меню -> Открыть с помощью ->"
-                      " Microsoft Word. Если Word-a в открывшемся списке нет, то нужно \"Выбрать"
-                      " программу...\" и там найти Word. Тогда файл откроется.</p>\n"
-                      "\t\t<p>После того как файл открылся Выберете в меню Файл -> Сведения -> Связаные"
-                      " документы -> Изменить связи с файлами. И в открывшемся окне для каждого файла"
-                      " поставить галочку в Параметры связи -> Хранить в документе и нажать OK. Затем"
-                      " выбрать Cохранить как и укажите нужный формат DOC, DOCX, RTF, PDF. Всё файл"
-                      " сконвертирован.</p>\n"
-                      "\t\t<br style=\"page-break-before: always\"/>\n"
-                      "\t\t<p><strong>LibreOffice Writer (ODT, DOC, DOCX, RTF, PDF)</strong></p>\n"
-                      "\t\t<p>Чтобы сконвертировать этот файл в odt, необходимо открыть его в LibreOffice"
-                      " Writer. Выполните Правый клик -> Контекстное меню -> Открыть в программе ->"
-                      " LibreOffice Writer. в меню выберите Правка -> Связи и для каждого файла нажать"
-                      " Разорвать связи. Затем можно сохранять файл в нужном формате ODT, DOC, DOCX, RTF."
-                      " Для сохранения в формате PDF Выберите в меню Файл -> Экспорт в PDF. Всё файл"
-                      " сконвертирован.</p>\n"
-                      "\t</body>\n"
-                      "</html>";
+  if (data->wf_marks == NULL || data->geo_marks == NULL)
+    return;
 
-      fwrite (header, sizeof (gchar), strlen (header), file);
-      /* Создаём фабрику объектов доступа к данным амплитуд. */
-      factory_amp = hyscan_factory_amplitude_new (global->cache);
-      hyscan_factory_amplitude_set_project (factory_amp,
-                                            global->db,
-                                            global->project_name);
-      /* Создаём фабрику объектов доступа к данным глубины. */
-      factory_dpt = hyscan_factory_depth_new (global->cache);
-      hyscan_factory_depth_set_project (factory_dpt,
-                                        global->db,
-                                        global->project_name);
-      /* Создаём очередь для генерации тайлов. */
-      tile_queue = hyscan_tile_queue_new (g_get_num_processors (),
-                                          global->cache,
-                                          factory_amp,
-                                          factory_dpt);
-      g_mutex_init (&package.mutex);
-      package.cache = global->cache;
-      gdk_rgba_parse (&package.color, "#FFFF00");
-      package.counter = 0;
-      /* Соединяем сигнал готовности тайла с функцией-обработчиком. */
-      g_signal_connect_swapped (G_OBJECT (tile_queue), "tile-queue-image",
-                                G_CALLBACK (hyscan_gtk_mark_export_tile_loaded), &package);
+  data->global = global;
+  data->folder = gtk_file_chooser_get_current_folder (GTK_FILE_CHOOSER (dialog));
 
-      /* Водопадные метки. */
-      if (wf_marks)
-        {
-          HyScanMarkLocation *location   = NULL; /*  */
-          GHashTableIter  hash_iter;
-          gchar          *mark_id    = NULL; /* Идентификатор метки. */
+  thread = g_thread_new ("save_sa_html", hyscan_gtk_mark_export_save_as_html_thread, (gpointer)data);
 
-          g_hash_table_iter_init (&hash_iter, wf_marks);
-
-          while (g_hash_table_iter_next (&hash_iter, (gpointer *) &mark_id, (gpointer *) &location))
-            {
-              hyscan_gtk_mark_export_generate_tile (location, tile_queue, &package.counter);
-            }
-        }
-      if (geo_marks)
-        {
-          HyScanMarkGeo  *geo_mark   = NULL; /*  */
-          GHashTableIter  hash_iter;
-          gchar          *mark_id    = NULL, /* Идентификатор метки. */
-                         *category = "\t\t<p><strong>Geo marks</strong></p>\n";
-
-          fwrite (category, sizeof (gchar), strlen (category), file);
-
-          g_hash_table_iter_init (&hash_iter, geo_marks);
-
-          while (g_hash_table_iter_next (&hash_iter, (gpointer *) &mark_id, (gpointer *) &geo_mark))
-            {
-              GDateTime *local;
-              gchar *lat, *lon, *name, *description, *comment, *notes, *date, *time;
-
-              lat = g_strdup_printf ("%.6f°", geo_mark->center.lat);
-              lon = g_strdup_printf ("%.6f°", geo_mark->center.lon);
-
-              local  = g_date_time_new_from_unix_local (1e-6 * geo_mark->ctime);
-              if (local == NULL)
-                {
-                  date = g_strdup (empty);
-                  time = g_strdup (empty);
-                }
-              else
-                {
-                  date = g_date_time_format (local, "%m/%d/%Y");
-                  time = g_date_time_format (local, "%H:%M:%S");
-                }
-
-              name = (geo_mark->name == NULL) ? empty : g_strdup (geo_mark->name);
-              description = (geo_mark->description == NULL) ? empty : g_strdup (geo_mark->description);
-
-              comment = g_strdup (empty);
-              notes = g_strdup (empty);
-
-              if (geo_mark->type == HYSCAN_MARK_GEO)
-                {
-                   gchar *format  = "\t\t\t<p><strong>%s</strong></p>\n"
-                                    "\t\t\t\t<p>Date: %s</p>\n"
-                                    "\t\t\t\t<p>Time: %s</p>\n"
-                                    "\t\t\t\t<p>Location: %s, %s</p>\n"
-                                    "\t\t\t\t<p>Description: %s</p>\n"
-                                    "\t\t\t\t<p>Comment: %s</p>\n"
-                                    "\t\t\t\t<p>Notes: %s</p>\n"
-                                    "\t\t\t<br style=\"page-break-before: always\"/>\n";
-                   gchar *content = g_strdup_printf (format, name, date, time, lat, lon,
-                                                     description, comment, notes);
-                   fwrite (content, sizeof (gchar), strlen (content), file);
-                   g_free (content);
-                }
-
-              g_free (lat);
-              g_free (lon);
-              g_free (name);
-              g_free (description);
-              g_free (comment);
-              g_free (notes);
-              g_free (date);
-              g_free (time);
-
-              lat = lon = name = description = comment = notes = date = time = NULL;
-
-              g_date_time_unref (local);
-            }
-        }
-
-      if (package.counter)
-        {
-          GRand *rand = g_rand_new ();  /* Идентификатор для TileQueue. */
-          /* Запуск генерации тайлов. */
-          hyscan_tile_queue_add_finished (tile_queue, g_rand_int_range (rand, 0, INT32_MAX));
-          g_free (rand);
-        }
-      while (package.counter)
-        {
-          /* Ждём пока сгенерируются и сохранятся все тайлы. */
-          /* g_usleep (1000); */
-        }
-
-      /* Водопадные метки. */
-      if (wf_marks)
-        {
-          HyScanMarkLocation *location   = NULL; /*  */
-          GHashTableIter  hash_iter;
-          gchar          *mark_id    = NULL, /* Идентификатор метки. */
-                         *category = "\t\t<p><strong>Waterfall marks</strong></p>\n";
-
-          fwrite (category, sizeof (gchar), strlen (category), file);
-
-          g_hash_table_iter_init (&hash_iter, wf_marks);
-
-          while (g_hash_table_iter_next (&hash_iter, (gpointer *) &mark_id, (gpointer *) &location))
-            {
-              hyscan_gtk_mark_export_save_tile (location,
-                                                tile_queue,
-                                                image_folder,
-                                                media,
-                                                file,
-                                                &package);
-            }
-        }
-
-      g_mutex_clear (&package.mutex);
-
-      g_object_unref (tile_queue);
-      g_object_unref (factory_dpt);
-      g_object_unref (factory_amp);
-
-      fwrite (footer, sizeof (gchar), strlen (footer), file);
-      fclose (file);
-    }
-
-  g_hash_table_unref (wf_marks);
-  g_hash_table_unref (geo_marks);
-  g_free (file_name);
+  g_thread_unref (thread);
   gtk_widget_destroy (dialog);
 }
