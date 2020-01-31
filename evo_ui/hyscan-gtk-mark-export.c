@@ -21,6 +21,7 @@ typedef struct _DataForHTML
               *geo_marks;     /* Гео-метки. */
   Global      *global;        /* Структура с "глобальными" параметрами. */
   gchar       *folder;        /* Папка для экспорта. */
+  GdkRGBA      color;         /* Цветовая схема. */
 }DataForHTML;
 
 /* Структура для передачи данных для сохранения тайла после генерации. */
@@ -66,6 +67,10 @@ static void          hyscan_gtk_mark_export_init_tile           (HyScanTile     
                                                                  HyScanMarkLocation  *location);
 
 static gpointer      hyscan_gtk_mark_export_save_as_html_thread (gpointer             user_data);
+
+static gboolean      hyscan_gtk_mark_export_set_watch_cursor    (gpointer             user_data);
+
+static gboolean      hyscan_gtk_mark_export_set_default_cursor  (gpointer             user_data);
 
 /* Функция генерации строки. */
 static gchar *
@@ -548,8 +553,6 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
 {
   DataForHTML *data = (DataForHTML*)user_data;
   FILE        *file           = NULL;    /* Дескриптор файла. */
-  GdkCursor  *cursor_watch    = NULL;
-  GdkDisplay *display         = gdk_display_get_default ();
   gchar       *current_folder = NULL,   /* Полный путь до папки с проектом. */
               *media          = "media", /* Папка для сохранения изображений. */
               *image_folder   = NULL,    /* Полный путь до папки с изображениями. */
@@ -629,7 +632,7 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
                                           factory_dpt);
       g_mutex_init (&package.mutex);
       package.cache = data->global->cache;
-      gdk_rgba_parse (&package.color, "#FFFF00");
+      package.color = data->color;
       package.counter = 0;
       /* Соединяем сигнал готовности тайла с функцией-обработчиком. */
       g_signal_connect_swapped (G_OBJECT (tile_queue), "tile-queue-image",
@@ -723,8 +726,7 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
           /* Запуск генерации тайлов. */
           hyscan_tile_queue_add_finished (tile_queue, g_rand_int_range (rand, 0, INT32_MAX));
           /* Устанавливаем курсор-часы. */
-          cursor_watch = gdk_cursor_new_for_display (display, GDK_WATCH);
-          gdk_window_set_cursor (gtk_widget_get_window (data->global->gui.window), cursor_watch);
+          g_timeout_add (0, hyscan_gtk_mark_export_set_watch_cursor, data->global->gui.window);
           g_free (rand);
         }
       while (package.counter)
@@ -769,8 +771,42 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
   g_hash_table_unref (data->wf_marks);
   g_hash_table_unref (data->geo_marks);
   g_free (file_name);
-  gdk_window_set_cursor (gtk_widget_get_window (data->global->gui.window), NULL);
+  g_timeout_add (0, hyscan_gtk_mark_export_set_default_cursor, data->global->gui.window);
   return NULL;
+}
+
+/*
+ * Функция безопасно устанавливает курсор "Часы".
+ * */
+gboolean
+hyscan_gtk_mark_export_set_watch_cursor (gpointer user_data)
+{
+  GtkWidget  *window;
+  GdkCursor  *cursor_watch;
+  GdkDisplay *display;
+
+  g_return_val_if_fail (GTK_IS_WIDGET (user_data), FALSE);
+
+  window       = GTK_WIDGET (user_data);
+  display      = gdk_display_get_default ();
+  cursor_watch = gdk_cursor_new_for_display (display, GDK_WATCH);
+  gdk_window_set_cursor (gtk_widget_get_window (window), cursor_watch);
+  return FALSE;
+}
+
+/*
+ * Функция безопасно устанавливает курсор по умолчанию.
+ * */
+gboolean
+hyscan_gtk_mark_export_set_default_cursor (gpointer user_data)
+{
+  GtkWidget *window;
+
+  g_return_val_if_fail (GTK_IS_WIDGET (user_data), FALSE);
+
+  window = GTK_WIDGET (user_data);
+  gdk_window_set_cursor (gtk_widget_get_window (window), NULL);
+  return FALSE;
 }
 
 /**
@@ -926,7 +962,7 @@ hyscan_gtk_mark_export_save_as_html (HyScanMarkLocModel *ml_model,
       return;
     }
 
-  data = g_malloc0 (sizeof (DataForHTML));
+  data            = g_malloc0 (sizeof (DataForHTML));
   data->wf_marks  = hyscan_mark_loc_model_get (ml_model);
   data->geo_marks = hyscan_object_model_get (mark_geo_model);
 
@@ -935,6 +971,7 @@ hyscan_gtk_mark_export_save_as_html (HyScanMarkLocModel *ml_model,
 
   data->global = global;
   data->folder = gtk_file_chooser_get_current_folder (GTK_FILE_CHOOSER (dialog));
+  gdk_rgba_parse (&data->color, "#FFFF00");
 
   thread = g_thread_new ("save_sa_html", hyscan_gtk_mark_export_save_as_html_thread, (gpointer)data);
 
