@@ -325,31 +325,52 @@ hyscan_gtk_mark_export_save_tile (HyScanMarkLocation *location,     /* Метк�
               if (hyscan_tile_queue_get (tile_queue, tile, &tile_cacheable, &image, &size))
                 {
                   gboolean echo = (location->direction == HYSCAN_MARK_LOCATION_BOTTOM)? TRUE : FALSE;
-                  /*gdouble width = (echo)? ship_speed * 2.0 * location->mark->height : 2.0 * location->mark->width;*/
                   gdouble width = hyscan_gtk_mark_export_get_wfmark_width (location);
                   GDateTime *local = NULL;
                   gchar *lat, *lon, *name, *description, *comment,
                         *notes, *date, *time, *content, *file_name,
                         *board,
                         *track_time = (track_ctime == NULL)? _(empty) : g_date_time_format (track_ctime, time_stamp),
-                        *format  = _("\t\t\t<p><a name=\"%s\"><strong>%s</strong></a></p>\n"
-                                   "\t\t\t\t<img src=\"%s/%s.png\" alt=\"%s\" title=\"%s\">\n"
-                                   "\t\t\t\t<p>Date: %s<br>\n"
-                                   "\t\t\t\tTime: %s<br>\n"
-                                   "\t\t\t\tLocation: %s, %s (%s)<br>\n"
-                                   "\t\t\t\tDescription: %s<br>\n"
-                                   "\t\t\t\tComment: %s<br>\n"
-                                   "\t\t\t\tNotes: %s<br>\n"
-                                   "\t\t\t\tTrack: %s<br>\n"
-                                   "\t\t\t\tTrack creation date: %s<br>\n"
-                                   "\t\t\t\tBoard: %s<br>\n"
-                                   "\t\t\t\tDepth: %.2f m<br>\n"
-                                   "\t\t\t\tWidth: %.2f m<br>\n"
-                                   "\t\t\t\tSlant range: %.2f m<br>\n"
-                                   "\t\t\t\tProject: %s<br>\n"
-                                   "\t\t\t\t%s</p>\n"
-                                   "\t\t\t<br style=\"page-break-before: always\"/>\n");
-
+                        *format;
+                  if (echo)
+                    {
+                      format = g_strdup (_("\t\t\t<p><a name=\"%s\"><strong>%s</strong></a></p>\n"
+                                           "\t\t\t\t<img src=\"%s/%s.png\" alt=\"%s\" title=\"%s\">\n"
+                                           "\t\t\t\t<p>Date: %s<br>\n"
+                                           "\t\t\t\tTime: %s<br>\n"
+                                           "\t\t\t\tLocation: %s, %s (%s)<br>\n"
+                                           "\t\t\t\tDescription: %s<br>\n"
+                                           "\t\t\t\tComment: %s<br>\n"
+                                           "\t\t\t\tNotes: %s<br>\n"
+                                           "\t\t\t\tTrack: %s<br>\n"
+                                           "\t\t\t\tTrack creation date: %s<br>\n"
+                                           "\t\t\t\tBoard: %s<br>\n"
+                                           "\t\t\t\tDepth: %.2f m<br>\n"
+                                           "\t\t\t\tWidth: %.2f m<br>\n"
+                                           "\t\t\t\tProject: %s<br>\n"
+                                           "\t\t\t\t%s</p>\n"
+                                           "\t\t\t<br style=\"page-break-before: always\"/>\n"));
+                    }
+                  else
+                    {
+                      format = g_strdup (_("\t\t\t<p><a name=\"%s\"><strong>%s</strong></a></p>\n"
+                                           "\t\t\t\t<img src=\"%s/%s.png\" alt=\"%s\" title=\"%s\">\n"
+                                           "\t\t\t\t<p>Date: %s<br>\n"
+                                           "\t\t\t\tTime: %s<br>\n"
+                                           "\t\t\t\tLocation: %s, %s (%s)<br>\n"
+                                           "\t\t\t\tDescription: %s<br>\n"
+                                           "\t\t\t\tComment: %s<br>\n"
+                                           "\t\t\t\tNotes: %s<br>\n"
+                                           "\t\t\t\tTrack: %s<br>\n"
+                                           "\t\t\t\tTrack creation date: %s<br>\n"
+                                           "\t\t\t\tBoard: %s<br>\n"
+                                           "\t\t\t\tDepth: %.2f m<br>\n"
+                                           "\t\t\t\tWidth: %.2f m<br>\n"
+                                           "\t\t\t\tSlant range: %.2f m<br>\n"
+                                           "\t\t\t\tProject: %s<br>\n"
+                                           "\t\t\t\t%s</p>\n"
+                                           "\t\t\t<br style=\"page-break-before: always\"/>\n"));
+                    }
                   lat = g_strdup_printf ("%.6f°", location->mark_geo.lat);
                   lon = g_strdup_printf ("%.6f°", location->mark_geo.lon);
 
@@ -386,14 +407,26 @@ hyscan_gtk_mark_export_save_tile (HyScanMarkLocation *location,     /* Метк�
                       break;
                     }
 
-                  content = g_strdup_printf (format, id, name, media, id, name, name,
-                                             date, time, lat, lon, sys_coord, description,
-                                             comment, notes, location->track_name,
-                                             track_time, board,location->depth, width,
-                                             location->across, project_name, _(link_to_site));
+                  if (echo)
+                    {
+                      content = g_strdup_printf (format, id, name, media, id, name, name,
+                                                 date, time, lat, lon, sys_coord, description,
+                                                 comment, notes, location->track_name,
+                                                 track_time, board,location->depth,
+                                                 location->across, project_name, _(link_to_site));
+                    }
+                  else
+                    {
+                      content = g_strdup_printf (format, id, name, media, id, name, name,
+                                                 date, time, lat, lon, sys_coord, description,
+                                                 comment, notes, location->track_name,
+                                                 track_time, board,location->depth, width,
+                                                 location->across, project_name, _(link_to_site));
+                    }
 
                   fwrite (content, sizeof (gchar), strlen (content), file);
 
+                  g_free (format);
                   g_free (content);
                   g_free (lat);
                   g_free (lon);
@@ -667,7 +700,7 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
                       "\t</head>\n"
                       "\t<body>\n"
                       "\t\t<p>%s</p>\n"
-                      "\t\t<p>%s</p>\n"
+                      "\t\t<p>%s<br>\n\t\t%s</p>\n"
                       "%s",
             *title  = _("Marks report"),
             *project = g_strdup_printf (_("Project: %s"), data->global->project_name),
@@ -691,14 +724,13 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
           gchar *tmp = _("%s<br>\n"
                        "\t\t%s<br>\n"
                        "\t\t%s<br>\n"
-                       "\t\t%s<br>\n"
-                       "\t\t%s<br>\n"
-                       "\t\tStatistics<br>\n"
+                       "\t\t%s</p>\n"
+                       "\t\t<p>Statistics<br>\n"
                        "\t\tGeo marks: %i<br>\n"
                        "\t\tAcoustic marks: %i<br>\n"
                        "\t\tTotal: %i");
           txt_title = g_strdup_printf (tmp,
-                                       title, project, crtime, gntime, prj_desc,
+                                       title, project, crtime, prj_desc,
                                        geo_mark_size, wf_mark_size,
                                        geo_mark_size + wf_mark_size);
         }
@@ -707,9 +739,8 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
           txt_title = g_strdup_printf ("%s\n"
                                        "\t\t%s<br>\n"
                                        "\t\t%s<br>\n"
-                                       "\t\t%s<br>\n"
                                        "\t\t%s",
-                                       title, project, crtime, gntime, prj_desc);
+                                       title, project, crtime, prj_desc);
         }
       title = g_strdup_printf ("%s. %s. %s. %s.", title, project, crtime, gntime);
 
@@ -758,8 +789,10 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
             }
           list = g_strconcat (list, "\t\t<br style=\"page-break-before: always\"/>\n", (gchar*) NULL);
         }
-      str   = g_strdup_printf (header, title, title, txt_title, _(link_to_site), list);
+
+      str   = g_strdup_printf (header, title, title, txt_title, _(link_to_site), gntime, list);
       fwrite (str, sizeof (gchar), strlen (str), file);
+
       g_free (str);
       g_free (txt_title);
       g_free (title);

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-02-04 12:28+0300\n"
+"POT-Creation-Date: 2020-02-04 14:42+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,16 +17,16 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: evo-ui.c:63 hyscan-gtk-mark-export.c:1037
+#: evo-ui.c:63 hyscan-gtk-mark-export.c:1079
 msgid "Save file"
 msgstr ""
 
-#: evo-ui.c:66 hyscan-gtk-map-kit.c:399 hyscan-gtk-mark-export.c:1040
-#: hyscan-gtk-mark-export.c:1146
+#: evo-ui.c:66 hyscan-gtk-map-kit.c:399 hyscan-gtk-mark-export.c:1082
+#: hyscan-gtk-mark-export.c:1188
 msgid "Cancel"
 msgstr ""
 
-#: evo-ui.c:67 hyscan-gtk-mark-export.c:1042
+#: evo-ui.c:67 hyscan-gtk-mark-export.c:1084
 msgid "Save"
 msgstr ""
 
@@ -300,7 +300,7 @@ msgstr ""
 msgid "Generated: <a href=\"http://screen-co.ru/\">HyScan5</a>."
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:236 hyscan-gtk-mark-export.c:1108
+#: hyscan-gtk-mark-export.c:236 hyscan-gtk-mark-export.c:1150
 #, c-format
 msgid ""
 "%s\n"
@@ -308,7 +308,28 @@ msgid ""
 "%s%s"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:335
+#: hyscan-gtk-mark-export.c:337
+#, c-format
+msgid ""
+"\t\t\t<p><a name=\"%s\"><strong>%s</strong></a></p>\n"
+"\t\t\t\t<img src=\"%s/%s.png\" alt=\"%s\" title=\"%s\">\n"
+"\t\t\t\t<p>Date: %s<br>\n"
+"\t\t\t\tTime: %s<br>\n"
+"\t\t\t\tLocation: %s, %s (%s)<br>\n"
+"\t\t\t\tDescription: %s<br>\n"
+"\t\t\t\tComment: %s<br>\n"
+"\t\t\t\tNotes: %s<br>\n"
+"\t\t\t\tTrack: %s<br>\n"
+"\t\t\t\tTrack creation date: %s<br>\n"
+"\t\t\t\tBoard: %s<br>\n"
+"\t\t\t\tDepth: %.2f m<br>\n"
+"\t\t\t\tWidth: %.2f m<br>\n"
+"\t\t\t\tProject: %s<br>\n"
+"\t\t\t\t%s</p>\n"
+"\t\t\t<br style=\"page-break-before: always\"/>\n"
+msgstr ""
+
+#: hyscan-gtk-mark-export.c:356
 #, c-format
 msgid ""
 "\t\t\t<p><a name=\"%s\"><strong>%s</strong></a></p>\n"
@@ -330,69 +351,68 @@ msgid ""
 "\t\t\t<br style=\"page-break-before: always\"/>\n"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:376
+#: hyscan-gtk-mark-export.c:397
 msgid "Port"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:379
+#: hyscan-gtk-mark-export.c:400
 msgid "Starboard"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:382
+#: hyscan-gtk-mark-export.c:403
 msgid "Bottom"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:672
+#: hyscan-gtk-mark-export.c:705
 msgid "Marks report"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:673
+#: hyscan-gtk-mark-export.c:706
 #, c-format
 msgid "Project: %s"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:674
+#: hyscan-gtk-mark-export.c:707
 #, c-format
 msgid "Project description: %s"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:678
+#: hyscan-gtk-mark-export.c:711
 #, c-format
 msgid "Project creation date: %s"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:681
+#: hyscan-gtk-mark-export.c:714
 #, c-format
 msgid "Report creation date: %s"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:691
+#: hyscan-gtk-mark-export.c:724
 #, c-format
 msgid ""
 "%s<br>\n"
 "\t\t%s<br>\n"
 "\t\t%s<br>\n"
-"\t\t%s<br>\n"
-"\t\t%s<br>\n"
-"\t\tStatistics<br>\n"
+"\t\t%s</p>\n"
+"\t\t<p>Statistics<br>\n"
 "\t\tGeo marks: %i<br>\n"
 "\t\tAcoustic marks: %i<br>\n"
 "\t\tTotal: %i"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:713
+#: hyscan-gtk-mark-export.c:753
 msgid "\t\t<a href=\"#geo\"><strong>Geo marks</strong></a><br>\n"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:736
+#: hyscan-gtk-mark-export.c:776
 msgid "\t\t<a href=\"#wf\"><strong>Acoustic marks</strong></a><br>\n"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:804
+#: hyscan-gtk-mark-export.c:846
 msgid "\t\t<p><a name=\"geo\"><strong>Geo marks</strong></a></p>\n"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:843
+#: hyscan-gtk-mark-export.c:885
 #, c-format
 msgid ""
 "\t\t\t<p><a name=\"%s\"><strong>%s</strong></a></p>\n"
@@ -407,15 +427,15 @@ msgid ""
 "\t\t\t<br style=\"page-break-before: always\"/>\n"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:896
+#: hyscan-gtk-mark-export.c:938
 msgid "\t\t<p><a name=\"wf\"><strong>Acoustic marks</strong></a></p>\n"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:1143
+#: hyscan-gtk-mark-export.c:1185
 msgid "Choose directory"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:1148
+#: hyscan-gtk-mark-export.c:1190
 msgid "Choose"
 msgstr ""
 
