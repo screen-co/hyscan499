@@ -346,7 +346,6 @@ hyscan_gtk_mark_export_save_tile (HyScanMarkLocation *location,     /* Метк�
                                            "\t\t\t\tTrack creation date: %s<br>\n"
                                            "\t\t\t\tBoard: %s<br>\n"
                                            "\t\t\t\tDepth: %.2f m<br>\n"
-                                           "\t\t\t\tWidth: %.2f m<br>\n"
                                            "\t\t\t\tProject: %s<br>\n"
                                            "\t\t\t\t%s</p>\n"
                                            "\t\t\t<br style=\"page-break-before: always\"/>\n"));
@@ -409,11 +408,14 @@ hyscan_gtk_mark_export_save_tile (HyScanMarkLocation *location,     /* Метк�
 
                   if (echo)
                     {
+                      /* location->across - глубина до ценра тайла.*/
+                      /* location->depth - расстояние от поверхности
+                       * до линии дна по центральной вертикальной линии тайла. */
                       content = g_strdup_printf (format, id, name, media, id, name, name,
                                                  date, time, lat, lon, sys_coord, description,
                                                  comment, notes, location->track_name,
-                                                 track_time, board,location->depth,
-                                                 location->across, project_name, _(link_to_site));
+                                                 track_time, board, location->depth,
+                                                 project_name, _(link_to_site));
                     }
                   else
                     {
@@ -589,10 +591,10 @@ hyscan_gtk_mark_export_init_tile (HyScanTile          *tile,
 
   if (location->direction == HYSCAN_MARK_LOCATION_BOTTOM)
     {
-      /* Если метка "эхолотная", то умножаем её габариты на ship_speed.
+      /* Если метка "эхолотная", то умножаем её высоту на ship_speed.
        * И меняем ширину и высоту местами, т.к. у Echosounder-а другая система координат.*/
       width =  ship_speed * location->mark->height;
-      height = ship_speed * location->mark->width;
+      height = location->mark->width;
     }
 
   /* Для левого борта тайл надо отразить по оси X. */
@@ -608,6 +610,13 @@ hyscan_gtk_mark_export_init_tile (HyScanTile          *tile,
           tile->info.across_end = 0;
         }
     }
+  else if (location->direction == HYSCAN_MARK_LOCATION_BOTTOM)
+    {
+      tile->info.across_start = round (
+            (location->across - height) * 1000.0);
+      tile->info.across_end   = round (
+            (location->across + height) * 1000.0);
+    }
   else
     {
       tile->info.across_start = round (
@@ -620,19 +629,23 @@ hyscan_gtk_mark_export_init_tile (HyScanTile          *tile,
         }
     }
 
-  tile->info.along_start = round (
-        (location->along - height) * 1000.0);
-  tile->info.along_end   = round (
-        (location->along + height) * 1000.0);
+  if (location->direction == HYSCAN_MARK_LOCATION_BOTTOM)
+    {
+      tile->info.along_start = round (
+            (location->along - width) * 1000.0);
+      tile->info.along_end   = round (
+            (location->along + width) * 1000.0);
+    }
+  else
+    {
+      tile->info.along_start = round (
+            (location->along - height) * 1000.0);
+      tile->info.along_end   = round (
+            (location->along + height) * 1000.0);
+    }
 
   /* Нормировка тайлов по ширине в 600 пикселей. */
   ppi = 600.0 / ( (2.0 * 100.0 * width) / 2.54);
-  if (location->direction == HYSCAN_MARK_LOCATION_BOTTOM)
-    {
-      /* Если метка "эхолотная", то нормируем по высоте в 600 пикселей,
-       * т.к. сгенерированный тайл будет повёрнут на 90 градусов. */
-      ppi = 600.0 / ( (2.0 * 100.0 * height) / 2.54);
-    }
 
   tile->info.scale    = 1.0f;
   tile->info.ppi      = ppi;
