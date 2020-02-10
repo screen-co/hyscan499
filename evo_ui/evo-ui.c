@@ -1380,9 +1380,12 @@ build_interface (Global *global)
           hyscan_gtk_map_kit_set_user_dir (ui->mapkit, profile_dir);
         g_free (profile_dir);
       }
+
+    hyscan_gtk_map_kit_add_marks (ui->mapkit);
+/*
     hyscan_gtk_map_kit_add_marks_wf (ui->mapkit);
     hyscan_gtk_map_kit_add_marks_geo (ui->mapkit);
-
+*/
     gtk_stack_add_named (GTK_STACK (ui->control_stack), ui->mapkit->control, EVO_MAP);
     gtk_stack_add_named (GTK_STACK (ui->nav_stack), ui->mapkit->navigation, EVO_MAP);
     // gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), ui->mapkit->map, EVO_MAP, _("Map"));

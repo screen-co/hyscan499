@@ -19,6 +19,7 @@
 #include <hyscan-gtk-map-geomark.h>
 #include <hyscan-gtk-layer-list.h>
 #include <hyscan-gtk-param-cc.h>
+#include <hyscan-gtk-mark-manager.h>
 
 #define GETTEXT_PACKAGE "hyscanfnn-evoui"
 #include <glib/gi18n-lib.h>
@@ -109,6 +110,8 @@ struct _HyScanGtkMapKitPrivate
   GtkWidget             *stbar_offline;   /* Статусбар оффлайн. */
   GtkWidget             *stbar_coord;     /* Статусбар координат. */
   GtkWidget             *layer_list;
+
+  GtkWidget             *mark_manager;    /* Журнал меток. */
 };
 
 static void     hyscan_gtk_map_kit_set_tracks   (HyScanGtkMapKit      *kit,
@@ -1026,9 +1029,20 @@ create_wfmark_toolbox (HyScanGtkMapKit *kit)
   gtk_scrolled_window_set_min_content_height (GTK_SCROLLED_WINDOW (scrolled_window), 120);
   gtk_container_add (GTK_CONTAINER (scrolled_window), GTK_WIDGET (priv->mark_tree));
 
+  /* Создаём менеджер меток. */
+  if (priv->mark_geo_model != NULL)
+    priv->mark_manager = hyscan_mark_manager_new (priv->mark_geo_model,
+                                                  priv->ml_model,
+                                                  priv->db_info,
+                                                  priv->project_name,
+                                                  priv->cache,
+                                                  priv->db);
+
   /* Помещаем в панель навигации. */
   gtk_box_pack_start (GTK_BOX (kit->navigation), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
   gtk_box_pack_start (GTK_BOX (kit->navigation), scrolled_window, TRUE, TRUE, 0);
+  if (priv->mark_manager)
+      gtk_box_pack_start (GTK_BOX (kit->navigation), priv->mark_manager, FALSE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (kit->navigation), priv->mark_editor, FALSE, FALSE, 0);
 }
 
@@ -1786,6 +1800,54 @@ hyscan_gtk_map_kit_add_nav (HyScanGtkMapKit           *kit,
   gtk_box_pack_start (GTK_BOX (box), priv->locate_button, FALSE, TRUE, 6);
 
   hyscan_gtk_layer_list_set_tools (HYSCAN_GTK_LAYER_LIST (priv->layer_list), "nav", box);
+}
+
+/**
+ * hyscan_gtk_map_kit_add_marks:
+ * @kit: указатель на структуру с GUI
+ *
+ * Создаёт модели с данными о метках водопада и их местоположении, и гео-метках,
+ * создаются виджеты GUI-а.
+ */
+void hyscan_gtk_map_kit_add_marks (HyScanGtkMapKit *kit)
+{
+  HyScanGtkMapKitPrivate *priv = kit->priv;
+
+  g_return_if_fail (priv->mark_model == NULL);
+  g_return_if_fail (priv->mark_geo_model == NULL);
+  g_return_if_fail (priv->db != NULL);
+
+  /* Модели меток водопада и их местоположения. */
+  priv->mark_model = hyscan_object_model_new (HYSCAN_TYPE_OBJECT_DATA_WFMARK);
+  priv->ml_model = hyscan_mark_loc_model_new (priv->db, priv->cache);
+
+  /* Подключаемся к ml_model и mark_model, т.к. нужны данные по списку меток, и по их местоположению. */
+  g_signal_connect_swapped (priv->ml_model, "changed", G_CALLBACK (on_marks_changed), kit);
+  /* Модель геометок. */
+  priv->mark_geo_model = hyscan_object_model_new (HYSCAN_TYPE_OBJECT_DATA_GEOMARK);
+  g_signal_connect_swapped (priv->mark_geo_model, "changed", G_CALLBACK (on_marks_changed), kit);
+
+  /* Слой с метками. */
+  priv->wfmark_layer = hyscan_gtk_map_wfmark_new (priv->ml_model, priv->db, priv->cache);
+  add_layer_row (kit, priv->wfmark_layer, FALSE, "wfmark", _("Waterfall Marks"));
+  hyscan_gtk_layer_list_set_tools (HYSCAN_GTK_LAYER_LIST (priv->layer_list), "wfmark",
+                                   create_wfmark_layer_toolbox (priv->wfmark_layer));
+
+  /* Слой с геометками. */
+  priv->geomark_layer = hyscan_gtk_map_geomark_new (priv->mark_geo_model);
+  add_layer_row (kit, priv->geomark_layer, FALSE, "geomark", _("Geo Marks"));
+
+  /* Виджет навигации по меткам. */
+  create_wfmark_toolbox (kit);
+
+  /* Устанавливаем проект и БД. */
+  if (priv->project_name != NULL)
+    {
+      hyscan_object_model_set_project (priv->mark_model, priv->db, priv->project_name);
+      hyscan_mark_loc_model_set_project (priv->ml_model, priv->project_name);
+      hyscan_object_model_set_project (priv->mark_geo_model, priv->db, priv->project_name);
+      hyscan_gtk_map_wfmark_set_project (HYSCAN_GTK_MAP_WFMARK (priv->wfmark_layer), priv->project_name);
+    }
 }
 
 void
