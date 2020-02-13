@@ -33,9 +33,9 @@
  */
 
 #include "hyscan-gtk-con.h"
-#include "hyscan-gtk-profile-db.h"
-#include "hyscan-gtk-profile-hw.h"
-#include "hyscan-gtk-profile-offset.h"
+#include <hyscan-gtk-profile-db.h>
+#include <hyscan-gtk-profile-hw.h>
+#include <hyscan-gtk-profile-offset.h>
 #include "hyscan-fnn-project.h"
 #include "sonar-configure.h"
 #include <hyscan-async.h>

@@ -1234,6 +1234,11 @@ make_page_for_panel (EvoUI     *ui,
         g_signal_connect_swapped (get_widget_from_builder(b, "pf_player_stop"), "clicked", G_CALLBACK (player_stop), adj);
         g_signal_connect_swapped (get_widget_from_builder(b, "pf_player_slower"), "clicked", G_CALLBACK (player_slower), adj);
         g_signal_connect_swapped (get_widget_from_builder(b, "pf_player_faster"), "clicked", G_CALLBACK (player_faster), adj);
+
+                                                                                              add_to_sg (sg, b, "ss_magnifier_label");
+        g_signal_connect (get_widget_from_builder(b, "pf_magnifier_x2"), "toggled", G_CALLBACK (magnifier_x2), wf->wf_magn);
+        g_signal_connect (get_widget_from_builder(b, "pf_magnifier_x3"), "toggled", G_CALLBACK (magnifier_x3), wf->wf_magn);
+
         player_adj_value_printer (adj, label);
       }
 

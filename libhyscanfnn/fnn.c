@@ -139,7 +139,7 @@ fnn_ensure_panel (gint    panelx,
       main_widget = make_overlay (vwf->wf,
                                   &vwf->wf_grid, &vwf->wf_ctrl,
                                   &vwf->wf_mark, &vwf->wf_metr,
-                                  &vwf->wf_play, NULL,
+                                  &vwf->wf_play, &vwf->wf_magn,
                                   &vwf->wf_shad, &vwf->wf_coor,
                                   global->marks.model);
 
