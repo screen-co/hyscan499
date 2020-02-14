@@ -351,8 +351,6 @@ mark_exporter (GObject  *emitter,
                gpointer  _selector)
 {
   gint selector = GPOINTER_TO_INT (_selector);
-  HyScanObjectModel *geo;
-  HyScanMarkLocModel *wf;
 
   if (selector == XYZ_TO_FILE)
     {
@@ -364,7 +362,9 @@ mark_exporter (GObject  *emitter,
     }
   else
     {
-      hyscan_gtk_map_kit_get_mark_backends (global_ui.mapkit, &geo, &wf);
+      HyScanObjectModel  *geo = hyscan_model_manager_get_geo_mark_model (_global->model_manager);
+      HyScanMarkLocModel *wf  = hyscan_model_manager_get_wf_mark_loc_model (_global->model_manager);
+      /*hyscan_gtk_map_kit_get_mark_backends (global_ui.mapkit, &geo, &wf);*/
 
       switch (selector)
         {
@@ -388,6 +388,8 @@ mark_exporter (GObject  *emitter,
           break;
           default: break;
         }
+      g_object_unref (geo);
+      g_object_unref (wf);
     }
 }
 
@@ -1368,7 +1370,8 @@ build_interface (Global *global)
     HyScanGeoGeodetic center = {0, 0, 0};
 
     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
-    ui->mapkit = hyscan_gtk_map_kit_new (&center, global->db, cache_dir);
+    /*ui->mapkit = hyscan_gtk_map_kit_new (&center, global->db, cache_dir, global->model_manager);*/
+    ui->mapkit = hyscan_gtk_map_kit_new (&center, cache_dir, global->model_manager);
     hyscan_gtk_map_kit_set_project (ui->mapkit, global->project_name);
     profile_dirs = get_profile_dir ();
     for (i = 0; profile_dirs[i] != NULL; ++i)
@@ -1386,6 +1389,7 @@ build_interface (Global *global)
     hyscan_gtk_map_kit_add_marks_wf (ui->mapkit);
     hyscan_gtk_map_kit_add_marks_geo (ui->mapkit);
 */
+
     gtk_stack_add_named (GTK_STACK (ui->control_stack), ui->mapkit->control, EVO_MAP);
     gtk_stack_add_named (GTK_STACK (ui->nav_stack), ui->mapkit->navigation, EVO_MAP);
     // gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), ui->mapkit->map, EVO_MAP, _("Map"));
@@ -1411,10 +1415,11 @@ build_interface (Global *global)
 
   /* Левая панель содержит список галсов, меток и редактор меток. */
   {
-    GtkWidget * lbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
-    GtkWidget * tracks = GTK_WIDGET (global->gui.track.view);
-    GtkWidget * mlist = GTK_WIDGET (global->gui.mark_view);
-    GtkWidget * meditor = GTK_WIDGET (global->gui.meditor);
+    GtkWidget *lbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6),
+              *tracks = GTK_WIDGET (global->gui.track.view),
+              *mlist = GTK_WIDGET (global->gui.mark_view),
+              *mark_manager = hyscan_mark_manager_new (global->model_manager),
+              *meditor = GTK_WIDGET (global->gui.meditor);
 
     gtk_widget_set_margin_end (lbox, 6);
     gtk_widget_set_margin_top (lbox, 0);
@@ -1430,6 +1435,8 @@ build_interface (Global *global)
     gtk_box_pack_start (GTK_BOX (lbox), tracks, TRUE, TRUE, 0);
     gtk_box_pack_start (GTK_BOX (lbox), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
     gtk_box_pack_start (GTK_BOX (lbox), mlist, TRUE, TRUE, 0);
+    /* Журнал меток. */
+    gtk_box_pack_start (GTK_BOX (lbox), mark_manager, FALSE, TRUE, 0);
     gtk_box_pack_start (GTK_BOX (lbox), meditor, FALSE, FALSE, 0);
     // gtk_box_pack_start (GTK_BOX (lbox), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
 

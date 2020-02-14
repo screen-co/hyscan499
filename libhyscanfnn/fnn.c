@@ -40,6 +40,7 @@ fnn_ensure_panel (gint    panelx,
 {
   GArray *svp;
   FnnPanel *panel;
+  HyScanObjectModel *model = hyscan_model_manager_get_wf_mark_model (global->model_manager);
 
   /* Вдруг панель уже есть? Тогда выходим вот отседова. */
   if (g_hash_table_contains (tglobal->panels, GINT_TO_POINTER (panelx)))
@@ -98,7 +99,7 @@ fnn_ensure_panel (gint    panelx,
                                   &vwf->wf_mark, &vwf->wf_metr,
                                   &vwf->wf_play, &vwf->wf_magn,
                                   &vwf->wf_shad, &vwf->wf_coor,
-                                  global->marks.model);
+                                  model);
 
       g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), global);
       g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (panelx));
@@ -141,7 +142,7 @@ fnn_ensure_panel (gint    panelx,
                                   &vwf->wf_mark, &vwf->wf_metr,
                                   &vwf->wf_play, NULL,
                                   &vwf->wf_shad, &vwf->wf_coor,
-                                  global->marks.model);
+                                  model);
 
       hyscan_gtk_waterfall_grid_set_condence (vwf->wf_grid, 10.0);
       hyscan_gtk_waterfall_grid_set_grid_color (vwf->wf_grid, hyscan_tile_color_converter_c2i (32, 32, 32, 255));
@@ -203,7 +204,7 @@ fnn_ensure_panel (gint    panelx,
                                   &vwf->wf_mark, &vwf->wf_metr,
                                   &vwf->wf_play, &vwf->wf_magn,
                                   &vwf->wf_shad, &vwf->wf_coor,
-                                  global->marks.model);
+                                  model);
 
       g_signal_connect (vwf->wf, "automove-state", G_CALLBACK (automove_switched), global);
       g_signal_connect (vwf->wf, "waterfall-zoom", G_CALLBACK (zoom_changed), GINT_TO_POINTER (panelx));
@@ -271,6 +272,7 @@ fnn_ensure_panel (gint    panelx,
       return TRUE;
     }
 
+  g_object_unref (model);
   g_hash_table_insert (global->panels, GINT_TO_POINTER (panelx), panel);
   g_array_free (svp, TRUE);
 
@@ -496,18 +498,23 @@ run_manager (GObject *emitter)
   if (res == HYSCAN_FNN_PROJECT_OPEN || res == HYSCAN_FNN_PROJECT_CREATE)
     {
       gchar *project;
+      HyScanDBInfo *db_info = hyscan_model_manager_get_track_model (tglobal->model_manager);
+      HyScanObjectModel *model = hyscan_model_manager_get_wf_mark_model (tglobal->model_manager);
 
       g_clear_pointer (&tglobal->project_name, g_free);
       hyscan_fnn_project_get (HYSCAN_FNN_PROJECT (dialog), &project, NULL);
 
       tglobal->project_name = g_strdup (project);
-      hyscan_db_info_set_project (tglobal->db_info, project);
+      hyscan_db_info_set_project (db_info, project);
+      g_object_unref (db_info);
 
       g_clear_pointer (&tglobal->marks.loc_storage, g_hash_table_unref);
       tglobal->marks.loc_storage = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
                                                         (GDestroyNotify) loc_store_free);
 
-      hyscan_object_model_set_project (tglobal->marks.model, tglobal->db, project);
+      hyscan_object_model_set_project (model, tglobal->db, project);
+
+      g_object_unref (model);
 
       if (tglobal->override.project_changed != NULL)
         tglobal->override.project_changed (tglobal, project);
@@ -951,6 +958,24 @@ track_scroller (GtkTreeView *tree,
   gtk_tree_path_free (first);
 }
 
+/**
+ * model_manager_track_model_changed:
+ * @model_manager: указатель на Менеджер Моделей
+ * @global: указатель на структуру с глобальными данными
+ *
+ * Обработчик сигнала Менеджера Моделей об изменения данных в модели галсов
+ */
+void
+model_manager_tracks_changed (HyScanModelManager *model_manager,
+                              Global             *global)
+{
+  HyScanDBInfo *model = hyscan_model_manager_get_track_model(model_manager);
+
+  tracks_changed (model, global);
+
+  g_object_unref (model);
+}
+
 /* Функция вызывается при изменении списка галсов. */
 void
 tracks_changed (HyScanDBInfo *db_info,
@@ -1316,7 +1341,9 @@ remove_mark_update (Global *global)
 gboolean
 mark_update (Global *global)
 {
-  mark_model_changed (global->marks.model, global);
+  HyScanObjectModel *model = hyscan_model_manager_get_wf_mark_model (global->model_manager);
+  mark_model_changed (model, global);
+  g_object_unref (model);
   global->marks.request_update_tag = 0;
   return G_SOURCE_REMOVE;
 }
@@ -1358,7 +1385,10 @@ get_mark_coords (GHashTable          * locstores,
       LocStore *ls;
       gchar * track_name = NULL;
 
-      track_name = get_track_name_by_id (global->db_info, mark->track);
+      /*track_name = get_track_name_by_id (global->db_info, mark->track);*/
+      HyScanDBInfo *db_info = hyscan_model_manager_get_track_model (global->model_manager);
+      track_name = get_track_name_by_id (db_info, mark->track);
+      g_object_unref (db_info);
       if (track_name == NULL)
         {
           add_mark_update (global);
@@ -1429,6 +1459,23 @@ make_marks_with_coords (HyScanObjectModel *model,
   return marks;
 }
 
+/**
+ * model_manager_wf_mark_model_changed:
+ * @model_manager: указатель на Менеджер Моделей
+ * @global: указатель на структуру с глобальными данными
+ *
+ * Обработчик сигнала Менеджера Моделей об изменения данных в модели "водопадных" меток
+ */
+void model_manager_wf_mark_model_changed (HyScanModelManager *model_manager,
+                                          Global             *global)
+{
+  HyScanObjectModel *model = hyscan_model_manager_get_wf_mark_model (model_manager);
+
+  mark_model_changed (model, global);
+
+  g_object_unref (model);
+}
+
 void
 mark_model_changed (HyScanObjectModel *model,
                     Global            *global)
@@ -1484,10 +1531,11 @@ mark_modified (HyScanGtkMarkEditor *med,
   gchar *mark_id = NULL;
   GHashTable *marks;
   HyScanMarkWaterfall *mark;
+  HyScanObjectModel *model = hyscan_model_manager_get_wf_mark_model (global->model_manager);
 
   hyscan_gtk_mark_editor_get_mark (med, &mark_id, NULL, NULL, NULL);
 
-  if ((marks = hyscan_object_model_get (global->marks.model)) == NULL)
+  if ((marks = hyscan_object_model_get (model)) == NULL)
     return;
 
   if ((mark = g_hash_table_lookup (marks, mark_id)) != NULL)
@@ -1505,7 +1553,9 @@ mark_modified (HyScanGtkMarkEditor *med,
                                        &wfmark->operator_name,
                                        &wfmark->description);
 
-      hyscan_object_model_modify_object (global->marks.model, mark_id, (const HyScanObject *) modified_mark);
+      hyscan_object_model_modify_object (model, mark_id, (const HyScanObject *) modified_mark);
+
+      g_object_unref (model);
 
       hyscan_mark_waterfall_free (modified_mark);
     }
@@ -1601,6 +1651,7 @@ track_changed (GtkTreeView *list,
   const gchar *track_name;
   gpointer k, v;
   gboolean on_air;
+  HyScanDBInfo *db_info = hyscan_model_manager_get_track_model (global->model_manager);
 
   /* Определяем название нового галса. */
   gtk_tree_view_get_cursor (list, &path, NULL);
@@ -1618,14 +1669,15 @@ track_changed (GtkTreeView *list,
   global->track_name = g_strdup (track_name);
 
   {
-    GHashTable *tracks = hyscan_db_info_get_tracks (global->db_info);
+    GHashTable *tracks = hyscan_db_info_get_tracks (db_info);
     HyScanTrackInfo *info = g_hash_table_lookup(tracks, track_name);
     update_panels (global, info);
     g_hash_table_unref (tracks);
   }
 
   /* Выясняем, ведется ли в него запись. */
-  on_air = track_is_active (global->db_info, track_name);
+  on_air = track_is_active (db_info, track_name);
+  g_object_unref (db_info);
 
   g_hash_table_iter_init (&htiter, global->panels);
   while (g_hash_table_iter_next (&htiter, &k, &v))

@@ -143,6 +143,9 @@ main (int argc, char **argv)
 
   global.canary = 123456789;
 
+  HyScanDBInfo      *db_info;
+  HyScanObjectModel *model;
+
   /* Перенаправление логов в файл. */
   #ifdef FNN_LOGGING
   hyscan_fnn_flog_open ("hyscan", 5000000);
@@ -471,15 +474,23 @@ restart:
       g_object_unref (info);
     }
 
-  /* Монитор базы данных. */
-  global.db_info = hyscan_db_info_new (global.db);
-  g_signal_connect (global.db_info, "projects-changed", G_CALLBACK (projects_changed), &global);
-  g_signal_connect (global.db_info, "tracks-changed", G_CALLBACK (tracks_changed), &global);
-
   /* Конфигурация. */
   global.sound_velocity = sound_velocity;
   global.full_screen = full_screen;
   global.project_name = g_strdup (project_name);
+
+  /* Cоздаём Менеджер Моделей. */
+  global.model_manager = hyscan_model_manager_new (global.project_name, global.db, global.cache);
+  /* Получаем модель галсов. */
+  db_info = hyscan_model_manager_get_track_model (global.model_manager);
+  /* Монитор базы данных. */
+  /*global.db_info = hyscan_db_info_new (global.db);*/
+  g_signal_connect (db_info, "projects-changed", G_CALLBACK (projects_changed), &global);
+  /*g_signal_connect (db_info, "tracks-changed", G_CALLBACK (tracks_changed), &global);*/
+  g_signal_connect (global.model_manager,
+                    hyscan_model_manager_get_signal_title (global.model_manager, SIGNAL_TRACKS_CHANGED),
+                    G_CALLBACK (model_manager_tracks_changed),
+                    &global);
 
   // splash = hyscan_fnn_splash_new ();
   // hyscan_fnn_splash_start (splash, "Подключение");
@@ -527,15 +538,22 @@ restart:
   gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (global.gui.track.list), 0, GTK_SORT_DESCENDING);
 
   /* Список меток. */
-  global.marks.model = hyscan_object_model_new (HYSCAN_TYPE_OBJECT_DATA_WFMARK);
+  /*global.marks.model = hyscan_object_model_new (HYSCAN_TYPE_OBJECT_DATA_WFMARK);*/
+  model = hyscan_model_manager_get_wf_mark_model (global.model_manager);
   // TODO: перепроверить, что в ран-менеджере, что в трек-чейнджед, что здесь
   global.marks.loc_storage = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
                                                     (GDestroyNotify) loc_store_free);
   global.gui.mark_view = hyscan_gtk_project_viewer_new ();
   global.gui.meditor = hyscan_gtk_mark_editor_new ();
 
-  hyscan_object_model_set_project (global.marks.model, global.db, global.project_name);
-  g_signal_connect (global.marks.model, "changed", G_CALLBACK (mark_model_changed), &global);
+  /*hyscan_object_model_set_project (global.marks.model, global.db, global.project_name);
+  g_signal_connect (global.marks.model, "changed", G_CALLBACK (mark_model_changed), &global);*/
+  hyscan_object_model_set_project (model, global.db, global.project_name);
+  /*g_signal_connect (model, "changed", G_CALLBACK (mark_model_changed), &global);*/
+  g_signal_connect (global.model_manager,
+                    hyscan_model_manager_get_signal_title (global.model_manager, SIGNAL_WF_MARKS_CHANGED),
+                    G_CALLBACK (model_manager_wf_mark_model_changed),
+                    &global);
   g_signal_connect (global.gui.meditor, "mark-modified", G_CALLBACK (mark_modified), &global);
   g_signal_connect (global.gui.mark_view, "item-changed", G_CALLBACK (active_mark_changed), &global);
 
@@ -610,7 +628,7 @@ exit:
 
   g_clear_pointer (&global.settings, g_key_file_unref);
   g_clear_object (&global.cache);
-  g_clear_object (&global.db_info);
+  g_clear_object (&db_info);
   g_clear_object (&global.db);
 
   g_clear_pointer (&global.panels, g_hash_table_unref);

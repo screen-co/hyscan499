@@ -6,6 +6,8 @@
 #include <hyscan-sensor.h>
 #include <hyscan-object-model.h>
 #include <hyscan-mark-loc-model.h>
+#include <hyscan-gtk-mark-manager.h>
+#include <hyscan-model-manager.h>
 
 typedef struct _HyScanGtkMapKitPrivate HyScanGtkMapKitPrivate;
 
@@ -21,8 +23,8 @@ typedef struct
 } HyScanGtkMapKit;
 
 HyScanGtkMapKit * hyscan_gtk_map_kit_new              (HyScanGeoGeodetic          *center,
-                                                       HyScanDB                   *db,
-                                                       const gchar                *cache_dir);
+                                                       const gchar                *cache_dir,
+                                                       HyScanModelManager         *model_manager);
 
 void              hyscan_gtk_map_kit_set_project      (HyScanGtkMapKit            *kit,
                                                        const gchar                *project_name);
@@ -44,6 +46,8 @@ void              hyscan_gtk_map_kit_add_nav          (HyScanGtkMapKit          
                                                        const HyScanAntennaOffset  *offset,
                                                        gdouble                     delay_time);
 
+void              hyscan_gtk_map_kit_add_marks        (HyScanGtkMapKit            *kit);
+
 void              hyscan_gtk_map_kit_add_marks_wf     (HyScanGtkMapKit            *kit);
 
 void              hyscan_gtk_map_kit_add_marks_geo    (HyScanGtkMapKit            *kit);
@@ -63,9 +67,10 @@ void              hyscan_gtk_map_kit_kf_setup         (HyScanGtkMapKit          
 
 void              hyscan_gtk_map_kit_kf_desetup       (HyScanGtkMapKit            *kit,
                                                        GKeyFile                   *keyfile);
-
+/*
 void              hyscan_gtk_map_kit_get_mark_backends(HyScanGtkMapKit            *kit,
                                                        HyScanObjectModel         **geo,
                                                        HyScanMarkLocModel        **wf);
+*/
 
 #endif /* __HYSCAN_GTK_MAP_KIT_H__ */

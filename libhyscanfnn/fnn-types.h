@@ -13,7 +13,6 @@
 #include <hyscan-gtk-waterfall-magnifier.h>
 #include <hyscan-gtk-waterfall-coord.h>
 #include <hyscan-gtk-waterfall-shadowm.h>
-#include <hyscan-object-model.h>
 #include <hyscan-gtk-project-viewer.h>
 #include <hyscan-gtk-mark-editor.h>
 #include <hyscan-gtk-nav-indicator.h>
@@ -21,7 +20,7 @@
 #include <hyscan-nmea-parser.h>
 #include <hyscan-mloc.h>
 #include <hyscan-projector.h>
-#include <hyscan-db-info.h>
+#include <hyscan-model-manager.h>
 #include <hyscan-cached.h>
 #include <urpc-server.h>
 #include <math.h>
@@ -238,7 +237,7 @@ struct _Global
 {
   gint32                  canary;
   HyScanDB               *db;
-  HyScanDBInfo           *db_info;
+  /*HyScanDBInfo           *db_info;*/
 
   gchar                  *project_name;
   gchar                  *track_name;
@@ -264,9 +263,12 @@ struct _Global
   GHashTable             *panels; /* {panelx : FnnPanel} */
   GHashTable             *infos; /* {HyScanSourceType : HyScanSonarInfoSource} */
 
+  /* Менеджер моделей. */
+  HyScanModelManager     *model_manager;
+
   struct
     {
-      HyScanObjectModel  *model; /* модель */
+      /*HyScanObjectModel  *model;*/ /* модель */
       HyScanMarkSync     *sync;  /* синхронизация */
 
       GHashTable         *loc_storage;  /* хранилище локейшенов и проекторов */
@@ -294,6 +296,7 @@ struct _Global
 
       GtkWidget          *mark_view;
       GtkWidget          *meditor;
+
     } gui;
 
   struct
@@ -414,6 +417,10 @@ track_scroller (GtkTreeView *tree,
                 gboolean     to_end);
 
 HYSCAN_API void
+model_manager_tracks_changed (HyScanModelManager *model_manager,
+                              Global             *global);
+
+HYSCAN_API void
 tracks_changed (HyScanDBInfo *db_info,
                 Global       *global);
 
@@ -474,6 +481,10 @@ get_mark_coords (GHashTable           * locstores,
                  Global               * global);
 
 HYSCAN_API void
+model_manager_wf_mark_model_changed (HyScanModelManager *model_manager,
+                                     Global             *global);
+
+HYSCAN_API void
 mark_model_changed (HyScanObjectModel *mark_model,
                     Global            *global);
 
@@ -493,7 +504,7 @@ gboolean
 track_is_active (HyScanDBInfo *db_info,
                  const gchar  *name);
 
-HYSCAN_API  void
+HYSCAN_API void
 track_changed (GtkTreeView *list,
                Global      *global);
 
