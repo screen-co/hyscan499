@@ -1460,14 +1460,14 @@ make_marks_with_coords (HyScanObjectModel *model,
 }
 
 /**
- * model_manager_wf_mark_model_changed:
+ * model_manager_acoustic_mark_model_changed:
  * @model_manager: указатель на Менеджер Моделей
  * @global: указатель на структуру с глобальными данными
  *
- * Обработчик сигнала Менеджера Моделей об изменения данных в модели "водопадных" меток
+ * Обработчик сигнала Менеджера Моделей об изменения данных в модели акустических меток
  */
-void model_manager_wf_mark_model_changed (HyScanModelManager *model_manager,
-                                          Global             *global)
+void model_manager_acoustic_mark_model_changed (HyScanModelManager *model_manager,
+                                                Global             *global)
 {
   HyScanObjectModel *model = hyscan_model_manager_get_acoustic_mark_model (model_manager);
 

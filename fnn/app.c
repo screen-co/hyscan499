@@ -551,8 +551,8 @@ restart:
   /*hyscan_object_model_set_project (model, global.db, global.project_name);*/
   /*g_signal_connect (model, "changed", G_CALLBACK (mark_model_changed), &global);*/
   g_signal_connect (global.model_manager,
-                    hyscan_model_manager_get_signal_title (global.model_manager, SIGNAL_WF_MARKS_CHANGED),
-                    G_CALLBACK (model_manager_wf_mark_model_changed),
+                    hyscan_model_manager_get_signal_title (global.model_manager, SIGNAL_ACOUSTIC_MARKS_CHANGED),
+                    G_CALLBACK (model_manager_acoustic_mark_model_changed),
                     &global);
   g_signal_connect (global.gui.meditor, "mark-modified", G_CALLBACK (mark_modified), &global);
   g_signal_connect (global.gui.mark_view, "item-changed", G_CALLBACK (active_mark_changed), &global);

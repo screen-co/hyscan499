@@ -481,8 +481,8 @@ get_mark_coords (GHashTable           * locstores,
                  Global               * global);
 
 HYSCAN_API void
-model_manager_wf_mark_model_changed (HyScanModelManager *model_manager,
-                                     Global             *global);
+model_manager_acoustic_mark_model_changed (HyScanModelManager *model_manager,
+                                           Global             *global);
 
 HYSCAN_API void
 mark_model_changed (HyScanObjectModel *mark_model,
