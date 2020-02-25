@@ -539,7 +539,7 @@ restart:
 
   /* Список меток. */
   /*global.marks.model = hyscan_object_model_new (HYSCAN_TYPE_OBJECT_DATA_WFMARK);*/
-  model = hyscan_model_manager_get_wf_mark_model (global.model_manager);
+  model = hyscan_model_manager_get_acoustic_mark_model (global.model_manager);
   // TODO: перепроверить, что в ран-менеджере, что в трек-чейнджед, что здесь
   global.marks.loc_storage = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
                                                     (GDestroyNotify) loc_store_free);
@@ -548,7 +548,7 @@ restart:
 
   /*hyscan_object_model_set_project (global.marks.model, global.db, global.project_name);
   g_signal_connect (global.marks.model, "changed", G_CALLBACK (mark_model_changed), &global);*/
-  hyscan_object_model_set_project (model, global.db, global.project_name);
+  /*hyscan_object_model_set_project (model, global.db, global.project_name);*/
   /*g_signal_connect (model, "changed", G_CALLBACK (mark_model_changed), &global);*/
   g_signal_connect (global.model_manager,
                     hyscan_model_manager_get_signal_title (global.model_manager, SIGNAL_WF_MARKS_CHANGED),

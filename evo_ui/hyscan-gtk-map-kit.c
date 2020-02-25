@@ -795,7 +795,7 @@ mark_modified (HyScanGtkMarkEditor *med,
                HyScanGtkMapKit     *kit)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
-  HyScanObjectModel *mark_model = hyscan_model_manager_get_wf_mark_model (priv->model_manager),
+  HyScanObjectModel *mark_model = hyscan_model_manager_get_acoustic_mark_model (priv->model_manager),
                     *mark_geo_model = hyscan_model_manager_get_geo_mark_model (priv->model_manager);
   gchar *mark_id = NULL;
   gchar *title;
@@ -946,7 +946,7 @@ on_marks_changed (HyScanGtkMapKit *kit)
   g_return_if_fail (HYSCAN_IS_MODEL_MANAGER (priv->model_manager));
 
   mark_geo_model = hyscan_model_manager_get_geo_mark_model (priv->model_manager);
-  ml_model = hyscan_model_manager_get_wf_mark_loc_model (priv->model_manager);
+  ml_model = hyscan_model_manager_get_acoustic_mark_loc_model (priv->model_manager);
   /* Блокируем обработку изменения выделения в списке меток. */
   selection = gtk_tree_view_get_selection (priv->mark_tree);
   g_signal_handlers_block_by_func (selection, on_marks_selected, kit);
@@ -1715,7 +1715,7 @@ hyscan_gtk_map_kit_new (HyScanGeoGeodetic  *center,
   /* Подключаем сигнал изменения данных в модели "водопадных" меток с координатами. */
   g_signal_connect_swapped (kit->priv->model_manager,
                             hyscan_model_manager_get_signal_title (kit->priv->model_manager,
-                                                                   SIGNAL_WF_MARKS_LOC_CHANGED),
+                                                                   SIGNAL_ACOUSTIC_MARKS_LOC_CHANGED),
                             G_CALLBACK (on_marks_changed),
                             kit);
   /* Подключаем сигнал изменения данных в модели гео-меток.*/
@@ -1734,8 +1734,8 @@ hyscan_gtk_map_kit_set_project (HyScanGtkMapKit *kit,
   HyScanGtkMapKitPrivate *priv = kit->priv;
   HyScanDBInfo *db_info = hyscan_model_manager_get_track_model (priv->model_manager);
   HyScanObjectModel *mark_geo_model = hyscan_model_manager_get_geo_mark_model (priv->model_manager),
-                    *mark_model = hyscan_model_manager_get_wf_mark_model (priv->model_manager);
-  HyScanMarkLocModel *ml_model = hyscan_model_manager_get_wf_mark_loc_model (priv->model_manager);
+                    *mark_model = hyscan_model_manager_get_acoustic_mark_model (priv->model_manager);
+  HyScanMarkLocModel *ml_model = hyscan_model_manager_get_acoustic_mark_loc_model (priv->model_manager);
 
   /* Очищаем список активных галсов, только если уже был открыт другой проект. */
   if (priv->project_name != NULL)
@@ -1918,8 +1918,8 @@ void hyscan_gtk_map_kit_add_marks (HyScanGtkMapKit *kit)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
   HyScanObjectModel *mark_geo_model = hyscan_model_manager_get_geo_mark_model (priv->model_manager),
-                    *mark_model = hyscan_model_manager_get_wf_mark_model (priv->model_manager);
-  HyScanMarkLocModel *ml_model = hyscan_model_manager_get_wf_mark_loc_model (priv->model_manager);
+                    *mark_model = hyscan_model_manager_get_acoustic_mark_model (priv->model_manager);
+  HyScanMarkLocModel *ml_model = hyscan_model_manager_get_acoustic_mark_loc_model (priv->model_manager);
 /*
   g_return_if_fail (priv->mark_model == NULL);
   g_return_if_fail (priv->mark_geo_model == NULL);
@@ -1966,8 +1966,8 @@ void
 hyscan_gtk_map_kit_add_marks_wf (HyScanGtkMapKit *kit)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
-  HyScanMarkLocModel *ml_model = hyscan_model_manager_get_wf_mark_loc_model (priv->model_manager),
-                     *mark_model = hyscan_model_manager_get_wf_mark_model (priv->model_manager);
+  HyScanMarkLocModel *ml_model = hyscan_model_manager_get_acoustic_mark_loc_model (priv->model_manager);
+  HyScanObjectModel  *mark_model = hyscan_model_manager_get_acoustic_mark_model (priv->model_manager);
 
   g_return_if_fail (priv->db != NULL);
 

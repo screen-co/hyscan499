@@ -363,7 +363,7 @@ mark_exporter (GObject  *emitter,
   else
     {
       HyScanObjectModel  *geo = hyscan_model_manager_get_geo_mark_model (_global->model_manager);
-      HyScanMarkLocModel *wf  = hyscan_model_manager_get_wf_mark_loc_model (_global->model_manager);
+      HyScanMarkLocModel *wf  = hyscan_model_manager_get_acoustic_mark_loc_model (_global->model_manager);
       /*hyscan_gtk_map_kit_get_mark_backends (global_ui.mapkit, &geo, &wf);*/
 
       switch (selector)
@@ -1377,7 +1377,7 @@ build_interface (Global *global)
     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     /*ui->mapkit = hyscan_gtk_map_kit_new (&center, global->db, cache_dir, global->model_manager);*/
     ui->mapkit = hyscan_gtk_map_kit_new (&center, cache_dir, global->model_manager);
-    hyscan_gtk_map_kit_set_project (ui->mapkit, global->project_name);
+    /*hyscan_gtk_map_kit_set_project (ui->mapkit, global->project_name);*/
     profile_dirs = get_profile_dir ();
     for (i = 0; profile_dirs[i] != NULL; ++i)
       {

@@ -40,7 +40,7 @@ fnn_ensure_panel (gint    panelx,
 {
   GArray *svp;
   FnnPanel *panel;
-  HyScanObjectModel *model = hyscan_model_manager_get_wf_mark_model (global->model_manager);
+  HyScanObjectModel *model = hyscan_model_manager_get_acoustic_mark_model (global->model_manager);
 
   /* Вдруг панель уже есть? Тогда выходим вот отседова. */
   if (g_hash_table_contains (tglobal->panels, GINT_TO_POINTER (panelx)))
@@ -499,7 +499,7 @@ run_manager (GObject *emitter)
     {
       gchar *project;
       HyScanDBInfo *db_info = hyscan_model_manager_get_track_model (tglobal->model_manager);
-      HyScanObjectModel *model = hyscan_model_manager_get_wf_mark_model (tglobal->model_manager);
+      HyScanObjectModel *model = hyscan_model_manager_get_acoustic_mark_model (tglobal->model_manager);
 
       g_clear_pointer (&tglobal->project_name, g_free);
       hyscan_fnn_project_get (HYSCAN_FNN_PROJECT (dialog), &project, NULL);
@@ -1341,7 +1341,7 @@ remove_mark_update (Global *global)
 gboolean
 mark_update (Global *global)
 {
-  HyScanObjectModel *model = hyscan_model_manager_get_wf_mark_model (global->model_manager);
+  HyScanObjectModel *model = hyscan_model_manager_get_acoustic_mark_model (global->model_manager);
   mark_model_changed (model, global);
   g_object_unref (model);
   global->marks.request_update_tag = 0;
@@ -1469,7 +1469,7 @@ make_marks_with_coords (HyScanObjectModel *model,
 void model_manager_wf_mark_model_changed (HyScanModelManager *model_manager,
                                           Global             *global)
 {
-  HyScanObjectModel *model = hyscan_model_manager_get_wf_mark_model (model_manager);
+  HyScanObjectModel *model = hyscan_model_manager_get_acoustic_mark_model (model_manager);
 
   mark_model_changed (model, global);
 
@@ -1531,7 +1531,7 @@ mark_modified (HyScanGtkMarkEditor *med,
   gchar *mark_id = NULL;
   GHashTable *marks;
   HyScanMarkWaterfall *mark;
-  HyScanObjectModel *model = hyscan_model_manager_get_wf_mark_model (global->model_manager);
+  HyScanObjectModel *model = hyscan_model_manager_get_acoustic_mark_model (global->model_manager);
 
   hyscan_gtk_mark_editor_get_mark (med, &mark_id, NULL, NULL, NULL);
 
