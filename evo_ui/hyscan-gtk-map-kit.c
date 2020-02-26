@@ -119,7 +119,7 @@ static gchar ** hyscan_gtk_map_kit_get_tracks   (HyScanGtkMapKit      *kit);
 static void     hyscan_gtk_map_kit_track_enable (HyScanGtkMapKit      *kit,
                                                  const gchar          *track_name,
                                                  gboolean              enable);
-static void    hyscan_gtk_map_kit_on_changed_combo_box (
+static void     hyscan_gtk_map_kit_on_changed_combo_box (
                                                  GtkComboBox          *combo,
                                                  HyScanGtkLayer       *layer);
 #if !GLIB_CHECK_VERSION (2, 44, 0)
@@ -1493,6 +1493,7 @@ hyscan_gtk_map_kit_track_enable (HyScanGtkMapKit *kit,
   gint i, j;
 
   tracks = hyscan_gtk_map_kit_get_tracks (kit);
+
   track_enabled = g_strv_contains ((const gchar *const *) tracks, track_name);
 
   /* Галс уже и так в нужном состоянии. */
@@ -1650,7 +1651,6 @@ hyscan_gtk_map_kit_new (HyScanGeoGeodetic  *center,
 {
   HyScanGtkMapKit    *kit;
   HyScanDBInfo       *db_info;
-  HyScanMarkLocModel *ml_model;
 
   g_return_val_if_fail (HYSCAN_IS_MODEL_MANAGER (model_manager), NULL);
 
@@ -1690,6 +1690,18 @@ hyscan_gtk_map_kit_new (HyScanGeoGeodetic  *center,
 
   g_object_unref (db_info);
 
+  if (kit->priv->track_layer != NULL)
+    {
+      hyscan_gtk_map_track_set_project (HYSCAN_GTK_MAP_TRACK (kit->priv->track_layer),
+                                        kit->priv->project_name);
+    }
+
+  if (kit->priv->wfmark_layer != NULL)
+    {
+      hyscan_gtk_map_wfmark_set_project (HYSCAN_GTK_MAP_WFMARK (kit->priv->wfmark_layer),
+                                         kit->priv->project_name);
+    }
+
     /* Добавляем профиль по умолчанию. */
     {
       HyScanProfileMap *profile;
@@ -1712,7 +1724,7 @@ hyscan_gtk_map_kit_new (HyScanGeoGeodetic  *center,
                                                            SIGNAL_TRACKS_CHANGED),
                     G_CALLBACK (model_manager_tracks_changed),
                     kit);
-  /* Подключаем сигнал изменения данных в модели "водопадных" меток с координатами. */
+  /* Подключаем сигнал изменения данных в модели акустических меток с координатами. */
   g_signal_connect_swapped (kit->priv->model_manager,
                             hyscan_model_manager_get_signal_title (kit->priv->model_manager,
                                                                    SIGNAL_ACOUSTIC_MARKS_LOC_CHANGED),

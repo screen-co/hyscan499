@@ -866,7 +866,7 @@ on_enable_layer (GtkCellRendererToggle *cell_renderer,
   visible = !visible;
   if (g_strcmp0 (key, EVO_GRID_KEY) == 0)
     {
-      hyscan_gtk_waterfall_grid_show_grid(HYSCAN_GTK_WATERFALL_GRID(layer), visible);
+      hyscan_gtk_waterfall_grid_show_grid (HYSCAN_GTK_WATERFALL_GRID(layer), visible);
     }
   else
     {
@@ -1378,6 +1378,7 @@ build_interface (Global *global)
     /*ui->mapkit = hyscan_gtk_map_kit_new (&center, global->db, cache_dir, global->model_manager);*/
     ui->mapkit = hyscan_gtk_map_kit_new (&center, cache_dir, global->model_manager);
     /*hyscan_gtk_map_kit_set_project (ui->mapkit, global->project_name);*/
+
     profile_dirs = get_profile_dir ();
     for (i = 0; profile_dirs[i] != NULL; ++i)
       {
