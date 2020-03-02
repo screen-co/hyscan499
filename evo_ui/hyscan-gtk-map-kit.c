@@ -36,6 +36,8 @@
 #include <hyscan-track-stats.h>
 #include <hyscan-gtk-planner-list-bar.h>
 #include <hyscan-gtk-planner-import.h>
+#include <hyscan-gtk-param-merge.h>
+#include <hyscan-param-merge.h>
 
 #define PROFILE_EXTENSION    ".ini"
 #define DEFAULT_PROFILE_NAME "default"    /* Имя профиля карты по умолчанию. */
@@ -419,9 +421,9 @@ create_popup (HyScanGtkMapKit *kit,
 }
 
 static GtkWidget *
-create_param_settings_window (HyScanGtkMapKit *kit,
-                              const gchar     *title,
-                              HyScanParam     *param)
+create_param_settings_window (HyScanGtkMapKit  *kit,
+                              const gchar      *title,
+                              HyScanParamMerge *param)
 {
   GtkWidget *window;
   GtkWidget *frontend;
@@ -435,7 +437,7 @@ create_param_settings_window (HyScanGtkMapKit *kit,
   gtk_window_set_default_size (GTK_WINDOW (window), 250, 300);
 
   /* Виджет отображения параметров. */
-  frontend = hyscan_gtk_param_list_new (param, "/", FALSE);
+  frontend = hyscan_gtk_param_merge_new (param, "/", FALSE);
   hyscan_gtk_param_set_watch_period (HYSCAN_GTK_PARAM (frontend), 500);
 
   /* Кнопки сохранения настроек. */
@@ -485,34 +487,41 @@ on_configure_track_clicked (GtkButton *button,
   HyScanGtkMapKitPrivate *priv = kit->priv;
 
   GtkTreeSelection *selection;
-  GList *list;
-  GtkTreeModel *tree_model = GTK_TREE_MODEL (priv->track_store);
+  GList *list, *link;
+  HyScanParamMerge *merge;
 
   selection = gtk_tree_view_get_selection (priv->track_tree);
-  list = gtk_tree_selection_get_selected_rows (selection, &tree_model);
-  if (list != NULL)
+  list = gtk_tree_selection_get_selected_rows (selection, NULL);
+
+  merge = hyscan_param_merge_new ();
+  for (link = list; link != NULL; link = link->next)
     {
-      GtkTreePath *path = list->data;
+      GtkTreePath *path = link->data;
       GtkTreeIter iter;
       gchar *track_name;
 
       if (gtk_tree_model_get_iter (GTK_TREE_MODEL (priv->track_store), &iter, path))
         {
-          GtkWidget *window;
           HyScanGtkMapTrackItem *track;
 
           gtk_tree_model_get (GTK_TREE_MODEL (priv->track_store), &iter, TRACK_COLUMN, &track_name, -1);
           track = hyscan_gtk_map_track_lookup (HYSCAN_GTK_MAP_TRACK (priv->track_layer), track_name);
-
-          window = create_param_settings_window (kit, _("Track settings"), HYSCAN_PARAM (track));
-          gtk_widget_show_all (window);
+          hyscan_param_merge_add (merge, HYSCAN_PARAM (track));
 
           g_object_unref (track);
           g_free (track_name);
         }
     }
-  g_list_free_full (list, (GDestroyNotify) gtk_tree_path_free);
 
+  if (hyscan_param_merge_bind (merge))
+    {
+      GtkWidget *window;
+
+      window = create_param_settings_window (kit, _("Track settings"), merge);
+      gtk_widget_show_all (window);
+    }
+
+  g_list_free_full (list, (GDestroyNotify) gtk_tree_path_free);
 }
 
 /* Функция вызывается при изменении списка галсов. */
@@ -579,10 +588,12 @@ on_button_press_event (GtkTreeView     *tree_view,
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
 
-  if ((event_button->type == GDK_BUTTON_PRESS) && (event_button->button == GDK_BUTTON_SECONDARY))
-    gtk_menu_popup_at_pointer (priv->track_menu, (const GdkEvent *) event_button);
+  if (event_button->button != GDK_BUTTON_SECONDARY)
+    return GDK_EVENT_PROPAGATE;
 
-  return FALSE;
+  gtk_menu_popup_at_pointer (priv->track_menu, (const GdkEvent *) event_button);
+
+  return GDK_EVENT_STOP;
 }
 
 /* Отмечает все галочки в списке галсов. */
@@ -1093,6 +1104,7 @@ create_track_box (HyScanGtkMapKit *kit,
                                           G_TYPE_STRING,  /* TRACK_COLUMN     */
                                           G_TYPE_STRING   /* DATE_COLUMN      */);
   priv->track_tree = create_track_tree_view (kit, GTK_TREE_MODEL (priv->track_store));
+  gtk_tree_selection_set_mode (gtk_tree_view_get_selection (priv->track_tree), GTK_SELECTION_MULTIPLE);
 
   create_track_menu (kit);
   gtk_menu_attach_to_widget (priv->track_menu, GTK_WIDGET (priv->track_tree), NULL);
