@@ -1023,7 +1023,7 @@ make_record_control (Global *global,
   GtkBuilder *b;
   GtkWidget *w;
 
-  if (global->control_s == NULL)
+  if (global->sonar_model == NULL)
     return NULL;
 
   b = gtk_builder_new_from_resource ("/org/evo/gtk/record.ui");
@@ -1100,7 +1100,7 @@ make_tvg_control (Global *global,
 
   for (; sources != NULL && *sources != HYSCAN_SOURCE_INVALID; ++sources)
     {
-      info = hyscan_control_source_get_info (global->control, *sources);
+      info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (*sources));
       if (info->tvg == NULL)
         {
           source_informer ("No TVG info", *sources);

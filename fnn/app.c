@@ -101,7 +101,11 @@ connector_finished (GtkAssistant *ass,
   if (hyscan_gtk_con_get_result (HYSCAN_GTK_CON (ass)))
     {
       global->control = hyscan_gtk_con_get_control (HYSCAN_GTK_CON (ass));
-      global->control_s = HYSCAN_SONAR (global->control);
+      if (global->control != NULL)
+        {
+          global->sonar_model = hyscan_sonar_model_new (global->control);
+        }
+
       con_status = CONNECTOR_CLOSE;
     }
   else
@@ -406,6 +410,7 @@ main (int argc, char **argv)
   }
 
   /* К этому моменту подвезли global.control и global.db. Настраиваю контрол. */
+  global.infos = g_hash_table_new (g_direct_hash, g_direct_equal);
   if (global.control != NULL)
     {
       guint32 n_sources;
@@ -415,8 +420,6 @@ main (int argc, char **argv)
 
       hyscan_control_device_bind (global.control);
       hyscan_control_writer_set_db (global.control, global.db);
-
-      global.infos = g_hash_table_new (g_direct_hash, g_direct_equal);
 
       sensors = hyscan_control_sensors_list (global.control);
       for (; sensors != NULL && *sensors != NULL; ++sensors)
@@ -583,8 +586,8 @@ restart:
     g_source_remove (sensor_label_writer_tag);
   // hyscan_fnn_splash_start (splash, "Отключение");
 
-  if (global.control != NULL)
-    hyscan_sonar_stop (global.control_s);
+  if (global.sonar_model != NULL)
+    hyscan_sonar_stop (HYSCAN_SONAR (global.sonar_model));
 
   /***
    *     ___         ___   ___               ___

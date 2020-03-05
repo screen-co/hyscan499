@@ -486,7 +486,7 @@ run_manager (GObject *emitter)
   GtkWidget *dialog;
   gint res;
 
-  if (tglobal->control_s != NULL)
+  if (tglobal->sonar_model != NULL)
     start_stop (tglobal, NULL, FALSE);
 
   info = hyscan_db_info_new (tglobal->db);
@@ -585,35 +585,6 @@ run_show_sonar_info (GObject     *emitter,
   gtk_dialog_run (GTK_DIALOG (dialog));
   hyscan_gtk_param_discard (HYSCAN_GTK_PARAM (cc));
   gtk_widget_destroy (dialog);
-}
-
-gboolean
-real_sonar_sync (Global *global)
-{
-  gint64 cur_time = g_get_monotonic_time ();
-  gint64 last_clk = global->last_click_time;
-  gboolean st;
-
-  if (cur_time - last_clk < 750 * G_TIME_SPAN_MILLISECOND)
-    {
-      return G_SOURCE_CONTINUE;
-    }
-
-  if (global->on_air && !global->synced)
-    {
-      st = hyscan_sonar_sync (global->control_s);
-      global->synced = TRUE;
-      g_message ("sync %s", st ? "OK" : "FAILED");
-    }
-  return G_SOURCE_REMOVE;
-}
-
-void
-sync_sonar (Global *global)
-{
-  global->synced = FALSE;
-  global->last_click_time = g_get_monotonic_time ();
-  g_timeout_add (250, (GSourceFunc)real_sonar_sync, global);
 }
 
 void
@@ -2052,7 +2023,7 @@ rec_disable (Global   *global,
     {
       gboolean status;
       source_informer ("  disabling receiver", *iter);
-      status = hyscan_sonar_receiver_disable (global->control_s, *iter);
+      status = hyscan_sonar_receiver_disable (HYSCAN_SONAR (global->sonar_model), *iter);
 
       if (!status)
         {
@@ -2061,7 +2032,6 @@ rec_disable (Global   *global,
         }
     }
 
-  sync_sonar (global);
   g_message ("  success");
   return TRUE;
 }
@@ -2081,7 +2051,7 @@ gen_disable (Global   *global,
       HyScanSourceType source = *iter;
 
       source_informer ("  disabling generator", source);
-      status = hyscan_sonar_generator_disable (global->control_s, source);
+      status = hyscan_sonar_generator_disable (HYSCAN_SONAR (global->sonar_model), source);
 
       if (!status)
         {
@@ -2089,8 +2059,6 @@ gen_disable (Global   *global,
           return FALSE;
         }
     }
-
-  sync_sonar (global);
 
   g_message ("  success");
   return TRUE;
@@ -2147,7 +2115,7 @@ signal_set (Global *global,
       prev_sig = sig;
 
       /* Устанавливаем. */
-      status = hyscan_sonar_generator_set_preset (global->control_s, source, sig->value);
+      status = hyscan_sonar_generator_set_preset (HYSCAN_SONAR (global->sonar_model), source, sig->value);
 
       if (!status)
         {
@@ -2155,8 +2123,6 @@ signal_set (Global *global,
           return FALSE;
         }
     }
-
-  sync_sonar (global);
 
   if (sig != NULL)
     signal_label (panel, sig->name);
@@ -2278,15 +2244,13 @@ log_tvg_set (Global  *global,
       hyscan_return_val_if_fail (info != NULL && info->tvg != NULL, TRUE); // TODO do something
       *gain0 = CLAMP (*gain0, info->tvg->min_gain,info->tvg->max_gain);
 
-      status = hyscan_sonar_tvg_set_logarithmic (global->control_s, source, *gain0, beta, alpha);
+      status = hyscan_sonar_tvg_set_logarithmic (HYSCAN_SONAR (global->sonar_model), source, *gain0, beta, alpha);
       if (!status)
         {
           g_message ("  failure!");
           return FALSE;
         }
     }
-
-  sync_sonar (global);
 
   log_tvg_label (panel, *gain0, beta, alpha);
   g_message ("  success");
@@ -2322,15 +2286,13 @@ const_tvg_set (Global  *global,
       hyscan_return_val_if_fail (info != NULL && info->tvg != NULL, TRUE); // TODO do something
       *gain0 = CLAMP (*gain0, info->tvg->min_gain,info->tvg->max_gain);
 
-      status = hyscan_sonar_tvg_set_constant (global->control_s, source, *gain0);
+      status = hyscan_sonar_tvg_set_constant (HYSCAN_SONAR (global->sonar_model), source, *gain0);
       if (!status)
         {
           g_message ("  failure!");
           return FALSE;
         }
     }
-
-  sync_sonar (global);
 
   const_tvg_label (panel, *gain0);
   g_message ("  success");
@@ -2364,7 +2326,7 @@ lin_tvg_set (Global  *global,
       if (source == HYSCAN_SOURCE_PROFILER_ECHO)
         {
           g_message ("  setting TVG for profiler-echo (hardcoded 10)");
-          status = hyscan_sonar_tvg_set_constant (global->control_s, source, 10);
+          status = hyscan_sonar_tvg_set_constant (HYSCAN_SONAR (global->sonar_model), source, 10);
           if (!status)
             {
               g_message ("  failure!");
@@ -2381,15 +2343,13 @@ lin_tvg_set (Global  *global,
       hyscan_return_val_if_fail (info != NULL && info->tvg != NULL, TRUE); // TODO do something
       *gain0 = CLAMP (*gain0, info->tvg->min_gain,info->tvg->max_gain);
 
-      status = hyscan_sonar_tvg_set_linear_db (global->control_s, source, *gain0, step);
+      status = hyscan_sonar_tvg_set_linear_db (HYSCAN_SONAR (global->sonar_model), source, *gain0, step);
       if (!status)
         {
           g_message ("  failure!");
           return FALSE;
         }
     }
-
-  sync_sonar (global);
 
   tvg_label (panel, *gain0, step);
   g_message ("  success");
@@ -2409,26 +2369,24 @@ auto_tvg_set (Global   *global,
 
   HyScanSourceType *iter;
 
-  g_message ("auto_tvg_set: %s (%i), level %f, sensitivity %f", panel->name, panelx, level, sensitivity);
-
   if (panel == NULL)
     {
       g_warning ("  auto_tvg_set: panel %i not found!", panelx);
       return FALSE;
     }
 
+  g_message ("auto_tvg_set: %s (%i), level %f, sensitivity %f", panel->name, panelx, level, sensitivity);
+
   for (iter = panel->sources; *iter != HYSCAN_SOURCE_INVALID; ++iter)
     {
       source_informer ("  setting auto-tvg", *iter);
-      status = hyscan_sonar_tvg_set_auto (global->control_s, *iter, level, sensitivity);
+      status = hyscan_sonar_tvg_set_auto (HYSCAN_SONAR (global->sonar_model), *iter, level, sensitivity);
       if (!status)
         {
           g_message ("  failure!");
           return FALSE;
         }
     }
-
-  sync_sonar (global);
 
   /* Теперь печатаем что и куда надо. */
   auto_tvg_label (panel, level, sensitivity);
@@ -2558,13 +2516,14 @@ distance_set (Global  *global,
   HyScanSourceType *iter;
   FnnPanel *panel = get_panel_quiet (global, panelx);
 
-  g_message ("distance_set: %s (%i), distance %f", panel->name, panelx, *meters);
-
   if (panel == NULL)
     {
       g_warning ("  distance_set: panel %i not found!", panelx);
       return FALSE;
     }
+
+  g_message ("distance_set: %s (%i), distance %f", panel->name, panelx, *meters);
+
   if (*meters < 1.0)
     {
       g_message ("  failure!");
@@ -2635,7 +2594,7 @@ distance_set (Global  *global,
       g_message ("    %s: %4.1f m, r/w time: %f %f",
                  hyscan_source_get_id_by_type (*iter), *meters, receive_time, wait_time);
 
-      status = hyscan_sonar_receiver_set_time (global->control_s, *iter, receive_time, wait_time);
+      status = hyscan_sonar_receiver_set_time (HYSCAN_SONAR (global->sonar_model), *iter, receive_time, wait_time);
       if (!status)
         {
           g_message ("  failure!");
@@ -2644,7 +2603,6 @@ distance_set (Global  *global,
     }
 
   /* Специальный случай. */
-  sync_sonar (global);
   distance_label (panel, *meters);
   g_message ("  success");
   return TRUE;
@@ -3093,13 +3051,13 @@ disable_changed (GtkWidget *widget,
 {
   FnnPanel *panel = get_panel_quiet (tglobal, panelx);
 
-  g_message ("disable_changed: %s (%i) %s", panel->name, panelx, disabled ? "OFF" : "ON");
-
   if (panel == NULL)
     {
       g_warning ("  disable_changed: panel %i not found!", panelx);
       return TRUE;
     }
+
+  g_message ("disable_changed: %s (%i) %s", panel->name, panelx, disabled ? "OFF" : "ON");
 
   panel->current.disabled = disabled;
 
@@ -3109,7 +3067,6 @@ disable_changed (GtkWidget *widget,
       return TRUE;
     }
 
-  sync_sonar (tglobal);
   g_message ("  success");
   return FALSE;
 }
@@ -3308,7 +3265,7 @@ start_stop (Global                *global,
   GHashTableIter iter;
   gpointer k, v;
 
-  if (global->control_s == NULL)
+  if (global->sonar_model == NULL)
     {
       g_message ("I ain't got no sonar.");
       return FALSE;
@@ -3386,7 +3343,7 @@ start_stop (Global                *global,
       global->on_air = FALSE;
 
       g_message ("Sonar stopped");
-      hyscan_sonar_stop (global->control_s);
+      hyscan_sonar_stop (HYSCAN_SONAR (global->sonar_model));
       gtk_widget_set_sensitive (GTK_WIDGET (global->gui.track.tree), TRUE);
     }
 
@@ -3601,9 +3558,6 @@ panel_sources_are_in_sonar (Global   *global,
                             FnnPanel *panel)
 {
   HyScanSourceType *i;
-
-  if (global->infos == NULL)
-    return FALSE;
 
   /* Если в ГЛ нет хотя бы одного источника, который есть на панели,
    * считаем, что всё пропало. */

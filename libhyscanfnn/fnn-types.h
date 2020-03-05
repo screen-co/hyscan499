@@ -255,7 +255,7 @@ struct _Global
   gint                    view_selector;
 
   HyScanControl          *control;
-  HyScanSonar            *control_s;
+  HyScanSonarModel       *sonar_model;
   gboolean                on_air;
   gint64                  last_click_time;
   gboolean                synced;

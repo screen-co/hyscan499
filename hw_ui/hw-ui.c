@@ -558,7 +558,7 @@ build_interface (Global *global)
   build_all (ui, global, common_pages);
 
   /* Общие ГЛ-виджеты. */
-  if (global->control_s != NULL)
+  if (global->control != NULL)
     build_all (ui, global, any_sonar_pages);
 
   /* Инициализация значений. */
