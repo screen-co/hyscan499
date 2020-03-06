@@ -2,12 +2,11 @@
 #define __HYSCAN_GTK_MAP_KIT_H__
 
 #include <hyscan-gtk-map.h>
-#include <hyscan-db.h>
+/*#include <hyscan-db.h>*/
 #include <hyscan-sensor.h>
-#include <hyscan-object-model.h>
-#include <hyscan-mark-loc-model.h>
+/*#include <hyscan-object-model.h>
+#include <hyscan-mark-loc-model.h>*/
 #include <hyscan-gtk-mark-manager.h>
-#include <hyscan-model-manager.h>
 
 typedef struct _HyScanGtkMapKitPrivate HyScanGtkMapKitPrivate;
 

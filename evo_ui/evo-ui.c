@@ -364,7 +364,6 @@ mark_exporter (GObject  *emitter,
     {
       HyScanObjectModel  *geo = hyscan_model_manager_get_geo_mark_model (_global->model_manager);
       HyScanMarkLocModel *wf  = hyscan_model_manager_get_acoustic_mark_loc_model (_global->model_manager);
-      /*hyscan_gtk_map_kit_get_mark_backends (global_ui.mapkit, &geo, &wf);*/
 
       switch (selector)
         {
@@ -1375,9 +1374,7 @@ build_interface (Global *global)
     HyScanGeoGeodetic center = {0, 0, 0};
 
     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
-    /*ui->mapkit = hyscan_gtk_map_kit_new (&center, global->db, cache_dir, global->model_manager);*/
     ui->mapkit = hyscan_gtk_map_kit_new (&center, cache_dir, global->model_manager);
-    /*hyscan_gtk_map_kit_set_project (ui->mapkit, global->project_name);*/
 
     profile_dirs = get_profile_dir ();
     for (i = 0; profile_dirs[i] != NULL; ++i)
@@ -1391,10 +1388,6 @@ build_interface (Global *global)
       }
 
     hyscan_gtk_map_kit_add_marks (ui->mapkit);
-/*
-    hyscan_gtk_map_kit_add_marks_wf (ui->mapkit);
-    hyscan_gtk_map_kit_add_marks_geo (ui->mapkit);
-*/
 
     gtk_stack_add_named (GTK_STACK (ui->control_stack), ui->mapkit->control, EVO_MAP);
     gtk_stack_add_named (GTK_STACK (ui->nav_stack), ui->mapkit->navigation, EVO_MAP);
@@ -1438,11 +1431,14 @@ build_interface (Global *global)
     g_object_set (meditor, "vexpand", FALSE, "valign", GTK_ALIGN_END,
                            "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
 
-    gtk_box_pack_start (GTK_BOX (lbox), tracks, TRUE, TRUE, 0);
+    /*gtk_box_pack_start (GTK_BOX (lbox), tracks, TRUE, TRUE, 0);*/
+    gtk_box_pack_start (GTK_BOX (lbox), tracks, FALSE, TRUE, 0);
     gtk_box_pack_start (GTK_BOX (lbox), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
-    gtk_box_pack_start (GTK_BOX (lbox), mlist, TRUE, TRUE, 0);
+    /*gtk_box_pack_start (GTK_BOX (lbox), mlist, TRUE, TRUE, 0);*/
+    gtk_box_pack_start (GTK_BOX (lbox), mlist, FALSE, TRUE, 0);
     /* Журнал меток. */
-    gtk_box_pack_start (GTK_BOX (lbox), mark_manager, FALSE, TRUE, 0);
+    /*gtk_box_pack_start (GTK_BOX (lbox), mark_manager, FALSE, TRUE, 0);*/
+    gtk_box_pack_start (GTK_BOX (lbox), mark_manager, TRUE, TRUE, 0);
     gtk_box_pack_start (GTK_BOX (lbox), meditor, FALSE, FALSE, 0);
     // gtk_box_pack_start (GTK_BOX (lbox), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
 

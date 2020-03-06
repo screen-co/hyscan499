@@ -16,11 +16,11 @@
 #include <hyscan-gtk-project-viewer.h>
 #include <hyscan-gtk-mark-editor.h>
 #include <hyscan-gtk-nav-indicator.h>
+#include <hyscan-gtk-model-manager.h>
 #include <hyscan-tile-color.h>
 #include <hyscan-nmea-parser.h>
 #include <hyscan-mloc.h>
 #include <hyscan-projector.h>
-#include <hyscan-model-manager.h>
 #include <hyscan-cached.h>
 #include <urpc-server.h>
 #include <math.h>
@@ -268,7 +268,6 @@ struct _Global
 
   struct
     {
-      /*HyScanObjectModel  *model;*/ /* модель */
       HyScanMarkSync     *sync;  /* синхронизация */
 
       GHashTable         *loc_storage;  /* хранилище локейшенов и проекторов */

@@ -64,13 +64,9 @@ struct _HyScanGtkMapKitPrivate
   gchar                 *project_name;
   HyScanDB              *db;
   HyScanCache           *cache;
-  /* Менеджер Моделей. */
-  HyScanModelManager    *model_manager;
-  /* Модели данных. */
-  /*HyScanDBInfo          *db_info;          *//* Доступ к данным БД. */
-  /*HyScanObjectModel     *mark_model;       *//* Модель меток водопада. */
-  /*HyScanObjectModel     *mark_geo_model;*/   /* Модель геометок. */
-  /*HyScanMarkLocModel    *ml_model;*/         /* Модель местоположения меток водопада. */
+
+  HyScanModelManager    *model_manager;    /* Менеджер Моделей. */
+
   HyScanNavModel        *nav_model;
 
   GHashTable            *profiles;         /* Хэш-таблица профилей карты. */
@@ -1063,9 +1059,11 @@ create_wfmark_toolbox (HyScanGtkMapKit *kit)
 
   /* Помещаем в панель навигации. */
   gtk_box_pack_start (GTK_BOX (kit->navigation), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
-  gtk_box_pack_start (GTK_BOX (kit->navigation), scrolled_window, TRUE, TRUE, 0);
+  /*gtk_box_pack_start (GTK_BOX (kit->navigation), scrolled_window, TRUE, TRUE, 0);*/
+  gtk_box_pack_start (GTK_BOX (kit->navigation), scrolled_window, FALSE, TRUE, 0);
   if (priv->mark_manager != NULL)
-    gtk_box_pack_start (GTK_BOX (kit->navigation), priv->mark_manager, FALSE, TRUE, 0);
+    /*gtk_box_pack_start (GTK_BOX (kit->navigation), priv->mark_manager, FALSE, TRUE, 0);*/
+     gtk_box_pack_start (GTK_BOX (kit->navigation), priv->mark_manager, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (kit->navigation), priv->mark_editor, FALSE, FALSE, 0);
 }
 
@@ -1093,7 +1091,6 @@ create_track_box (HyScanGtkMapKit *kit,
   g_signal_connect_swapped (priv->track_tree, "destroy", G_CALLBACK (gtk_widget_destroy), priv->track_menu);
   g_signal_connect (priv->track_tree, "button-press-event", G_CALLBACK (on_button_press_event), kit);
   g_signal_connect (priv->track_tree, "row-activated", G_CALLBACK (on_track_activated), kit);
-  /*g_signal_connect (priv->db_info, "tracks-changed", G_CALLBACK (tracks_changed), kit);*/
   /* Область прокрутки со списком галсов. */
   scrolled_window = gtk_scrolled_window_new (NULL, NULL);
   gtk_scrolled_window_set_shadow_type (GTK_SCROLLED_WINDOW (scrolled_window), GTK_SHADOW_IN);
@@ -1105,7 +1102,8 @@ create_track_box (HyScanGtkMapKit *kit,
 
 
   /* Помещаем в панель навигации. */
-  gtk_box_pack_start (box, scrolled_window, TRUE, TRUE, 0);
+  /*gtk_box_pack_start (box, scrolled_window, TRUE, TRUE, 0);*/
+  gtk_box_pack_start (box, scrolled_window, FALSE, TRUE, 0);
 }
 
 static void
@@ -1714,10 +1712,6 @@ hyscan_gtk_map_kit_new (HyScanGeoGeodetic  *center,
       g_object_unref (profile);
     }
 
-  /*hyscan_gtk_map_kit_model_create (kit, db);
-  hyscan_gtk_map_kit_view_create (kit);
-  hyscan_gtk_map_kit_model_init (kit);*/
-
   /*  Подключаем сигнал изменения данных в модели галсов.  */
   g_signal_connect (kit->priv->model_manager,
                     hyscan_model_manager_get_signal_title (kit->priv->model_manager,
@@ -1932,21 +1926,6 @@ void hyscan_gtk_map_kit_add_marks (HyScanGtkMapKit *kit)
   HyScanObjectModel *mark_geo_model = hyscan_model_manager_get_geo_mark_model (priv->model_manager),
                     *mark_model = hyscan_model_manager_get_acoustic_mark_model (priv->model_manager);
   HyScanMarkLocModel *ml_model = hyscan_model_manager_get_acoustic_mark_loc_model (priv->model_manager);
-/*
-  g_return_if_fail (priv->mark_model == NULL);
-  g_return_if_fail (priv->mark_geo_model == NULL);
-  g_return_if_fail (priv->db != NULL);
-*/
-  /* Модели меток водопада и их местоположения. */
-  /*priv->mark_model = hyscan_object_model_new (HYSCAN_TYPE_OBJECT_DATA_WFMARK);*/
-  /*priv->ml_model = hyscan_mark_loc_model_new (priv->db, priv->cache);*/
-
-  /* Подключаемся к ml_model и mark_model, т.к. нужны данные по списку меток, и по их местоположению. */
-  /*g_signal_connect_swapped (priv->ml_model, "changed", G_CALLBACK (on_marks_changed), kit);*/
-  /*g_signal_connect_swapped (priv->ml_model, "changed", G_CALLBACK (on_marks_changed), kit);*/
-  /* Модель геометок. */
-  /*priv->mark_geo_model = hyscan_object_model_new (HYSCAN_TYPE_OBJECT_DATA_GEOMARK);*/
-  /*g_signal_connect_swapped (priv->mark_geo_model, "changed", G_CALLBACK (on_marks_changed), kit);*/
 
   /* Слой с метками. */
   priv->wfmark_layer = hyscan_gtk_map_wfmark_new (ml_model, priv->db, priv->cache);
@@ -1982,10 +1961,6 @@ hyscan_gtk_map_kit_add_marks_wf (HyScanGtkMapKit *kit)
   HyScanObjectModel  *mark_model = hyscan_model_manager_get_acoustic_mark_model (priv->model_manager);
 
   g_return_if_fail (priv->db != NULL);
-
-  /* Модели меток водопада и их местоположения. */
-  /*priv->mark_model = hyscan_object_model_new (HYSCAN_TYPE_OBJECT_DATA_WFMARK);
-  ml_model = hyscan_mark_loc_model_new (priv->db, priv->cache);*/
 
   /* Подключаемся к ml_model и mark_model, т.к. нужны данные по списку меток, и по их местоположению. */
   g_signal_connect_swapped (ml_model, "changed", G_CALLBACK (on_marks_changed), kit);
@@ -2085,16 +2060,6 @@ hyscan_gtk_map_kit_free (HyScanGtkMapKit *kit)
   g_hash_table_destroy (priv->profiles);
   g_clear_object (&priv->cache);
   g_clear_object (&priv->db);
-/*
-  g_clear_object (&priv->ml_model);
-  g_clear_object (&priv->db_info);
-  g_clear_object (&priv->mark_model);
-  g_clear_object (&priv->mark_geo_model);
-*/
-  /*g_object_unref (priv->db_info);*/
-  /*g_object_unref (priv->ml_model);*/
-  /*g_object_unref (priv->mark_model);*/
-  /*g_object_unref (priv->mark_geo_model);*/
 
   g_object_unref (priv->model_manager);
 
