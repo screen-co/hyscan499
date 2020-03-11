@@ -19,19 +19,6 @@
       </packing>
     </child>
     <child>
-      <object class="GtkSwitch" id="start_stop">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <signal name="state-set" handler="ui_start_stop" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">1</property>
-      </packing>
-    </child>
-    <child>
       <object class="GtkSwitch" id="start_stop_dry">
         <property name="can_focus">True</property>
         <property name="no_show_all">True</property>

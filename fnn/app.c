@@ -101,11 +101,6 @@ connector_finished (GtkAssistant *ass,
   if (hyscan_gtk_con_get_result (HYSCAN_GTK_CON (ass)))
     {
       global->control = hyscan_gtk_con_get_control (HYSCAN_GTK_CON (ass));
-      if (global->control != NULL)
-        {
-          global->sonar_model = hyscan_sonar_model_new (global->control);
-        }
-
       con_status = CONNECTOR_CLOSE;
     }
   else
@@ -421,6 +416,17 @@ main (int argc, char **argv)
       hyscan_control_device_bind (global.control);
       hyscan_control_writer_set_db (global.control, global.db);
 
+      global.sonar_model = hyscan_sonar_model_new (global.control);
+
+      /* Обработчик подготавливает панели перед началом работы ГЛ. */
+      g_signal_connect (global.sonar_model, "before-start", G_CALLBACK (before_start), &global);
+
+      /* Обработчик смены статуса работы ГЛ. */
+      g_signal_connect_swapped (global.sonar_model, "start-stop", G_CALLBACK (sonar_state_changed), &global);
+
+      global.recorder = hyscan_sonar_recorder_new (HYSCAN_SONAR (global.sonar_model), global.db);
+      hyscan_sonar_recorder_set_project (global.recorder, global.project_name);
+
       sensors = hyscan_control_sensors_list (global.control);
       for (; sensors != NULL && *sensors != NULL; ++sensors)
         {
@@ -494,6 +500,8 @@ restart:
   global.sound_velocity = sound_velocity;
   global.full_screen = full_screen;
   global.project_name = g_strdup (project_name);
+  if (global.recorder != NULL)
+    hyscan_sonar_recorder_set_project (global.recorder, global.project_name);
 
   // splash = hyscan_fnn_splash_new ();
   // hyscan_fnn_splash_start (splash, "Подключение");

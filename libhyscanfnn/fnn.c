@@ -509,6 +509,9 @@ run_manager (GObject *emitter)
 
       hyscan_object_model_set_project (tglobal->marks.model, tglobal->db, project);
 
+      if (tglobal->recorder != NULL)
+        hyscan_sonar_recorder_set_project (tglobal->recorder, project);
+
       if (tglobal->override.project_changed != NULL)
         tglobal->override.project_changed (tglobal, project);
 
@@ -3256,16 +3259,97 @@ panel_turn_on_off (Global   *global,
   return status;
 }
 
+gboolean
+panels_turn_on (Global *global)
+{
+  GHashTableIter iter;
+  gpointer v;
+
+  /* Проходим по всем страницам и включаем системы локаторов. */
+  g_hash_table_iter_init (&iter, global->panels);
+  while (g_hash_table_iter_next (&iter, NULL, &v))
+    {
+      FnnPanel *panel = v;
+
+      /* Если не удалось запустить какую-либо подсистему. */
+      if (!panel_turn_on_off (global, TRUE, panel))
+        return FALSE;
+    }
+
+  return TRUE;
+}
+
+static gchar *
+make_track_name (Global *global)
+{
+  gint track_num = 1; /* Число галсов в проекте. */
+  gint number;
+  gint32 project_id;
+  gchar **tracks;
+  gchar **strs;
+
+  project_id = hyscan_db_project_open (global->db, global->project_name);
+  tracks = hyscan_db_track_list (global->db, project_id);
+
+  for (strs = tracks; strs != NULL && *strs != NULL; strs++)
+    {
+      /* Ищем галс с самым большим номером в названии. */
+      number = g_ascii_strtoll (*strs, NULL, 10);
+      if (number >= track_num)
+        track_num = number + 1;
+    }
+
+  hyscan_db_close (global->db, project_id);
+  g_free (tracks);
+
+  return g_strdup_printf ("%d%s", track_num, global->dry ? DRY_TRACK_SUFFIX : "");
+}
+
+/* Обработчик сигнала "start-stop" модели ГЛ. Устанавливает состояние global по факту старта и остановки ГЛ. */
+void
+sonar_state_changed (Global      *global,
+                     const gchar *track_name)
+{
+  GHashTableIter iter;
+  gpointer k;
+
+  global->on_air = (track_name != NULL);
+  if (global->on_air)
+    {
+      g_free (global->track_name);
+      global->track_name = g_strdup (track_name);
+    }
+
+  gtk_widget_set_sensitive (GTK_WIDGET (global->gui.track.tree), !global->on_air);
+
+  /* Устанавливаем live_view для всех виджетов. */
+  g_hash_table_iter_init (&iter, global->panels);
+  while (g_hash_table_iter_next (&iter, &k, NULL))
+    live_view (NULL, global->on_air, GPOINTER_TO_INT (k));
+}
+
+/* Обработчик сигнала "before-start" модели ГЛ.
+ * Отменяет запись (возвращает TRUE), если не удалось включить какую-то из панелей. */
+gboolean
+before_start (HyScanSonarModel *model,
+              Global           *global)
+{
+  if (panels_turn_on (global))
+    return FALSE;
+
+  /* Что-то пошло не так, отменяем запуск ГЛ. */
+  g_message ("Failed to turn on some panels. Cancel sonar start");
+
+  return TRUE;
+}
+
 /* Функция включает/выключает излучение. */
 gboolean
 start_stop (Global                *global,
             const HyScanTrackPlan *track_plan,
             gboolean               state)
 {
-  GHashTableIter iter;
-  gpointer k, v;
-
-  if (global->sonar_model == NULL)
+  if (global->control == NULL)
     {
       g_message ("I ain't got no sonar.");
       return FALSE;
@@ -3274,83 +3358,42 @@ start_stop (Global                *global,
   /* Включаем излучение. */
   if (state)
     {
+      gboolean status;
+      gchar *track_name;
+
       g_message ("Start sonars. Dry is %s", global->dry ? "ON" : "OFF");
-      gint track_num = 1;
-      gboolean status = TRUE;
 
       /* Закрываем текущий открытый галс. */
       g_clear_pointer (&global->track_name, g_free);
 
-      /* Проходим по всем страницам и включаем системы локаторов. */
-      g_hash_table_iter_init (&iter, global->panels);
-      while (g_hash_table_iter_next (&iter, &k, &v))
-        {
-          FnnPanel *panel = v;
-          status = panel_turn_on_off (global, TRUE, panel);
-
-          /* Если не удалось запустить какую-либо подсистему. */
-          if (!status)
-            return FALSE;
-        }
-
-      /* Число галсов в проекте. */
-      {
-        gint number;
-        gint32 project_id;
-        gchar **tracks;
-        gchar **strs;
-
-        project_id = hyscan_db_project_open (global->db, global->project_name);
-        tracks = hyscan_db_track_list (global->db, project_id);
-
-        for (strs = tracks; strs != NULL && *strs != NULL; strs++)
-          {
-            /* Ищем галс с самым большим номером в названии. */
-            number = g_ascii_strtoll (*strs, NULL, 10);
-            if (number >= track_num)
-              track_num = number + 1;
-          }
-
-        hyscan_db_close (global->db, project_id);
-        g_free (tracks);
-      }
-
       /* Включаем запись нового галса. */
-      global->track_name = g_strdup_printf ("%d%s", track_num, global->dry ? DRY_TRACK_SUFFIX : "");
+      track_name = make_track_name (global);
 
-      status = hyscan_sonar_start (global->control_s, global->project_name,
-                                   global->track_name, HYSCAN_TRACK_SURVEY, track_plan);
+      /* Перед реальным запуском ГЛ будет отправлен сигнал "before-start",
+       * который вызывает before_start(). */
+      status = hyscan_sonar_start (HYSCAN_SONAR (global->sonar_model), global->project_name,
+                                   track_name, HYSCAN_TRACK_SURVEY, track_plan);
+
+      g_free (track_name);
 
       if (!status)
         {
           g_message ("Sonar startup failed @ %i",__LINE__);
           return FALSE;
         }
-      else
-        {
-          g_message ("Sonar started");
-        }
 
-      /* Если локатор включён, переходим в режим онлайн. */
-      gtk_widget_set_sensitive (GTK_WIDGET (global->gui.track.tree), FALSE);
-
-      global->on_air = TRUE;
+      g_message ("Sonar started");
     }
 
   /* Выключаем излучение и блокируем режим онлайн. */
   else
     {
-      global->on_air = FALSE;
-
       g_message ("Sonar stopped");
       hyscan_sonar_stop (HYSCAN_SONAR (global->sonar_model));
-      gtk_widget_set_sensitive (GTK_WIDGET (global->gui.track.tree), TRUE);
     }
 
-  /* Устанавливаем live_view для всех виджетов. */
-  g_hash_table_iter_init (&iter, global->panels);
-  while (g_hash_table_iter_next (&iter, &k, &v))
-    live_view (NULL, state, GPOINTER_TO_INT (k));
+  /* По факту запуска или остановки ГЛ будет отправлен сигнал "before-start",
+   * который вызывает sonar_state_changed(). */
 
   return TRUE;
 }
@@ -3361,6 +3404,8 @@ set_dry (Global    *global,
          gboolean   state)
 {
   global->dry = state;
+
+  hyscan_sonar_recorder_set_suffix (global->recorder, global->dry ? "-dry" : "");
 
   return TRUE;
 }
