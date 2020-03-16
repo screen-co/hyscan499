@@ -1384,9 +1384,8 @@ get_mark_coords (GHashTable          * locstores,
     {
       LocStore *ls;
       gchar * track_name = NULL;
-
-      /*track_name = get_track_name_by_id (global->db_info, mark->track);*/
       HyScanDBInfo *db_info = hyscan_model_manager_get_track_model (global->model_manager);
+
       track_name = get_track_name_by_id (db_info, mark->track);
       g_object_unref (db_info);
       if (track_name == NULL)
