@@ -7,6 +7,7 @@
 #include <hyscan-sensor.h>
 #include <hyscan-object-model.h>
 #include <hyscan-mark-loc-model.h>
+#include <hyscan-sonar-recorder.h>
 
 typedef struct _HyScanGtkMapKitPrivate HyScanGtkMapKitPrivate;
 
@@ -44,6 +45,7 @@ void              hyscan_gtk_map_kit_set_user_dir     (HyScanGtkMapKit          
 void              hyscan_gtk_map_kit_add_nav          (HyScanGtkMapKit            *kit,
                                                        HyScanSensor               *sensor,
                                                        const gchar                *sensor_name,
+                                                       HyScanSonarRecorder        *recorder,
                                                        const HyScanAntennaOffset  *offset,
                                                        gdouble                     delay_time);
 
@@ -65,9 +67,6 @@ void              hyscan_gtk_map_kit_free             (HyScanGtkMapKit          
 
 GtkTreeView *     hyscan_gtk_map_kit_get_track_view   (HyScanGtkMapKit            *kit,
                                                        gint                       *track_col);
-
-void              hyscan_gtk_map_kit_set_rec_switch   (HyScanGtkMapKit            *kit,
-                                                       GtkSwitch                  *widget);
 
 void              hyscan_gtk_map_kit_kf_setup         (HyScanGtkMapKit            *kit,
                                                        GKeyFile                   *kf);
