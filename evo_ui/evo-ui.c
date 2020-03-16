@@ -640,13 +640,12 @@ sensor_toggle_wrapper (GtkCheckMenuItem *mitem,
 
 /* Обработчик сигнала о старте или остановке работы гидролокатора. */
 void
-ui_start_stop (HyScanSonarModel *sonar_model,
-               const gchar      *track_name)
+ui_start_stop (HyScanSonarModel *sonar_model)
 {
   EvoUI *ui = &global_ui;
   gboolean state;
 
-  state = (track_name != NULL);
+  state = hyscan_sonar_state_get_start (HYSCAN_SONAR_STATE (sonar_model), NULL, NULL, NULL, NULL);
 
   gtk_widget_set_sensitive (ui->starter.dry_switch, !state);
   gtk_widget_set_sensitive (GTK_WIDGET (ui->starter.dry_menu), !state);

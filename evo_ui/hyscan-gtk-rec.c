@@ -23,8 +23,7 @@ static void     hyscan_gtk_rec_object_constructed       (GObject               *
 static void     hyscan_gtk_rec_object_finalize          (GObject               *object);
 static gboolean hyscan_gtk_rec_state_set                (HyScanGtkRec          *gtk_rec,
                                                          gboolean               state);
-static void     hyscan_gtk_rec_state_start_stop         (HyScanGtkRec          *gtk_rec,
-                                                         const gchar           *track_name);
+static void     hyscan_gtk_rec_state_start_stop         (HyScanGtkRec          *gtk_rec);
 
 G_DEFINE_TYPE_WITH_PRIVATE (HyScanGtkRec, hyscan_gtk_rec, GTK_TYPE_SWITCH)
 
@@ -107,14 +106,16 @@ hyscan_gtk_rec_object_finalize (GObject *object)
 
 /* Обработчик сигнала "start-stop" синхронизирует положение тумблера со статусом работы ГЛ. */
 static void
-hyscan_gtk_rec_state_start_stop (HyScanGtkRec *gtk_rec,
-                                 const gchar  *track_name)
+hyscan_gtk_rec_state_start_stop (HyScanGtkRec *gtk_rec)
 {
   HyScanGtkRecPrivate *priv = gtk_rec->priv;
+  gboolean state;
+
+  state = hyscan_sonar_state_get_start (HYSCAN_SONAR_STATE (priv->sonar), NULL, NULL, NULL, NULL);
 
   /* Переводим виджет в новое состояние без обработчика. */
   g_signal_handler_block (gtk_rec, priv->handler_id);
-  gtk_switch_set_state (GTK_SWITCH (gtk_rec), track_name != NULL);
+  gtk_switch_set_state (GTK_SWITCH (gtk_rec), state);
   g_signal_handler_unblock (gtk_rec, priv->handler_id);
 }
 

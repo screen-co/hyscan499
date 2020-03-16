@@ -3307,17 +3307,18 @@ make_track_name (Global *global)
 
 /* Обработчик сигнала "start-stop" модели ГЛ. Устанавливает состояние global по факту старта и остановки ГЛ. */
 void
-sonar_state_changed (Global      *global,
-                     const gchar *track_name)
+sonar_state_changed (Global *global)
 {
   GHashTableIter iter;
   gpointer k;
+  gchar *track_name;
 
-  global->on_air = (track_name != NULL);
+  global->on_air = hyscan_sonar_state_get_start (HYSCAN_SONAR_STATE (global->sonar_model),
+                                                 NULL, &track_name, NULL, NULL);
   if (global->on_air)
     {
       g_free (global->track_name);
-      global->track_name = g_strdup (track_name);
+      global->track_name = track_name;
     }
 
   gtk_widget_set_sensitive (GTK_WIDGET (global->gui.track.tree), !global->on_air);
@@ -3405,7 +3406,7 @@ set_dry (Global    *global,
 {
   global->dry = state;
 
-  hyscan_sonar_recorder_set_suffix (global->recorder, global->dry ? "-dry" : "");
+  hyscan_sonar_recorder_set_suffix (global->recorder, global->dry ? "-dry" : "", FALSE);
 
   return TRUE;
 }

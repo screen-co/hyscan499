@@ -761,8 +761,7 @@ before_start (HyScanSonarModel *model,
               Global           *global);
 
 HYSCAN_API void
-sonar_state_changed (Global      *global,
-                     const gchar *track_name);
+sonar_state_changed (Global *global);
 
 HYSCAN_API gboolean
 set_dry (Global    *global,
