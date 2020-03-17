@@ -390,17 +390,17 @@ hyscan_gtk_mark_export_save_tile (HyScanMarkLocation *location,     /* Метк�
 
                   switch (location->direction)
                     {
-                      case HYSCAN_MARK_LOCATION_PORT:
-                        board = g_strdup (_("Port"));
+                    case HYSCAN_MARK_LOCATION_PORT:
+                      board = g_strdup (_("Port"));
                       break;
-                      case HYSCAN_MARK_LOCATION_STARBOARD:
-                        board = g_strdup (_("Starboard"));
+                    case HYSCAN_MARK_LOCATION_STARBOARD:
+                      board = g_strdup (_("Starboard"));
                       break;
-                      case HYSCAN_MARK_LOCATION_BOTTOM:
-                        board = g_strdup (_("Bottom"));
+                    case HYSCAN_MARK_LOCATION_BOTTOM:
+                      board = g_strdup (_("Bottom"));
                       break;
-                      default:
-                        board = g_strdup (_(unknown));
+                    default:
+                      board = g_strdup (_(unknown));
                       break;
                     }
 
@@ -1041,7 +1041,7 @@ hyscan_gtk_mark_export_get_wfmark_width (HyScanMarkLocation  *location)
   else if (location->direction == HYSCAN_MARK_LOCATION_PORT)
     {
       /* Поэтому значения отрицательные, и start и end меняются местами. */
-      gdouble across_start = -location->mark->width - location->across ;
+      gdouble across_start = -location->mark->width - location->across;
       gdouble across_end   =  location->mark->width - location->across;
       if (across_start < 0 && across_end > 0)
         {
