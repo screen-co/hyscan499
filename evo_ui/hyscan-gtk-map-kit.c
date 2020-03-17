@@ -125,7 +125,6 @@ struct _HyScanGtkMapKitPrivate
   GtkButton               *preload_button;   /* Кнопка загрузки тайлов. */
   GtkProgressBar          *preload_progress; /* Индикатор загрузки тайлов. */
   GtkWidget               *steer_box;        /* Контейнер для виджета навигации по отклонениям от плана. */
-  GtkWidget               *autorec_btn;      /* Чекбокс для старта автоматической записи. */
   HyScanSonarRecorder     *recorder;         /* Управление записью галса. */
 
   GtkTreeView             *track_tree;       /* GtkTreeView со списком галсов. */
@@ -2131,6 +2130,7 @@ add_steer (HyScanGtkMapKit *kit)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
   GtkWidget *direction;
+  GtkWidget *autostart, *autoselect;
   HyScanSteer *steer;
 
   /* Отклонение от курса. */
@@ -2141,9 +2141,13 @@ add_steer (HyScanGtkMapKit *kit)
   priv->steer = hyscan_gtk_map_steer_new (steer);
 
   direction = hyscan_gtk_map_direction_new (HYSCAN_GTK_MAP (kit->map), priv->planner_selection, priv->nav_model);
-  priv->autorec_btn = gtk_check_button_new_with_mnemonic (_("_Autostart recording"));
-  g_object_bind_property (priv->autorec_btn, "active", steer, "autostart", G_BINDING_SYNC_CREATE);
-  gtk_container_add (GTK_CONTAINER (direction), priv->autorec_btn);
+  autostart = gtk_check_button_new_with_mnemonic (_("_Autostart recording"));
+  g_object_bind_property (autostart, "active", steer, "autostart", G_BINDING_SYNC_CREATE);
+  autoselect = gtk_check_button_new_with_mnemonic (_("_Select track automatically"));
+  g_object_bind_property (autoselect, "active", steer, "autoselect", G_BINDING_SYNC_CREATE);
+
+  gtk_container_add (GTK_CONTAINER (direction), autostart);
+  gtk_container_add (GTK_CONTAINER (direction), autoselect);
   gtk_box_pack_start (GTK_BOX (priv->steer_box), priv->steer, TRUE, TRUE, 0);
   gtk_box_pack_start (GTK_BOX (priv->steer_box), direction,   TRUE, TRUE, 0);
   g_object_unref (steer);
