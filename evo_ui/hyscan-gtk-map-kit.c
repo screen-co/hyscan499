@@ -14,7 +14,6 @@
 #include <hyscan-profile-map.h>
 #include <hyscan-db-info.h>
 #include <hyscan-gtk-map-scale.h>
-#include <hyscan-gtk-param-list.h>
 #include <hyscan-gtk-map-wfmark.h>
 #include <hyscan-object-model.h>
 #include <hyscan-planner-model.h>
@@ -38,6 +37,7 @@
 #include <hyscan-gtk-planner-import.h>
 #include <hyscan-gtk-param-merge.h>
 #include <hyscan-param-merge.h>
+#include <hyscan-nav-model.h>
 
 #define PROFILE_EXTENSION    ".ini"
 #define DEFAULT_PROFILE_NAME "default"    /* Имя профиля карты по умолчанию. */
@@ -1131,9 +1131,9 @@ static void
 on_locate_click (HyScanGtkMapKit *kit)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
-  HyScanNavModelData data;
+  HyScanNavStateData data;
 
-  if (hyscan_nav_model_get (priv->nav_model, &data, NULL))
+  if (hyscan_nav_state_get (HYSCAN_NAV_STATE (priv->nav_model), &data, NULL))
     hyscan_gtk_map_move_to (HYSCAN_GTK_MAP (kit->map), data.coord);
 }
 
@@ -2137,10 +2137,10 @@ add_steer (HyScanGtkMapKit *kit)
   if (priv->nav_model == NULL || priv->planner_selection == NULL)
     return;
 
-  steer = hyscan_steer_new (priv->nav_model, priv->planner_selection, priv->recorder);
+  steer = hyscan_steer_new (HYSCAN_NAV_STATE (priv->nav_model), priv->planner_selection, priv->recorder);
   priv->steer = hyscan_gtk_map_steer_new (steer);
 
-  direction = hyscan_gtk_map_direction_new (HYSCAN_GTK_MAP (kit->map), priv->planner_selection, priv->nav_model);
+  direction = hyscan_gtk_map_direction_new (HYSCAN_GTK_MAP (kit->map), priv->planner_selection, HYSCAN_NAV_STATE (priv->nav_model));
   autostart = gtk_check_button_new_with_mnemonic (_("_Autostart recording"));
   g_object_bind_property (autostart, "active", steer, "autostart", G_BINDING_SYNC_CREATE);
   autoselect = gtk_check_button_new_with_mnemonic (_("_Select track automatically"));
