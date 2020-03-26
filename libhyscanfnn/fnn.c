@@ -3744,6 +3744,8 @@ fnn_deinit (Global *ext_global)
 
   if (settings != NULL)
     {
+      HyScanUnitsGeo geo_units;
+
       if (ext_global->panels != NULL)
         {
           GHashTableIter iter;
@@ -3774,6 +3776,9 @@ fnn_deinit (Global *ext_global)
 
       if (ext_global->project_name != NULL)
         keyfile_string_write_helper (settings, "common", "project", ext_global->project_name);
+
+      geo_units = hyscan_units_get_geo (ext_global->units);
+      keyfile_string_write_helper (settings, "units", "geo", hyscan_units_id_by_geo (geo_units));
     }
 
   tglobal = NULL;

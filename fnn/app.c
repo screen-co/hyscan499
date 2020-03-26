@@ -306,7 +306,18 @@ main (int argc, char **argv)
   global.settings = g_key_file_new ();
   g_key_file_load_from_file (global.settings, settings_file, G_KEY_FILE_NONE, NULL);
 
+  global.units = hyscan_units_new ();
+  /* Считываем из настроек единицы измерения. */
+  {
+    gchar *geo_units;
 
+    geo_units = keyfile_string_read_helper (global.settings, "units", "geo");
+    if (geo_units != NULL)
+      {
+        hyscan_units_set_geo (global.units, hyscan_units_geo_by_id (geo_units));
+        g_free (geo_units);
+      }
+  }
 
   /***
    *     ___   ___         ___         ___
@@ -507,7 +518,7 @@ restart:
   /* Навигационные данные. */
   if (global.control != NULL)
     {
-      global.gui.nav = hyscan_gtk_nav_indicator_new (HYSCAN_SENSOR (global.control));
+      global.gui.nav = hyscan_gtk_nav_indicator_new (HYSCAN_SENSOR (global.control), global.units);
       gtk_box_pack_end (GTK_BOX (global.gui.nav), hyscan_gtk_dev_indicator_new (global.control), FALSE, FALSE, 0);
     }
 
@@ -532,7 +543,7 @@ restart:
   global.marks.loc_storage = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
                                                     (GDestroyNotify) loc_store_free);
   global.gui.mark_view = hyscan_gtk_project_viewer_new ();
-  global.gui.meditor = hyscan_gtk_mark_editor_new ();
+  global.gui.meditor = hyscan_gtk_mark_editor_new (global.units);
 
   hyscan_object_model_set_project (global.marks.model, global.db, global.project_name);
   g_signal_connect (global.marks.model, "changed", G_CALLBACK (mark_model_changed), &global);
@@ -609,6 +620,7 @@ exit:
   g_clear_object (&common_builder);
 
   g_clear_pointer (&global.settings, g_key_file_unref);
+  g_clear_object (&global.units);
   g_clear_object (&global.cache);
   g_clear_object (&global.db_info);
   g_clear_object (&global.db);
