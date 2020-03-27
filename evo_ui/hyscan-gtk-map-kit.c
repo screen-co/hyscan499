@@ -127,6 +127,10 @@ static void     hyscan_gtk_map_kit_track_enable (HyScanGtkMapKit      *kit,
 static void     hyscan_gtk_map_kit_on_changed_combo_box (
                                                  GtkComboBox          *combo,
                                                  HyScanGtkLayer       *layer);
+
+static void     hyscan_gtk_map_kit_project_name_changes (HyScanGtkMapKit  *kit,
+                                                         GParamSpec       *pspec);
+
 #if !GLIB_CHECK_VERSION (2, 44, 0)
 static gboolean g_strv_contains               (const gchar * const  *strv,
                                                const gchar          *str);
@@ -324,8 +328,11 @@ track_tree_view_visible_changed (HyScanGtkMapKit     *kit,
 
      gtk_tree_model_get (GTK_TREE_MODEL (priv->track_store), &iter, TRACK_COLUMN, &track_name, -1);
 
-     active = g_strv_contains (visible_tracks, track_name);
-     gtk_list_store_set (priv->track_store, &iter, VISIBLE_COLUMN, active, -1);
+     if (visible_tracks != NULL)
+       {
+         active = g_strv_contains (visible_tracks, track_name);
+         gtk_list_store_set (priv->track_store, &iter, VISIBLE_COLUMN, active, -1);
+       }
 
      g_free (track_name);
 
@@ -1702,6 +1709,15 @@ nav_tools (HyScanGtkMapKit *kit)
   return grid;
 }
 
+void
+hyscan_gtk_map_kit_project_name_changes (HyScanGtkMapKit  *kit,
+                                         GParamSpec       *pspec)
+{
+  g_return_if_fail (G_IS_PARAM_SPEC(pspec));
+
+  hyscan_gtk_map_kit_set_project (kit, hyscan_model_manager_get_project_name (kit->priv->model_manager));
+}
+
 /**
  * hyscan_gtk_map_kit_new_map:
  * @center: центр карты
@@ -1719,7 +1735,6 @@ hyscan_gtk_map_kit_new (HyScanGeoGeodetic  *center,
                         const gchar        *cache_dir)
 {
   HyScanGtkMapKit    *kit;
-  HyScanDBInfo       *db_info;
 
   g_return_val_if_fail (HYSCAN_IS_MODEL_MANAGER (model_manager), NULL);
 
@@ -1740,7 +1755,6 @@ hyscan_gtk_map_kit_new (HyScanGeoGeodetic  *center,
 
   g_return_val_if_fail (HYSCAN_IS_DB (kit->priv->db), NULL);
 
-  db_info = hyscan_model_manager_get_track_model (kit->priv->model_manager);
   kit->map = create_map (kit);
   create_layers (kit);
 
@@ -1748,17 +1762,12 @@ hyscan_gtk_map_kit_new (HyScanGeoGeodetic  *center,
   kit->control    = create_control_box (kit);
   kit->status_bar = create_status_bar (kit);
 
-  kit->priv->project_name = hyscan_model_manager_get_project_name (kit->priv->model_manager);
+  kit->priv->project_name = (gchar*)hyscan_model_manager_get_project_name (kit->priv->model_manager);
 
   if (0 == g_strcmp0 (kit->priv->project_name, ""))
     {
       g_warning ("HyScanGtkMapKit has empty project name.");
     }
-
-  if (db_info != NULL && kit->priv->project_name != NULL)
-      hyscan_db_info_set_project (db_info, kit->priv->project_name);
-
-  g_object_unref (db_info);
 
   if (kit->priv->track_layer != NULL)
     {
@@ -1784,7 +1793,7 @@ hyscan_gtk_map_kit_new (HyScanGeoGeodetic  *center,
       g_object_unref (profile);
     }
 
-  /*  Подключаем сигнал изменения данных в модели галсов.  */
+  /*  Подключаем сигнал изменения данных в модели галсов. */
   g_signal_connect (kit->priv->model_manager,
                     hyscan_model_manager_get_signal_title (kit->priv->model_manager,
                                                            SIGNAL_TRACKS_CHANGED),
@@ -1796,11 +1805,16 @@ hyscan_gtk_map_kit_new (HyScanGeoGeodetic  *center,
                                                                    SIGNAL_ACOUSTIC_MARKS_LOC_CHANGED),
                             G_CALLBACK (on_marks_changed),
                             kit);
-  /* Подключаем сигнал изменения данных в модели гео-меток.*/
+  /* Подключаем сигнал изменения данных в модели гео-меток. */
   g_signal_connect_swapped (kit->priv->model_manager,
                             hyscan_model_manager_get_signal_title (kit->priv->model_manager,
                                                                    SIGNAL_GEO_MARKS_CHANGED),
                             G_CALLBACK (on_marks_changed),
+                            kit);
+  /* Подключаем сигнал изменения названия проекта. */
+  g_signal_connect_swapped (kit->priv->model_manager,
+                            "notify::project-name",
+                            G_CALLBACK (hyscan_gtk_map_kit_project_name_changes),
                             kit);
   return kit;
 }
@@ -1810,40 +1824,12 @@ hyscan_gtk_map_kit_set_project (HyScanGtkMapKit *kit,
                                 const gchar     *project_name)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
-  HyScanDBInfo *db_info = hyscan_model_manager_get_track_model (priv->model_manager);
-  HyScanObjectModel *mark_geo_model = hyscan_model_manager_get_geo_mark_model (priv->model_manager),
-                    *mark_model = hyscan_model_manager_get_acoustic_mark_model (priv->model_manager);
-  HyScanMarkLocModel *ml_model = hyscan_model_manager_get_acoustic_mark_loc_model (priv->model_manager);
+
+  kit->priv->project_name = (gchar*)project_name;
 
   /* Очищаем список активных галсов, только если уже был открыт другой проект. */
   if (priv->project_name != NULL)
     hyscan_gtk_map_kit_set_tracks (kit, (gchar **) { NULL });
-
-  g_free (priv->project_name);
-  priv->project_name = g_strdup (project_name);
-
-  if (db_info)
-    {
-      hyscan_db_info_set_project (db_info, priv->project_name);
-      g_object_unref (db_info);
-    }
-
-  /* Устанавливаем проект во всех сущностях. */
-  if (mark_geo_model != NULL)
-    {
-      hyscan_object_model_set_project (mark_geo_model, priv->db, priv->project_name);
-      g_object_unref (mark_geo_model);
-    }
-
-  if (mark_model != NULL)
-    hyscan_object_model_set_project (mark_model, priv->db, priv->project_name);
-
-  if (ml_model != NULL)
-    {
-      hyscan_mark_loc_model_set_project (ml_model, priv->project_name);
-      g_object_unref (ml_model);
-    }
-
   if (priv->track_layer != NULL)
     hyscan_gtk_map_track_set_project (HYSCAN_GTK_MAP_TRACK (priv->track_layer), priv->project_name);
   if (priv->wfmark_layer != NULL)

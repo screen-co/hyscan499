@@ -472,12 +472,11 @@ evo_brightness_set_override (Global  *global,
   return TRUE;
 }
 
-
 void
-evo_project_changed_override (Global *global,
-                          const gchar * project)
+evo_project_changed_override (Global      *global,
+                              const gchar *project)
 {
-  hyscan_gtk_map_kit_set_project (global_ui.mapkit, project);
+  hyscan_model_manager_set_project_name (_global->model_manager, project);
 }
 /***
  *     #     # ######     #    ######  ######  ####### ######   #####
