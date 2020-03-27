@@ -1771,6 +1771,9 @@ kf_desetup (GKeyFile *kf)
         continue;
 
       adj = g_hash_table_lookup (ui->balance_table, k);
+      if (adj == NULL)
+        continue;
+
       balance = gtk_adjustment_get_value (adj);
       keyfile_double_write_helper (ui->settings, panel->name, "evo.balance", balance);
     }

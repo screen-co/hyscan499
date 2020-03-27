@@ -1400,6 +1400,8 @@ make_marks_with_coords (HyScanObjectModel *model,
         g_hash_table_insert (marks, g_strdup (key), mark_ll);
     }
 
+  g_hash_table_unref (pure_marks);
+
   return marks;
 }
 
