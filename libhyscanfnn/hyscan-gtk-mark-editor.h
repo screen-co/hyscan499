@@ -3,6 +3,7 @@
 
 #include <gtk/gtk.h>
 #include <hyscan-api.h>
+#include <hyscan-units.h>
 
 G_BEGIN_DECLS
 
@@ -43,7 +44,7 @@ HYSCAN_API
 GType       hyscan_gtk_mark_editor_get_type  (void);
 
 HYSCAN_API
-GtkWidget*  hyscan_gtk_mark_editor_new       (void);
+GtkWidget*  hyscan_gtk_mark_editor_new       (HyScanUnits           *units);
 
 HYSCAN_API
 void        hyscan_gtk_mark_editor_set_mark  (HyScanGtkMarkEditor   *mark_editor,

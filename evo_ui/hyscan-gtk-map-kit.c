@@ -62,6 +62,15 @@ enum
 struct _HyScanGtkMapKitPrivate
 {
   gchar                 *project_name;
+
+  /* Модели данных. */
+  HyScanDBInfo          *db_info;          /* Доступ к данным БД. */
+  HyScanObjectModel     *mark_model;       /* Модель меток водопада. */
+  HyScanObjectModel     *mark_geo_model;   /* Модель геометок. */
+  HyScanMarkLocModel    *ml_model;         /* Модель местоположения меток водопада. */
+
+  HyScanUnits           *units;
+
   HyScanDB              *db;
   HyScanCache           *cache;
 
@@ -1000,7 +1009,7 @@ create_mark_editor (HyScanGtkMapKit *kit,
   GtkWidget *mark_editor;
   GtkTreeSelection *selection;
 
-  mark_editor = hyscan_gtk_mark_editor_new ();
+  mark_editor = hyscan_gtk_mark_editor_new (kit->priv->units);
   selection = gtk_tree_view_get_selection (mark_tree);
 
   g_signal_connect (selection,   "changed",       G_CALLBACK (on_marks_selected), kit);
@@ -1121,12 +1130,19 @@ on_motion_show_coords (HyScanGtkMap    *map,
                        GdkEventMotion  *event,
                        HyScanGtkMapKit *kit)
 {
+  HyScanGtkMapKitPrivate *priv = kit->priv;
   HyScanGeoGeodetic geo;
   gchar text[255];
+  gchar *lat, *lon;
 
   hyscan_gtk_map_point_to_geo (map, &geo, event->x, event->y);
-  g_snprintf (text, sizeof (text), "%.6f° %.6f°", geo.lat, geo.lon);
+  lat = hyscan_units_format (priv->units, HYSCAN_UNIT_TYPE_LAT, geo.lat, 6);
+  lon = hyscan_units_format (priv->units, HYSCAN_UNIT_TYPE_LON, geo.lon, 6);
+  g_snprintf (text, sizeof (text), "%s, %s", lat, lon);
   gtk_statusbar_push (GTK_STATUSBAR (kit->priv->stbar_coord), 0, text);
+
+  g_free (lat);
+  g_free (lon);
 
   return FALSE;
 }
@@ -1144,6 +1160,57 @@ create_ruler_toolbox (HyScanGtkLayer *layer,
 
   return ctrl_widget;
 }
+
+static void
+geo_units_change (GtkToggleButton   *button,
+                  GParamSpec        *pspec,
+                  HyScanGtkMapKit   *kit)
+{
+  HyScanUnitsGeo geo_units;
+
+  if (!gtk_toggle_button_get_active (button))
+    return;
+
+  geo_units = GPOINTER_TO_INT (g_object_get_data (G_OBJECT (button), "unit"));
+  hyscan_units_set_geo (kit->priv->units, geo_units);
+}
+
+/* Создаёт панель инструментов для слоя сетки. */
+static GtkWidget *
+create_grid_toolbox (HyScanGtkMapKit *kit)
+{
+  GtkWidget *box, *btn_widget = NULL;
+  HyScanUnitsGeo geo_units;
+  guint i;
+  struct {
+    HyScanUnitsGeo  value;
+    const gchar    *label;
+    GtkWidget      *widget;
+  } btn[] = {
+      { HYSCAN_UNITS_GEO_DD,     N_("Decimal Degree"), NULL },
+      { HYSCAN_UNITS_GEO_DDMM,   N_("Degree Minute"), NULL },
+      { HYSCAN_UNITS_GEO_DDMMSS, N_("Degree Minute Second"), NULL },
+  };
+
+  geo_units = hyscan_units_get_geo (kit->priv->units);
+
+  box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
+  gtk_box_pack_start (GTK_BOX (box), gtk_label_new (_("Coordinate Units")), FALSE, TRUE, 0);
+
+  for (i = 0; i < G_N_ELEMENTS (btn); i++)
+    {
+      btn_widget = gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (btn_widget), _(btn[i].label));
+      if (geo_units == btn[i].value)
+        gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (btn_widget), TRUE);
+
+      g_object_set_data (G_OBJECT (btn_widget), "unit", GINT_TO_POINTER (btn[i].value));
+      g_signal_connect (btn_widget, "notify::active", G_CALLBACK (geo_units_change), kit);
+      gtk_box_pack_start (GTK_BOX (box), btn_widget, FALSE, TRUE, 0);
+    }
+
+  return box;
+}
+
 /* Список галсов и меток. */
 static GtkWidget *
 create_navigation_box (HyScanGtkMapKit *kit)
@@ -1394,6 +1461,8 @@ create_control_box (HyScanGtkMapKit *kit)
                                      create_ruler_toolbox (priv->pin_layer, _("Remove all pins")));
     hyscan_gtk_layer_list_set_tools (HYSCAN_GTK_LAYER_LIST (priv->layer_list), "base",
                                      create_nav_input (kit));
+    hyscan_gtk_layer_list_set_tools (HYSCAN_GTK_LAYER_LIST (priv->layer_list), "grid",
+                                     create_grid_toolbox (kit));
   }
 
   gtk_grid_attach (GTK_GRID (ctrl_box), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), 0, ++t, 5, 1);
@@ -1408,7 +1477,7 @@ create_layers (HyScanGtkMapKit *kit)
   HyScanGtkMapKitPrivate *priv = kit->priv;
 
   priv->base_layer = hyscan_gtk_map_base_new (priv->cache);
-  priv->map_grid = hyscan_gtk_map_grid_new ();
+  priv->map_grid = hyscan_gtk_map_grid_new (priv->units);
   priv->ruler = hyscan_gtk_map_ruler_new ();
   priv->pin_layer = hyscan_gtk_map_pin_new ();
 
@@ -1637,6 +1706,7 @@ nav_tools (HyScanGtkMapKit *kit)
  * hyscan_gtk_map_kit_new_map:
  * @center: центр карты
  * @db: указатель на #HyScanDB
+ * @units: единицы измерения
  * @cache_dir: папка для кэширования тайлов
  *
  * Returns: указатель на структуру #HyScanGtkMapKit, для удаления
@@ -1644,8 +1714,9 @@ nav_tools (HyScanGtkMapKit *kit)
  */
 HyScanGtkMapKit *
 hyscan_gtk_map_kit_new (HyScanGeoGeodetic  *center,
-                        const gchar        *cache_dir,
-                        HyScanModelManager *model_manager)
+                        HyScanModelManager *model_manager,
+                        HyScanUnits        *units,
+                        const gchar        *cache_dir)
 {
   HyScanGtkMapKit    *kit;
   HyScanDBInfo       *db_info;
@@ -1656,6 +1727,7 @@ hyscan_gtk_map_kit_new (HyScanGeoGeodetic  *center,
   kit->priv = g_new0 (HyScanGtkMapKitPrivate, 1);
   kit->priv->tile_cache_dir = g_strdup (cache_dir);
   kit->priv->center = *center;
+  kit->priv->units = g_object_ref (units);
 
   kit->priv->profiles = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
 
@@ -1928,7 +2000,7 @@ void hyscan_gtk_map_kit_add_marks (HyScanGtkMapKit *kit)
   HyScanMarkLocModel *ml_model = hyscan_model_manager_get_acoustic_mark_loc_model (priv->model_manager);
 
   /* Слой с метками. */
-  priv->wfmark_layer = hyscan_gtk_map_wfmark_new (ml_model, priv->db, priv->cache);
+  priv->wfmark_layer = hyscan_gtk_map_wfmark_new (ml_model, priv->db, priv->cache, priv->units);
   add_layer_row (kit, priv->wfmark_layer, FALSE, "wfmark", _("Waterfall Marks"));
   hyscan_gtk_layer_list_set_tools (HYSCAN_GTK_LAYER_LIST (priv->layer_list), "wfmark",
                                    create_wfmark_layer_toolbox (priv->wfmark_layer));
@@ -1966,7 +2038,11 @@ hyscan_gtk_map_kit_add_marks_wf (HyScanGtkMapKit *kit)
   g_signal_connect_swapped (ml_model, "changed", G_CALLBACK (on_marks_changed), kit);
 
   /* Слой с метками. */
-  priv->wfmark_layer = hyscan_gtk_map_wfmark_new (ml_model, priv->db, priv->cache);
+/*<<<<<<< HEAD*/
+/*  priv->wfmark_layer = hyscan_gtk_map_wfmark_new (ml_model, priv->db, priv->cache);*/
+/*======= */
+  priv->wfmark_layer = hyscan_gtk_map_wfmark_new (priv->ml_model, priv->db, priv->cache, priv->units);
+/*>>>>>>> origin/wip/hyscan499*/
   add_layer_row (kit, priv->wfmark_layer, FALSE, "wfmark", _("Waterfall Marks"));
   hyscan_gtk_layer_list_set_tools (HYSCAN_GTK_LAYER_LIST (priv->layer_list), "wfmark",
                                    create_wfmark_layer_toolbox (priv->wfmark_layer));
@@ -2065,6 +2141,7 @@ hyscan_gtk_map_kit_free (HyScanGtkMapKit *kit)
 
   g_clear_object (&priv->track_store);
   g_clear_object (&priv->mark_store);
+  g_clear_object (&priv->units);
   g_free (priv);
 
   g_free (kit);

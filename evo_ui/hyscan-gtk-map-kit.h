@@ -2,10 +2,9 @@
 #define __HYSCAN_GTK_MAP_KIT_H__
 
 #include <hyscan-gtk-map.h>
-/*#include <hyscan-db.h>*/
+#include <hyscan-units.h>
+#include <hyscan-db.h>
 #include <hyscan-sensor.h>
-/*#include <hyscan-object-model.h>
-#include <hyscan-mark-loc-model.h>*/
 #include <hyscan-gtk-mark-manager.h>
 
 typedef struct _HyScanGtkMapKitPrivate HyScanGtkMapKitPrivate;
@@ -21,9 +20,10 @@ typedef struct
   HyScanGtkMapKitPrivate *priv;
 } HyScanGtkMapKit;
 
-HyScanGtkMapKit * hyscan_gtk_map_kit_new              (HyScanGeoGeodetic          *center,
-                                                       const gchar                *cache_dir,
-                                                       HyScanModelManager         *model_manager);
+HyScanGtkMapKit * hyscan_gtk_map_kit_new              (HyScanGeoGeodetic  *center,
+                                                       HyScanModelManager *model_manager,
+                                                       HyScanUnits        *units,
+                                                       const gchar        *cache_dir);
 
 void              hyscan_gtk_map_kit_set_project      (HyScanGtkMapKit            *kit,
                                                        const gchar                *project_name);

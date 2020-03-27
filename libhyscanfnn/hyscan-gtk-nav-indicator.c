@@ -7,7 +7,8 @@
 
 enum
 {
-  PROP_SENSOR = 1
+  PROP_SENSOR = 1,
+  PROP_UNITS,
 };
 
 struct _HyScanGtkNavIndicatorPrivate
@@ -50,6 +51,7 @@ struct _HyScanGtkNavIndicatorPrivate
   GtkLabel           * rll;
 
   HyScanSensor       * sensor;
+  HyScanUnits        * units;
   guint                update_tag;
   guint                sensor_data_id;
   GMutex               lock;
@@ -103,6 +105,9 @@ hyscan_gtk_nav_indicator_class_init (HyScanGtkNavIndicatorClass *klass)
   g_object_class_install_property (oclass, PROP_SENSOR,
     g_param_spec_object("sensor", "sensor", "sensor", HYSCAN_TYPE_SENSOR,
                         G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
+  g_object_class_install_property (oclass, PROP_UNITS,
+    g_param_spec_object("units", "units", "units", HYSCAN_TYPE_UNITS,
+                        G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
@@ -122,6 +127,8 @@ hyscan_gtk_nav_indicator_set_property (GObject      *object,
 
   if (prop_id == PROP_SENSOR)
     self->priv->sensor = g_value_dup_object (value);
+  else if (prop_id == PROP_UNITS)
+    self->priv->units = g_value_dup_object (value);
   else
     G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
 }
@@ -290,8 +297,15 @@ hyscan_gtk_nav_indicator_parse (HyScanGtkNavIndicator *self,
     }
   if (ll_ok)
     {
-      hyscan_gtk_nav_indicator_printer (&priv->string.lat, "<b>%.7f°</b>", lat);
-      hyscan_gtk_nav_indicator_printer (&priv->string.lon, "<b>%.7f°</b>", lon);
+      gchar *lat_str, *lon_str;
+
+      lat_str = hyscan_units_format (priv->units, HYSCAN_UNIT_TYPE_LAT, lat, 6);
+      lon_str = hyscan_units_format (priv->units, HYSCAN_UNIT_TYPE_LON, lon, 6);
+      hyscan_gtk_nav_indicator_printer (&priv->string.lat, "<b>%s</b>", lat_str);
+      hyscan_gtk_nav_indicator_printer (&priv->string.lon, "<b>%s</b>", lon_str);
+
+      g_free (lat_str);
+      g_free (lon_str);
     }
   if (trk_ok)
     {
@@ -364,9 +378,12 @@ hyscan_gtk_nav_indicator_update (HyScanGtkNavIndicator *self)
 }
 
 GtkWidget *
-hyscan_gtk_nav_indicator_new (HyScanSensor *sensor)
+hyscan_gtk_nav_indicator_new (HyScanSensor *sensor,
+                              HyScanUnits  *units)
 {
   return GTK_WIDGET (g_object_new (HYSCAN_TYPE_GTK_NAV_INDICATOR,
-                                   "sensor", sensor, NULL));
+                                   "sensor", sensor,
+                                   "units", units,
+                                   NULL));
 }
 

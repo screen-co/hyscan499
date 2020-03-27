@@ -4,6 +4,7 @@
 #include <gtk/gtk.h>
 #include <hyscan-buffer.h>
 #include <hyscan-sensor.h>
+#include <hyscan-units.h>
 
 G_BEGIN_DECLS
 
@@ -33,7 +34,8 @@ HYSCAN_API
 GType       hyscan_gtk_nav_indicator_get_type  (void);
 
 HYSCAN_API
-GtkWidget*  hyscan_gtk_nav_indicator_new       (HyScanSensor            *sensor);
+GtkWidget * hyscan_gtk_nav_indicator_new       (HyScanSensor            *sensor,
+                                                HyScanUnits             *units);
 
 G_END_DECLS
 

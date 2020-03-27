@@ -249,6 +249,7 @@ struct _Global
   gboolean                full_screen;
   gdouble                 sound_velocity;
   gdouble                 ship_speed;
+  HyScanUnits            *units;
 
   gint                    view_selector;
 

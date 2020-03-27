@@ -38,7 +38,7 @@
  * @Title: HyScanGtkDevIndicator
  *
  * Виджет периодически проверяет информацию о статусе оборудования и отображает
- * аггрегированный статус по всем устройствам. Во всплывающей подсказке показывается
+ * агрегированный статус по всем устройствам. Во всплывающей подсказке показывается
  * детальная информация по каждому из устройств.
  *
  * Предполагается использование виджета в статусной строке.
@@ -68,6 +68,7 @@ struct _HyScanGtkDevIndicatorPrivate
 
   GtkWidget               *tooltip_grid;       /* Виджет всплывающей подсказки. */
   GtkWidget              **status_labels;      /* Виджеты GtkLabel для отображения статусов. */
+  guint                    query_tag;          /* Тэг таймаут-функции по запросу статуса. */
 };
 
 static void          hyscan_gtk_dev_indicator_set_property             (GObject                  *object,
@@ -170,7 +171,7 @@ hyscan_gtk_dev_indicator_object_constructed (GObject *object)
   gtk_widget_set_has_tooltip (GTK_WIDGET (indicator), TRUE);
   hyscan_gtk_dev_indicator_dev_set_status (indicator, HYSCAN_DEVICE_STATUS_ERROR);
 
-  g_idle_add ((GSourceFunc) hyscan_gtk_dev_indicator_dev_status_query, indicator);
+  priv->query_tag = g_idle_add ((GSourceFunc) hyscan_gtk_dev_indicator_dev_status_query, indicator);
 }
 
 static void
@@ -178,6 +179,9 @@ hyscan_gtk_dev_indicator_object_finalize (GObject *object)
 {
   HyScanGtkDevIndicator *gtk_dev_indicator = HYSCAN_GTK_DEV_INDICATOR (object);
   HyScanGtkDevIndicatorPrivate *priv = gtk_dev_indicator->priv;
+
+  if (priv->query_tag != 0)
+    g_source_remove (priv->query_tag);
 
   g_clear_object (&priv->tooltip_grid);
   g_clear_object (&priv->control);
@@ -373,17 +377,21 @@ hyscan_gtk_dev_indicator_dev_status_ready (HyScanGtkDevIndicator *indicator,
     hyscan_gtk_dev_indicator_dev_set_status (indicator, status);
 
   /* Запрашиваем статус ещё раз. */
-  g_timeout_add (STATUS_QUERY_INTERVAL, (GSourceFunc) hyscan_gtk_dev_indicator_dev_status_query, indicator);
+  priv->query_tag = g_timeout_add (STATUS_QUERY_INTERVAL,
+                                   (GSourceFunc) hyscan_gtk_dev_indicator_dev_status_query, indicator);
 }
 
 static gboolean
 hyscan_gtk_dev_indicator_dev_status_query (HyScanGtkDevIndicator *indicator)
 {
+  HyScanGtkDevIndicatorPrivate *priv = indicator->priv;
   GTask *task;
 
   task = g_task_new (indicator, NULL, (GAsyncReadyCallback) hyscan_gtk_dev_indicator_dev_status_ready, NULL);
   g_task_run_in_thread (task, (GTaskThreadFunc) hyscan_gtk_dev_indicator_dev_status);
   g_object_unref (task);
+
+  priv->query_tag = 0;
 
   return G_SOURCE_REMOVE;
 }
