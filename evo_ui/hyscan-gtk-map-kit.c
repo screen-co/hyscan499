@@ -728,7 +728,7 @@ on_track_change (HyScanGtkMapKit *kit)
 
   track_name = track_tree_view_get_selected (kit);
 
-  if (track_name != NULL)
+  if (track_name != NULL && priv->track_layer != NULL)
     track_item = hyscan_gtk_map_track_lookup (HYSCAN_GTK_MAP_TRACK (priv->track_layer), track_name);
 
   has_nmea = (track_item != NULL) && hyscan_gtk_map_track_item_has_nmea (track_item);
@@ -1628,8 +1628,11 @@ create_control_box (HyScanGtkMapKit *kit)
                                      create_nav_input (kit));
     hyscan_gtk_layer_list_set_tools (HYSCAN_GTK_LAYER_LIST (priv->layer_list), "grid",
                                      create_grid_toolbox (kit));
-    hyscan_gtk_layer_list_set_tools (HYSCAN_GTK_LAYER_LIST (priv->layer_list), "track",
-                                     create_track_toolbox (kit));
+    if (priv->track_layer != NULL)
+      {
+       hyscan_gtk_layer_list_set_tools (HYSCAN_GTK_LAYER_LIST (priv->layer_list), "track",
+                                        create_track_toolbox (kit));
+      }
   }
 
   gtk_grid_attach (GTK_GRID (ctrl_box), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), 0, ++t, 5, 1);
@@ -1649,13 +1652,13 @@ create_layers (HyScanGtkMapKit *kit)
   priv->pin_layer = hyscan_gtk_map_pin_new ();
 
   /* Слой с галсами. */
-  if (priv->db != NULL)
-    priv->track_layer = hyscan_gtk_map_track_new (priv->db, priv->cache);
+  priv->track_layer = hyscan_gtk_map_track_new (priv->db, priv->cache);
 
   priv->layer_list = hyscan_gtk_layer_list_new (HYSCAN_GTK_LAYER_CONTAINER (kit->map));
 
   add_layer_row (kit, priv->base_layer,  TRUE,  "base",   _("Base Map"));
-  add_layer_row (kit, priv->track_layer, FALSE, "track",  _("Tracks"));
+  if (priv->track_layer != NULL)
+    add_layer_row (kit, priv->track_layer, FALSE, "track",  _("Tracks"));
   add_layer_row (kit, priv->ruler,       TRUE,  "ruler",  _("Ruler"));
   add_layer_row (kit, priv->pin_layer,   TRUE,  "pin",    _("Pin"));
   add_layer_row (kit, priv->map_grid,    TRUE,  "grid",   _("Grid"));
@@ -1670,7 +1673,6 @@ hyscan_gtk_map_kit_model_create (HyScanGtkMapKit *kit,
 
   priv->profiles = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref);
 
-  priv->cache = HYSCAN_CACHE (hyscan_cached_new (300));
   if (db != NULL)
     {
       priv->db = g_object_ref (db);
@@ -1869,6 +1871,7 @@ nav_tools (HyScanGtkMapKit *kit)
  * hyscan_gtk_map_kit_new_map:
  * @center: центр карты
  * @db: указатель на #HyScanDB
+ * @cache: указатель на #HyScanCache
  * @units: единицы измерения
  * @cache_dir: папка для кэширования тайлов
  *
@@ -1878,6 +1881,7 @@ nav_tools (HyScanGtkMapKit *kit)
 HyScanGtkMapKit *
 hyscan_gtk_map_kit_new (HyScanGeoGeodetic *center,
                         HyScanDB          *db,
+                        HyScanCache       *cache,
                         HyScanUnits       *units,
                         const gchar       *cache_dir)
 {
@@ -1886,6 +1890,7 @@ hyscan_gtk_map_kit_new (HyScanGeoGeodetic *center,
   kit = g_new0 (HyScanGtkMapKit, 1);
   kit->priv = g_new0 (HyScanGtkMapKitPrivate, 1);
   kit->priv->tile_cache_dir = g_strdup (cache_dir);
+  kit->priv->cache = g_object_ref (cache);
   kit->priv->center = *center;
   kit->priv->units = g_object_ref (units);
 

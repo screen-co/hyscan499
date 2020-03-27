@@ -25,6 +25,7 @@ typedef struct
 
 HyScanGtkMapKit * hyscan_gtk_map_kit_new              (HyScanGeoGeodetic          *center,
                                                        HyScanDB                   *db,
+                                                       HyScanCache                *cache,
                                                        HyScanUnits                *units,
                                                        const gchar                *cache_dir);
 
