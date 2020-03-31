@@ -1199,7 +1199,7 @@ create_grid_toolbox (HyScanGtkMapKit *kit)
     const gchar    *label;
     GtkWidget      *widget;
   } btn[] = {
-      { HYSCAN_UNITS_GEO_DD,     N_("Decimal Degree"), NULL },
+      { HYSCAN_UNITS_GEO_DD,     N_("Decimal Degrees"), NULL },
       { HYSCAN_UNITS_GEO_DDMM,   N_("Degree Minute"), NULL },
       { HYSCAN_UNITS_GEO_DDMMSS, N_("Degree Minute Second"), NULL },
   };
@@ -1247,7 +1247,7 @@ create_track_toolbox (HyScanGtkMapKit *kit)
   g_object_set_data (G_OBJECT (bar), "draw-type", GINT_TO_POINTER (HYSCAN_GTK_MAP_TRACK_BAR));
   g_signal_connect (bar, "notify::active", G_CALLBACK (track_layer_draw_change), kit->priv->track_layer);
 
-  beam = gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (bar), _("Fill beams"));
+  beam = gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (bar), _("Coverage"));
   g_object_set_data (G_OBJECT (beam), "draw-type", GINT_TO_POINTER (HYSCAN_GTK_MAP_TRACK_BEAM));
   g_signal_connect (beam, "notify::active", G_CALLBACK (track_layer_draw_change), kit->priv->track_layer);
 
@@ -1607,6 +1607,7 @@ create_control_box (HyScanGtkMapKit *kit)
     gtk_scrolled_window_set_propagate_natural_height (GTK_SCROLLED_WINDOW (scrolled_wnd), TRUE);
 
     lock_switch = gtk_switch_new ();
+    gtk_widget_set_halign (lock_switch, GTK_ALIGN_CENTER);
     gtk_switch_set_active (GTK_SWITCH (lock_switch),
                            !hyscan_gtk_layer_container_get_changes_allowed (HYSCAN_GTK_LAYER_CONTAINER (kit->map)));
 
