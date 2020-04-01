@@ -375,7 +375,7 @@ hyscan_gtk_con_make_intro_page (HyScanGtkCon *self)
 static void
 hyscan_gtk_con_make_hw_page (HyScanGtkCon *self)
 {
-  GtkWidget *page = hyscan_gtk_profile_hw_new (self->priv->folders, self->priv->drivers);
+  GtkWidget *page = hyscan_gtk_profile_hw_new (self->priv->folders, self->priv->drivers, FALSE);
 
   g_signal_connect (page, "selected", G_CALLBACK (hyscan_gtk_con_selected_hw), self);
   self->priv->hw_page = page;
