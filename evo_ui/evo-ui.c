@@ -1,4 +1,5 @@
 #include <gmodule.h>
+#include <hyscan-config.h>
 #include <hyscan-geo.h>
 #include <hyscan-gtk-area.h>
 #include <hyscan-gtk-fnn-offsets.h>
@@ -1388,18 +1389,18 @@ build_interface (Global *global)
     GtkWidget *box;
     GtkTreeView * tv;
     gint i;
-    gchar **profile_dirs;
+    const gchar **profile_dirs;
     gchar *cache_dir = g_build_filename (g_get_user_cache_dir (), "hyscan", NULL);
     HyScanGeoGeodetic center = {0, 0, 0};
 
     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     ui->mapkit = hyscan_gtk_map_kit_new (&center, global->db, global->cache, global->units, cache_dir);
     hyscan_gtk_map_kit_set_project (ui->mapkit, global->project_name);
-    profile_dirs = get_profile_dir ();
+    profile_dirs = hyscan_config_get_profile_dirs ();
     for (i = 0; profile_dirs[i] != NULL; ++i)
       {
         gchar *profile_dir;
-        profile_dir = g_build_filename (profile_dirs[i], "hyscan", "map-profiles", NULL);
+        profile_dir = g_build_filename (profile_dirs[i], "map-profiles", NULL);
         hyscan_gtk_map_kit_load_profiles (ui->mapkit, profile_dir);
         if (i == 0)
           hyscan_gtk_map_kit_set_user_dir (ui->mapkit, profile_dir);

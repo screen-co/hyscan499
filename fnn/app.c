@@ -10,6 +10,7 @@
 #include <hyscan-profile-db.h>
 #include <hyscan-gtk-dev-indicator.h>
 #include <gmodule.h>
+#include <hyscan-config.h>
 
 #ifdef G_OS_WIN32 /* Входная точка для GUI wWinMain. */
   #include <Windows.h>
@@ -151,11 +152,11 @@ main (int argc, char **argv)
 
   {
     setlocale (LC_ALL, "");
-    bindtextdomain (GETTEXT_PACKAGE, get_locale_dir());
-    bindtextdomain ("hyscangui", get_locale_dir());
-    bindtextdomain ("libhyscanfnn", get_locale_dir());
-    bindtextdomain ("hyscanfnn-swui", get_locale_dir());
-    bindtextdomain ("hyscanfnn-evoui", get_locale_dir());
+    bindtextdomain (GETTEXT_PACKAGE, hyscan_config_get_locale_dir());
+    bindtextdomain ("hyscangui", hyscan_config_get_locale_dir());
+    bindtextdomain ("libhyscanfnn", hyscan_config_get_locale_dir());
+    bindtextdomain ("hyscanfnn-swui", hyscan_config_get_locale_dir());
+    bindtextdomain ("hyscanfnn-evoui", hyscan_config_get_locale_dir());
 
     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
     bind_textdomain_codeset ("hyscangui" , "UTF-8");
@@ -337,19 +338,15 @@ main (int argc, char **argv)
     }
   else
     {
-      gchar **folders, *folder;
-      /* К О С Т Ы Л И
-       * О С Т Ы Л И
-       * С Т Ы Л И
-       * Т Ы Л И
-       * Ы Л И
-       * Л И
-       * И
-       */
+      const gchar **folders;
+      const gchar * const * iter;
+
       /* беру первую попавшуюся БД. Мне насрать. */
-      folders = get_profile_dir ();
-      folder = g_build_filename (folders[0], "hyscan","db-profiles", NULL);
+      folders = hyscan_config_get_profile_dirs ();
+      g_message ("folders: %s %s", folders[0], folders[1]);
+      for (iter = folders; iter != NULL && *iter != NULL; ++iter)
       {
+        gchar *folder = g_build_filename (*iter, "db-profiles", NULL);
         const gchar *filename;
         GError *error = NULL;
         GDir *dir;
@@ -379,19 +376,21 @@ main (int argc, char **argv)
             global.db = hyscan_profile_db_connect (profile);
 
             if (global.db != NULL)
-              break;
+              goto done;
           }
 
+        g_free (folder);
         g_dir_close (dir);
       }
-
+done: ;
     }
 
   /* теперь запускаю педрильный коннектор*/
   {
       GtkWidget *con;
 
-      con = hyscan_gtk_con_new (get_profile_dir(), driver_paths, global.settings, global.db);
+      con = hyscan_gtk_con_new ((gchar**)hyscan_config_get_profile_dirs(),
+                                driver_paths, global.settings, global.db);
       g_signal_connect_swapped (con, "close", G_CALLBACK (g_print), "close\n");
       g_signal_connect_swapped (con, "cancel", G_CALLBACK (g_print), "cancel\n");
       g_signal_connect (con, "cancel", G_CALLBACK (connector_finished), &global);
