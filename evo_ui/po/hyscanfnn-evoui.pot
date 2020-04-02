@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-02-04 14:42+0300\n"
+"POT-Creation-Date: 2020-04-02 12:20+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,258 +17,342 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: evo-ui.c:63 hyscan-gtk-mark-export.c:1079
+#: evo-ui.c:69 hyscan-gtk-mark-export.c:1092
 msgid "Save file"
 msgstr ""
 
-#: evo-ui.c:66 hyscan-gtk-map-kit.c:399 hyscan-gtk-mark-export.c:1082
-#: hyscan-gtk-mark-export.c:1188
+#: evo-ui.c:72 hyscan-gtk-map-kit.c:453 hyscan-gtk-mark-export.c:1095
+#: hyscan-gtk-mark-export.c:1202
 msgid "Cancel"
 msgstr ""
 
-#: evo-ui.c:67 hyscan-gtk-mark-export.c:1084
+#: evo-ui.c:73 hyscan-gtk-mark-export.c:1097
 msgid "Save"
 msgstr ""
 
-#: evo-ui.c:534
+#: evo-ui.c:574
 msgid "m/s"
 msgstr ""
 
-#: evo-ui.c:935
+#: evo-ui.c:954
 msgid "Layer"
 msgstr ""
 
-#: evo-ui.c:946 hyscan-gtk-map-kit.c:607
+#: evo-ui.c:965 hyscan-gtk-map-kit.c:683
 msgid "Show"
 msgstr ""
 
-#: evo-ui.c:959 hyscan-gtk-map-kit.c:1391
+#: evo-ui.c:978 hyscan-gtk-map-kit.c:1710
 msgid "Grid"
 msgstr ""
 
-#: evo-ui.c:960
+#: evo-ui.c:979
 msgid "Marks"
 msgstr ""
 
-#: evo-ui.c:961
+#: evo-ui.c:980
 msgid "Measurements"
 msgstr ""
 
-#: evo-ui.c:962
+#: evo-ui.c:981
 msgid "Shadow measure"
 msgstr ""
 
-#: evo-ui.c:963
+#: evo-ui.c:982
 msgid "Coordinates"
 msgstr ""
 
-#: evo-ui.c:964 tmp/evo.ui.h:21
+#: evo-ui.c:983 tmp/evo.ui.h:12
 msgid "Magnifier"
 msgstr ""
 
-#: evo-ui.c:1392
+#: evo-ui.c:1432
 msgid "Map"
 msgstr ""
 
-#: evo-ui.c:1468
+#: evo-ui.c:1514
 msgid "Project Manager"
 msgstr ""
 
-#: evo-ui.c:1473
+#: evo-ui.c:1519
 msgid "Online Map"
 msgstr ""
 
-#: evo-ui.c:1485
+#: evo-ui.c:1525
+msgid "Smooth nav"
+msgstr ""
+
+#: evo-ui.c:1536
 msgid "Marks as CSV"
 msgstr ""
 
-#: evo-ui.c:1489
+#: evo-ui.c:1540
 msgid "Marks as HTML"
 msgstr ""
 
-#: evo-ui.c:1493
+#: evo-ui.c:1544
 msgid "Marks to clipboard"
 msgstr ""
 
-#: evo-ui.c:1497
+#: evo-ui.c:1548
+msgid "Track plan as XML"
+msgstr ""
+
+#: evo-ui.c:1552
+msgid "Track plan as KML"
+msgstr ""
+
+#: evo-ui.c:1556
 msgid "XYZ"
 msgstr ""
 
-#: evo-ui.c:1501
+#: evo-ui.c:1560
 msgid "UTM"
 msgstr ""
 
-#: evo-ui.c:1505
+#: evo-ui.c:1564
 msgid "HSX"
 msgstr ""
 
-#: evo-ui.c:1509
+#: evo-ui.c:1571
+msgid "Import track plan"
+msgstr ""
+
+#: evo-ui.c:1575
 msgid "Export"
 msgstr ""
 
-#: evo-ui.c:1538
+#: evo-ui.c:1604
 msgid "Sensors"
 msgstr ""
 
-#: evo-ui.c:1550
+#: evo-ui.c:1616
 msgid "Info"
 msgstr ""
 
-#: evo-ui.c:1554
+#: evo-ui.c:1620
 msgid "State"
 msgstr ""
 
-#: evo-ui.c:1558
+#: evo-ui.c:1624
 msgid "Params"
 msgstr ""
 
-#: evo-ui.c:1562
+#: evo-ui.c:1628
 msgid "Sonar"
 msgstr ""
 
-#: evo-ui.c:1568
+#: evo-ui.c:1634
 msgid "Antennas offsets"
 msgstr ""
 
-#: evo-ui.c:1573 tmp/record.ui.h:2
+#: evo-ui.c:1639 tmp/record.ui.h:2
 msgid "No beaming"
 msgstr ""
 
-#: evo-ui.c:1586
+#: evo-ui.c:1655
 msgid "Hardware info"
 msgstr ""
 
-#: evo-ui.c:1595
+#: evo-ui.c:1664
 msgid "Exit"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:398
+#: hyscan-gtk-map-kit.c:452
 msgid "OK"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:400
+#: hyscan-gtk-map-kit.c:454
 msgid "Restore"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:401
+#: hyscan-gtk-map-kit.c:455
 msgid "Apply"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:463 hyscan-gtk-map-kit.c:700
+#: hyscan-gtk-map-kit.c:528 hyscan-gtk-map-kit.c:776
 msgid "Track settings"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:591
+#: hyscan-gtk-map-kit.c:667 hyscan-gtk-map-kit.c:1395
 msgid "Track"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:600 hyscan-gtk-map-kit.c:652
+#: hyscan-gtk-map-kit.c:676 hyscan-gtk-map-kit.c:728
 msgid "Date"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:642
+#: hyscan-gtk-map-kit.c:718
 msgid "Name"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:694
+#: hyscan-gtk-map-kit.c:770
 msgid "Find track on the map"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1139
-msgid "Go to"
-msgstr ""
-
-#: hyscan-gtk-map-kit.c:1143
-msgid "Download"
+#: hyscan-gtk-map-kit.c:1247
+msgid "Decimal Degrees"
 msgstr ""
 
 #: hyscan-gtk-map-kit.c:1248
+msgid "Degree Minute"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1249
+msgid "Degree Minute Second"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1255
+msgid "Coordinate Units"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1291
+msgid "Distance bars"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1295
+msgid "Coverage"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1367
+msgid "Topo coordinates (x, y)"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1397
+msgid "Zone"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1399
+msgid "Origin"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1410
+msgid "Enter parameters of coordinate system or pick it on the map"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1453
+msgid "Go to"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1457
+msgid "Download"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:1562
 #, c-format
 msgid "%s - Edit Profile"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1261
+#: hyscan-gtk-map-kit.c:1572
 msgid "_Apply"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1262
+#: hyscan-gtk-map-kit.c:1573
 msgid "_OK"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1263
+#: hyscan-gtk-map-kit.c:1574
 msgid "_Cancel"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1325 tmp/evo.ui.h:6
+#: hyscan-gtk-map-kit.c:1636 tmp/evo.ui.h:6
 msgid "Scale"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1349
+#: hyscan-gtk-map-kit.c:1661
 msgid "Lock layers"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1358
+#: hyscan-gtk-map-kit.c:1670
 msgid "Remove ruler"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1360
+#: hyscan-gtk-map-kit.c:1672
 msgid "Remove all pins"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1387
+#: hyscan-gtk-map-kit.c:1705
 msgid "Base Map"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1388
+#: hyscan-gtk-map-kit.c:1707
 msgid "Tracks"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1389
+#: hyscan-gtk-map-kit.c:1708
 msgid "Ruler"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1390
+#: hyscan-gtk-map-kit.c:1709
 msgid "Pin"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1521
+#: hyscan-gtk-map-kit.c:1846
 msgid "Show acoustic image"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1522
+#: hyscan-gtk-map-kit.c:1847
 msgid "Show mark border only"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1588
+#: hyscan-gtk-map-kit.c:1913
 msgid "COG Predictor, min"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1590
+#: hyscan-gtk-map-kit.c:1915
 msgid "HDG Predictor, km"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1680
+#: hyscan-gtk-map-kit.c:2076
 msgid "Offline"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1680
+#: hyscan-gtk-map-kit.c:2076
 msgid "Online"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1777
+#: hyscan-gtk-map-kit.c:2264
+msgid "_Autostart recording"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:2266
+msgid "_Select track automatically"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:2307
 msgid "My location"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1782
+#: hyscan-gtk-map-kit.c:2312
 msgid "Navigation"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1808
+#: hyscan-gtk-map-kit.c:2344 hyscan-gtk-map-kit.c:2383
 msgid "Waterfall Marks"
 msgstr ""
 
-#: hyscan-gtk-map-kit.c:1838
+#: hyscan-gtk-map-kit.c:2350 hyscan-gtk-map-kit.c:2501
 msgid "Geo Marks"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:2417
+msgid "Planner"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:2473
+msgid "Planned tracks"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:2756
+msgid "Import Track Plan"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:2763
+msgid "_Import"
+msgstr ""
+
+#: hyscan-gtk-map-kit.c:2764
+msgid "_Close"
 msgstr ""
 
 #: hyscan-gtk-map-preload.c:156
@@ -300,7 +384,7 @@ msgstr ""
 msgid "Generated: <a href=\"http://screen-co.ru/\">HyScan5</a>."
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:236 hyscan-gtk-mark-export.c:1150
+#: hyscan-gtk-mark-export.c:236 hyscan-gtk-mark-export.c:1164
 #, c-format
 msgid ""
 "%s\n"
@@ -308,7 +392,7 @@ msgid ""
 "%s%s"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:337
+#: hyscan-gtk-mark-export.c:335
 #, c-format
 msgid ""
 "\t\t\t<p><a name=\"%s\"><strong>%s</strong></a></p>\n"
@@ -323,13 +407,12 @@ msgid ""
 "\t\t\t\tTrack creation date: %s<br>\n"
 "\t\t\t\tBoard: %s<br>\n"
 "\t\t\t\tDepth: %.2f m<br>\n"
-"\t\t\t\tWidth: %.2f m<br>\n"
 "\t\t\t\tProject: %s<br>\n"
 "\t\t\t\t%s</p>\n"
 "\t\t\t<br style=\"page-break-before: always\"/>\n"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:356
+#: hyscan-gtk-mark-export.c:353
 #, c-format
 msgid ""
 "\t\t\t<p><a name=\"%s\"><strong>%s</strong></a></p>\n"
@@ -351,43 +434,43 @@ msgid ""
 "\t\t\t<br style=\"page-break-before: always\"/>\n"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:397
+#: hyscan-gtk-mark-export.c:394
 msgid "Port"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:400
+#: hyscan-gtk-mark-export.c:397
 msgid "Starboard"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:403
+#: hyscan-gtk-mark-export.c:400
 msgid "Bottom"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:705
+#: hyscan-gtk-mark-export.c:716
 msgid "Marks report"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:706
+#: hyscan-gtk-mark-export.c:717
 #, c-format
 msgid "Project: %s"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:707
+#: hyscan-gtk-mark-export.c:718
 #, c-format
 msgid "Project description: %s"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:711
+#: hyscan-gtk-mark-export.c:722
 #, c-format
 msgid "Project creation date: %s"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:714
+#: hyscan-gtk-mark-export.c:725
 #, c-format
 msgid "Report creation date: %s"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:724
+#: hyscan-gtk-mark-export.c:735
 #, c-format
 msgid ""
 "%s<br>\n"
@@ -400,19 +483,19 @@ msgid ""
 "\t\tTotal: %i"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:753
+#: hyscan-gtk-mark-export.c:764
 msgid "\t\t<a href=\"#geo\"><strong>Geo marks</strong></a><br>\n"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:776
+#: hyscan-gtk-mark-export.c:787
 msgid "\t\t<a href=\"#wf\"><strong>Acoustic marks</strong></a><br>\n"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:846
+#: hyscan-gtk-mark-export.c:857
 msgid "\t\t<p><a name=\"geo\"><strong>Geo marks</strong></a></p>\n"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:885
+#: hyscan-gtk-mark-export.c:896
 #, c-format
 msgid ""
 "\t\t\t<p><a name=\"%s\"><strong>%s</strong></a></p>\n"
@@ -427,15 +510,15 @@ msgid ""
 "\t\t\t<br style=\"page-break-before: always\"/>\n"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:938
+#: hyscan-gtk-mark-export.c:949
 msgid "\t\t<p><a name=\"wf\"><strong>Acoustic marks</strong></a></p>\n"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:1185
+#: hyscan-gtk-mark-export.c:1199
 msgid "Choose directory"
 msgstr ""
 
-#: hyscan-gtk-mark-export.c:1190
+#: hyscan-gtk-mark-export.c:1204
 msgid "Choose"
 msgstr ""
 
@@ -479,48 +562,48 @@ msgstr ""
 msgid "<small><b>0</b></small>"
 msgstr ""
 
-#: tmp/evo.ui.h:12
-msgid "Brightness"
-msgstr ""
-
 #: tmp/evo.ui.h:13
-msgid "Target mode"
-msgstr ""
-
-#: tmp/evo.ui.h:14
-msgid "Sensitivity"
-msgstr ""
-
-#: tmp/evo.ui.h:15
-msgid "Distance"
-msgstr ""
-
-#: tmp/evo.ui.h:16
-msgid "Signal"
-msgstr ""
-
-#: tmp/evo.ui.h:17
-msgid "Disable"
-msgstr ""
-
-#: tmp/evo.ui.h:18
-msgid "White"
-msgstr ""
-
-#: tmp/evo.ui.h:19
-msgid "Gamma"
-msgstr ""
-
-#: tmp/evo.ui.h:20
-msgid "Color"
-msgstr ""
-
-#: tmp/evo.ui.h:22
 msgid "x2"
 msgstr ""
 
-#: tmp/evo.ui.h:23
+#: tmp/evo.ui.h:14
 msgid "x3"
+msgstr ""
+
+#: tmp/evo.ui.h:15
+msgid "Brightness"
+msgstr ""
+
+#: tmp/evo.ui.h:16
+msgid "Target mode"
+msgstr ""
+
+#: tmp/evo.ui.h:17
+msgid "Sensitivity"
+msgstr ""
+
+#: tmp/evo.ui.h:18
+msgid "Distance"
+msgstr ""
+
+#: tmp/evo.ui.h:19
+msgid "Signal"
+msgstr ""
+
+#: tmp/evo.ui.h:20
+msgid "Disable"
+msgstr ""
+
+#: tmp/evo.ui.h:21
+msgid "White"
+msgstr ""
+
+#: tmp/evo.ui.h:22
+msgid "Gamma"
+msgstr ""
+
+#: tmp/evo.ui.h:23
+msgid "Color"
 msgstr ""
 
 #: tmp/evo.ui.h:24

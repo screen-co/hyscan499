@@ -49,7 +49,7 @@ start_stop_wrapper (HyScanFnnButton *button,
   gboolean status;
   gint i;
 
-  status = start_stop (_global, state);
+  status = start_stop (_global, NULL, state);
 
   if (!status)
     {
@@ -80,7 +80,7 @@ start_stop_dry_wrapper (HyScanFnnButton *button,
   gint i;
 
   set_dry (_global, state);
-  status = start_stop (_global, state);
+  status = start_stop (_global, NULL, state);
 
   if (!status)
     {
@@ -558,7 +558,7 @@ build_interface (Global *global)
   build_all (ui, global, common_pages);
 
   /* Общие ГЛ-виджеты. */
-  if (global->control_s != NULL)
+  if (global->control != NULL)
     build_all (ui, global, any_sonar_pages);
 
   /* Инициализация значений. */

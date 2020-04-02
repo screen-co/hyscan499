@@ -10,6 +10,7 @@
 #include <hyscan-profile-db.h>
 #include <hyscan-gtk-dev-indicator.h>
 #include <gmodule.h>
+#include <hyscan-config.h>
 
 #ifdef G_OS_WIN32 /* Входная точка для GUI wWinMain. */
   #include <Windows.h>
@@ -101,7 +102,6 @@ connector_finished (GtkAssistant *ass,
   if (hyscan_gtk_con_get_result (HYSCAN_GTK_CON (ass)))
     {
       global->control = hyscan_gtk_con_get_control (HYSCAN_GTK_CON (ass));
-      global->control_s = HYSCAN_SONAR (global->control);
       con_status = CONNECTOR_CLOSE;
     }
   else
@@ -155,11 +155,11 @@ main (int argc, char **argv)
 
   {
     setlocale (LC_ALL, "");
-    bindtextdomain (GETTEXT_PACKAGE, get_locale_dir());
-    bindtextdomain ("hyscangui", get_locale_dir());
-    bindtextdomain ("libhyscanfnn", get_locale_dir());
-    bindtextdomain ("hyscanfnn-swui", get_locale_dir());
-    bindtextdomain ("hyscanfnn-evoui", get_locale_dir());
+    bindtextdomain (GETTEXT_PACKAGE, hyscan_config_get_locale_dir());
+    bindtextdomain ("hyscangui", hyscan_config_get_locale_dir());
+    bindtextdomain ("libhyscanfnn", hyscan_config_get_locale_dir());
+    bindtextdomain ("hyscanfnn-swui", hyscan_config_get_locale_dir());
+    bindtextdomain ("hyscanfnn-evoui", hyscan_config_get_locale_dir());
 
     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
     bind_textdomain_codeset ("hyscangui" , "UTF-8");
@@ -341,19 +341,15 @@ main (int argc, char **argv)
     }
   else
     {
-      gchar **folders, *folder;
-      /* К О С Т Ы Л И
-       * О С Т Ы Л И
-       * С Т Ы Л И
-       * Т Ы Л И
-       * Ы Л И
-       * Л И
-       * И
-       */
+      const gchar **folders;
+      const gchar * const * iter;
+
       /* беру первую попавшуюся БД. Мне насрать. */
-      folders = get_profile_dir ();
-      folder = g_build_filename (folders[0], "hyscan","db-profiles", NULL);
+      folders = hyscan_config_get_profile_dirs ();
+      g_message ("folders: %s %s", folders[0], folders[1]);
+      for (iter = folders; iter != NULL && *iter != NULL; ++iter)
       {
+        gchar *folder = g_build_filename (*iter, "db-profiles", NULL);
         const gchar *filename;
         GError *error = NULL;
         GDir *dir;
@@ -383,19 +379,21 @@ main (int argc, char **argv)
             global.db = hyscan_profile_db_connect (profile);
 
             if (global.db != NULL)
-              break;
+              goto done;
           }
 
+        g_free (folder);
         g_dir_close (dir);
       }
-
+done: ;
     }
 
   /* теперь запускаю педрильный коннектор*/
   {
       GtkWidget *con;
 
-      con = hyscan_gtk_con_new (get_profile_dir(), driver_paths, global.settings, global.db);
+      con = hyscan_gtk_con_new ((gchar**)hyscan_config_get_profile_dirs(),
+                                driver_paths, global.settings, global.db);
       g_signal_connect_swapped (con, "close", G_CALLBACK (g_print), "close\n");
       g_signal_connect_swapped (con, "cancel", G_CALLBACK (g_print), "cancel\n");
       g_signal_connect (con, "cancel", G_CALLBACK (connector_finished), &global);
@@ -409,6 +407,7 @@ main (int argc, char **argv)
   }
 
   /* К этому моменту подвезли global.control и global.db. Настраиваю контрол. */
+  global.infos = g_hash_table_new (g_direct_hash, g_direct_equal);
   if (global.control != NULL)
     {
       guint32 n_sources;
@@ -419,7 +418,16 @@ main (int argc, char **argv)
       hyscan_control_device_bind (global.control);
       hyscan_control_writer_set_db (global.control, global.db);
 
-      global.infos = g_hash_table_new (g_direct_hash, g_direct_equal);
+      global.sonar_model = hyscan_sonar_model_new (global.control);
+
+      /* Обработчик подготавливает панели перед началом работы ГЛ. */
+      g_signal_connect (global.sonar_model, "before-start", G_CALLBACK (before_start), &global);
+
+      /* Обработчик смены статуса работы ГЛ. */
+      g_signal_connect_swapped (global.sonar_model, "start-stop", G_CALLBACK (sonar_state_changed), &global);
+
+      global.recorder = hyscan_sonar_recorder_new (HYSCAN_SONAR (global.sonar_model), global.db);
+      hyscan_sonar_recorder_set_project (global.recorder, global.project_name);
 
       sensors = hyscan_control_sensors_list (global.control);
       for (; sensors != NULL && *sensors != NULL; ++sensors)
@@ -489,6 +497,8 @@ restart:
   global.sound_velocity = sound_velocity;
   global.full_screen = full_screen;
   global.project_name = g_strdup (project_name);
+  if (global.recorder != NULL)
+    hyscan_sonar_recorder_set_project (global.recorder, global.project_name);
 
   /* Cоздаём Менеджер Моделей. */
   global.model_manager = hyscan_model_manager_new (global.project_name, global.db, global.cache);
@@ -593,8 +603,8 @@ restart:
     g_source_remove (sensor_label_writer_tag);
   // hyscan_fnn_splash_start (splash, "Отключение");
 
-  if (global.control != NULL)
-    hyscan_sonar_stop (global.control_s);
+  if (global.sonar_model != NULL)
+    hyscan_sonar_stop (HYSCAN_SONAR (global.sonar_model));
 
   /***
    *     ___         ___   ___               ___

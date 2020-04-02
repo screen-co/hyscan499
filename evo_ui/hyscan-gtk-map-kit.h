@@ -6,6 +6,7 @@
 #include <hyscan-db.h>
 #include <hyscan-sensor.h>
 #include <hyscan-gtk-mark-manager.h>
+#include <hyscan-sonar-recorder.h>
 
 typedef struct _HyScanGtkMapKitPrivate HyScanGtkMapKitPrivate;
 
@@ -15,6 +16,7 @@ typedef struct
   GtkWidget *map;                 /* Виджет карты. */
   GtkWidget *control;             /* Виджет с кнопками управления картой. */
   GtkWidget *status_bar;          /* Виджет со статусом. */
+  GtkWidget *paned;               /* Центральный виджет. */
 
   /* ## Private. ## */
   HyScanGtkMapKitPrivate *priv;
@@ -42,6 +44,7 @@ void              hyscan_gtk_map_kit_set_user_dir     (HyScanGtkMapKit          
 void              hyscan_gtk_map_kit_add_nav          (HyScanGtkMapKit            *kit,
                                                        HyScanSensor               *sensor,
                                                        const gchar                *sensor_name,
+                                                       HyScanSonarRecorder        *recorder,
                                                        const HyScanAntennaOffset  *offset,
                                                        gdouble                     delay_time);
 
@@ -51,10 +54,15 @@ void              hyscan_gtk_map_kit_add_marks_wf     (HyScanGtkMapKit          
 
 void              hyscan_gtk_map_kit_add_marks_geo    (HyScanGtkMapKit            *kit);
 
+void              hyscan_gtk_map_kit_add_planner      (HyScanGtkMapKit            *kit);
+
 gboolean          hyscan_gtk_map_kit_get_offline      (HyScanGtkMapKit            *kit);
 
 void              hyscan_gtk_map_kit_set_offline      (HyScanGtkMapKit            *kit,
                                                        gboolean                    offline);
+
+void              hyscan_gtk_map_kit_set_smooth       (HyScanGtkMapKit            *kit,
+                                                       gboolean                    smooth);
 
 void              hyscan_gtk_map_kit_free             (HyScanGtkMapKit            *kit);
 
@@ -71,5 +79,12 @@ void              hyscan_gtk_map_kit_get_mark_backends(HyScanGtkMapKit          
                                                        HyScanObjectModel         **geo,
                                                        HyScanMarkLocModel        **wf);
 */
+
+HyScanObjectModel *
+                  hyscan_gtk_map_kit_get_planner      (HyScanGtkMapKit            *kit);
+
+void              hyscan_gtk_map_kit_run_planner_import (HyScanGtkMapKit          *kit);
+
+HyScanTrackPlan * hyscan_gtk_map_kit_get_track_plan   (HyScanGtkMapKit           *kit);
 
 #endif /* __HYSCAN_GTK_MAP_KIT_H__ */

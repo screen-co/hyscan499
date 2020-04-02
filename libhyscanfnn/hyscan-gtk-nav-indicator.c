@@ -178,6 +178,17 @@ hyscan_gtk_nav_indicator_finalize (GObject *object)
   g_object_unref (priv->parser.gga_time);
   g_object_unref (priv->parser.gga_lat);
   g_object_unref (priv->parser.gga_lon);
+  g_object_unref (priv->parser.pitch);
+  g_object_unref (priv->parser.roll);
+
+  g_free (priv->string.lat);
+  g_free (priv->string.lon);
+  g_free (priv->string.trk);
+  g_free (priv->string.spd);
+  g_free (priv->string.dpt);
+  g_free (priv->string.tmd);
+  g_free (priv->string.pch);
+  g_free (priv->string.rll);
 
   if (priv->update_tag > 0)
     g_source_remove (priv->update_tag);
@@ -220,6 +231,9 @@ hyscan_gtk_nav_indicator_parse (HyScanGtkNavIndicator *self,
   /* Ищем строки РМЦ и ДПТ. */
   for (i = 0; (nmea != NULL) && (nmea[i] != NULL); i++)
     {
+      if (strlen (nmea[i]) < 3)
+        continue;
+
       if (g_str_has_prefix (nmea[i]+3, "RMC"))
         rmcs = nmea[i];
       else if (g_str_has_prefix (nmea[i]+3, "GGA"))

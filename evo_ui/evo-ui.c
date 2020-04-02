@@ -1,9 +1,12 @@
 #include <gmodule.h>
+#include <hyscan-config.h>
 #include <hyscan-geo.h>
 #include <hyscan-gtk-area.h>
 #include <hyscan-gtk-fnn-offsets.h>
 #include "hyscan-gtk-mark-export.h"
+#include <hyscan-planner-export.h>
 #include "evo-ui.h"
+#include "hyscan-gtk-rec.h"
 
 #define GETTEXT_PACKAGE "hyscanfnn-evoui"
 #include <glib/gi18n-lib.h>
@@ -42,7 +45,10 @@ enum
   UTM_TO_FILE,
   MARKS_TO_CSV,
   MARKS_TO_CLIPBOARD,
-  MARKS_TO_HTML
+  MARKS_TO_HTML,
+  PLANNER_TO_XML,
+  PLANNER_TO_KML,
+  IMPORT_PLANNER_XML,
 };
 
 EvoUI global_ui = {0,};
@@ -360,6 +366,40 @@ mark_exporter (GObject  *emitter,
     {
       utm_xyz (NULL);
     }
+  else if (selector == IMPORT_PLANNER_XML)
+    {
+      hyscan_gtk_map_kit_run_planner_import (global_ui.mapkit);
+    }
+  else if (selector == PLANNER_TO_XML || selector == PLANNER_TO_KML)
+    {
+      gchar *data;
+      GHashTable *objects;
+      HyScanObjectModel *planner;
+
+      planner = hyscan_gtk_map_kit_get_planner (global_ui.mapkit);
+      if (planner == NULL)
+        return;
+
+      objects = hyscan_object_model_get (planner);
+      g_object_unref (planner);
+
+      if (objects == NULL)
+        return;
+
+      if (selector == PLANNER_TO_XML)
+        {
+          data = hyscan_planner_export_xml_to_str (objects);
+          filesave_dialog ("plan.xml", _global->project_name, NULL, data);
+        }
+      else
+        {
+          data = hyscan_planner_export_kml_to_str (objects);
+          filesave_dialog ("plan.kml", _global->project_name, NULL, data);
+        }
+
+      g_hash_table_destroy (objects);
+      g_free (data);
+    }
   else
     {
       HyScanObjectModel  *geo = hyscan_model_manager_get_geo_mark_model (_global->model_manager);
@@ -563,34 +603,20 @@ map_offline_wrapper (GObject *emitter,
 }
 
 void
+map_smooth_wrapper (GObject *emitter,
+                    HyScanGtkMapKit *map)
+{
+  hyscan_gtk_map_kit_set_smooth (map,
+                                 gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (emitter)));
+}
+
+void
 menu_dry_wrapper (GObject *emitter)
 {
   EvoUI *ui = &global_ui;
   gboolean state = gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (emitter));
 
   set_dry (_global, state);
-
-  gtk_switch_set_active (GTK_SWITCH (ui->starter.dry_switch), state);
-}
-
-gboolean
-ui_start_stop_dry (GtkSwitch *button,
-                   gboolean   state,
-                   gpointer   user_data)
-{
-  EvoUI *ui = &global_ui;
-  // gboolean status;
-
-  set_dry (_global, state);
-  // status = start_stop (_global, state);
-
-  // if (!status)
-  //   return TRUE;
-
-  // gtk_widget_set_sensitive (ui->starter.all, !state);
-  gtk_check_menu_item_set_active (ui->starter.dry_menu, state);
-
-  return FALSE;
 }
 
 static void
@@ -613,24 +639,17 @@ sensor_toggle_wrapper (GtkCheckMenuItem *mitem,
   g_signal_handlers_unblock_by_func (mitem, sensor_toggle_wrapper, (gpointer) name);
 }
 
-gboolean
-ui_start_stop (GtkSwitch *button,
-               gboolean   state,
-               gpointer   user_data)
+/* Обработчик сигнала о старте или остановке работы гидролокатора. */
+void
+ui_start_stop (HyScanSonarModel *sonar_model)
 {
   EvoUI *ui = &global_ui;
-  gboolean status;
+  gboolean state;
 
-  // set_dry (_global, FALSE);
-  status = start_stop (_global, state);
-
-  if (!status)
-    return TRUE;
+  state = hyscan_sonar_state_get_start (HYSCAN_SONAR_STATE (sonar_model), NULL, NULL, NULL, NULL);
 
   gtk_widget_set_sensitive (ui->starter.dry_switch, !state);
   gtk_widget_set_sensitive (GTK_WIDGET (ui->starter.dry_menu), !state);
-
-  return FALSE;
 }
 
 void
@@ -972,20 +991,22 @@ make_record_control (Global *global,
                      EvoUI   *ui)
 {
   GtkBuilder *b;
-  GtkWidget *w;
+  GtkWidget *w, *rec_switch;
 
-  if (global->control_s == NULL)
+  if (global->sonar_model == NULL)
     return NULL;
+
+  /* Обработчик выполняет действия, при смене статуса записи. */
+  g_signal_connect (global->sonar_model, "start-stop", G_CALLBACK (ui_start_stop), NULL);
 
   b = gtk_builder_new_from_resource ("/org/evo/gtk/record.ui");
 
   w = g_object_ref (get_widget_from_builder (b, "record_control"));
   ui->starter.dry_switch = g_object_ref (get_widget_from_builder (b, "start_stop_dry"));
-  ui->starter.all = g_object_ref (get_widget_from_builder (b, "start_stop"));
+  rec_switch = hyscan_gtk_rec_new (global->recorder);
 
-  gtk_builder_add_callback_symbol (b, "ui_start_stop", G_CALLBACK (ui_start_stop));
-  gtk_builder_add_callback_symbol (b, "ui_start_stop_dry", G_CALLBACK (ui_start_stop_dry));
-  gtk_builder_connect_signals (b, global);
+  /* Помещаем виджет включения записи в GtkGrid. */
+  gtk_grid_attach (GTK_GRID (w), rec_switch, 1, 1, 1, 1);
 
   {
     gchar ** env;
@@ -1051,7 +1072,7 @@ make_tvg_control (Global *global,
 
   for (; sources != NULL && *sources != HYSCAN_SOURCE_INVALID; ++sources)
     {
-      info = hyscan_control_source_get_info (global->control, *sources);
+      info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (*sources));
       if (info->tvg == NULL)
         {
           source_informer ("No TVG info", *sources);
@@ -1368,34 +1389,46 @@ build_interface (Global *global)
     GtkWidget *box;
     GtkTreeView * tv;
     gint i;
-    gchar **profile_dirs;
+    const gchar **profile_dirs;
     gchar *cache_dir = g_build_filename (g_get_user_cache_dir (), "hyscan", NULL);
     HyScanGeoGeodetic center = {0, 0, 0};
 
     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
+/*<<<<<<< HEAD*/
 
     ui->mapkit = hyscan_gtk_map_kit_new (&center, global->model_manager, global->units, cache_dir);
     hyscan_gtk_map_kit_set_project (ui->mapkit, global->project_name);
 
-    profile_dirs = get_profile_dir ();
+    /*profile_dirs = get_profile_dir ();
+=======
+    ui->mapkit = hyscan_gtk_map_kit_new (&center, global->db, global->cache, global->units, cache_dir);
+    hyscan_gtk_map_kit_set_project (ui->mapkit, global->project_name);*/
+    profile_dirs = hyscan_config_get_profile_dirs ();
+/*>>>>>>> origin/wip/hyscan499*/
     for (i = 0; profile_dirs[i] != NULL; ++i)
       {
         gchar *profile_dir;
-        profile_dir = g_build_filename (profile_dirs[i], "hyscan", "map-profiles", NULL);
+        profile_dir = g_build_filename (profile_dirs[i], "map-profiles", NULL);
         hyscan_gtk_map_kit_load_profiles (ui->mapkit, profile_dir);
         if (i == 0)
           hyscan_gtk_map_kit_set_user_dir (ui->mapkit, profile_dir);
         g_free (profile_dir);
       }
-
+/*<<<<<<< HEAD*/
     hyscan_gtk_map_kit_add_marks (ui->mapkit);
+/*=======
+    hyscan_gtk_map_kit_add_marks_wf (ui->mapkit);
+    hyscan_gtk_map_kit_add_marks_geo (ui->mapkit);*/
+    hyscan_gtk_map_kit_add_planner (ui->mapkit);
+/*>>>>>>> origin/wip/hyscan499*/
 
     gtk_stack_add_named (GTK_STACK (ui->control_stack), ui->mapkit->control, EVO_MAP);
     gtk_stack_add_named (GTK_STACK (ui->nav_stack), ui->mapkit->navigation, EVO_MAP);
     // gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), ui->mapkit->map, EVO_MAP, _("Map"));
-    gtk_box_pack_start (GTK_BOX (box), ui->mapkit->map, TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (box), ui->mapkit->paned, TRUE, TRUE, 0);
     // gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), ui->mapkit->status_bar, EVO_MAP, _("Map"));
-    gtk_box_pack_start (GTK_BOX (box), ui->mapkit->status_bar, FALSE, FALSE, 0);
+    // gtk_box_pack_start (GTK_BOX (box), ui->mapkit->bottom_panel, FALSE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (box), ui->mapkit->status_bar, FALSE, TRUE, 0);
     gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), box, EVO_MAP, _("Map"));
     gtk_stack_set_visible_child_name(GTK_STACK (ui->acoustic_stack), EVO_MAP);
 
@@ -1488,10 +1521,15 @@ build_interface (Global *global)
     g_signal_connect (mitem, "toggled", G_CALLBACK (map_offline_wrapper), ui->mapkit);
     gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
+    /* сглаживание показаний приёмника GPS */
+    mitem = gtk_check_menu_item_new_with_label (_("Smooth nav"));
+    g_signal_connect (mitem, "toggled", G_CALLBACK (map_smooth_wrapper), ui->mapkit);
+    gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
+
     /* Exports */
     {
       gint subt = 0;
-      GtkWidget *submenu = gtk_menu_new ();
+      GtkWidget *submenu;
       submenu = gtk_menu_new ();
       subt = 0;
 
@@ -1507,6 +1545,14 @@ build_interface (Global *global)
       g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (MARKS_TO_CLIPBOARD));
       gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
 
+      mitem = gtk_menu_item_new_with_label (_("Track plan as XML"));
+      g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (PLANNER_TO_XML));
+      gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
+      mitem = gtk_menu_item_new_with_label (_("Track plan as KML"));
+      g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (PLANNER_TO_KML));
+      gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
       mitem = gtk_menu_item_new_with_label (_("XYZ"));
       g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (XYZ_TO_FILE));
       gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
@@ -1517,6 +1563,13 @@ build_interface (Global *global)
 
       mitem = gtk_menu_item_new_with_label (_("HSX"));
       g_signal_connect (mitem, "activate", G_CALLBACK (run_export_data), _global);
+      gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
+      mitem = gtk_separator_menu_item_new ();
+      gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
+      mitem = gtk_menu_item_new_with_label (_("Import track plan"));
+      g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (IMPORT_PLANNER_XML));
       gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
 
       mitem = gtk_menu_item_new_with_label (_("Export"));
@@ -1586,6 +1639,9 @@ build_interface (Global *global)
           mitem = gtk_check_menu_item_new_with_label (_("No beaming"));
           ui->starter.dry_menu = g_object_ref (mitem);
           g_signal_connect (mitem, "toggled", G_CALLBACK (menu_dry_wrapper), NULL);
+          g_object_bind_property (ui->starter.dry_menu, "active",
+                                  ui->starter.dry_switch, "active",
+                                  G_BINDING_BIDIRECTIONAL | G_BINDING_SYNC_CREATE);
           gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
           {
@@ -1671,7 +1727,8 @@ build_interface (Global *global)
           offset = hyscan_fnn_offsets_get_offset (o, sensor_name);
           offset_ptr = &offset;
         }
-      hyscan_gtk_map_kit_add_nav (ui->mapkit, HYSCAN_SENSOR (global->control), sensor_name, offset_ptr, 0);
+      hyscan_gtk_map_kit_add_nav (ui->mapkit, HYSCAN_SENSOR (global->control), sensor_name,
+                                  global->recorder, offset_ptr, 0);
 
       g_object_unref (o);
       g_free (file);
@@ -1688,9 +1745,6 @@ destroy_interface (void)
   g_signal_handlers_disconnect_by_func(ui->acoustic_stack, G_CALLBACK(widget_swap), NULL);
   g_clear_object (&ui->acoustic_stack);
   g_clear_pointer (&ui->builders, g_hash_table_unref);
-
-  g_clear_object (&ui->starter.all);
-  g_clear_object (&ui->starter.dry_switch);
 
   g_clear_pointer (&ui->mapkit, hyscan_gtk_map_kit_free);
 
@@ -1736,6 +1790,9 @@ kf_desetup (GKeyFile *kf)
         continue;
 
       adj = g_hash_table_lookup (ui->balance_table, k);
+      if (adj == NULL)
+        continue;
+
       balance = gtk_adjustment_get_value (adj);
       keyfile_double_write_helper (ui->settings, panel->name, "evo.balance", balance);
     }

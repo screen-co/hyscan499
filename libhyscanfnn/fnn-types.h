@@ -13,6 +13,7 @@
 #include <hyscan-gtk-waterfall-magnifier.h>
 #include <hyscan-gtk-waterfall-coord.h>
 #include <hyscan-gtk-waterfall-shadowm.h>
+#include <hyscan-sonar-recorder.h>
 #include <hyscan-gtk-project-viewer.h>
 #include <hyscan-gtk-mark-editor.h>
 #include <hyscan-gtk-nav-indicator.h>
@@ -32,6 +33,7 @@
 #include <hyscan-fl-coords.h>
 #include <hyscan-mark-sync.h>
 #include <hyscan-api.h>
+#include <hyscan-sonar-model.h>
 
 #define hyscan_return_val_if_fail(expr,val) do {if (!(expr)) {g_warning("Failed at line %i", __LINE__); return (val);}} while (FALSE)
 #define hyscan_exit_if(expr,msg) do {if (!(expr)) break; g_message ((msg)); goto exit;} while (FALSE)
@@ -253,11 +255,10 @@ struct _Global
 
   gint                    view_selector;
 
+  HyScanSonarRecorder    *recorder;
   HyScanControl          *control;
-  HyScanSonar            *control_s;
+  HyScanSonarModel       *sonar_model;
   gboolean                on_air;
-  gint64                  last_click_time;
-  gboolean                synced;
 
   GKeyFile               *settings;
 
@@ -761,8 +762,16 @@ panel_turn_on_off (Global   *global,
                    FnnPanel *panel);
 
 HYSCAN_API gboolean
-start_stop (Global    *global,
-            gboolean   state);
+start_stop (Global                *global,
+            const HyScanTrackPlan *track_plan,
+            gboolean               state);
+
+HYSCAN_API gboolean
+before_start (HyScanSonarModel *model,
+              Global           *global);
+
+HYSCAN_API void
+sonar_state_changed (Global *global);
 
 HYSCAN_API gboolean
 set_dry (Global    *global,
