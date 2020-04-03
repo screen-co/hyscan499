@@ -1343,6 +1343,48 @@ make_page_for_panel (EvoUI     *ui,
   return box;
 }
 
+/* Находит датчик для навигации на вкладке карты. */
+static void
+mapkit_add_nav (Global           *global,
+                HyScanGtkMapKit  *mapkit,
+                HyScanFnnOffsets *o)
+{
+  HyScanAntennaOffset offset, *offset_ptr;
+  const gchar *const *sensors;
+  const gchar *sensor_name = NULL;
+  gint i;
+  GList *link;
+
+  sensors = hyscan_control_sensors_list (global->control);
+  if (sensors == NULL)
+    return;
+
+  /* Находим датчик. */
+  for (i = 0; sensors[i] != NULL; i++)
+    {
+      if (g_strstr_len (sensors[i], -1, "gnss") == NULL)
+        continue;
+
+      sensor_name = sensors[i];
+      break;
+    }
+
+  /* Определяем его смещение. */
+  offset_ptr = NULL;
+  for (link = hyscan_fnn_offsets_get_keys (o); link != NULL; link = link->next)
+    {
+      if (!g_str_equal (link->data, sensor_name))
+        continue;
+
+      offset = hyscan_fnn_offsets_get_offset (o, sensor_name);
+      offset_ptr = &offset;
+      break;
+    }
+
+  hyscan_gtk_map_kit_add_nav (mapkit, HYSCAN_SENSOR (global->control), sensor_name,
+                              global->recorder, offset_ptr, 0);
+}
+
 /* Самая крутая функция, строит весь уй. */
 G_MODULE_EXPORT gboolean
 build_interface (Global *global)
@@ -1698,28 +1740,14 @@ build_interface (Global *global)
     {
       gchar * file = g_build_filename (g_get_user_config_dir(), "hyscan", "offsets.ini", NULL);
       HyScanFnnOffsets * o =  hyscan_fnn_offsets_new (global->control);
-      HyScanAntennaOffset offset, * offset_ptr;
-      const gchar * sensor_name;
-      GList * link;
 
       if (!hyscan_fnn_offsets_read (o, file))
         g_message ("didn't read offsets");
       else if (!hyscan_fnn_offsets_execute (o))
         g_message ("didn't apply offsets");
 
-      /* Включаем на карте навигацию по датчику "nmea" с учётом его смещения. */
-      sensor_name = "nmea";
-      offset_ptr = NULL;
-      for (link = hyscan_fnn_offsets_get_keys (o); link != NULL && offset_ptr == NULL; link = link->next)
-        {
-          if (!g_str_equal (link->data, sensor_name))
-            continue;
-
-          offset = hyscan_fnn_offsets_get_offset (o, sensor_name);
-          offset_ptr = &offset;
-        }
-      hyscan_gtk_map_kit_add_nav (ui->mapkit, HYSCAN_SENSOR (global->control), sensor_name,
-                                  global->recorder, offset_ptr, 0);
+      /* Включаем на карте навигацию. */
+      mapkit_add_nav (global, ui->mapkit, o);
 
       g_object_unref (o);
       g_free (file);

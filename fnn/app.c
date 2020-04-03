@@ -388,6 +388,26 @@ main (int argc, char **argv)
 done: ;
     }
 
+  /* Устанавливаем иконки приложения. */
+  {
+    GList *icon_list = NULL;
+    guint i;
+    const gchar *icons[] =
+    {
+      "/org/hyscan/icons/main-16x16.png",
+      "/org/hyscan/icons/main-32x32.png",
+      "/org/hyscan/icons/main-64x64.png",
+      "/org/hyscan/icons/main-128x128.png",
+      "/org/hyscan/icons/main-256x256.png",
+    };
+
+    for (i = 0; i < G_N_ELEMENTS (icons); i++)
+      icon_list = g_list_prepend (icon_list, gdk_pixbuf_new_from_resource (icons[i], NULL));
+
+    gtk_window_set_default_icon_list (icon_list);
+    g_list_free_full (icon_list, g_object_unref);
+  }
+
   /* теперь запускаю педрильный коннектор*/
   {
       GtkWidget *con;
