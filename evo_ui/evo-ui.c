@@ -1394,17 +1394,12 @@ build_interface (Global *global)
     HyScanGeoGeodetic center = {0, 0, 0};
 
     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
-/*<<<<<<< HEAD*/
 
     ui->mapkit = hyscan_gtk_map_kit_new (&center, global->model_manager, global->units, cache_dir);
     hyscan_gtk_map_kit_set_project (ui->mapkit, global->project_name);
 
-    /*profile_dirs = get_profile_dir ();
-=======
-    ui->mapkit = hyscan_gtk_map_kit_new (&center, global->db, global->cache, global->units, cache_dir);
-    hyscan_gtk_map_kit_set_project (ui->mapkit, global->project_name);*/
     profile_dirs = hyscan_config_get_profile_dirs ();
-/*>>>>>>> origin/wip/hyscan499*/
+
     for (i = 0; profile_dirs[i] != NULL; ++i)
       {
         gchar *profile_dir;
@@ -1414,13 +1409,9 @@ build_interface (Global *global)
           hyscan_gtk_map_kit_set_user_dir (ui->mapkit, profile_dir);
         g_free (profile_dir);
       }
-/*<<<<<<< HEAD*/
+
     hyscan_gtk_map_kit_add_marks (ui->mapkit);
-/*=======
-    hyscan_gtk_map_kit_add_marks_wf (ui->mapkit);
-    hyscan_gtk_map_kit_add_marks_geo (ui->mapkit);*/
     hyscan_gtk_map_kit_add_planner (ui->mapkit);
-/*>>>>>>> origin/wip/hyscan499*/
 
     gtk_stack_add_named (GTK_STACK (ui->control_stack), ui->mapkit->control, EVO_MAP);
     gtk_stack_add_named (GTK_STACK (ui->nav_stack), ui->mapkit->navigation, EVO_MAP);
