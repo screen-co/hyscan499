@@ -6,6 +6,7 @@
  */
 #include "hyscan-gtk-mark-export.h"
 #include <glib.h>
+#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <sys/stat.h>
@@ -560,12 +561,12 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
 
   /* Создаём папку с названием проекта. */
   current_folder = g_strconcat (data->folder, "/", data->global->project_name, (gchar*) NULL);
-  mkdir (current_folder, 0777);
+  g_mkdir (current_folder, 0777);
   /* HTML-файл. */
   file_name = g_strdup_printf ("%s/index.html", current_folder);
   /* Создаём папку для сохранения тайлов. */
   image_folder = g_strdup_printf ("%s/%s", current_folder, media);
-  mkdir (image_folder, 0777);
+  g_mkdir (image_folder, 0777);
 
 #ifdef G_OS_WIN32
   fopen_s (&file, file_name, "w");
