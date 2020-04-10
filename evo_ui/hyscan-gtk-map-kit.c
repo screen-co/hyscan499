@@ -105,7 +105,7 @@ struct _HyScanGtkMapKitPrivate
   gchar                   *profiles_dir;     /* Папка для записи пользоательских профилей. */
   gchar                   *tile_cache_dir;   /* Путь к директории, в которой хранятся тайлы. */
 
-  HyScanGeoGeodetic        center;           /* Географические координаты для виджета навигации. */
+  HyScanGeoPoint           center;           /* Географические координаты для виджета навигации. */
 
   /* Слои. */
   HyScanGtkLayer          *base_layer;       /* Слой подложки. */
@@ -1188,7 +1188,7 @@ on_motion_show_coords (HyScanGtkMap    *map,
                        HyScanGtkMapKit *kit)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
-  HyScanGeoGeodetic geo;
+  HyScanGeoPoint geo;
   gchar text[255];
   gchar *lat, *lon;
 
@@ -2308,7 +2308,7 @@ hyscan_gtk_map_kit_add_nav (HyScanGtkMapKit           *kit,
   g_signal_connect_swapped (priv->locate_button, "clicked", G_CALLBACK (on_locate_click), kit);
 
   /* Слой с траекторией движения судна. */
-  priv->way_layer = hyscan_gtk_map_nav_new (priv->nav_model);
+  priv->way_layer = hyscan_gtk_map_nav_new (HYSCAN_NAV_STATE (priv->nav_model));
   add_layer_row (kit, priv->way_layer, FALSE, "nav", _("Navigation"));
 
   priv->recorder = g_object_ref (recorder);
@@ -2613,7 +2613,7 @@ hyscan_gtk_map_kit_kf_setup (HyScanGtkMapKit *kit,
 {
   gchar *profile_name = NULL;
   gboolean offline;
-  HyScanGeoGeodetic center;
+  HyScanGeoPoint center;
   gchar **layers, **tracks;
   gchar *cache_dir;
   gint planner_cols;
@@ -2690,7 +2690,7 @@ hyscan_gtk_map_kit_kf_desetup (HyScanGtkMapKit *kit,
 {
   gchar *proifle;
   gchar **layers, **tracks;
-  HyScanGeoGeodetic geod;
+  HyScanGeoPoint geod;
   HyScanGeoCartesian2D  c2d;
   gdouble from_x, to_x, from_y, to_y;
   gint planner_cols;
@@ -2736,7 +2736,7 @@ hyscan_gtk_map_kit_get_mark_backends (HyScanGtkMapKit     *kit,
 HyScanObjectModel *
 hyscan_gtk_map_kit_get_planner (HyScanGtkMapKit *kit)
 {
-  return kit->priv->planner_model != NULL ? g_object_ref (kit->priv->planner_model) : NULL;
+  return kit->priv->planner_model != NULL ? g_object_ref (HYSCAN_OBJECT_MODEL (kit->priv->planner_model)) : NULL;
 }
 
 /**

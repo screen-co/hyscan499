@@ -110,7 +110,7 @@ hyscan_gtk_mark_editor_constructed (GObject *object)
 
   G_OBJECT_CLASS (hyscan_gtk_mark_editor_parent_class)->constructed (object);
 
-  g_signal_connect_swapped (priv->units, "notify::geo", hyscan_gtk_mark_editor_latlon_update, object);
+  g_signal_connect_swapped (priv->units, "notify::geo", G_CALLBACK (hyscan_gtk_mark_editor_latlon_update), object);
 }
 
 static void

@@ -99,7 +99,7 @@ static void
 hyscan_gtk_map_go_click (HyScanGtkMapGo *map_go)
 {
   HyScanGtkMapGoPrivate *priv = map_go->priv;
-  HyScanGeoGeodetic center;
+  HyScanGeoPoint center;
 
   center.lat = gtk_spin_button_get_value (GTK_SPIN_BUTTON (priv->lat));
   center.lon = gtk_spin_button_get_value (GTK_SPIN_BUTTON (priv->lon));

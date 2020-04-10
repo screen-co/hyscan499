@@ -1433,7 +1433,7 @@ build_interface (Global *global)
     gint i;
     const gchar **profile_dirs;
     gchar *cache_dir = g_build_filename (g_get_user_cache_dir (), "hyscan", NULL);
-    HyScanGeoGeodetic center = {0, 0, 0};
+    HyScanGeoPoint center = {0, 0};
 
     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
 

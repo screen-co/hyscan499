@@ -4,7 +4,7 @@
 #include <hyscan-gtk-configurator.h>
 
 #define GETTEXT_PACKAGE "hyscan-499"
-#include <fnn-types.h>
+#include <hyscan-config.h>
 
 #ifdef G_OS_WIN32 /* Входная точка для GUI wWinMain. */
   #include <Windows.h>
@@ -14,13 +14,12 @@ int
 main (int argc, char **argv)
 {
   GtkWidget *configurator;
-  gchar *config_dir;
-  gchar **folders;
+  const gchar *config_dir;
   gboolean exit_if_configured = FALSE;
 
   setlocale (LC_ALL, "");
-  bindtextdomain (GETTEXT_PACKAGE, get_locale_dir ());
-  bindtextdomain ("libhyscanfnn", get_locale_dir ());
+  bindtextdomain (GETTEXT_PACKAGE, hyscan_config_get_locale_dir ());
+  bindtextdomain ("libhyscanfnn", hyscan_config_get_locale_dir ());
   bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
   bind_textdomain_codeset ("libhyscanfnn", "UTF-8");
   textdomain (GETTEXT_PACKAGE);
@@ -58,10 +57,8 @@ main (int argc, char **argv)
     g_strfreev (args);
   }
 
-  folders = get_profile_dir ();
-  config_dir = g_build_path (G_DIR_SEPARATOR_S, folders[0], "hyscan", NULL);
+  config_dir = hyscan_config_get_user_files_dir ();
   configurator = hyscan_gtk_configurator_new (config_dir);
-  g_free (config_dir);
 
   if (exit_if_configured && hyscan_gtk_configurator_configured (HYSCAN_GTK_CONFIGURATOR (configurator)))
     {
