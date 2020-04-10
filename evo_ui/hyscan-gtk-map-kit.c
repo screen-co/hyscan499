@@ -1939,7 +1939,7 @@ hyscan_gtk_map_kit_project_name_changes (HyScanGtkMapKit  *kit,
  *          hyscan_gtk_map_kit_free().
  */
 HyScanGtkMapKit *
-hyscan_gtk_map_kit_new (HyScanGeoGeodetic  *center,
+hyscan_gtk_map_kit_new (HyScanGeoPoint     *center,
                         HyScanModelManager *model_manager,
                         HyScanUnits        *units,
                         const gchar        *cache_dir)

@@ -22,10 +22,10 @@ typedef struct
   HyScanGtkMapKitPrivate *priv;
 } HyScanGtkMapKit;
 
-HyScanGtkMapKit * hyscan_gtk_map_kit_new              (HyScanGeoGeodetic  *center,
-                                                       HyScanModelManager *model_manager,
-                                                       HyScanUnits        *units,
-                                                       const gchar        *cache_dir);
+HyScanGtkMapKit * hyscan_gtk_map_kit_new              (HyScanGeoPoint             *center,
+                                                       HyScanModelManager         *model_manager,
+                                                       HyScanUnits                *units,
+                                                       const gchar                *cache_dir);
 
 void              hyscan_gtk_map_kit_set_project      (HyScanGtkMapKit            *kit,
                                                        const gchar                *project_name);
