@@ -1227,7 +1227,7 @@ hyscan_gtk_mark_export_save_as_html (HyScanMarkLocModel *ml_model,
   data->folder = gtk_file_chooser_get_current_folder (GTK_FILE_CHOOSER (dialog));
   gdk_rgba_parse (&data->color, "#FFFF00");
 
-  thread = g_thread_new ("save_sa_html", hyscan_gtk_mark_export_save_as_html_thread, (gpointer)data);
+  thread = g_thread_new ("save_as_html", hyscan_gtk_mark_export_save_as_html_thread, (gpointer)data);
 
   g_thread_unref (thread);
   gtk_widget_destroy (dialog);
