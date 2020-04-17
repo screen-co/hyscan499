@@ -43,7 +43,11 @@ typedef struct _DataForHTML
 {
   GHashTable  *wf_marks,      /* "Водопадные" метки. */
               *geo_marks;     /* Гео-метки. */
-  Global      *global;        /* Структура с "глобальными" параметрами. */
+  /*Global      *global;        *//* Структура с "глобальными" параметрами. */
+  GtkWindow   *toplevel;      /* Главное окно. */
+  const gchar *project_name;  /* Название проекта. */
+  HyScanDB    *db;            /* Указатель на базу данных. */
+  HyScanCache *cache;         /* Указатель на кэш.  */
   gchar       *folder;        /* Папка для экспорта. */
   GdkRGBA      color;         /* Цветовая схема. */
 }DataForHTML;
@@ -677,7 +681,7 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
               *file_name      = NULL;    /* Полный путь до файла index.html */
 
   /* Создаём папку с названием проекта. */
-  current_folder = g_strconcat (data->folder, "/", data->global->project_name, (gchar*) NULL);
+  current_folder = g_strconcat (data->folder, "/", data->project_name, (gchar*) NULL);
   g_mkdir (current_folder, 0777);
   /* HTML-файл. */
   file_name = g_strdup_printf ("%s/index.html", current_folder);
@@ -695,8 +699,8 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
       HyScanFactoryAmplitude  *factory_amp;  /* Фабрика объектов акустических данных. */
       HyScanFactoryDepth      *factory_dpt;  /* Фабрика объектов глубины. */
       HyScanTileQueue         *tile_queue;   /* Очередь для работы с акустическими изображениями. */
-      HyScanProjectInfo       *project_info = hyscan_db_info_get_project_info (data->global->db,
-                                                                               data->global->project_name);
+      HyScanProjectInfo       *project_info = hyscan_db_info_get_project_info (data->db,
+                                                                               data->project_name);
       Package                  package;
       guint wf_mark_size  = g_hash_table_size (data->wf_marks),
             geo_mark_size = g_hash_table_size (data->geo_marks);
@@ -715,7 +719,7 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
                          "\t\t<p>%s<br>\n\t\t%s</p>\n"
                          "%s",
             *title     = _("Marks report"),
-            *project   = g_strdup_printf (_("Project: %s"), data->global->project_name),
+            *project   = g_strdup_printf (_("Project: %s"), data->project_name),
             *prj_desc  = g_strdup_printf (_("Project description: %s"),
                                           (project_info->description == NULL ||
                                            0 == g_strcmp0 (project_info->description, "")) ?
@@ -730,7 +734,7 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
             *str       = NULL,
             *txt_title = NULL,
             *list      = "\t\t<br style=\"page-break-before: always\"/>\n";
-      title = g_strdup_printf (title, data->global->project_name);
+      title = g_strdup_printf (title, data->project_name);
       if (wf_mark_size > 0 || geo_mark_size > 0)
         {
           gchar *tmp = _("%s<br>\n"
@@ -814,22 +818,22 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
       g_free (gntime);
       g_free (list);
       /* Создаём фабрику объектов доступа к данным амплитуд. */
-      factory_amp = hyscan_factory_amplitude_new (data->global->cache);
+      factory_amp = hyscan_factory_amplitude_new (data->cache);
       hyscan_factory_amplitude_set_project (factory_amp,
-                                            data->global->db,
-                                            data->global->project_name);
+                                            data->db,
+                                            data->project_name);
       /* Создаём фабрику объектов доступа к данным глубины. */
-      factory_dpt = hyscan_factory_depth_new (data->global->cache);
+      factory_dpt = hyscan_factory_depth_new (data->cache);
       hyscan_factory_depth_set_project (factory_dpt,
-                                        data->global->db,
-                                        data->global->project_name);
+                                        data->db,
+                                        data->project_name);
       /* Создаём очередь для генерации тайлов. */
       tile_queue = hyscan_tile_queue_new (g_get_num_processors (),
-                                          data->global->cache,
+                                          data->cache,
                                           factory_amp,
                                           factory_dpt);
       g_mutex_init (&package.mutex);
-      package.cache   = data->global->cache;
+      package.cache   = data->cache;
       package.color   = data->color;
       package.counter = 0;
       /* Соединяем сигнал готовности тайла с функцией-обработчиком. */
@@ -906,7 +910,7 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
                                     "\t\t\t<br style=\"page-break-before: always\"/>\n");
                    gchar *content = g_strdup_printf (format, mark_id, name, date, time, lat, lon,
                                                      sys_coord, description, comment, notes,
-                                                     data->global->project_name, _(link_to_site));
+                                                     data->project_name, _(link_to_site));
                    fwrite (content, sizeof (gchar), strlen (content), file);
                    g_free (content);
                 }
@@ -932,7 +936,7 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
           /* Запуск генерации тайлов. */
           hyscan_tile_queue_add_finished (tile_queue, g_rand_int_range (rand, 0, INT32_MAX));
           /* Устанавливаем курсор-часы. */
-          g_timeout_add (0, hyscan_gtk_mark_export_set_watch_cursor, data->global->gui.window);
+          g_timeout_add (0, hyscan_gtk_mark_export_set_watch_cursor, data->toplevel);
           g_free (rand);
         }
       while (package.counter)
@@ -955,9 +959,9 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
 
           while (g_hash_table_iter_next (&hash_iter, (gpointer *) &mark_id, (gpointer *) &location))
             {
-              gint32 project_id = hyscan_db_project_open (data->global->db, data->global->project_name);
+              gint32 project_id = hyscan_db_project_open (data->db, data->project_name);
               HyScanTrackInfo *track_info = hyscan_db_info_get_track_info (
-                                                   data->global->db,
+                                                   data->db,
                                                    project_id,
                                                    location->track_name);
               hyscan_gtk_mark_export_save_tile (location,
@@ -965,7 +969,7 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
                                                 tile_queue,
                                                 image_folder,
                                                 media,
-                                                data->global->project_name,
+                                                data->project_name,
                                                 mark_id,
                                                 file,
                                                 &package);
@@ -984,8 +988,11 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
 
   g_hash_table_unref (data->wf_marks);
   g_hash_table_unref (data->geo_marks);
+  g_object_unref (data->db);
+  g_object_unref (data->cache);
+  g_free (data->project_name);
   g_free (file_name);
-  g_timeout_add (0, hyscan_gtk_mark_export_set_default_cursor, data->global->gui.window);
+  g_timeout_add (0, hyscan_gtk_mark_export_set_default_cursor, data->toplevel);
   g_free (data);
   return NULL;
 }
@@ -1178,27 +1185,24 @@ hyscan_gtk_mark_export_copy_to_clipboard (HyScanMarkLocModel *ml_model,
 
 /**
  * hyscan_gtk_mark_export_save_as_html:
- * @ml_model: указатель на модель водопадных меток с данными о положении в пространстве
- * @mark_geo_model: указатель на модель геометок
- * @projrct_name: указатель на назване проекта. Добавляется в буфер обмена как описание содержимого
- * @global: указатель на структуру с "глобадьными" переменными
- * @export_folder: папка для экспорта
+ * @model_manager: указатель на указатель на Менеджер Моделей
+ * @toplevel: главное окно
  *
  * Сохраняет метки в формате HTML.
  */
 void
-hyscan_gtk_mark_export_save_as_html (HyScanMarkLocModel *ml_model,
-                                     HyScanObjectModel  *mark_geo_model,
-                                     Global             *global,
-                                     gchar              *export_folder)
+hyscan_gtk_mark_export_save_as_html (HyScanModelManager *model_manager,
+                                     GtkWindow          *toplevel)
 {
+  HyScanMarkLocModel *ml_model = hyscan_model_manager_get_acoustic_mark_loc_model (model_manager);
+  HyScanObjectModel  *mark_geo_model = hyscan_model_manager_get_geo_mark_model (model_manager);
   GtkWidget   *dialog = NULL;   /* Диалог выбора директории. */
   GThread     *thread = NULL;   /* Поток. */
   DataForHTML *data   = NULL;   /* Данные для потока. */
   gint         res;             /* Результат диалога. */
 
   dialog = gtk_file_chooser_dialog_new (_("Choose directory"),
-                                        GTK_WINDOW (global->gui.window),
+                                        toplevel,
                                         GTK_FILE_CHOOSER_ACTION_SELECT_FOLDER,
                                         _("Cancel"),
                                         GTK_RESPONSE_CANCEL,
@@ -1206,7 +1210,8 @@ hyscan_gtk_mark_export_save_as_html (HyScanMarkLocModel *ml_model,
                                         GTK_RESPONSE_ACCEPT,
                                         NULL);
 
-  gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (dialog), export_folder);
+  gtk_file_chooser_set_current_folder (GTK_FILE_CHOOSER (dialog),
+                                       hyscan_model_manager_get_export_folder (model_manager));
 
   res = gtk_dialog_run (GTK_DIALOG (dialog));
 
@@ -1220,10 +1225,16 @@ hyscan_gtk_mark_export_save_as_html (HyScanMarkLocModel *ml_model,
   data->wf_marks  = hyscan_mark_loc_model_get (ml_model);
   data->geo_marks = hyscan_object_model_get (mark_geo_model);
 
+  g_object_unref (ml_model);
+  g_object_unref (mark_geo_model);
+
   if (data->wf_marks == NULL || data->geo_marks == NULL)
     return;
 
-  data->global = global;
+  data->project_name = hyscan_model_manager_get_project_name (model_manager);
+  data->db = hyscan_model_manager_get_db (model_manager);
+  data->cache = hyscan_model_manager_get_cache (model_manager);
+  data->toplevel = toplevel;
   data->folder = gtk_file_chooser_get_current_folder (GTK_FILE_CHOOSER (dialog));
   gdk_rgba_parse (&data->color, "#FFFF00");
 

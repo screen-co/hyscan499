@@ -521,11 +521,15 @@ restart:
     hyscan_sonar_recorder_set_project (global.recorder, global.project_name);
 
   /* Cоздаём Менеджер Моделей. */
-  global.model_manager = hyscan_model_manager_new (global.project_name, global.db, global.cache);
-  g_signal_connect (global.model_manager,
-                    hyscan_model_manager_get_signal_title (global.model_manager, SIGNAL_TRACKS_CHANGED),
-                    G_CALLBACK (model_manager_tracks_changed),
-                    &global);
+  {
+    gchar *folder = NULL;
+    folder = keyfile_string_read_helper (global.settings, "EVO", "export_folder");
+    global.model_manager = hyscan_model_manager_new (global.project_name, global.db, global.cache, folder);
+    g_signal_connect (global.model_manager,
+                      hyscan_model_manager_get_signal_title (global.model_manager, SIGNAL_TRACKS_CHANGED),
+                      G_CALLBACK (model_manager_tracks_changed),
+                      &global);
+  }
   /* Получаем модель галсов. */
   db_info = hyscan_model_manager_get_track_model (global.model_manager);
   g_signal_connect (db_info, "projects-changed", G_CALLBACK (projects_changed), &global);

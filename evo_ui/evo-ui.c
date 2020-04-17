@@ -420,9 +420,8 @@ mark_exporter (GObject  *emitter,
           break;
           case MARKS_TO_HTML:
             {
-              gchar *folder = NULL;
-              folder = keyfile_string_read_helper (global_ui.settings, "EVO", "export_folder");
-              hyscan_gtk_mark_export_save_as_html (wf, geo, _global, folder);
+              hyscan_gtk_mark_export_save_as_html (_global->model_manager,
+                                                   GTK_WINDOW (_global->gui.window));
             }
           break;
           default: break;
