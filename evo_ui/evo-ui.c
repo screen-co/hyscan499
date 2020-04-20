@@ -1369,6 +1369,9 @@ mapkit_add_nav (Global           *global,
       break;
     }
 
+  if (sensor_name == NULL)
+    return;
+
   /* Определяем его смещение. */
   offset_ptr = NULL;
   for (link = hyscan_fnn_offsets_get_keys (o); link != NULL; link = link->next)
