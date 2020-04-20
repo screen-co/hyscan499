@@ -65,6 +65,7 @@ struct _HyScanGtkConPrivate
 
   GtkLabel      *project_label;
   GtkLabel      *hw_label;
+  GtkLabel      *of_label;
 
   GtkWidget *hw_page;
 
@@ -325,6 +326,7 @@ hyscan_gtk_con_make_intro_page (HyScanGtkCon *self)
   intro = GTK_WIDGET(gtk_builder_get_object (b, "intro"));
   priv->project_label = GTK_LABEL(gtk_builder_get_object (b, "pj_name"));
   priv->hw_label = GTK_LABEL(gtk_builder_get_object (b, "hw_name"));
+  priv->of_label = GTK_LABEL(gtk_builder_get_object (b, "of_name"));
 
   gtk_builder_add_callback_symbol (b, "hyscan_gtk_con_run_project_manager", G_CALLBACK (hyscan_gtk_con_run_project_manager));
   gtk_builder_add_callback_symbol (b, "hyscan_gtk_con_run_view", G_CALLBACK (hyscan_gtk_con_run_view));
@@ -332,24 +334,35 @@ hyscan_gtk_con_make_intro_page (HyScanGtkCon *self)
   gtk_builder_connect_signals (b, self);
 
   {
-    gchar *pf_file;
-    HyScanProfileHW *pfl;
+    gchar *pf_file, *of_file;
+    HyScanProfileHW *hwp = NULL;
+    HyScanProfileOffset *ofp = NULL;
 
     pf_file = keyfile_string_read_helper (priv->kf, "common", "hardware");
+    of_file = keyfile_string_read_helper (priv->kf, "common", "offset");
 
     if (pf_file != NULL)
       {
+        hwp = hyscan_profile_hw_new (pf_file);
+        if (hyscan_profile_read (HYSCAN_PROFILE (hwp)))
+          {
+            gtk_label_set_text (priv->hw_label, hyscan_profile_get_name(HYSCAN_PROFILE (hwp)));
 
-        pfl = hyscan_profile_hw_new (pf_file);
-        g_free (pf_file);
-
-        hyscan_profile_read (HYSCAN_PROFILE (pfl));
-        gtk_label_set_text (priv->hw_label, hyscan_profile_get_name(HYSCAN_PROFILE (pfl)));
+            if (of_file != NULL)
+              {
+                ofp = hyscan_profile_offset_new (of_file);
+                if (hyscan_profile_read (HYSCAN_PROFILE (ofp)))
+                  gtk_label_set_text (priv->of_label, hyscan_profile_get_name(HYSCAN_PROFILE (ofp)));
+              }
+          }
       }
     else
       {
-        gtk_widget_set_sensitive(GTK_WIDGET(gtk_builder_get_object (b, "scan")), FALSE);
+        gtk_widget_set_sensitive (GTK_WIDGET(gtk_builder_get_object (b, "scan")), FALSE);
       }
+
+    g_free (pf_file);
+    g_free (of_file);
   }
   {
     gchar *pjct;
@@ -391,9 +404,21 @@ hyscan_gtk_con_make_hw_page (HyScanGtkCon *self)
   gtk_assistant_set_page_complete (GTK_ASSISTANT (self), page, FALSE);
 }
 
-static void hyscan_gtk_con_selected_offset(void)
+static void
+hyscan_gtk_con_selected_offset(HyScanGtkProfile   *page,
+                               HyScanProfile      *profile,
+                               HyScanGtkCon       *self)
 {
+  g_clear_object (&self->priv->of_profile);
+  g_clear_pointer (&self->priv->of_profile_file, g_free);
 
+  if (profile != NULL)
+    {
+      self->priv->of_profile = g_object_ref (profile);
+      self->priv->of_profile_file = g_strdup (hyscan_profile_get_file (profile));
+      keyfile_string_write_helper (self->priv->kf, "common", "offset", self->priv->of_profile_file);
+      // gtk_assistant_set_page_type (GTK_ASSISTANT (self), page, GTK_ASSISTANT_PAGE_CONTENT);
+    }
 }
 
 static void
