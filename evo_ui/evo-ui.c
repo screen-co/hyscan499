@@ -421,7 +421,8 @@ mark_exporter (GObject  *emitter,
           case MARKS_TO_HTML:
             {
               hyscan_gtk_mark_export_save_as_html (_global->model_manager,
-                                                   GTK_WINDOW (_global->gui.window));
+                                                   GTK_WINDOW (_global->gui.window),
+                                                   FALSE);
             }
           break;
           default: break;

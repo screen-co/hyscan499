@@ -22,7 +22,6 @@ add_library (${UI_NAME} SHARED
              hyscan-gtk-map-kit.c
              evo-ui.c
              hyscan-gtk-rec.c
-             hyscan-gtk-mark-export.c
              hyscan-gtk-map-preload.c
              hyscan-gtk-map-go.c
              ${CMAKE_BINARY_DIR}/resources/${UI_NAME}-resources.c)
