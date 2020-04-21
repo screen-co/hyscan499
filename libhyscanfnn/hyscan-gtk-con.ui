@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.18.3 -->
+<!-- Generated with glade 3.22.1 -->
 <interface domain="libhyscanfnn">
   <requires lib="gtk+" version="3.12"/>
   <object class="GtkImage" id="scan_image">
@@ -36,11 +36,11 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="label2">
+      <object class="GtkLabel" id="pj_label">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="xalign">1</property>
         <property name="label" translatable="yes">Project:</property>
+        <property name="xalign">1</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -48,11 +48,11 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="label3">
+      <object class="GtkLabel" id="hw_label">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
-        <property name="xalign">1</property>
         <property name="label" translatable="yes">Hardware:</property>
+        <property name="xalign">1</property>
       </object>
       <packing>
         <property name="left_attach">0</property>
@@ -72,7 +72,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">5</property>
+        <property name="top_attach">6</property>
         <property name="width">2</property>
       </packing>
     </child>
@@ -89,7 +89,7 @@
       </object>
       <packing>
         <property name="left_attach">2</property>
-        <property name="top_attach">5</property>
+        <property name="top_attach">6</property>
         <property name="width">2</property>
       </packing>
     </child>
@@ -120,7 +120,7 @@
       </packing>
     </child>
     <child>
-      <object class="GtkButton" id="button1">
+      <object class="GtkButton" id="project_manager_button">
         <property name="label" translatable="yes">Project manager</property>
         <property name="visible">True</property>
         <property name="can_focus">True</property>
@@ -154,12 +154,51 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">4</property>
+        <property name="top_attach">5</property>
         <property name="width">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="of_label">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Offsets:</property>
+        <property name="xalign">1</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="of_name">
+        <property name="width_request">100</property>
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <attributes>
+          <attribute name="style" value="italic"/>
+        </attributes>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">4</property>
+        <property name="width">2</property>
       </packing>
     </child>
     <child>
       <placeholder/>
     </child>
+    <child>
+      <placeholder/>
+    </child>
+  </object>
+  <object class="GtkSizeGroup">
+    <property name="mode">vertical</property>
+    <widgets>
+      <widget name="hw_name"/>
+      <widget name="project_manager_button"/>
+      <widget name="pj_name"/>
+      <widget name="of_name"/>
+    </widgets>
   </object>
 </interface>
