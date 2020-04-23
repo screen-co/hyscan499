@@ -2572,7 +2572,8 @@ hyscan_gtk_map_kit_free (HyScanGtkMapKit *kit)
   g_free (priv->profile_active);
   g_free (priv->tile_cache_dir);
   g_free (priv->profiles_dir);
-  g_free (priv->project_name);
+  /*g_free (priv->project_name);*/
+  priv->project_name = NULL;
   g_free (priv->recording_track);
   g_hash_table_destroy (priv->profiles);
   g_clear_object (&priv->cache);
