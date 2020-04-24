@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-12-16 18:12+0300\n"
+"POT-Creation-Date: 2020-04-24 14:32+0300\n"
 "PO-Revision-Date: 2019-07-19 17:26+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -30,7 +30,7 @@ msgstr "ГБО-НЧ"
 msgid "SideScanHigh"
 msgstr "ГБО-ВЧ"
 
-#: fnn.c:123 fnn.c:3491
+#: fnn.c:123 fnn.c:3547
 msgid "Profiler"
 msgstr "Профилограф"
 
@@ -50,51 +50,51 @@ msgstr "НЧ эхолот"
 msgid "ForwardLook"
 msgstr "ВСЛ"
 
-#: fnn.c:532 fnn.c:540
+#: fnn.c:535 fnn.c:543
 msgid "Hardware parameters"
 msgstr "Параметры оборудования"
 
-#: fnn.c:535 hyscan-gtk-configurator.c:127
+#: fnn.c:538 hyscan-gtk-configurator.c:127
 msgid "Apply"
 msgstr "Применить"
 
-#: fnn.c:536
+#: fnn.c:539
 msgid "Reset"
 msgstr "Сбросить"
 
-#: fnn.c:537 fnn.c:573 fnn.c:864
+#: fnn.c:540 fnn.c:576 fnn.c:838
 msgid "Close"
 msgstr "Закрыть"
 
-#: fnn.c:570 fnn.c:576
+#: fnn.c:573 fnn.c:579
 msgid "Sonar info"
 msgstr "Информация о локаторе"
 
-#: fnn.c:861 fnn.c:867
+#: fnn.c:835 fnn.c:841
 msgid "Export data"
 msgstr "Экспорт данных"
 
-#: fnn.c:3500
+#: fnn.c:3556
 msgid "Yellow"
 msgstr "Жёлтая"
 
-#: fnn.c:3508
+#: fnn.c:3564
 msgid "Brown"
 msgstr "Коричневая"
 
-#: fnn.c:3515
+#: fnn.c:3571
 msgid "Sepia"
 msgstr "Сепия"
 
-#: fnn.c:3522
+#: fnn.c:3578
 msgid "White"
 msgstr "Белая"
 
-#: fnn.c:3530
+#: fnn.c:3586
 msgid "Inverted"
 msgstr "Инверсная"
 
-#: fnn.c:3538
+#: fnn.c:3594
 msgid "Green"
 msgstr "Зеленая"
 
@@ -130,7 +130,7 @@ msgstr "Вы действительно хотите удалить галс"
 msgid "Enter project name"
 msgstr "Введите название проекта"
 
-#: hyscan-fnn-project.c:445 hyscan-gtk-dev-indicator.c:154
+#: hyscan-fnn-project.c:445 hyscan-gtk-dev-indicator.c:276
 msgid "OK"
 msgstr "OK"
 
@@ -147,31 +147,35 @@ msgctxt "widget_title"
 msgid "Project manager"
 msgstr "Менеджер проектов"
 
-#: hyscan-gtk-con.c:360
+#: hyscan-gtk-con.c:380
 msgid "Intro"
 msgstr "Начальная страница"
 
-#: hyscan-gtk-con.c:383
+#: hyscan-gtk-con.c:403
 msgid "Hardware"
 msgstr "Оборудование"
 
-#: hyscan-gtk-con.c:429
+#: hyscan-gtk-con.c:432
+msgid "Antennas positions"
+msgstr "Местоположение антенн"
+
+#: hyscan-gtk-con.c:466
 msgid "Connection"
 msgstr "Подключение"
 
-#: hyscan-gtk-con.c:457
+#: hyscan-gtk-con.c:495
 msgid "Connecting..."
 msgstr "Подключение..."
 
-#: hyscan-gtk-con.c:498
+#: hyscan-gtk-con.c:536
 msgid "Connection completed. HyScan will launch shortly. "
 msgstr "Подключение завершено. HyScan скоро запустится. "
 
-#: hyscan-gtk-con.c:505
+#: hyscan-gtk-con.c:543
 msgid "Connection failed. "
 msgstr "Не удалось подключиться"
 
-#: hyscan-gtk-con.c:506
+#: hyscan-gtk-con.c:544
 msgid "Continue in view mode"
 msgstr "Продолжить в режиме просмотра"
 
@@ -211,29 +215,25 @@ msgstr ""
 msgid "Name of DB-profile"
 msgstr "Имя профиля БД"
 
-#: hyscan-gtk-dev-indicator.c:157
-msgid "Warning"
-msgstr "Предупр."
-
-#: hyscan-gtk-dev-indicator.c:160
-msgid "Critical"
-msgstr "Критич."
-
-#: hyscan-gtk-dev-indicator.c:163
-msgid "Error"
-msgstr "Ошибка"
-
-#: hyscan-gtk-dev-indicator.c:166
-msgid "Unknown"
-msgstr "Неизвестно"
-
-#: hyscan-gtk-dev-indicator.c:213
+#: hyscan-gtk-dev-indicator.c:212
 msgid "Device status"
 msgstr "Статус оборудования"
 
-#: hyscan-gtk-dev-indicator.c:236
-msgid "No devices connected"
-msgstr "Оборудование не подключено"
+#: hyscan-gtk-dev-indicator.c:279
+msgid "Warning"
+msgstr "Предупр."
+
+#: hyscan-gtk-dev-indicator.c:282
+msgid "Critical"
+msgstr "Критич."
+
+#: hyscan-gtk-dev-indicator.c:285
+msgid "Error"
+msgstr "Ошибка"
+
+#: hyscan-gtk-dev-indicator.c:288
+msgid "Unknown"
+msgstr "Неизвестно"
 
 #: hyscan-gtk-fnn-offsets.c:120
 msgid "Positive: starboard, negative: portside"
@@ -252,12 +252,12 @@ msgid "Yaw"
 msgstr "поворот антенны по курсу; в рад"
 
 #: hyscan-gtk-fnn-offsets.c:124
-msgid "Roll"
-msgstr "поворот антенны по крену; в рад"
-
-#: hyscan-gtk-fnn-offsets.c:125
 msgid "Pitch"
 msgstr "поворот антенны по дифференту; в рад"
+
+#: hyscan-gtk-fnn-offsets.c:125
+msgid "Roll"
+msgstr "поворот антенны по крену; в рад"
 
 #: hyscan-gtk-fnn-offsets.c:293
 msgid "Done"
@@ -267,11 +267,11 @@ msgstr "Готово"
 msgid "Offset setup"
 msgstr "Местоположения антенн"
 
-#: hyscan-gtk-nav-indicator.c:302
+#: hyscan-gtk-nav-indicator.c:330
 msgid "m/s"
 msgstr "м/с"
 
-#: hyscan-gtk-nav-indicator.c:306
+#: hyscan-gtk-nav-indicator.c:334
 msgid "m"
 msgstr "м"
 
@@ -298,6 +298,10 @@ msgstr "Съемка"
 #: tmp/hyscan-gtk-con.ui.h:6
 msgid "Project manager"
 msgstr "Проекты..."
+
+#: tmp/hyscan-gtk-con.ui.h:7
+msgid "Offsets:"
+msgstr "Местоположения антенн"
 
 #: tmp/hyscan-gtk-mark-editor.ui.h:1
 msgid "Title"
@@ -348,3 +352,6 @@ msgstr "Название"
 #: tmp/hyscan-gtk-project-viewer.ui.h:2
 msgid "Date"
 msgstr "Дата"
+
+#~ msgid "No devices connected"
+#~ msgstr "Оборудование не подключено"
