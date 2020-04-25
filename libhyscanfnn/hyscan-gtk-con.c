@@ -301,8 +301,7 @@ hyscan_gtk_con_run_scan (GObject *emitter,
     if (pf_file != NULL)
       {
 
-        pfl = hyscan_profile_hw_new (pf_file);
-        hyscan_profile_hw_set_driver_paths(pfl, self->priv->drivers);
+        pfl = hyscan_profile_hw_new (pf_file, self->priv->drivers);
         hyscan_profile_read (HYSCAN_PROFILE (pfl));
         g_free (pf_file);
 
@@ -343,7 +342,7 @@ hyscan_gtk_con_make_intro_page (HyScanGtkCon *self)
 
     if (pf_file != NULL)
       {
-        hwp = hyscan_profile_hw_new (pf_file);
+        hwp = hyscan_profile_hw_new (pf_file, priv->drivers);
         if (hyscan_profile_read (HYSCAN_PROFILE (hwp)))
           {
             gtk_label_set_text (priv->hw_label, hyscan_profile_get_name(HYSCAN_PROFILE (hwp)));

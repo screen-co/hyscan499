@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-12-16 18:12+0300\n"
+"POT-Creation-Date: 2020-04-24 14:32+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -29,7 +29,7 @@ msgstr ""
 msgid "SideScanHigh"
 msgstr ""
 
-#: fnn.c:123 fnn.c:3491
+#: fnn.c:123 fnn.c:3547
 msgid "Profiler"
 msgstr ""
 
@@ -49,51 +49,51 @@ msgstr ""
 msgid "ForwardLook"
 msgstr ""
 
-#: fnn.c:532 fnn.c:540
+#: fnn.c:535 fnn.c:543
 msgid "Hardware parameters"
 msgstr ""
 
-#: fnn.c:535 hyscan-gtk-configurator.c:127
+#: fnn.c:538 hyscan-gtk-configurator.c:127
 msgid "Apply"
 msgstr ""
 
-#: fnn.c:536
+#: fnn.c:539
 msgid "Reset"
 msgstr ""
 
-#: fnn.c:537 fnn.c:573 fnn.c:864
+#: fnn.c:540 fnn.c:576 fnn.c:838
 msgid "Close"
 msgstr ""
 
-#: fnn.c:570 fnn.c:576
+#: fnn.c:573 fnn.c:579
 msgid "Sonar info"
 msgstr ""
 
-#: fnn.c:861 fnn.c:867
+#: fnn.c:835 fnn.c:841
 msgid "Export data"
 msgstr ""
 
-#: fnn.c:3500
+#: fnn.c:3556
 msgid "Yellow"
 msgstr ""
 
-#: fnn.c:3508
+#: fnn.c:3564
 msgid "Brown"
 msgstr ""
 
-#: fnn.c:3515
+#: fnn.c:3571
 msgid "Sepia"
 msgstr ""
 
-#: fnn.c:3522
+#: fnn.c:3578
 msgid "White"
 msgstr ""
 
-#: fnn.c:3530
+#: fnn.c:3586
 msgid "Inverted"
 msgstr ""
 
-#: fnn.c:3538
+#: fnn.c:3594
 msgid "Green"
 msgstr ""
 
@@ -129,7 +129,7 @@ msgstr ""
 msgid "Enter project name"
 msgstr ""
 
-#: hyscan-fnn-project.c:445 hyscan-gtk-dev-indicator.c:154
+#: hyscan-fnn-project.c:445 hyscan-gtk-dev-indicator.c:276
 msgid "OK"
 msgstr ""
 
@@ -146,31 +146,35 @@ msgctxt "widget_title"
 msgid "Project manager"
 msgstr ""
 
-#: hyscan-gtk-con.c:360
+#: hyscan-gtk-con.c:380
 msgid "Intro"
 msgstr ""
 
-#: hyscan-gtk-con.c:383
+#: hyscan-gtk-con.c:403
 msgid "Hardware"
 msgstr ""
 
-#: hyscan-gtk-con.c:429
+#: hyscan-gtk-con.c:432
+msgid "Antennas positions"
+msgstr ""
+
+#: hyscan-gtk-con.c:466
 msgid "Connection"
 msgstr ""
 
-#: hyscan-gtk-con.c:457
+#: hyscan-gtk-con.c:495
 msgid "Connecting..."
 msgstr ""
 
-#: hyscan-gtk-con.c:498
+#: hyscan-gtk-con.c:536
 msgid "Connection completed. HyScan will launch shortly. "
 msgstr ""
 
-#: hyscan-gtk-con.c:505
+#: hyscan-gtk-con.c:543
 msgid "Connection failed. "
 msgstr ""
 
-#: hyscan-gtk-con.c:506
+#: hyscan-gtk-con.c:544
 msgid "Continue in view mode"
 msgstr ""
 
@@ -206,28 +210,24 @@ msgstr ""
 msgid "Name of DB-profile"
 msgstr ""
 
-#: hyscan-gtk-dev-indicator.c:157
-msgid "Warning"
-msgstr ""
-
-#: hyscan-gtk-dev-indicator.c:160
-msgid "Critical"
-msgstr ""
-
-#: hyscan-gtk-dev-indicator.c:163
-msgid "Error"
-msgstr ""
-
-#: hyscan-gtk-dev-indicator.c:166
-msgid "Unknown"
-msgstr ""
-
-#: hyscan-gtk-dev-indicator.c:213
+#: hyscan-gtk-dev-indicator.c:212
 msgid "Device status"
 msgstr ""
 
-#: hyscan-gtk-dev-indicator.c:236
-msgid "No devices connected"
+#: hyscan-gtk-dev-indicator.c:279
+msgid "Warning"
+msgstr ""
+
+#: hyscan-gtk-dev-indicator.c:282
+msgid "Critical"
+msgstr ""
+
+#: hyscan-gtk-dev-indicator.c:285
+msgid "Error"
+msgstr ""
+
+#: hyscan-gtk-dev-indicator.c:288
+msgid "Unknown"
 msgstr ""
 
 #: hyscan-gtk-fnn-offsets.c:120
@@ -247,11 +247,11 @@ msgid "Yaw"
 msgstr ""
 
 #: hyscan-gtk-fnn-offsets.c:124
-msgid "Roll"
+msgid "Pitch"
 msgstr ""
 
 #: hyscan-gtk-fnn-offsets.c:125
-msgid "Pitch"
+msgid "Roll"
 msgstr ""
 
 #: hyscan-gtk-fnn-offsets.c:293
@@ -262,11 +262,11 @@ msgstr ""
 msgid "Offset setup"
 msgstr ""
 
-#: hyscan-gtk-nav-indicator.c:302
+#: hyscan-gtk-nav-indicator.c:330
 msgid "m/s"
 msgstr ""
 
-#: hyscan-gtk-nav-indicator.c:306
+#: hyscan-gtk-nav-indicator.c:334
 msgid "m"
 msgstr ""
 
@@ -292,6 +292,10 @@ msgstr ""
 
 #: tmp/hyscan-gtk-con.ui.h:6
 msgid "Project manager"
+msgstr ""
+
+#: tmp/hyscan-gtk-con.ui.h:7
+msgid "Offsets:"
 msgstr ""
 
 #: tmp/hyscan-gtk-mark-editor.ui.h:1

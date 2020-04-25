@@ -1006,6 +1006,7 @@ make_record_control (Global *global,
   rec_switch = hyscan_gtk_rec_new (global->recorder);
 
   /* Помещаем виджет включения записи в GtkGrid. */
+  gtk_widget_set_halign (rec_switch, GTK_ALIGN_CENTER);
   gtk_grid_attach (GTK_GRID (w), rec_switch, 1, 1, 1, 1);
 
   {
