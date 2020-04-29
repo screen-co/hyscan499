@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-04-25 17:08+0300\n"
+"POT-Creation-Date: 2020-04-29 15:35+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,143 +17,147 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: evo-ui.c:69
+#: evo-ui.c:71
 msgid "Save file"
 msgstr ""
 
-#: evo-ui.c:72 hyscan-gtk-map-kit.c:453
+#: evo-ui.c:74 hyscan-gtk-map-kit.c:453
 msgid "Cancel"
 msgstr ""
 
-#: evo-ui.c:73
+#: evo-ui.c:75
 msgid "Save"
 msgstr ""
 
-#: evo-ui.c:574
+#: evo-ui.c:452 evo-ui.c:1593
+msgid "Mark Manager"
+msgstr ""
+
+#: evo-ui.c:611
 msgid "m/s"
 msgstr ""
 
-#: evo-ui.c:954
+#: evo-ui.c:991
 msgid "Layer"
 msgstr ""
 
-#: evo-ui.c:965 hyscan-gtk-map-kit.c:683
+#: evo-ui.c:1002 hyscan-gtk-map-kit.c:683
 msgid "Show"
 msgstr ""
 
-#: evo-ui.c:978 hyscan-gtk-map-kit.c:1710
+#: evo-ui.c:1015 hyscan-gtk-map-kit.c:1710
 msgid "Grid"
 msgstr ""
 
-#: evo-ui.c:979
+#: evo-ui.c:1016
 msgid "Marks"
 msgstr ""
 
-#: evo-ui.c:980
+#: evo-ui.c:1017
 msgid "Measurements"
 msgstr ""
 
-#: evo-ui.c:981
+#: evo-ui.c:1018
 msgid "Shadow measure"
 msgstr ""
 
-#: evo-ui.c:982
+#: evo-ui.c:1019
 msgid "Coordinates"
 msgstr ""
 
-#: evo-ui.c:983 tmp/evo.ui.h:12
+#: evo-ui.c:1020 tmp/evo.ui.h:12
 msgid "Magnifier"
 msgstr ""
 
-#: evo-ui.c:1469
+#: evo-ui.c:1506
 msgid "Map"
 msgstr ""
 
-#: evo-ui.c:1551
+#: evo-ui.c:1588
 msgid "Project Manager"
 msgstr ""
 
-#: evo-ui.c:1556
+#: evo-ui.c:1598
 msgid "Online Map"
 msgstr ""
 
-#: evo-ui.c:1562
+#: evo-ui.c:1604
 msgid "Smooth nav"
 msgstr ""
 
-#: evo-ui.c:1573
+#: evo-ui.c:1615
 msgid "Marks as CSV"
 msgstr ""
 
-#: evo-ui.c:1577
+#: evo-ui.c:1619
 msgid "Marks as HTML"
 msgstr ""
 
-#: evo-ui.c:1581
+#: evo-ui.c:1623
 msgid "Marks to clipboard"
 msgstr ""
 
-#: evo-ui.c:1585
+#: evo-ui.c:1627
 msgid "Track plan as XML"
 msgstr ""
 
-#: evo-ui.c:1589
+#: evo-ui.c:1631
 msgid "Track plan as KML"
 msgstr ""
 
-#: evo-ui.c:1593
+#: evo-ui.c:1635
 msgid "XYZ"
 msgstr ""
 
-#: evo-ui.c:1597
+#: evo-ui.c:1639
 msgid "UTM"
 msgstr ""
 
-#: evo-ui.c:1601
+#: evo-ui.c:1643
 msgid "HSX"
 msgstr ""
 
-#: evo-ui.c:1608
+#: evo-ui.c:1650
 msgid "Import track plan"
 msgstr ""
 
-#: evo-ui.c:1612
+#: evo-ui.c:1654
 msgid "Export"
 msgstr ""
 
-#: evo-ui.c:1641
+#: evo-ui.c:1683
 msgid "Sensors"
 msgstr ""
 
-#: evo-ui.c:1653
+#: evo-ui.c:1695
 msgid "Info"
 msgstr ""
 
-#: evo-ui.c:1657
+#: evo-ui.c:1699
 msgid "State"
 msgstr ""
 
-#: evo-ui.c:1661
+#: evo-ui.c:1703
 msgid "Params"
 msgstr ""
 
-#: evo-ui.c:1665
+#: evo-ui.c:1707
 msgid "Sonar"
 msgstr ""
 
-#: evo-ui.c:1671
+#: evo-ui.c:1713
 msgid "Antennas offsets"
 msgstr ""
 
-#: evo-ui.c:1676 tmp/record.ui.h:2
+#: evo-ui.c:1718 tmp/record.ui.h:2
 msgid "No beaming"
 msgstr ""
 
-#: evo-ui.c:1692
+#: evo-ui.c:1734
 msgid "Hardware info"
 msgstr ""
 
-#: evo-ui.c:1701
+#: evo-ui.c:1743
 msgid "Exit"
 msgstr ""
 

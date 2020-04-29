@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-04-25 17:08+0300\n"
+"POT-Creation-Date: 2020-04-29 15:35+0300\n"
 "PO-Revision-Date: 2020-04-25 17:08+0300\n"
 "Last-Translator:  <zaharov@screen-co.ru>\n"
 "Language-Team: Russian <ru@li.org>\n"
@@ -18,143 +18,147 @@ msgstr ""
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
 
-#: evo-ui.c:69
+#: evo-ui.c:71
 msgid "Save file"
 msgstr "Сохранить файл"
 
-#: evo-ui.c:72 hyscan-gtk-map-kit.c:453
+#: evo-ui.c:74 hyscan-gtk-map-kit.c:453
 msgid "Cancel"
 msgstr "Отмена"
 
-#: evo-ui.c:73
+#: evo-ui.c:75
 msgid "Save"
 msgstr "Сохранить"
 
-#: evo-ui.c:574
+#: evo-ui.c:452 evo-ui.c:1593
+msgid "Mark Manager"
+msgstr "Менеджер проектов"
+
+#: evo-ui.c:611
 msgid "m/s"
 msgstr "м/с"
 
-#: evo-ui.c:954
+#: evo-ui.c:991
 msgid "Layer"
 msgstr "Слой"
 
-#: evo-ui.c:965 hyscan-gtk-map-kit.c:683
+#: evo-ui.c:1002 hyscan-gtk-map-kit.c:683
 msgid "Show"
 msgstr "Вид."
 
-#: evo-ui.c:978 hyscan-gtk-map-kit.c:1710
+#: evo-ui.c:1015 hyscan-gtk-map-kit.c:1710
 msgid "Grid"
 msgstr "Сетка"
 
-#: evo-ui.c:979
+#: evo-ui.c:1016
 msgid "Marks"
 msgstr "Метки"
 
-#: evo-ui.c:980
+#: evo-ui.c:1017
 msgid "Measurements"
 msgstr "Измерения"
 
-#: evo-ui.c:981
+#: evo-ui.c:1018
 msgid "Shadow measure"
 msgstr "Высота по тени"
 
-#: evo-ui.c:982
+#: evo-ui.c:1019
 msgid "Coordinates"
 msgstr "Координаты"
 
-#: evo-ui.c:983 tmp/evo.ui.h:12
+#: evo-ui.c:1020 tmp/evo.ui.h:12
 msgid "Magnifier"
 msgstr "Лупа"
 
-#: evo-ui.c:1469
+#: evo-ui.c:1506
 msgid "Map"
 msgstr "Карта"
 
-#: evo-ui.c:1551
+#: evo-ui.c:1588
 msgid "Project Manager"
 msgstr "Менеджер проектов"
 
-#: evo-ui.c:1556
+#: evo-ui.c:1598
 msgid "Online Map"
 msgstr "Онлайн-карта"
 
-#: evo-ui.c:1562
+#: evo-ui.c:1604
 msgid "Smooth nav"
 msgstr "Сглаж. навигация"
 
-#: evo-ui.c:1573
+#: evo-ui.c:1615
 msgid "Marks as CSV"
 msgstr "Метки в CSV"
 
-#: evo-ui.c:1577
+#: evo-ui.c:1619
 msgid "Marks as HTML"
 msgstr "Метки в HTML"
 
-#: evo-ui.c:1581
+#: evo-ui.c:1623
 msgid "Marks to clipboard"
 msgstr "Метки в буфер обмена"
 
-#: evo-ui.c:1585
+#: evo-ui.c:1627
 msgid "Track plan as XML"
 msgstr "Схема галсов в XML"
 
-#: evo-ui.c:1589
+#: evo-ui.c:1631
 msgid "Track plan as KML"
 msgstr "Схема галсов в KML"
 
-#: evo-ui.c:1593
+#: evo-ui.c:1635
 msgid "XYZ"
 msgstr "XYZ (координаты, глубина)"
 
-#: evo-ui.c:1597
+#: evo-ui.c:1639
 msgid "UTM"
 msgstr ""
 
-#: evo-ui.c:1601
+#: evo-ui.c:1643
 msgid "HSX"
 msgstr ""
 
-#: evo-ui.c:1608
+#: evo-ui.c:1650
 msgid "Import track plan"
 msgstr "Импорт схемы галсов"
 
-#: evo-ui.c:1612
+#: evo-ui.c:1654
 msgid "Export"
 msgstr "Экспорт"
 
-#: evo-ui.c:1641
+#: evo-ui.c:1683
 msgid "Sensors"
 msgstr "Датчики"
 
-#: evo-ui.c:1653
+#: evo-ui.c:1695
 msgid "Info"
 msgstr "Информация"
 
-#: evo-ui.c:1657
+#: evo-ui.c:1699
 msgid "State"
 msgstr "Состояние"
 
-#: evo-ui.c:1661
+#: evo-ui.c:1703
 msgid "Params"
 msgstr "Параметры"
 
-#: evo-ui.c:1665
+#: evo-ui.c:1707
 msgid "Sonar"
 msgstr "Локатор"
 
-#: evo-ui.c:1671
+#: evo-ui.c:1713
 msgid "Antennas offsets"
 msgstr "Смещения антенн"
 
-#: evo-ui.c:1676 tmp/record.ui.h:2
+#: evo-ui.c:1718 tmp/record.ui.h:2
 msgid "No beaming"
 msgstr "Без излучения"
 
-#: evo-ui.c:1692
+#: evo-ui.c:1734
 msgid "Hardware info"
 msgstr "Параметры оборудования"
 
-#: evo-ui.c:1701
+#: evo-ui.c:1743
 msgid "Exit"
 msgstr "Выход"
 
