@@ -53,6 +53,8 @@ enum
 
 EvoUI global_ui = {0,};
 Global *_global = NULL;
+/* Виджет для Журнала Меток. */
+GtkWidget  *mark_manager_window = NULL;
 
 void
 filesave_dialog (const gchar *extension,
@@ -432,6 +434,41 @@ mark_exporter (GObject  *emitter,
     }
 }
 
+/* Обработчик пункта меню "Журнал Меток". */
+void run_mark_manager ()
+{
+  if (mark_manager_window == NULL)
+    {
+      GtkWindow *window;
+      GtkWidget *mark_manager;
+      /* Создаём виджет. */
+      mark_manager_window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+      window = GTK_WINDOW (mark_manager_window);
+      /* Помещаем виджет в центр. */
+      gtk_window_set_position (window, GTK_WIN_POS_CENTER);
+      /* Размер виджета. */
+      gtk_window_set_default_size (window, 800, 600);
+      /* Заголовок виджета. */
+      gtk_window_set_title (window, _("Mark Manager"));
+      /* Отступ от края в 5 пикселей. */
+      gtk_container_set_border_width (GTK_CONTAINER (mark_manager_window), 5);
+      /* Cкрыть виджет по сигналу закрытия виджета. */
+      g_signal_connect (mark_manager_window,
+                        "delete-event",
+                        G_CALLBACK (gtk_widget_hide_on_delete),
+                        NULL);
+      /* Создаём Журнал Меток. */
+      mark_manager = hyscan_mark_manager_new (_global->model_manager);
+      /* Помещаем Журнал Меток в окно. */
+      gtk_container_add (GTK_CONTAINER (mark_manager_window), mark_manager);
+      /* Делаем все виджеты видимыми. */
+      gtk_widget_show_all (mark_manager_window);
+    }
+  else
+    {
+      gtk_window_present (GTK_WINDOW (mark_manager_window));
+    }
+}
 
 gboolean
 evo_brightness_set_override (Global  *global,
@@ -1488,7 +1525,7 @@ build_interface (Global *global)
     GtkWidget *lbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6),
               *tracks = GTK_WIDGET (global->gui.track.view),
               *mlist = GTK_WIDGET (global->gui.mark_view),
-              *mark_manager = hyscan_mark_manager_new (global->model_manager),
+              /**mark_manager = hyscan_mark_manager_new (global->model_manager),*/
               *meditor = GTK_WIDGET (global->gui.meditor);
 
     gtk_widget_set_margin_end (lbox, 6);
@@ -1502,14 +1539,14 @@ build_interface (Global *global)
     g_object_set (meditor, "vexpand", FALSE, "valign", GTK_ALIGN_END,
                            "hexpand", FALSE, "halign", GTK_ALIGN_FILL, NULL);
 
-    /*gtk_box_pack_start (GTK_BOX (lbox), tracks, TRUE, TRUE, 0);*/
-    gtk_box_pack_start (GTK_BOX (lbox), tracks, FALSE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (lbox), tracks, TRUE, TRUE, 0);
+    /*gtk_box_pack_start (GTK_BOX (lbox), tracks, FALSE, TRUE, 0);*/
     gtk_box_pack_start (GTK_BOX (lbox), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
-    /*gtk_box_pack_start (GTK_BOX (lbox), mlist, TRUE, TRUE, 0);*/
-    gtk_box_pack_start (GTK_BOX (lbox), mlist, FALSE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (lbox), mlist, TRUE, TRUE, 0);
+    /*gtk_box_pack_start (GTK_BOX (lbox), mlist, FALSE, TRUE, 0);*/
     /* Журнал меток. */
     /*gtk_box_pack_start (GTK_BOX (lbox), mark_manager, FALSE, TRUE, 0);*/
-    gtk_box_pack_start (GTK_BOX (lbox), mark_manager, TRUE, TRUE, 0);
+    /*gtk_box_pack_start (GTK_BOX (lbox), mark_manager, TRUE, TRUE, 0);*/
     gtk_box_pack_start (GTK_BOX (lbox), meditor, FALSE, FALSE, 0);
     // gtk_box_pack_start (GTK_BOX (lbox), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
 
@@ -1550,6 +1587,11 @@ build_interface (Global *global)
     /* менеджер проектов */
     mitem = gtk_menu_item_new_with_label (_("Project Manager"));
     g_signal_connect (mitem, "activate", G_CALLBACK (run_manager), NULL);
+    gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
+
+    /* Журнал Меток. */
+    mitem = gtk_menu_item_new_with_label (_("Mark Manager"));
+    g_signal_connect (mitem, "activate", G_CALLBACK (run_mark_manager), NULL);
     gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
     /* офлайн-карта */

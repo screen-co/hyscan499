@@ -1119,16 +1119,16 @@ create_wfmark_toolbox (HyScanGtkMapKit *kit)
 
   /* Создаём менеджер меток. */
   /*if (priv->mark_geo_model != NULL)*/
-  if (priv->mark_manager == NULL)
-    priv->mark_manager = hyscan_mark_manager_new (priv->model_manager);
+  /*if (priv->mark_manager == NULL)
+    priv->mark_manager = hyscan_mark_manager_new (priv->model_manager);*/
 
   /* Помещаем в панель навигации. */
   gtk_box_pack_start (GTK_BOX (kit->navigation), gtk_separator_new (GTK_ORIENTATION_HORIZONTAL), FALSE, FALSE, 0);
-  /*gtk_box_pack_start (GTK_BOX (kit->navigation), scrolled_window, TRUE, TRUE, 0);*/
-  gtk_box_pack_start (GTK_BOX (kit->navigation), scrolled_window, FALSE, TRUE, 0);
-  if (priv->mark_manager != NULL)
+  gtk_box_pack_start (GTK_BOX (kit->navigation), scrolled_window, TRUE, TRUE, 0);
+  /*gtk_box_pack_start (GTK_BOX (kit->navigation), scrolled_window, FALSE, TRUE, 0);*/
+  /*if (priv->mark_manager != NULL)*/
     /*gtk_box_pack_start (GTK_BOX (kit->navigation), priv->mark_manager, FALSE, TRUE, 0);*/
-     gtk_box_pack_start (GTK_BOX (kit->navigation), priv->mark_manager, TRUE, TRUE, 0);
+     /*gtk_box_pack_start (GTK_BOX (kit->navigation), priv->mark_manager, TRUE, TRUE, 0);*/
   gtk_box_pack_start (GTK_BOX (kit->navigation), priv->mark_editor, FALSE, FALSE, 0);
 }
 
@@ -1168,8 +1168,8 @@ create_track_box (HyScanGtkMapKit *kit,
 
 
   /* Помещаем в панель навигации. */
-  /*gtk_box_pack_start (box, scrolled_window, TRUE, TRUE, 0);*/
-  gtk_box_pack_start (box, scrolled_window, FALSE, TRUE, 0);
+  gtk_box_pack_start (box, scrolled_window, TRUE, TRUE, 0);
+  /*gtk_box_pack_start (box, scrolled_window, FALSE, TRUE, 0);*/
 }
 
 static void
