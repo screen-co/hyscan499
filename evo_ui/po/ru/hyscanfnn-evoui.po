@@ -32,7 +32,7 @@ msgstr "Сохранить"
 
 #: evo-ui.c:452 evo-ui.c:1593
 msgid "Mark Manager"
-msgstr "Менеджер проектов"
+msgstr "Журнал меток"
 
 #: evo-ui.c:611
 msgid "m/s"
