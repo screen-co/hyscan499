@@ -38,7 +38,9 @@
 #include <hyscan-gtk-param-merge.h>
 #include <hyscan-param-merge.h>
 #include <hyscan-nav-model.h>
+#include <hyscan-config.h>
 
+#define PROFILE_DIR          "map-profiles"
 #define PROFILE_EXTENSION    ".ini"
 #define DEFAULT_PROFILE_NAME "default"    /* Имя профиля карты по умолчанию. */
 #define PRELOAD_STATE_DONE   1000         /* Статус кэширования тайлов 0 "Загрузка завершена". */
@@ -102,7 +104,6 @@ struct _HyScanGtkMapKitPrivate
   GHashTable              *profiles;         /* Хэш-таблица профилей карты. */
   gchar                   *profile_active;   /* Ключ активного профиля. */
   gboolean                 profile_offline;  /* Признак оффлайн-профиля карты. */
-  gchar                   *profiles_dir;     /* Папка для записи пользоательских профилей. */
   gchar                   *tile_cache_dir;   /* Путь к директории, в которой хранятся тайлы. */
 
   HyScanGeoPoint           center;           /* Географические координаты для виджета навигации. */
@@ -199,6 +200,9 @@ list_profiles (const gchar *profiles_path)
   GError *error = NULL;
   GDir *dir;
 
+  if (!g_file_test (profiles_path, G_FILE_TEST_IS_DIR))
+    goto exit;
+
   dir = g_dir_open (profiles_path, 0, &error);
   if (error == NULL)
     {
@@ -225,6 +229,7 @@ list_profiles (const gchar *profiles_path)
       g_error_free (error);
     }
 
+exit:
   profiles = g_realloc (profiles, ++nprofiles * sizeof (gchar **));
   profiles[nprofiles - 1] = NULL;
 
@@ -1463,8 +1468,10 @@ static void
 profile_config_apply_clicked (HyScanGtkMapKit *kit)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
+  HyScanParam *param;
   HyScanProfileMap *profile, *new_profile;
   gchar *file_name, *base_name;
+  const gchar *user_dir;
 
   profile = g_hash_table_lookup (priv->profiles, priv->profile_active);
   if (profile == NULL)
@@ -1472,17 +1479,23 @@ profile_config_apply_clicked (HyScanGtkMapKit *kit)
 
   hyscan_gtk_param_apply (HYSCAN_GTK_PARAM (priv->profile_param));
 
-  if (priv->profiles_dir == NULL)
+  user_dir = hyscan_config_get_user_files_dir ();
+  if (user_dir == NULL)
     return;
 
+  /* Создаём копию профиля в пользовательской директории. */
   base_name = g_strdup_printf ("%s%s", priv->profile_active, PROFILE_EXTENSION);
-  file_name = g_build_path (G_DIR_SEPARATOR_S, priv->profiles_dir, base_name, NULL);
+  file_name = g_build_path (G_DIR_SEPARATOR_S, user_dir, PROFILE_DIR, base_name, NULL);
+  new_profile = hyscan_profile_map_copy (profile, file_name);
 
-  hyscan_profile_map_write (profile, HYSCAN_GTK_MAP (kit->map), file_name);
-  new_profile = hyscan_profile_map_new (priv->tile_cache_dir, file_name);
+  /* Записываем копию профиля на диск и считываем её обратно. */
+  param = hyscan_gtk_layer_container_get_param (HYSCAN_GTK_LAYER_CONTAINER (kit->map));
+  hyscan_profile_map_set_param (new_profile, param);
+  hyscan_profile_write (HYSCAN_PROFILE (new_profile));
   if (hyscan_profile_read (HYSCAN_PROFILE (new_profile)))
     add_profile (kit, priv->profile_active, new_profile);
 
+  g_object_unref (param);
   g_free (file_name);
   g_free (base_name);
 }
@@ -1887,6 +1900,8 @@ hyscan_gtk_map_kit_new (HyScanGeoPoint    *center,
                         const gchar       *cache_dir)
 {
   HyScanGtkMapKit *kit;
+  const gchar **profile_dirs;
+  gint i;
 
   kit = g_new0 (HyScanGtkMapKit, 1);
   kit->priv = g_new0 (HyScanGtkMapKitPrivate, 1);
@@ -1898,6 +1913,15 @@ hyscan_gtk_map_kit_new (HyScanGeoPoint    *center,
   hyscan_gtk_map_kit_model_create (kit, db);
   hyscan_gtk_map_kit_view_create (kit);
   hyscan_gtk_map_kit_model_init (kit);
+
+  profile_dirs = hyscan_config_get_profile_dirs ();
+  for (i = 0; profile_dirs[i] != NULL; ++i)
+    {
+      gchar *profile_dir;
+      profile_dir = g_build_filename (profile_dirs[i], PROFILE_DIR, NULL);
+      hyscan_gtk_map_kit_load_profiles (kit, profile_dir);
+      g_free (profile_dir);
+    }
 
   return kit;
 }
@@ -1970,23 +1994,6 @@ gchar *
 hyscan_gtk_map_kit_get_profile_name (HyScanGtkMapKit   *kit)
 {
   return g_strdup (kit->priv->profile_active);
-}
-
-/**
- * hyscan_gtk_map_kit_set_user_dir:
- * @kit: указатель на HyScanGtkMapKit
- * @param путь к папке для записи пользовательских профилей
- *
- * Устанавливает папку, куда будут сохранены изменённые профили
- */
-void
-hyscan_gtk_map_kit_set_user_dir (HyScanGtkMapKit *kit,
-                                 const gchar     *profiles_dir)
-{
-  HyScanGtkMapKitPrivate *priv = kit->priv;
-
-  g_free (priv->profiles_dir);
-  priv->profiles_dir = g_strdup (profiles_dir);
 }
 
 /**
@@ -2410,7 +2417,6 @@ hyscan_gtk_map_kit_free (HyScanGtkMapKit *kit)
 
   g_free (priv->profile_active);
   g_free (priv->tile_cache_dir);
-  g_free (priv->profiles_dir);
   g_free (priv->project_name);
   g_free (priv->recording_track);
   g_hash_table_destroy (priv->profiles);
