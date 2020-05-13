@@ -133,7 +133,7 @@ hyscan_gtk_mark_export_print_marks (GHashTable *wf_marks,
         {
           gchar *line;
 
-          if (location->mark->type != HYSCAN_MARK_WATERFALL)
+          if (location->mark->type != HYSCAN_TYPE_MARK_WATERFALL)
             continue;
 
           line = hyscan_gtk_mark_export_formatter (location->mark_geo.lat,
@@ -157,7 +157,7 @@ hyscan_gtk_mark_export_print_marks (GHashTable *wf_marks,
         {
           gchar *line;
 
-          if (geo_mark->type != HYSCAN_MARK_GEO)
+          if (geo_mark->type != HYSCAN_TYPE_MARK_GEO)
             continue;
 
           line = hyscan_gtk_mark_export_formatter (geo_mark->center.lat,
@@ -229,7 +229,7 @@ hyscan_gtk_mark_export_generate_tile (HyScanMarkLocation *location,   /* Мет�
                                                                        * изображениями. */
                                       guint              *counter)    /* Счётчик генерируемых тайлов. */
 {
-  if (location->mark->type == HYSCAN_MARK_WATERFALL)
+  if (location->mark->type == HYSCAN_TYPE_MARK_WATERFALL)
     {
       HyScanTile *tile = NULL;
       HyScanTileCacheable tile_cacheable;
@@ -266,7 +266,7 @@ hyscan_gtk_mark_export_save_tile (HyScanMarkLocation *location,     /* Метк�
                                   FILE               *file,         /* Дескриптор файла для записи данных в index.html. */
                                   Package            *package)      /* Пакет дополнительных данных. */
 {
-  if (location->mark->type == HYSCAN_MARK_WATERFALL)
+  if (location->mark->type == HYSCAN_TYPE_MARK_WATERFALL)
     {
       HyScanTile *tile = NULL;
       HyScanTileCacheable tile_cacheable;
@@ -690,7 +690,7 @@ hyscan_gtk_mark_export_save_as_html_thread (gpointer user_data)
               comment = g_strdup (empty);
               notes = g_strdup (empty);
 
-              if (geo_mark->type == HYSCAN_MARK_GEO)
+              if (geo_mark->type == HYSCAN_TYPE_MARK_GEO)
                 {
                    gchar *format  = "\t\t\t<p><strong>%s</strong></p>\n"
                                     "\t\t\t\t<p>Date: %s</p>\n"

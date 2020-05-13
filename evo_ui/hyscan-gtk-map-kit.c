@@ -773,7 +773,7 @@ on_marks_selected (GtkTreeSelection *selection,
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
   GtkTreeIter iter;
-  HyScanObjectType mark_type;
+  GType mark_type;
 
   gchar *mark_id, *mark_name, *operator_name, *description;
   gdouble latitude, longitude;
@@ -827,9 +827,9 @@ update_mark (HyScanObjectModel *model,
   hyscan_mark_set_text (mark, name, mark->description, mark->operator_name);
   hyscan_object_model_modify_object (model, mark_id, (const HyScanObject *) mark);
 
-  if (mark->type == HYSCAN_MARK_WATERFALL)
+  if (mark->type == HYSCAN_TYPE_MARK_WATERFALL)
     hyscan_mark_waterfall_free ((HyScanMarkWaterfall *) mark);
-  else if (mark->type == HYSCAN_MARK_GEO)
+  else if (mark->type == HYSCAN_TYPE_MARK_GEO)
     hyscan_mark_geo_free ((HyScanMarkGeo *) mark);
 }
 
@@ -867,12 +867,12 @@ on_marks_activated (GtkTreeView        *treeview,
   if (gtk_tree_model_get_iter (model, &iter, path))
   {
     gchar *mark_id;
-    HyScanObjectType mark_type;
+    GType mark_type;
 
     gtk_tree_model_get (model, &iter, MARK_ID_COLUMN, &mark_id, MARK_TYPE_COLUMN, &mark_type, -1);
-    if (mark_type == HYSCAN_MARK_WATERFALL && priv->wfmark_layer != NULL)
+    if (mark_type == HYSCAN_TYPE_MARK_WATERFALL && priv->wfmark_layer != NULL)
       hyscan_gtk_map_wfmark_mark_view (HYSCAN_GTK_MAP_WFMARK (priv->wfmark_layer), mark_id, FALSE);
-    else if (mark_type == HYSCAN_MARK_GEO && priv->geomark_layer != NULL)
+    else if (mark_type == HYSCAN_TYPE_MARK_GEO && priv->geomark_layer != NULL)
       hyscan_gtk_map_geomark_mark_view (HYSCAN_GTK_MAP_GEOMARK (priv->geomark_layer), mark_id, FALSE);
 
     g_free (mark_id);
@@ -920,16 +920,16 @@ mark_tree_append (HyScanGtkMapKit *kit,
   gchar *time_str;
   gchar *type_name;
 
-  if (mark->type == HYSCAN_MARK_WATERFALL && ((HyScanMarkWaterfall *) mark)->track == NULL)
+  if (mark->type == HYSCAN_TYPE_MARK_WATERFALL && ((HyScanMarkWaterfall *) mark)->track == NULL)
     return;
 
   /* Добавляем в список меток. */
   local = g_date_time_new_from_unix_local (mark->mtime / 1000000);
   time_str = g_date_time_format (local, "%d.%m %H:%M");
 
-  if (mark->type == HYSCAN_MARK_WATERFALL)
+  if (mark->type == HYSCAN_TYPE_MARK_WATERFALL)
     type_name = "W";
-  else if (mark->type == HYSCAN_MARK_GEO)
+  else if (mark->type == HYSCAN_TYPE_MARK_GEO)
     type_name = "G";
   else
     type_name = "?";
@@ -1062,7 +1062,7 @@ create_wfmark_toolbox (HyScanGtkMapKit *kit)
                                          G_TYPE_STRING,  /* MARK_NAME_COLUMN   */
                                          G_TYPE_STRING,  /* MARK_MTIME_COLUMN */
                                          G_TYPE_INT64,   /* MARK_MTIME_SORT_COLUMN */
-                                         G_TYPE_UINT,    /* MARK_TYPE_COLUMN */
+                                         G_TYPE_GTYPE,   /* MARK_TYPE_COLUMN */
                                          G_TYPE_STRING,  /* MARK_TYPE_NAME_COLUMN */
                                          G_TYPE_STRING,  /* MARK_OPERATOR_COLUMN */
                                          G_TYPE_STRING,  /* MARK_DESCRIPTION_COLUMN */
@@ -2058,7 +2058,7 @@ hyscan_gtk_map_kit_add_record (HyScanGtkMapKit *kit,
 
   if (track->records == NULL || !g_strv_contains ((const gchar *const *) track->records, track_id))
     {
-      hyscan_planner_track_add_record (track, track_id);
+      hyscan_planner_track_record_append (track, track_id);
       hyscan_object_model_modify_object (HYSCAN_OBJECT_MODEL (priv->planner_model), active_track,
                                          (const HyScanObject *) track);
     }
