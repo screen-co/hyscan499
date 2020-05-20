@@ -458,7 +458,7 @@ void run_mark_manager ()
                         G_CALLBACK (gtk_widget_hide_on_delete),
                         NULL);
       /* Создаём Журнал Меток. */
-      mark_manager = hyscan_mark_manager_new (_global->model_manager);
+      mark_manager = hyscan_gtk_mark_manager_new (_global->model_manager);
       /* Помещаем Журнал Меток в окно. */
       gtk_container_add (GTK_CONTAINER (mark_manager_window), mark_manager);
       /* Делаем все виджеты видимыми. */
@@ -1511,7 +1511,7 @@ build_interface (Global *global)
     GtkWidget *lbox = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6),
               *tracks = GTK_WIDGET (global->gui.track.view),
               *mlist = GTK_WIDGET (global->gui.mark_view),
-              /**mark_manager = hyscan_mark_manager_new (global->model_manager),*/
+              /**mark_manager = hyscan_gtk_mark_manager_new (global->model_manager),*/
               *meditor = GTK_WIDGET (global->gui.meditor);
 
     gtk_widget_set_margin_end (lbox, 6);

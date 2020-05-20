@@ -524,14 +524,14 @@ restart:
   {
     gchar *folder = NULL;
     folder = keyfile_string_read_helper (global.settings, "EVO", "export_folder");
-    global.model_manager = hyscan_model_manager_new (global.project_name, global.db, global.cache, folder);
+    global.model_manager = hyscan_gtk_model_manager_new (global.project_name, global.db, global.cache, folder);
     g_signal_connect (global.model_manager,
-                      hyscan_model_manager_get_signal_title (global.model_manager, SIGNAL_TRACKS_CHANGED),
+                      hyscan_gtk_model_manager_get_signal_title (global.model_manager, SIGNAL_TRACKS_CHANGED),
                       G_CALLBACK (model_manager_tracks_changed),
                       &global);
   }
   /* Получаем модель галсов. */
-  db_info = hyscan_model_manager_get_track_model (global.model_manager);
+  db_info = hyscan_gtk_model_manager_get_track_model (global.model_manager);
   g_signal_connect (db_info, "projects-changed", G_CALLBACK (projects_changed), &global);
 
   // splash = hyscan_fnn_splash_new ();
@@ -580,7 +580,7 @@ restart:
   gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (global.gui.track.list), 0, GTK_SORT_DESCENDING);
 
   /* Список меток. */
-  model = hyscan_model_manager_get_acoustic_mark_model (global.model_manager);
+  model = hyscan_gtk_model_manager_get_acoustic_mark_model (global.model_manager);
   // TODO: перепроверить, что в ран-менеджере, что в трек-чейнджед, что здесь
   global.marks.loc_storage = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
                                                     (GDestroyNotify) loc_store_free);
@@ -588,7 +588,7 @@ restart:
   global.gui.meditor = hyscan_gtk_mark_editor_new (global.units);
 
   g_signal_connect (global.model_manager,
-                    hyscan_model_manager_get_signal_title (global.model_manager, SIGNAL_ACOUSTIC_MARKS_CHANGED),
+                    hyscan_gtk_model_manager_get_signal_title (global.model_manager, SIGNAL_ACOUSTIC_MARKS_CHANGED),
                     G_CALLBACK (model_manager_acoustic_mark_model_changed),
                     &global);
   g_signal_connect (global.gui.meditor, "mark-modified", G_CALLBACK (mark_modified), &global);

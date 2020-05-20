@@ -23,7 +23,7 @@ typedef struct
 } HyScanGtkMapKit;
 
 HyScanGtkMapKit * hyscan_gtk_map_kit_new              (HyScanGeoPoint             *center,
-                                                       HyScanModelManager         *model_manager,
+                                                       HyScanGtkModelManager      *model_manager,
                                                        HyScanUnits                *units,
                                                        const gchar                *cache_dir);
 

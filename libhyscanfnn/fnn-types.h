@@ -266,7 +266,7 @@ struct _Global
   GHashTable             *infos; /* {HyScanSourceType : HyScanSonarInfoSource} */
 
   /* Менеджер моделей. */
-  HyScanModelManager     *model_manager;
+  HyScanGtkModelManager  *model_manager;
 
   struct
     {
@@ -418,8 +418,8 @@ track_scroller (GtkTreeView *tree,
                 gboolean     to_end);
 
 HYSCAN_API void
-model_manager_tracks_changed (HyScanModelManager *model_manager,
-                              Global             *global);
+model_manager_tracks_changed (HyScanGtkModelManager *model_manager,
+                              Global                *global);
 
 HYSCAN_API void
 tracks_changed (HyScanDBInfo *db_info,
@@ -482,8 +482,8 @@ get_mark_coords (GHashTable           * locstores,
                  Global               * global);
 
 HYSCAN_API void
-model_manager_acoustic_mark_model_changed (HyScanModelManager *model_manager,
-                                           Global             *global);
+model_manager_acoustic_mark_model_changed (HyScanGtkModelManager *model_manager,
+                                           Global                *global);
 
 HYSCAN_API void
 mark_model_changed (HyScanObjectModel *mark_model,

@@ -40,7 +40,7 @@ fnn_ensure_panel (gint    panelx,
 {
   GArray *svp;
   FnnPanel *panel;
-  HyScanObjectModel *model = hyscan_model_manager_get_acoustic_mark_model (global->model_manager);
+  HyScanObjectModel *model = hyscan_gtk_model_manager_get_acoustic_mark_model (global->model_manager);
 
   /* Вдруг панель уже есть? Тогда выходим вот отседова. */
   if (g_hash_table_contains (tglobal->panels, GINT_TO_POINTER (panelx)))
@@ -498,8 +498,8 @@ run_manager (GObject *emitter)
   if (res == HYSCAN_FNN_PROJECT_OPEN || res == HYSCAN_FNN_PROJECT_CREATE)
     {
       gchar *project;
-      HyScanDBInfo *db_info = hyscan_model_manager_get_track_model (tglobal->model_manager);
-      HyScanObjectModel *model = hyscan_model_manager_get_acoustic_mark_model (tglobal->model_manager);
+      HyScanDBInfo *db_info = hyscan_gtk_model_manager_get_track_model (tglobal->model_manager);
+      HyScanObjectModel *model = hyscan_gtk_model_manager_get_acoustic_mark_model (tglobal->model_manager);
 
       g_clear_pointer (&tglobal->project_name, g_free);
       hyscan_fnn_project_get (HYSCAN_FNN_PROJECT (dialog), &project, NULL);
@@ -940,10 +940,10 @@ track_scroller (GtkTreeView *tree,
  * Обработчик сигнала Менеджера Моделей об изменения данных в модели галсов
  */
 void
-model_manager_tracks_changed (HyScanModelManager *model_manager,
-                              Global             *global)
+model_manager_tracks_changed (HyScanGtkModelManager *model_manager,
+                              Global                *global)
 {
-  HyScanDBInfo *model = hyscan_model_manager_get_track_model(model_manager);
+  HyScanDBInfo *model = hyscan_gtk_model_manager_get_track_model(model_manager);
 
   tracks_changed (model, global);
 
@@ -1315,7 +1315,7 @@ remove_mark_update (Global *global)
 gboolean
 mark_update (Global *global)
 {
-  HyScanObjectModel *model = hyscan_model_manager_get_acoustic_mark_model (global->model_manager);
+  HyScanObjectModel *model = hyscan_gtk_model_manager_get_acoustic_mark_model (global->model_manager);
   mark_model_changed (model, global);
   g_object_unref (model);
   global->marks.request_update_tag = 0;
@@ -1358,7 +1358,7 @@ get_mark_coords (GHashTable          * locstores,
     {
       LocStore *ls;
       gchar * track_name = NULL;
-      HyScanDBInfo *db_info = hyscan_model_manager_get_track_model (global->model_manager);
+      HyScanDBInfo *db_info = hyscan_gtk_model_manager_get_track_model (global->model_manager);
 
       track_name = get_track_name_by_id (db_info, mark->track);
       g_object_unref (db_info);
@@ -1441,10 +1441,10 @@ make_marks_with_coords (HyScanObjectModel *model,
  *
  * Обработчик сигнала Менеджера Моделей об изменения данных в модели акустических меток
  */
-void model_manager_acoustic_mark_model_changed (HyScanModelManager *model_manager,
-                                                Global             *global)
+void model_manager_acoustic_mark_model_changed (HyScanGtkModelManager *model_manager,
+                                                Global                *global)
 {
-  HyScanObjectModel *model = hyscan_model_manager_get_acoustic_mark_model (model_manager);
+  HyScanObjectModel *model = hyscan_gtk_model_manager_get_acoustic_mark_model (model_manager);
 
   mark_model_changed (model, global);
 
@@ -1506,7 +1506,7 @@ mark_modified (HyScanGtkMarkEditor *med,
   gchar *mark_id = NULL;
   GHashTable *marks;
   HyScanMarkWaterfall *mark;
-  HyScanObjectModel *model = hyscan_model_manager_get_acoustic_mark_model (global->model_manager);
+  HyScanObjectModel *model = hyscan_gtk_model_manager_get_acoustic_mark_model (global->model_manager);
 
   hyscan_gtk_mark_editor_get_mark (med, &mark_id, NULL, NULL, NULL);
 
@@ -1626,7 +1626,7 @@ track_changed (GtkTreeView *list,
   const gchar *track_name;
   gpointer k, v;
   gboolean on_air;
-  HyScanDBInfo *db_info = hyscan_model_manager_get_track_model (global->model_manager);
+  HyScanDBInfo *db_info = hyscan_gtk_model_manager_get_track_model (global->model_manager);
 
   /* Определяем название нового галса. */
   gtk_tree_view_get_cursor (list, &path, NULL);
