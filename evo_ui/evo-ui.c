@@ -1471,8 +1471,6 @@ build_interface (Global *global)
   {
     GtkWidget *box;
     GtkTreeView * tv;
-    gint i;
-    const gchar **profile_dirs;
     gchar *cache_dir = g_build_filename (g_get_user_cache_dir (), "hyscan", NULL);
     HyScanGeoPoint center = {0, 0};
 
@@ -1480,18 +1478,6 @@ build_interface (Global *global)
 
     ui->mapkit = hyscan_gtk_map_kit_new (&center, global->model_manager, global->units, cache_dir);
     hyscan_gtk_map_kit_set_project (ui->mapkit, global->project_name);
-
-    profile_dirs = hyscan_config_get_profile_dirs ();
-
-    for (i = 0; profile_dirs[i] != NULL; ++i)
-      {
-        gchar *profile_dir;
-        profile_dir = g_build_filename (profile_dirs[i], "map-profiles", NULL);
-        hyscan_gtk_map_kit_load_profiles (ui->mapkit, profile_dir);
-        if (i == 0)
-          hyscan_gtk_map_kit_set_user_dir (ui->mapkit, profile_dir);
-        g_free (profile_dir);
-      }
 
     hyscan_gtk_map_kit_add_marks (ui->mapkit);
     hyscan_gtk_map_kit_add_planner (ui->mapkit);
@@ -1596,7 +1582,7 @@ build_interface (Global *global)
 
     /* офлайн-карта */
     mitem = gtk_check_menu_item_new_with_label (_("Online Map"));
-    ui->map_offline = g_object_ref (mitem);
+    ui->map_offline = GTK_CHECK_MENU_ITEM (g_object_ref (mitem));
     g_signal_connect (mitem, "toggled", G_CALLBACK (map_offline_wrapper), ui->mapkit);
     gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
@@ -1716,7 +1702,7 @@ build_interface (Global *global)
 
           /* офлайн-карта */
           mitem = gtk_check_menu_item_new_with_label (_("No beaming"));
-          ui->starter.dry_menu = g_object_ref (mitem);
+          ui->starter.dry_menu = GTK_CHECK_MENU_ITEM (g_object_ref (mitem));
           g_signal_connect (mitem, "toggled", G_CALLBACK (menu_dry_wrapper), NULL);
           g_object_bind_property (ui->starter.dry_menu, "active",
                                   ui->starter.dry_switch, "active",
