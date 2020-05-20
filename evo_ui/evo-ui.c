@@ -404,8 +404,8 @@ mark_exporter (GObject  *emitter,
     }
   else
     {
-      HyScanObjectModel  *geo = hyscan_model_manager_get_geo_mark_model (_global->model_manager);
-      HyScanMarkLocModel *wf  = hyscan_model_manager_get_acoustic_mark_loc_model (_global->model_manager);
+      HyScanObjectModel  *geo = hyscan_gtk_model_manager_get_geo_mark_model (_global->model_manager);
+      HyScanMarkLocModel *wf  = hyscan_gtk_model_manager_get_acoustic_mark_loc_model (_global->model_manager);
 
       switch (selector)
         {
@@ -553,7 +553,7 @@ void
 evo_project_changed_override (Global      *global,
                               const gchar *project)
 {
-  hyscan_model_manager_set_project_name (_global->model_manager, project);
+  hyscan_gtk_model_manager_set_project_name (_global->model_manager, project);
 }
 /***
  *     #     # ######     #    ######  ######  ####### ######   #####
