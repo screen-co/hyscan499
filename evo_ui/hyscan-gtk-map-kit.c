@@ -821,7 +821,7 @@ update_mark (HyScanObjectModel *model,
   HyScanMark *mark;
   gchar *description, *operator_name;
 
-  mark = (HyScanMark *) hyscan_object_model_get_id (model, mark_id);
+  mark = (HyScanMark *) hyscan_object_model_get_by_id (model, mark_id);
   if (mark == NULL)
     return;
 
@@ -2052,7 +2052,7 @@ hyscan_gtk_map_kit_add_record (HyScanGtkMapKit *kit,
   if (active_track == NULL)
     return;
 
-  track = (HyScanPlannerTrack *) hyscan_object_model_get_id (HYSCAN_OBJECT_MODEL (priv->planner_model), active_track);
+  track = (HyScanPlannerTrack *) hyscan_object_model_get_by_id (HYSCAN_OBJECT_MODEL (priv->planner_model), active_track);
   if (!HYSCAN_IS_PLANNER_TRACK (track))
     {
       g_free (active_track);
@@ -2642,7 +2642,7 @@ hyscan_gtk_map_kit_get_track_plan (HyScanGtkMapKit *kit)
   if (active_track == NULL)
     return NULL;
 
-  track = (HyScanPlannerTrack *) hyscan_object_model_get_id (HYSCAN_OBJECT_MODEL (priv->planner_model), active_track);
+  track = (HyScanPlannerTrack *) hyscan_object_model_get_by_id (HYSCAN_OBJECT_MODEL (priv->planner_model), active_track);
   g_free (active_track);
 
   if (!HYSCAN_IS_PLANNER_TRACK (track))
