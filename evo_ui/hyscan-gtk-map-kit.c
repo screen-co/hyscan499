@@ -819,18 +819,21 @@ update_mark (HyScanObjectModel *model,
              const gchar       *name)
 {
   HyScanMark *mark;
+  gchar *description, *operator_name;
 
   mark = (HyScanMark *) hyscan_object_model_get_id (model, mark_id);
   if (mark == NULL)
     return;
 
-  hyscan_mark_set_text (mark, name, mark->description, mark->operator_name);
+  description = g_strdup (mark->description);
+  operator_name = g_strdup (mark->operator_name);
+
+  hyscan_mark_set_text (mark, name, description, operator_name);
   hyscan_object_model_modify_object (model, mark_id, (const HyScanObject *) mark);
 
-  if (mark->type == HYSCAN_TYPE_MARK_WATERFALL)
-    hyscan_mark_waterfall_free ((HyScanMarkWaterfall *) mark);
-  else if (mark->type == HYSCAN_TYPE_MARK_GEO)
-    hyscan_mark_geo_free ((HyScanMarkGeo *) mark);
+  hyscan_object_free ((HyScanObject *) mark);
+  g_free (description);
+  g_free (operator_name);
 }
 
 /* Обработчик изменения метки в редакторе меток. */
