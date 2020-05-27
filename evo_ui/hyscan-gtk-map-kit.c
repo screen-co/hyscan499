@@ -841,18 +841,21 @@ update_mark (HyScanObjectModel *model,
              const gchar       *name)
 {
   HyScanMark *mark;
+  gchar *description, *operator_name;
 
-  mark = (HyScanMark *) hyscan_object_model_get_id (model, mark_id);
+  mark = (HyScanMark *) hyscan_object_model_get_by_id (model, mark_id);
   if (mark == NULL)
     return;
 
-  hyscan_mark_set_text (mark, name, mark->description, mark->operator_name);
+  description = g_strdup (mark->description);
+  operator_name = g_strdup (mark->operator_name);
+
+  hyscan_mark_set_text (mark, name, description, operator_name);
   hyscan_object_model_modify_object (model, mark_id, (const HyScanObject *) mark);
 
-  if (mark->type == HYSCAN_TYPE_MARK_WATERFALL)
-    hyscan_mark_waterfall_free ((HyScanMarkWaterfall *) mark);
-  else if (mark->type == HYSCAN_TYPE_MARK_GEO)
-    hyscan_mark_geo_free ((HyScanMarkGeo *) mark);
+  hyscan_object_free ((HyScanObject *) mark);
+  g_free (description);
+  g_free (operator_name);
 }
 
 /* Обработчик изменения метки в редакторе меток. */
@@ -2162,7 +2165,7 @@ hyscan_gtk_map_kit_add_record (HyScanGtkMapKit *kit,
   if (active_track == NULL)
     return;
 
-  track = (HyScanPlannerTrack *) hyscan_object_model_get_id (HYSCAN_OBJECT_MODEL (priv->planner_model), active_track);
+  track = (HyScanPlannerTrack *) hyscan_object_model_get_by_id (HYSCAN_OBJECT_MODEL (priv->planner_model), active_track);
   if (!HYSCAN_IS_PLANNER_TRACK (track))
     {
       g_free (active_track);
@@ -2805,7 +2808,7 @@ hyscan_gtk_map_kit_get_track_plan (HyScanGtkMapKit *kit)
   if (active_track == NULL)
     return NULL;
 
-  track = (HyScanPlannerTrack *) hyscan_object_model_get_id (HYSCAN_OBJECT_MODEL (priv->planner_model), active_track);
+  track = (HyScanPlannerTrack *) hyscan_object_model_get_by_id (HYSCAN_OBJECT_MODEL (priv->planner_model), active_track);
   g_free (active_track);
 
   if (!HYSCAN_IS_PLANNER_TRACK (track))
