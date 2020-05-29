@@ -1476,8 +1476,7 @@ build_interface (Global *global)
 
     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
 
-    ui->mapkit = hyscan_gtk_map_kit_new (&center, global->model_manager, global->units, cache_dir);
-    hyscan_gtk_map_kit_set_project (ui->mapkit, global->project_name);
+    ui->mapkit = hyscan_gtk_map_kit_new (&center, global->model_manager, global->cache, global->units, cache_dir);
 
     hyscan_gtk_map_kit_add_marks (ui->mapkit);
     hyscan_gtk_map_kit_add_planner (ui->mapkit);

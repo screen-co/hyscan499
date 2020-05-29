@@ -24,11 +24,9 @@ typedef struct
 
 HyScanGtkMapKit * hyscan_gtk_map_kit_new              (HyScanGeoPoint             *center,
                                                        HyScanGtkModelManager      *model_manager,
+                                                       HyScanCache                *cache,
                                                        HyScanUnits                *units,
                                                        const gchar                *cache_dir);
-
-void              hyscan_gtk_map_kit_set_project      (HyScanGtkMapKit            *kit,
-                                                       const gchar                *project_name);
 
 gboolean          hyscan_gtk_map_kit_set_profile_name (HyScanGtkMapKit            *kit,
                                                        const gchar                *profile_name);
@@ -46,10 +44,6 @@ void              hyscan_gtk_map_kit_add_nav          (HyScanGtkMapKit          
                                                        gdouble                     delay_time);
 
 void              hyscan_gtk_map_kit_add_marks        (HyScanGtkMapKit            *kit);
-
-void              hyscan_gtk_map_kit_add_marks_wf     (HyScanGtkMapKit            *kit);
-
-void              hyscan_gtk_map_kit_add_marks_geo    (HyScanGtkMapKit            *kit);
 
 void              hyscan_gtk_map_kit_add_planner      (HyScanGtkMapKit            *kit);
 
@@ -71,11 +65,6 @@ void              hyscan_gtk_map_kit_kf_setup         (HyScanGtkMapKit          
 
 void              hyscan_gtk_map_kit_kf_desetup       (HyScanGtkMapKit            *kit,
                                                        GKeyFile                   *keyfile);
-/*
-void              hyscan_gtk_map_kit_get_mark_backends(HyScanGtkMapKit            *kit,
-                                                       HyScanObjectModel         **geo,
-                                                       HyScanMarkLocModel        **wf);
-*/
 
 HyScanObjectModel *
                   hyscan_gtk_map_kit_get_planner      (HyScanGtkMapKit            *kit);
