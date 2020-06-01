@@ -3729,62 +3729,6 @@ win32_build_path (int n, ...)
 }
 #endif
 
-const gchar *
-get_locale_dir (void)
-{
-  static gchar *locale_dir = NULL;
-
-  if (locale_dir == NULL)
-    {
-      #ifdef G_OS_WIN32
-        gchar *utf8_path;
-        utf8_path = win32_build_path (2, "share", "locale", NULL);
-        locale_dir = g_win32_locale_filename_from_utf8 (utf8_path);
-        g_free (utf8_path);
-      #else
-        locale_dir = FNN_LOCALE_DIR;
-      #endif
-
-      g_message ("locale_dir: <%s>", locale_dir);
-    }
-
-  return locale_dir;
-}
-
-gchar **
-get_profile_dir (void)
-{
-  static gchar **dirs = NULL;
-  gint dc = 0;
-
-  if (dirs == NULL)
-    {
-      gint i;
-
-      #ifdef FNN_PROFILE_STANDALONE
-        dirs = g_realloc (dirs, ++dc * sizeof (*dirs));
-        dirs[dc - 1] = g_strdup (g_get_user_config_dir ());
-      #endif
-
-      dirs = g_realloc (dirs, ++dc * sizeof (*dirs));
-
-      #ifdef G_OS_WIN32
-        dirs[dc - 1] = win32_build_path (1, FNN_PROFILE_DIR, NULL);
-      #else
-        dirs[dc - 1] = FNN_PROFILE_DIR;
-      #endif
-
-      /* NULL-termination */
-      dirs = g_realloc (dirs, ++dc * sizeof (*dirs));
-      dirs[dc - 1] = NULL;
-
-      for (i = 0; dirs != NULL && dirs[i] != NULL; ++i)
-        g_message ("profile_dirs: %i. %s", i, dirs[i]);
-    }
-
-  return dirs;
-}
-
 void
 fnn_init (Global *ext_global)
 {

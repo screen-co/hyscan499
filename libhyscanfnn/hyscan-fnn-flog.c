@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <glib/gstdio.h>
+#include <hyscan-config.h>
 
 typedef struct
 {
@@ -125,24 +126,8 @@ hyscan_fnn_flog_open (const gchar *component,
   flog.max_size = file_size;
 
   /* Создаём папку для записи логов. */
-#ifdef FNN_PROFILE_STANDALONE
-  log_dir = g_build_path (G_DIR_SEPARATOR_S, g_get_user_data_dir (), "hyscan", "log", NULL);
-#else
-  {
-    gchar *install_dir, *self_exe;
-
-#ifdef G_OS_WIN32
-    install_dir = g_win32_get_package_installation_directory_of_module (NULL);
-#else
-    self_exe = g_file_read_link ("/proc/self/exe", NULL); // todo: протестировать
-    install_dir = g_path_get_dirname (self_exe);
-    g_free (self_exe);
-#endif
-    log_dir = g_build_path (G_DIR_SEPARATOR_S, install_dir, "..", "log", NULL);
-    g_free (install_dir);
-  }
-#endif
-  g_message ("Logs are written to %s", log_dir);
+  log_dir = g_build_path (G_DIR_SEPARATOR_S, hyscan_config_get_user_files_dir (), "log", NULL);
+  g_message ("HyScanFnnFlog: logs are written to %s", log_dir);
   g_mkdir_with_parents (log_dir, 0755);
 
   /* Открываем файл. */
