@@ -14,8 +14,8 @@ int
 main (int argc, char **argv)
 {
   GtkWidget *configurator;
-  const gchar *config_dir;
   gboolean exit_if_configured = FALSE;
+  gchar *settings_file = NULL;
 
   setlocale (LC_ALL, "");
   bindtextdomain (GETTEXT_PACKAGE, hyscan_config_get_locale_dir ());
@@ -31,7 +31,8 @@ main (int argc, char **argv)
     GOptionContext *context;
     GOptionEntry entries[] =
     {
-      { "exit-if-configured", 'e',   0, G_OPTION_ARG_NONE,  &exit_if_configured, "Exit if already configured", NULL },
+      { "exit-if-configured", 'e',   0, G_OPTION_ARG_NONE,   &exit_if_configured, "Exit if already configured", NULL },
+      { "settings",           'l',   0, G_OPTION_ARG_STRING, &settings_file,      "Settings file",              NULL },
       { NULL, }
     };
 
@@ -57,19 +58,21 @@ main (int argc, char **argv)
     g_strfreev (args);
   }
 
-  config_dir = hyscan_config_get_user_files_dir ();
-  configurator = hyscan_gtk_configurator_new (config_dir);
+  if (settings_file == NULL)
+    settings_file = g_build_filename (g_get_user_config_dir (), "hyscan", "settings.ini", NULL);
+
+  configurator = hyscan_gtk_configurator_new (settings_file);
+  g_free (settings_file);
 
   if (exit_if_configured && hyscan_gtk_configurator_configured (HYSCAN_GTK_CONFIGURATOR (configurator)))
     {
       gtk_widget_destroy (configurator);
+      return 0;
     }
-  else
-    {
-      g_signal_connect_after (configurator, "destroy", G_CALLBACK (gtk_main_quit), NULL);
-      gtk_widget_show_all (configurator);
-      gtk_main ();
-    }
+
+  g_signal_connect_after (configurator, "destroy", G_CALLBACK (gtk_main_quit), NULL);
+  gtk_widget_show_all (configurator);
+  gtk_main ();
 
   return 0;
 }

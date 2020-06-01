@@ -33,7 +33,7 @@ HYSCAN_API
 GType                  hyscan_gtk_configurator_get_type   (void);
 
 HYSCAN_API
-GtkWidget *            hyscan_gtk_configurator_new        (const gchar           *config_dir);
+GtkWidget *            hyscan_gtk_configurator_new        (const gchar           *settings_ini);
 
 HYSCAN_API
 gboolean               hyscan_gtk_configurator_configured (HyScanGtkConfigurator *configurator);

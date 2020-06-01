@@ -1,19 +1,25 @@
-#define GETTEXT_PACKAGE "libhyscanfnn"
+#define GETTEXT_PACKAGE     "libhyscanfnn"
 #include <glib/gi18n-lib.h>
+#include <hyscan-profile-db.h>
+#include <hyscan-config.h>
 #include "hyscan-gtk-configurator.h"
+
+#define PROFILE_DB_PATH     "db-profiles"
+#define PROFILE_HW_PATH     "hw-profiles"
+#define PROFILE_MAP_PATH    "map-profiles"
+#define PROFILE_OFFSET_PATH "offset-profiles"
 
 enum
 {
   PROP_O,
-  PROP_CONFIG_DIR,
+  PROP_SETTINGS_INI,
 };
 
 struct _HyScanGtkConfiguratorPrivate
 {
-  gchar            *config_dir;        /* Путь к директории с настройками. */
   gchar            *settings_ini;      /* Путь к файлу конфигурации. */
 
-  gchar            *db_profile_file;   /* Имя файла профиля БД. */
+  HyScanProfileDB  *db_profile;        /* Профиль БД. */
   gchar            *db_profile_name;   /* Название профиля БД. */
   gchar            *db_profile_dir;    /* Путь к директории БД. */
   gchar            *map_cache_dir;     /* Путь к директории с кэшом карт. */
@@ -34,6 +40,7 @@ static void     hyscan_gtk_configurator_update_config       (HyScanGtkConfigurat
 static void     hyscan_gtk_configurator_configure           (HyScanGtkConfigurator *configurator);
 static gboolean hyscan_gtk_configurator_read_db             (HyScanGtkConfigurator *configurator);
 static gboolean hyscan_gtk_configurator_read_map            (HyScanGtkConfigurator *configurator);
+static void     hyscan_gtk_configurator_mkdir               (const gchar           *subdir);
 
 G_DEFINE_TYPE_WITH_PRIVATE (HyScanGtkConfigurator, hyscan_gtk_configurator, GTK_TYPE_WINDOW)
 
@@ -47,8 +54,8 @@ hyscan_gtk_configurator_class_init (HyScanGtkConfiguratorClass *klass)
   object_class->constructed = hyscan_gtk_configurator_object_constructed;
   object_class->finalize = hyscan_gtk_configurator_object_finalize;
 
-  g_object_class_install_property (object_class, PROP_CONFIG_DIR,
-    g_param_spec_string ("config-dir", "Config dir", "Directory containing configuration", NULL,
+  g_object_class_install_property (object_class, PROP_SETTINGS_INI,
+    g_param_spec_string ("settings-ini", "Settings file", "Path to settings.ini file", NULL,
                          G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
 
@@ -69,8 +76,8 @@ hyscan_gtk_configurator_set_property (GObject      *object,
 
   switch (prop_id)
     {
-    case PROP_CONFIG_DIR:
-      priv->config_dir = g_value_dup_string (value);
+    case PROP_SETTINGS_INI:
+      priv->settings_ini = g_value_dup_string (value);
       break;
 
     default:
@@ -90,12 +97,17 @@ hyscan_gtk_configurator_object_constructed (GObject *object)
   G_OBJECT_CLASS (hyscan_gtk_configurator_parent_class)->constructed (object);
 
   /* Читаем текущую конфигурацию. */
-  priv->settings_ini = g_build_path (G_DIR_SEPARATOR_S, priv->config_dir, "settings.ini", NULL);
   hyscan_gtk_configurator_read_map (configurator);
   if (!hyscan_gtk_configurator_read_db (configurator))
     {
+      gchar *filename;
+      filename = g_build_path (G_DIR_SEPARATOR_S, hyscan_config_get_user_files_dir (),
+                               PROFILE_DB_PATH, "default.ini", NULL);
+
+      priv->db_profile = hyscan_profile_db_new (filename);
       priv->db_profile_name = g_strdup (_("Default profile"));
-      priv->db_profile_file = g_strdup ("default.ini");
+      priv->db_profile_dir = NULL;
+      g_free (filename);
     }
 
   gtk_window_set_position (GTK_WINDOW (configurator), GTK_WIN_POS_CENTER);
@@ -175,12 +187,11 @@ hyscan_gtk_configurator_object_finalize (GObject *object)
   HyScanGtkConfigurator *gtk_configurator = HYSCAN_GTK_CONFIGURATOR (object);
   HyScanGtkConfiguratorPrivate *priv = gtk_configurator->priv;
 
-  g_free (priv->config_dir);
   g_free (priv->db_profile_dir);
   g_free (priv->db_profile_name);
-  g_free (priv->db_profile_file);
   g_free (priv->map_cache_dir);
   g_free (priv->settings_ini);
+  g_clear_object (&priv->db_profile);
 
   G_OBJECT_CLASS (hyscan_gtk_configurator_parent_class)->finalize (object);
 }
@@ -218,23 +229,12 @@ hyscan_gtk_configurator_update_config (HyScanGtkConfigurator *configurator)
   hyscan_gtk_configurator_update_view (configurator);
 }
 
-static gchar *
-hyscan_gtk_configurator_get_dir (HyScanGtkConfigurator *configurator,
-                                 const gchar           *subdir)
-{
-  HyScanGtkConfiguratorPrivate *priv = configurator->priv;
-
-  return g_build_path (G_DIR_SEPARATOR_S, priv->config_dir, subdir, NULL);
-}
-
-
 static void
-hyscan_gtk_configurator_mkdir (HyScanGtkConfigurator *configurator,
-                               const gchar           *subdir)
+hyscan_gtk_configurator_mkdir (const gchar *subdir)
 {
   gchar *profile_dir;
 
-  profile_dir = hyscan_gtk_configurator_get_dir (configurator, subdir);
+  profile_dir = g_build_path (G_DIR_SEPARATOR_S, hyscan_config_get_user_files_dir (), subdir, NULL);
   g_mkdir_with_parents (profile_dir, 0755);
   g_free (profile_dir);
 }
@@ -243,49 +243,47 @@ static void
 hyscan_gtk_configurator_configure (HyScanGtkConfigurator *configurator)
 {
   HyScanGtkConfiguratorPrivate *priv = configurator->priv;
-  GKeyFile *key_file;
-  gchar *profiles_dir, *profile_path;
-  gchar *db_uri;
-  GError *error = NULL;
 
   /* Создаём директорию с базой данных. */
-  g_mkdir_with_parents (priv->db_profile_dir, 0755);
+  if (priv->db_profile_dir != NULL)
+    g_mkdir_with_parents (priv->db_profile_dir, 0755);
 
   /* Создаём пользовательские директории с профилями. */
-  hyscan_gtk_configurator_mkdir (configurator, "db-profiles");
-  hyscan_gtk_configurator_mkdir (configurator, "hw-profiles");
-  hyscan_gtk_configurator_mkdir (configurator, "map-profiles");
-  hyscan_gtk_configurator_mkdir (configurator, "offset-profiles");
+  hyscan_gtk_configurator_mkdir (PROFILE_DB_PATH);
+  hyscan_gtk_configurator_mkdir (PROFILE_HW_PATH);
+  hyscan_gtk_configurator_mkdir (PROFILE_MAP_PATH);
+  hyscan_gtk_configurator_mkdir (PROFILE_OFFSET_PATH);
 
-  key_file = g_key_file_new ();
-  g_key_file_load_from_file (key_file, priv->db_profile_file,
-                             G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, NULL);
-  db_uri = g_strdup_printf ("file://%s", priv->db_profile_dir);
-  g_key_file_set_string (key_file, "db", "name", priv->db_profile_name);
-  g_key_file_set_string (key_file, "db", "uri", db_uri);
+  /* Записываем профиль БД. */
+  {
+    gchar *db_uri;
 
-  profiles_dir = hyscan_gtk_configurator_get_dir (configurator, "db-profiles");
-  profile_path = g_build_path (G_DIR_SEPARATOR_S, profiles_dir, priv->db_profile_file, NULL);
-  g_key_file_save_to_file (key_file, profile_path, &error);
-  if (error != NULL)
-    {
-      g_warning ("HyScanGtkConfigurator: %s", error->message);
-      g_clear_error (&error);
-    }
+    db_uri = g_strdup_printf ("file://%s", priv->db_profile_dir);
 
-  g_key_file_load_from_file (key_file, priv->settings_ini,
-                             G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, NULL);
-  g_key_file_set_string (key_file, "evo-map", "cache", priv->map_cache_dir);
-  g_key_file_save_to_file (key_file, priv->settings_ini, &error);
-  if (error != NULL)
-    {
-      g_warning ("HyScanGtkConfigurator: %s", error->message);
-      g_clear_error (&error);
-    }
+    hyscan_profile_set_name (HYSCAN_PROFILE (priv->db_profile), priv->db_profile_name);
+    hyscan_profile_db_set_uri (priv->db_profile, db_uri);
+    if (!hyscan_profile_write (HYSCAN_PROFILE (priv->db_profile)))
+      g_warning ("HyScanGtkConfigurator: failed to write db profile");
 
-  g_free (db_uri);
-  g_free (profiles_dir);
-  g_free (profile_path);
+    g_free (db_uri);
+  }
+
+  /* Обновляем settings.ini. */
+  {
+    GKeyFile *key_file = g_key_file_new ();
+    GError *error = NULL;
+
+    g_key_file_load_from_file (key_file, priv->settings_ini,
+                               G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, NULL);
+    g_key_file_set_string (key_file, "evo-map", "cache", priv->map_cache_dir);
+    g_key_file_save_to_file (key_file, priv->settings_ini, &error);
+    if (error != NULL)
+      {
+        g_warning ("HyScanGtkConfigurator: %s", error->message);
+        g_clear_error (&error);
+      }
+    g_key_file_unref (key_file);
+  }
 
   gtk_window_close (GTK_WINDOW (configurator));
 }
@@ -311,66 +309,54 @@ hyscan_gtk_configurator_read_db (HyScanGtkConfigurator *configurator)
   GDir *dir;
   gchar *profiles_path;
   const gchar *filename;
-  gboolean db_profile_found = FALSE;
-  GKeyFile *key_file;
-  gchar *db_uri = NULL, *db_name = NULL, *db_file = NULL;
+  const gchar *db_uri;
 
-  profiles_path = hyscan_gtk_configurator_get_dir (configurator, "db-profiles");
+  profiles_path = g_build_path (G_DIR_SEPARATOR_S, hyscan_config_get_user_files_dir (), PROFILE_DB_PATH, NULL);
 
   dir = g_dir_open (profiles_path, 0, NULL);
   if (dir == NULL)
     return FALSE;
 
-  key_file = g_key_file_new ();
-  while ((filename = g_dir_read_name (dir)) != NULL && !db_profile_found)
+  /* Ищем первый профиль базы данных, который удастся прочитать. */
+  while ((filename = g_dir_read_name (dir)) != NULL)
     {
       gchar *fullname;
 
       fullname = g_build_path (G_DIR_SEPARATOR_S, profiles_path, filename, NULL);
-      if (!g_key_file_load_from_file (key_file, fullname, G_KEY_FILE_NONE, NULL))
-        continue;
-
-      g_free (db_name);
-      g_free (db_uri);
-      g_free (db_file);
-      db_file = g_strdup (filename);
-      db_name = g_key_file_get_string (key_file, "db", "name", NULL);
-      db_uri = g_key_file_get_string (key_file, "db", "uri", NULL);
-      db_profile_found = (db_name != NULL && db_uri != NULL);
-
+      priv->db_profile = hyscan_profile_db_new (fullname);
       g_free (fullname);
+
+      if (hyscan_profile_read (HYSCAN_PROFILE (priv->db_profile)))
+        break;
+
+      g_clear_object (&priv->db_profile);
     }
-  g_key_file_free (key_file);
   g_dir_close (dir);
-
-  if (db_profile_found)
-    {
-      priv->db_profile_name = g_strdup (db_name);
-      priv->db_profile_file = g_strdup (db_file);
-      if (g_pattern_match_simple ("file://*", db_uri))
-        priv->db_profile_dir = g_strdup (db_uri + strlen ("file://"));
-    }
-
-  g_free (db_file);
-  g_free (db_name);
-  g_free (db_uri);
-
   g_free (profiles_path);
 
-  return db_profile_found;
+  if (priv->db_profile == NULL)
+    return FALSE;
+
+  db_uri = hyscan_profile_db_get_uri (priv->db_profile);
+  if (g_pattern_match_simple ("file://*", db_uri))
+    priv->db_profile_dir = g_strdup (db_uri + strlen ("file://"));
+
+  priv->db_profile_name = g_strdup (hyscan_profile_get_name (HYSCAN_PROFILE (priv->db_profile)));
+
+  return TRUE;
 }
 
 /**
  * hyscan_gtk_configurator_new:
- * @config_dir: путь к директории, где находятся конфигурационные файлы hyscan499
+ * @settings_ini: путь к файлу конфигурации settings.ini
  *
  * Returns: виджет начальной настройки hyscan499
  */
 GtkWidget *
-hyscan_gtk_configurator_new (const gchar *config_dir)
+hyscan_gtk_configurator_new (const gchar *settings_ini)
 {
   return g_object_new (HYSCAN_TYPE_GTK_CONFIGURATOR,
-                       "config-dir", config_dir,
+                       "settings-ini", settings_ini,
                        NULL);
 }
 
