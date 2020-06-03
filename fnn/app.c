@@ -157,12 +157,16 @@ main (int argc, char **argv)
     setlocale (LC_ALL, "");
     bindtextdomain (GETTEXT_PACKAGE, hyscan_config_get_locale_dir());
     bindtextdomain ("hyscangui", hyscan_config_get_locale_dir());
+    bindtextdomain ("hyscangtk", hyscan_config_get_locale_dir());
+    bindtextdomain ("hyscancore", hyscan_config_get_locale_dir());
     bindtextdomain ("libhyscanfnn", hyscan_config_get_locale_dir());
     bindtextdomain ("hyscanfnn-swui", hyscan_config_get_locale_dir());
     bindtextdomain ("hyscanfnn-evoui", hyscan_config_get_locale_dir());
 
     bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
     bind_textdomain_codeset ("hyscangui" , "UTF-8");
+    bind_textdomain_codeset ("hyscangtk" , "UTF-8");
+    bind_textdomain_codeset ("hyscancore" , "UTF-8");
     bind_textdomain_codeset ("libhyscanfnn" , "UTF-8");
     bind_textdomain_codeset ("hyscanfnn-swui", "UTF-8");
     bind_textdomain_codeset ("hyscanfnn-evoui", "UTF-8");

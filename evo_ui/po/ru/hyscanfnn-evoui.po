@@ -196,15 +196,15 @@ msgstr "Показать галс на карте"
 
 #: hyscan-gtk-map-kit.c:1247
 msgid "Decimal Degrees"
-msgstr ""
+msgstr "Десятичные градусы"
 
 #: hyscan-gtk-map-kit.c:1248
 msgid "Degree Minute"
-msgstr ""
+msgstr "Градусы Минуты"
 
 #: hyscan-gtk-map-kit.c:1249
 msgid "Degree Minute Second"
-msgstr ""
+msgstr "Градусы Минуты Секунды"
 
 #: hyscan-gtk-map-kit.c:1255
 msgid "Coordinate Units"
