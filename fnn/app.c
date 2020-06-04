@@ -307,8 +307,7 @@ main (int argc, char **argv)
 
   /* Файл c настройками. */
   if (settings_file == NULL)
-    settings_file = g_build_filename (g_get_user_config_dir (), "hyscan",
-                                      "settings.ini", NULL);
+    settings_file = g_build_filename (hyscan_config_get_user_files_dir (), "settings.ini", NULL);
 
   global.settings = g_key_file_new ();
   g_key_file_load_from_file (global.settings, settings_file, G_KEY_FILE_NONE, NULL);
