@@ -11,12 +11,8 @@ add_executable (migrate-config migrate-config.c
 target_link_libraries (configurator ${GTK3_LIBRARIES} ${HYSCAN_LIBRARIES})
 target_link_libraries (migrate-config ${GLIB2_LIBRARIES} ${HYSCAN_LIBRARIES})
 
-if (${CMAKE_C_COMPILER_ID} STREQUAL MSVC)
-  if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
-    set_property (TARGET configurator PROPERTY WIN32_EXECUTABLE true)
-  endif()
-
-  target_sources (configurator PRIVATE app.rc icon.ico)
+if ((${CMAKE_C_COMPILER_ID} STREQUAL MSVC) AND (${CMAKE_BUILD_TYPE} STREQUAL "Release"))
+  set_property (TARGET configurator PROPERTY WIN32_EXECUTABLE true)
 endif()
 
 install (TARGETS configurator
