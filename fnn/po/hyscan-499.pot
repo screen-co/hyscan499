@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-11-22 14:16+0300\n"
+"POT-Creation-Date: 2020-06-04 13:39+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,6 +16,61 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
+
+#: ../configurator/configurator.c:73
+msgid "Configuration is outdated"
+msgstr ""
+
+#: ../configurator/configurator.c:74
+msgid "_Update"
+msgstr ""
+
+#: ../configurator/configurator.c:75
+msgid "_Quit"
+msgstr ""
+
+#: ../configurator/configurator.c:78
+msgid ""
+"Configuration is outdated. Would you like to update it to the latest version?"
+msgstr ""
+
+#: ../configurator/hyscan-configurator.c:97
+msgid "Default profile"
+msgstr ""
+
+#: ../configurator/hyscan-gtk-configurator.c:91
+msgid "Initial configuration"
+msgstr ""
+
+#: ../configurator/hyscan-gtk-configurator.c:98
+#: ../configurator/hyscan-gtk-configurator.c:134
+msgid "DB directory"
+msgstr ""
+
+#: ../configurator/hyscan-gtk-configurator.c:104
+#: ../configurator/hyscan-gtk-configurator.c:137
+msgid "Map cache directory"
+msgstr ""
+
+#: ../configurator/hyscan-gtk-configurator.c:115
+msgid "Apply"
+msgstr ""
+
+#: ../configurator/hyscan-gtk-configurator.c:119
+msgid ""
+"You should create a database profile to run HyScan. Please, specify the name "
+"of the profile and the path to the database directory."
+msgstr ""
+
+#: ../configurator/hyscan-gtk-configurator.c:125
+msgid ""
+"Map cache stores tile images for the map offline work. Please, specify the "
+"path to map cache directory."
+msgstr ""
+
+#: ../configurator/hyscan-gtk-configurator.c:131
+msgid "Name of DB-profile"
+msgstr ""
 
 #: common.ui.h:1 tmp/common.ui.h:1
 msgid "Track"

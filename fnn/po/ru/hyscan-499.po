@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: hyscan 499\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-05 18:26+0300\n"
+"POT-Creation-Date: 2020-06-04 13:39+0300\n"
 "PO-Revision-Date: 2019-06-20 11:30+0300\n"
 "Last-Translator:  <m1n7@yandex.ru>\n"
 "Language-Team: Russian\n"
@@ -17,6 +17,65 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && n"
 "%10<=4 && (n%100<10 || n%100>=20) ? 1 : 2);\n"
+
+#: ../configurator/configurator.c:73
+msgid "Configuration is outdated"
+msgstr "Конфигурация устарела"
+
+#: ../configurator/configurator.c:74
+msgid "_Update"
+msgstr "_Обновить"
+
+#: ../configurator/configurator.c:75
+msgid "_Quit"
+msgstr "_Выйти"
+
+#: ../configurator/configurator.c:78
+msgid ""
+"Configuration is outdated. Would you like to update it to the latest version?"
+msgstr "Конфигурация устарела. Обновить файлы конфигурации до последней версии?"
+
+#: ../configurator/hyscan-configurator.c:97
+msgid "Default profile"
+msgstr "Профиль по умолчанию"
+
+#: ../configurator/hyscan-gtk-configurator.c:91
+msgid "Initial configuration"
+msgstr "Первоначальная конфигурация"
+
+#: ../configurator/hyscan-gtk-configurator.c:98
+#: ../configurator/hyscan-gtk-configurator.c:134
+msgid "DB directory"
+msgstr "Каталог базы данных"
+
+#: ../configurator/hyscan-gtk-configurator.c:104
+#: ../configurator/hyscan-gtk-configurator.c:137
+msgid "Map cache directory"
+msgstr "Каталог кэша карты"
+
+#: ../configurator/hyscan-gtk-configurator.c:115
+msgid "Apply"
+msgstr "Применить"
+
+#: ../configurator/hyscan-gtk-configurator.c:119
+msgid ""
+"You should create a database profile to run HyScan. Please, specify the name "
+"of the profile and the path to the database directory."
+msgstr ""
+"Необходимо создать профиль базы данных, чтобы запустить HyScan. Пожалуйста, "
+"укажите имя профиля и путь к директории с базой данных."
+
+#: ../configurator/hyscan-gtk-configurator.c:125
+msgid ""
+"Map cache stores tile images for the map offline work. Please, specify the "
+"path to map cache directory."
+msgstr ""
+"Кэш карты хранит изображения тайлов и позволяет карте работать в режиме "
+"оффлайн. Укажите ниже путь к папке для кэша карты."
+
+#: ../configurator/hyscan-gtk-configurator.c:131
+msgid "Name of DB-profile"
+msgstr "Имя профиля базы данных"
 
 #: common.ui.h:1 tmp/common.ui.h:1
 msgid "Track"

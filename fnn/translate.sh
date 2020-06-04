@@ -13,7 +13,7 @@ case "$1" in
             echo "Extracting lines from C source files..."
             xgettext --keyword=_ --keyword=N_ --keyword=C_:1c,2 \
              --sort-by-file -C --from-code=UTF-8 \
-            -o ${POT_FILE} *.c *.h tmp/*
+            -o ${POT_FILE} *.c *.h tmp/* ../configurator/*.c
             rm -rf tmp
             ;;
 

@@ -3,6 +3,7 @@
 
 #include <gtk/gtk.h>
 #include <hyscan-api.h>
+#include "hyscan-configurator.h"
 
 G_BEGIN_DECLS
 
@@ -33,7 +34,7 @@ HYSCAN_API
 GType                  hyscan_gtk_configurator_get_type   (void);
 
 HYSCAN_API
-GtkWidget *            hyscan_gtk_configurator_new        (const gchar           *settings_ini);
+GtkWidget *            hyscan_gtk_configurator_new        (HyScanConfigurator    *model);
 
 HYSCAN_API
 gboolean               hyscan_gtk_configurator_configured (HyScanGtkConfigurator *configurator);

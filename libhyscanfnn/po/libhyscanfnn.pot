@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-04-24 14:32+0300\n"
+"POT-Creation-Date: 2020-06-04 13:43+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,83 +17,83 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: fnn.c:67
+#: fnn.c:68
 msgid "SideScan"
 msgstr ""
 
-#: fnn.c:76
+#: fnn.c:77
 msgid "SideScanLow"
 msgstr ""
 
-#: fnn.c:85
+#: fnn.c:86
 msgid "SideScanHigh"
 msgstr ""
 
-#: fnn.c:123 fnn.c:3547
+#: fnn.c:124 fnn.c:3598
 msgid "Profiler"
 msgstr ""
 
-#: fnn.c:175
+#: fnn.c:176
 msgid "Echosounder"
 msgstr ""
 
-#: fnn.c:182
+#: fnn.c:183
 msgid "EchosounderHigh"
 msgstr ""
 
-#: fnn.c:189
+#: fnn.c:190
 msgid "EchosounderLow"
 msgstr ""
 
-#: fnn.c:232
+#: fnn.c:233
 msgid "ForwardLook"
 msgstr ""
 
-#: fnn.c:535 fnn.c:543
+#: fnn.c:542 fnn.c:550
 msgid "Hardware parameters"
 msgstr ""
 
-#: fnn.c:538 hyscan-gtk-configurator.c:127
+#: fnn.c:545
 msgid "Apply"
 msgstr ""
 
-#: fnn.c:539
+#: fnn.c:546
 msgid "Reset"
 msgstr ""
 
-#: fnn.c:540 fnn.c:576 fnn.c:838
+#: fnn.c:547 fnn.c:583 fnn.c:845
 msgid "Close"
 msgstr ""
 
-#: fnn.c:573 fnn.c:579
+#: fnn.c:580 fnn.c:586
 msgid "Sonar info"
 msgstr ""
 
-#: fnn.c:835 fnn.c:841
+#: fnn.c:842 fnn.c:848
 msgid "Export data"
 msgstr ""
 
-#: fnn.c:3556
+#: fnn.c:3607
 msgid "Yellow"
 msgstr ""
 
-#: fnn.c:3564
+#: fnn.c:3615
 msgid "Brown"
 msgstr ""
 
-#: fnn.c:3571
+#: fnn.c:3622
 msgid "Sepia"
 msgstr ""
 
-#: fnn.c:3578
+#: fnn.c:3629
 msgid "White"
 msgstr ""
 
-#: fnn.c:3586
+#: fnn.c:3637
 msgid "Inverted"
 msgstr ""
 
-#: fnn.c:3594
+#: fnn.c:3645
 msgid "Green"
 msgstr ""
 
@@ -146,68 +146,36 @@ msgctxt "widget_title"
 msgid "Project manager"
 msgstr ""
 
-#: hyscan-gtk-con.c:380
+#: hyscan-gtk-con.c:379
 msgid "Intro"
 msgstr ""
 
-#: hyscan-gtk-con.c:403
+#: hyscan-gtk-con.c:402
 msgid "Hardware"
 msgstr ""
 
-#: hyscan-gtk-con.c:432
+#: hyscan-gtk-con.c:431
 msgid "Antennas positions"
 msgstr ""
 
-#: hyscan-gtk-con.c:466
+#: hyscan-gtk-con.c:465
 msgid "Connection"
 msgstr ""
 
-#: hyscan-gtk-con.c:495
+#: hyscan-gtk-con.c:494
 msgid "Connecting..."
 msgstr ""
 
-#: hyscan-gtk-con.c:536
+#: hyscan-gtk-con.c:535
 msgid "Connection completed. HyScan will launch shortly. "
 msgstr ""
 
-#: hyscan-gtk-con.c:543
+#: hyscan-gtk-con.c:542
 msgid "Connection failed. "
 msgstr ""
 
-#: hyscan-gtk-con.c:544
+#: hyscan-gtk-con.c:543
 msgid "Continue in view mode"
-msgstr ""
-
-#: hyscan-gtk-configurator.c:97
-msgid "Default profile"
-msgstr ""
-
-#: hyscan-gtk-configurator.c:103
-msgid "Initial configuration"
-msgstr ""
-
-#: hyscan-gtk-configurator.c:110 hyscan-gtk-configurator.c:146
-msgid "DB directory"
-msgstr ""
-
-#: hyscan-gtk-configurator.c:116 hyscan-gtk-configurator.c:149
-msgid "Map cache directory"
-msgstr ""
-
-#: hyscan-gtk-configurator.c:131
-msgid ""
-"You should create a database profile to run HyScan. Please, specify the name "
-"of the profile and the path to the database directory."
-msgstr ""
-
-#: hyscan-gtk-configurator.c:137
-msgid ""
-"Map cache stores tile images for the map offline work. Please, specify the "
-"path to map cache directory."
-msgstr ""
-
-#: hyscan-gtk-configurator.c:143
-msgid "Name of DB-profile"
 msgstr ""
 
 #: hyscan-gtk-dev-indicator.c:212
