@@ -30,13 +30,10 @@ struct _HyScanGtkConfiguratorClass
   GtkWindowClass parent_class;
 };
 
-HYSCAN_API
 GType                  hyscan_gtk_configurator_get_type   (void);
 
-HYSCAN_API
 GtkWidget *            hyscan_gtk_configurator_new        (HyScanConfigurator    *model);
 
-HYSCAN_API
 gboolean               hyscan_gtk_configurator_configured (HyScanGtkConfigurator *configurator);
 
 G_END_DECLS
