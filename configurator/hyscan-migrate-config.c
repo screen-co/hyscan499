@@ -9,8 +9,9 @@ enum
 
 enum HyScanMigrateConfigDb
 {
-  HYSCAN_MIGRATE_CONFIG_DB_0       = 0,
-  HYSCAN_MIGRATE_CONFIG_DB_65D2C45 = 0x965D2C45,
+  HYSCAN_MIGRATE_CONFIG_DB_INVALID = -1,
+  HYSCAN_MIGRATE_CONFIG_DB_0,
+  HYSCAN_MIGRATE_CONFIG_DB_65D2C45,
   HYSCAN_MIGRATE_CONFIG_DB_LATEST  = HYSCAN_MIGRATE_CONFIG_DB_65D2C45,
 };
 
@@ -24,6 +25,8 @@ static void      hyscan_migrate_config_set_property             (GObject        
                                                                  const GValue          *value,
                                                                  GParamSpec            *pspec);
 static void      hyscan_migrate_config_object_finalize          (GObject               *object);
+static guint64   hyscan_migrate_config_db_version_uint64        (gint                   version);
+static gint      hyscan_migrate_config_profile_version          (GKeyFile              *key_file);
 
 G_DEFINE_TYPE_WITH_PRIVATE (HyScanMigrateConfig, hyscan_migrate_config, G_TYPE_OBJECT)
 
@@ -80,6 +83,23 @@ hyscan_migrate_config_object_finalize (GObject *object)
 }
 
 static guint64
+hyscan_migrate_config_db_version_uint64 (gint version)
+{
+  switch (version)
+    {
+    case HYSCAN_MIGRATE_CONFIG_DB_0:
+      return 0;
+
+    case HYSCAN_MIGRATE_CONFIG_DB_65D2C45:
+      return 0x965D2C45;
+  
+    default:
+      g_warning ("HyScanMigrateConfig: unknown db version %lu", version);
+      return 0;
+    }
+}
+
+static gint
 hyscan_migrate_config_profile_version (GKeyFile *key_file)
 {
   guint64 version;
@@ -88,11 +108,18 @@ hyscan_migrate_config_profile_version (GKeyFile *key_file)
     return HYSCAN_MIGRATE_CONFIG_DB_0;
 
   version = g_key_file_get_uint64 (key_file, HYSCAN_PROFILE_INFO_GROUP, HYSCAN_PROFILE_VERSION, NULL);
-
-  return version;
+  switch (version)
+    {
+    case 0x965D2C45:
+      return HYSCAN_MIGRATE_CONFIG_DB_65D2C45;
+  
+    default:
+      g_warning ("HyScanMigrateConfig: unknown db version %lu", version);
+      return HYSCAN_MIGRATE_CONFIG_DB_INVALID;
+    }
 }
 
-/** Миграция первой версии: название профиля перенесно в группу "_". */
+/* Миграция первой версии: название профиля перенесно в группу "_". */
 static gboolean
 hyscan_migrate_config_profile_db_0 (GKeyFile *key_file)
 {
@@ -102,7 +129,8 @@ hyscan_migrate_config_profile_db_0 (GKeyFile *key_file)
   g_key_file_remove_key (key_file, "db", "name", NULL);
 
   g_key_file_set_string (key_file, HYSCAN_PROFILE_INFO_GROUP, HYSCAN_PROFILE_NAME, name);
-  g_key_file_set_uint64 (key_file, HYSCAN_PROFILE_INFO_GROUP, HYSCAN_PROFILE_VERSION, HYSCAN_MIGRATE_CONFIG_DB_65D2C45);
+  g_key_file_set_uint64 (key_file, HYSCAN_PROFILE_INFO_GROUP, HYSCAN_PROFILE_VERSION, 
+                         hyscan_migrate_config_db_version_uint64 (HYSCAN_MIGRATE_CONFIG_DB_65D2C45));
 
   g_free (name);
 
@@ -112,7 +140,7 @@ hyscan_migrate_config_profile_db_0 (GKeyFile *key_file)
 static gboolean
 hyscan_migrate_config_profile_db (GKeyFile *key_file)
 {
-  guint64 version;
+  gint version;
 
   version = hyscan_migrate_config_profile_version (key_file);
   switch (version)
