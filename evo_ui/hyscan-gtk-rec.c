@@ -115,6 +115,7 @@ hyscan_gtk_rec_state_start_stop (HyScanGtkRec *gtk_rec)
 
   /* Переводим виджет в новое состояние без обработчика. */
   g_signal_handler_block (gtk_rec, priv->handler_id);
+  gtk_switch_set_active (GTK_SWITCH (gtk_rec), state);
   gtk_switch_set_state (GTK_SWITCH (gtk_rec), state);
   g_signal_handler_unblock (gtk_rec, priv->handler_id);
 }
