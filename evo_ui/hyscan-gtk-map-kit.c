@@ -912,14 +912,58 @@ on_track_activated (GtkTreeView        *treeview,
   }
 }
 
+/* Удаляет из таблицы меток строки пропавших меток и возвращает хэш таблицу остальных строк. */
+static GHashTable *
+mark_tree_filter_iters (HyScanGtkMapKit *kit,
+                        GType            filter_type,
+                        GHashTable      *marks)
+{
+  HyScanGtkMapKitPrivate *priv = kit->priv;
+  GHashTable *gtk_iters;
+  GtkTreeIter gtk_iter;
+  gboolean valid;
+
+  /* Удаляем строки, которых больше нет. */
+  gtk_iters = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, (GDestroyNotify) gtk_tree_iter_free);
+  valid = gtk_tree_model_get_iter_first (GTK_TREE_MODEL (priv->mark_store), &gtk_iter);
+  while (valid)
+    {
+      GType mark_type;
+      gchar *mark_id;
+
+      /* Обрабатываем только метки указанного типа. */
+      gtk_tree_model_get (GTK_TREE_MODEL (priv->mark_store), &gtk_iter, MARK_TYPE_COLUMN, &mark_type, -1);
+      if (mark_type != filter_type)
+        {
+          valid = gtk_tree_model_iter_next (GTK_TREE_MODEL (priv->mark_store), &gtk_iter);
+          continue;
+        }
+
+      gtk_tree_model_get (GTK_TREE_MODEL (priv->mark_store), &gtk_iter, MARK_ID_COLUMN, &mark_id, -1);
+      if (g_hash_table_contains (marks, mark_id))
+        {
+          g_hash_table_insert (gtk_iters, mark_id, gtk_tree_iter_copy (&gtk_iter));
+          valid = gtk_tree_model_iter_next (GTK_TREE_MODEL (priv->mark_store), &gtk_iter);
+        }
+      else
+        {
+          g_free (mark_id);
+          valid = gtk_list_store_remove (priv->mark_store, &gtk_iter);
+          continue;
+        }
+    }
+
+  return gtk_iters;
+}
+
 /* Добавляет метку в список меток. */
 static void
 mark_tree_append (HyScanGtkMapKit *kit,
+                  GtkTreeIter     *reuse_iter,
                   const gchar     *mark_id,
                   HyScanMark      *mark,
                   gdouble          lat,
-                  gdouble          lon,
-                  gboolean         selected)
+                  gdouble          lon)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
 
@@ -943,8 +987,13 @@ mark_tree_append (HyScanGtkMapKit *kit,
   else
     type_name = "?";
 
-  gtk_list_store_append (priv->mark_store, &tree_iter);
-  gtk_list_store_set (priv->mark_store, &tree_iter,
+  if (reuse_iter == NULL)
+    {
+      gtk_list_store_append (priv->mark_store, &tree_iter);
+      reuse_iter = &tree_iter;
+    }
+
+  gtk_list_store_set (priv->mark_store, reuse_iter,
                       MARK_ID_COLUMN, mark_id,
                       MARK_NAME_COLUMN, mark->name,
                       MARK_MTIME_COLUMN, time_str,
@@ -955,84 +1004,58 @@ mark_tree_append (HyScanGtkMapKit *kit,
                       MARK_LON_COLUMN, lon,
                       -1);
 
-  if (selected)
-    gtk_tree_selection_select_iter (gtk_tree_view_get_selection (priv->mark_tree), &tree_iter);
-
   g_free (time_str);
   g_date_time_unref (local);
-}
-
-static gchar *
-mark_get_selected_id (HyScanGtkMapKit *kit)
-{
-  HyScanGtkMapKitPrivate *priv = kit->priv;
-  GtkTreeSelection *selection;
-  GtkTreeIter iter;
-  gchar *mark_id;
-
-  selection = gtk_tree_view_get_selection (priv->mark_tree);
-  if (!gtk_tree_selection_get_selected (selection, NULL, &iter))
-    return NULL;
-
-  gtk_tree_model_get (GTK_TREE_MODEL (priv->mark_store), &iter, MARK_ID_COLUMN, &mark_id, -1);
-
-  return mark_id;
 }
 
 static void
 on_marks_changed (HyScanGtkMapKit *kit)
 {
   HyScanGtkMapKitPrivate *priv = kit->priv;
-  gchar *selected_id;
-  GtkTreeSelection *selection;
   GHashTable *marks;
   GHashTableIter hash_iter;
   gchar *mark_id;
-
-  /* Блокируем обработку изменения выделения в списке меток. */
-  selection = gtk_tree_view_get_selection (priv->mark_tree);
-  g_signal_handlers_block_by_func (selection, on_marks_selected, kit);
-
-  selected_id = mark_get_selected_id (kit);
-
-  /* Удаляем все строки из mark_store. */
-  gtk_list_store_clear (priv->mark_store);
 
   /* Добавляем метки из всех моделей. */
   if (priv->ml_model != NULL && (marks = hyscan_mark_loc_model_get (priv->ml_model)) != NULL)
     {
       HyScanMarkLocation *location;
+      GHashTable *gtk_iters;
+
+      /* Фильтруем строки, которые уже есть. */
+      gtk_iters = mark_tree_filter_iters (kit, HYSCAN_TYPE_MARK_WATERFALL, marks);
 
       g_hash_table_iter_init (&hash_iter, marks);
       while (g_hash_table_iter_next (&hash_iter, (gpointer *) &mark_id, (gpointer *) &location))
         {
-          mark_tree_append (kit, mark_id, (HyScanMark *) location->mark,
-                            location->mark_geo.lat, location->mark_geo.lon,
-                            g_strcmp0 (mark_id, selected_id) == 0);
+          GtkTreeIter *reuse_iter = g_hash_table_lookup (gtk_iters, mark_id);
+          mark_tree_append (kit, reuse_iter, mark_id, (HyScanMark *) location->mark,
+                            location->mark_geo.lat, location->mark_geo.lon);
         }
 
+      g_hash_table_unref (gtk_iters);
       g_hash_table_unref (marks);
     }
 
   if (priv->mark_geo_model != NULL && (marks = hyscan_object_model_get (priv->mark_geo_model)) != NULL)
     {
       HyScanMarkGeo *mark;
+      GHashTable *gtk_iters;
+
+      /* Фильтруем строки, которые уже есть. */
+      gtk_iters = mark_tree_filter_iters (kit, HYSCAN_TYPE_MARK_GEO, marks);
 
       g_hash_table_iter_init (&hash_iter, marks);
       while (g_hash_table_iter_next (&hash_iter, (gpointer *) &mark_id, (gpointer *) &mark))
         {
-          mark_tree_append (kit, mark_id, (HyScanMark *) mark,
-                            mark->center.lat, mark->center.lon,
-                            g_strcmp0 (mark_id, selected_id) == 0);
+          GtkTreeIter *reuse_iter = g_hash_table_lookup (gtk_iters, mark_id);
+          mark_tree_append (kit, reuse_iter, mark_id, (HyScanMark *) mark,
+                            mark->center.lat, mark->center.lon);
         }
 
+      g_hash_table_unref (gtk_iters);
       g_hash_table_unref (marks);
     }
-
-  /* Разблокируем обработку выделения. */
-  g_signal_handlers_unblock_by_func (selection, on_marks_selected, kit);
-
-  g_free (selected_id);
 }
 
 static GtkWidget *
