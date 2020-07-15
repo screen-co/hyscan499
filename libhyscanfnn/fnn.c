@@ -549,7 +549,7 @@ run_param (GObject     *emitter,
   gtk_header_bar_set_title (GTK_HEADER_BAR (gtk_dialog_get_header_bar (GTK_DIALOG (dialog))),
                             _("Hardware parameters"));
   content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
-  tree = hyscan_gtk_param_tree_new (HYSCAN_PARAM (tglobal->control), root, TRUE);
+  tree = hyscan_gtk_param_tree_new_full (HYSCAN_PARAM (tglobal->control), root, TRUE);
   hyscan_gtk_param_set_watch_period (HYSCAN_GTK_PARAM (tree), 200);
 
   gtk_container_add (GTK_CONTAINER (content), tree);
@@ -585,7 +585,7 @@ run_show_sonar_info (GObject     *emitter,
   gtk_header_bar_set_title (GTK_HEADER_BAR (gtk_dialog_get_header_bar (GTK_DIALOG (dialog))),
                             _("Sonar info"));
   content = gtk_dialog_get_content_area (GTK_DIALOG (dialog));
-  cc = hyscan_gtk_param_cc_new (HYSCAN_PARAM (tglobal->control), root, TRUE);
+  cc = hyscan_gtk_param_cc_new_full (HYSCAN_PARAM (tglobal->control), root, TRUE);
   hyscan_gtk_param_set_watch_period (HYSCAN_GTK_PARAM (cc), 200);
 
   gtk_container_add (GTK_CONTAINER (content), cc);

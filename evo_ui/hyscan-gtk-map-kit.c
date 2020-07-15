@@ -446,7 +446,7 @@ create_param_settings_window (HyScanGtkMapKit  *kit,
   gtk_window_set_default_size (GTK_WINDOW (window), 250, 300);
 
   /* Виджет отображения параметров. */
-  frontend = hyscan_gtk_param_merge_new (param, "/", FALSE);
+  frontend = hyscan_gtk_param_merge_new_full (param, "/", FALSE);
   hyscan_gtk_param_set_watch_period (HYSCAN_GTK_PARAM (frontend), 500);
 
   /* Кнопки сохранения настроек. */
@@ -1568,7 +1568,7 @@ edit_profile_btn_clicked (HyScanGtkMapKit *kit)
 
   g_signal_connect_swapped (window, "destroy", G_CALLBACK (profile_param_clear), kit);
 
-  priv->profile_param = hyscan_gtk_param_cc_new (map_param, "/", FALSE);
+  priv->profile_param = hyscan_gtk_param_cc_new_full (map_param, "/", FALSE);
   btn_apply = gtk_button_new_with_mnemonic (_("_Apply"));
   btn_ok = gtk_button_new_with_mnemonic (_("_OK"));
   btn_cancel = gtk_button_new_with_mnemonic (_("_Cancel"));

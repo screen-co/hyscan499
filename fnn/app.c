@@ -143,7 +143,7 @@ main (int argc, char **argv)
 
   global.canary = 123456789;
 
-  HyScanDBInfo      *db_info;
+  HyScanDBInfo      *db_info = NULL;
   HyScanObjectModel *model;
 
   /* Перенаправление логов в файл. */
