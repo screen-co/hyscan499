@@ -3189,7 +3189,6 @@ live_view (GtkWidget  *widget,
 {
   VisualWF *wf;
   VisualFL *fl;
-  gboolean current;
   FnnPanel *panel = get_panel (tglobal, panelx);
 
   switch (panel->type)
@@ -3198,7 +3197,7 @@ live_view (GtkWidget  *widget,
     case FNN_PANEL_PROFILER:
     case FNN_PANEL_ECHO:
       wf = (VisualWF*)panel->vis_gui;
-      current = hyscan_gtk_waterfall_automove (wf->wf, state);
+      hyscan_gtk_waterfall_automove (wf->wf, state);
       break;
 
     case FNN_PANEL_FORWARDLOOK:
@@ -3208,14 +3207,13 @@ live_view (GtkWidget  *widget,
         hyscan_forward_look_player_real_time (fl->player);
       else
         hyscan_forward_look_player_pause (fl->player);
-      current = state;
       break;
 
     default:
       g_warning ("live_view: wrong panel type!");
     }
 
-  button_set_active (G_OBJECT (panel->vis_gui->live_view), current);
+  button_set_active (G_OBJECT (panel->vis_gui->live_view), state);
 
   return TRUE;
 }
