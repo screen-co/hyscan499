@@ -12,8 +12,7 @@ enum HyScanMigrateConfigDb
   HYSCAN_MIGRATE_CONFIG_DB_INVALID = -1,
   HYSCAN_MIGRATE_CONFIG_DB_0,
   HYSCAN_MIGRATE_CONFIG_DB_65D2C45,
-  HYSCAN_MIGRATE_CONFIG_DB_20200100,
-  HYSCAN_MIGRATE_CONFIG_DB_LATEST  = HYSCAN_MIGRATE_CONFIG_DB_20200100,
+  HYSCAN_MIGRATE_CONFIG_DB_LATEST  = HYSCAN_MIGRATE_CONFIG_DB_65D2C45,
 };
 
 struct _HyScanMigrateConfigPrivate
@@ -93,10 +92,7 @@ hyscan_migrate_config_db_version_uint64 (gint version)
 
     case HYSCAN_MIGRATE_CONFIG_DB_65D2C45:
       return 0x965D2C45;
-
-    case HYSCAN_MIGRATE_CONFIG_DB_20200100:
-      return 20200100;
-
+  
     default:
       g_warning ("HyScanMigrateConfig: unknown db version %lu", version);
       return 0;
@@ -111,12 +107,12 @@ hyscan_migrate_config_profile_version (GKeyFile *key_file)
   if (!g_key_file_has_group (key_file, HYSCAN_PROFILE_INFO_GROUP))
     return HYSCAN_MIGRATE_CONFIG_DB_0;
 
-  version = g_key_file_get_uint64 (key_file, HYSCAN_PROFILE_INFO_GROUP, "version", NULL);
+  version = g_key_file_get_uint64 (key_file, HYSCAN_PROFILE_INFO_GROUP, HYSCAN_PROFILE_VERSION, NULL);
   switch (version)
     {
     case 0x965D2C45:
       return HYSCAN_MIGRATE_CONFIG_DB_65D2C45;
-
+  
     default:
       g_warning ("HyScanMigrateConfig: unknown db version %lu", version);
       return HYSCAN_MIGRATE_CONFIG_DB_INVALID;
@@ -132,8 +128,8 @@ hyscan_migrate_config_profile_db_0 (GKeyFile *key_file)
   name = g_key_file_get_string (key_file, "db", "name", NULL);
   g_key_file_remove_key (key_file, "db", "name", NULL);
 
-  g_key_file_set_string (key_file, HYSCAN_PROFILE_INFO_GROUP, "name", name);
-  g_key_file_set_uint64 (key_file, HYSCAN_PROFILE_INFO_GROUP, "version",
+  g_key_file_set_string (key_file, HYSCAN_PROFILE_INFO_GROUP, HYSCAN_PROFILE_NAME, name);
+  g_key_file_set_uint64 (key_file, HYSCAN_PROFILE_INFO_GROUP, HYSCAN_PROFILE_VERSION, 
                          hyscan_migrate_config_db_version_uint64 (HYSCAN_MIGRATE_CONFIG_DB_65D2C45));
 
   g_free (name);
@@ -212,7 +208,7 @@ hyscan_migrate_config_status (HyScanMigrateConfig *migrate_config)
   gchar **db_profiles;
   gint i, n_profiles;
   GKeyFile *key_file = NULL;
-
+  
   g_return_val_if_fail (HYSCAN_IS_MIGRATE_CONFIG (migrate_config), HYSCAN_MIGRATE_CONFIG_STATUS_INVALID);
 
   db_profiles = hyscan_migrate_config_profiles_db (migrate_config, "db-profiles");
