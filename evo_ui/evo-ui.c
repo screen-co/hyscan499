@@ -11,14 +11,11 @@
 #define GETTEXT_PACKAGE "hyscanfnn-evoui"
 #include <glib/gi18n-lib.h>
 #include <proj_api.h>
+#include <hyscan-gtk-layer-list.h>
 
 // #define EVO_EMPTY_PAGE "empty_page"
 #define EVO_NOT_MAP "evo-not-map"
 #define EVO_MAP "evo-map"
-#define EVO_MAP_CENTER_LAT "lat"
-#define EVO_MAP_CENTER_LON "lon"
-#define EVO_MAP_PROFILE "profile"    /* для настроек, ключ профиля. */
-#define EVO_MAP_OFFLINE "offline"    /* для настроек, офлаен-режим. */
 #define EVO_ENABLE_EXTRAS "HY_PARAM"
 
 #define EVO_GRID_KEY "GRID"
@@ -30,14 +27,6 @@
 
 #define TVG_TEST(caps,concrete) ((caps & concrete) == concrete)
 #define DEG2RAD(x) ((x) * G_PI / 180.0)
-
-enum
-{
-  LAYER_VISIBLE_COLUMN,
-  LAYER_KEY_COLUMN,
-  LAYER_TITLE_COLUMN,
-  LAYER_COLUMN
-};
 
 enum
 {
@@ -874,153 +863,50 @@ make_stack (void)
   return stack;
 }
 
-static void
-add_layer_row (GtkListStore    *store,
-               HyScanGtkLayer  *layer,
-               const gchar     *title,
-               const gchar     *key)
-{
-  GtkTreeIter tree_iter;
-
-  if (layer == NULL)
-    return;
-
-  /* Регистрируем слой в layer_store. */
-  gtk_list_store_append (store, &tree_iter);
-  gtk_list_store_set (store, &tree_iter,
-                      LAYER_VISIBLE_COLUMN, hyscan_gtk_layer_get_visible (layer),
-                      LAYER_TITLE_COLUMN, title,
-                      LAYER_COLUMN, layer,
-                      LAYER_KEY_COLUMN, key,
-                      -1);
-}
-
-static void
-on_enable_layer (GtkCellRendererToggle *cell_renderer,
-                 gchar                 *path,
-                 GtkTreeModel *tree_model)
-{
-  GtkTreeIter iter;
-  GtkTreePath *tree_path;
-  gboolean visible;
-  HyScanGtkLayer *layer;
-  gchar *key;
-
-  /* Узнаем, галочку какого слоя изменил пользователь. */
-  tree_path = gtk_tree_path_new_from_string (path);
-  gtk_tree_model_get_iter (tree_model, &iter, tree_path);
-  gtk_tree_path_free (tree_path);
-  gtk_tree_model_get (tree_model, &iter,
-                      LAYER_COLUMN, &layer,
-                      LAYER_VISIBLE_COLUMN, &visible,
-                      LAYER_KEY_COLUMN, &key,
-                      -1);
-
-  /* Устанавливаем новое данных. */
-  visible = !visible;
-  if (g_strcmp0 (key, EVO_GRID_KEY) == 0)
-    {
-      hyscan_gtk_waterfall_grid_show_grid (HYSCAN_GTK_WATERFALL_GRID(layer), visible);
-    }
-  else
-    {
-      hyscan_gtk_layer_set_visible (layer, visible);
-    }
-  gtk_list_store_set (GTK_LIST_STORE (tree_model), &iter, LAYER_VISIBLE_COLUMN, visible, -1);
-
-  g_object_unref (layer);
-  g_free (key);
-}
-
-
-static void
-layer_changed (GtkTreeSelection *selection,
-               HyScanGtkLayerContainer *container)
-{
-  // HyScanGtkMapKitPrivate *priv = kit->priv;
-
-  GtkTreeModel *model;
-  GtkTreeIter iter;
-  HyScanGtkLayer *layer;
-  gchar *layer_key;
-
-  /* Получаем данные выбранного слоя. */
-  gtk_tree_selection_get_selected (selection, &model, &iter);
-  gtk_tree_model_get (model, &iter,
-                      LAYER_COLUMN, &layer,
-                      LAYER_KEY_COLUMN, &layer_key,
-                      -1);
-
-  if (!hyscan_gtk_layer_grab_input (layer))
-    hyscan_gtk_layer_container_set_input_owner (container, NULL);
-
-  // layer_tools = gtk_stack_get_child_by_name (GTK_STACK (priv->layer_tool_stack), layer_key);
-
-  // if (layer_tools != NULL)
-  //   {
-  //     gtk_stack_set_visible_child (GTK_STACK (priv->layer_tool_stack), layer_tools);
-  //     gtk_widget_show_all (GTK_WIDGET (priv->layer_tool_stack));
-  //   }
-  // else
-  //   {
-  //     gtk_widget_hide (GTK_WIDGET (priv->layer_tool_stack));
-  //   }
-
-  // g_free (layer_key);
-  // g_object_unref (layer);
-}
-
 GtkWidget *
 make_layer_list (EvoUI *ui,
                  VisualWF *vwf)
 {
-  GtkCellRenderer *renderer;
-  GtkTreeViewColumn *column;
-  GtkWidget *tree_view;
-  GtkTreeSelection *selection;
-  GtkListStore *store;
+  GtkWidget *layer_list;
 
-  store = gtk_list_store_new (4,
-                              G_TYPE_BOOLEAN,        /* LAYER_VISIBLE_COLUMN */
-                              G_TYPE_STRING,         /* LAYER_KEY_COLUMN     */
-                              G_TYPE_STRING,         /* LAYER_TITLE_COLUMN   */
-                              HYSCAN_TYPE_GTK_LAYER  /* LAYER_COLUMN         */);
-  tree_view = gtk_tree_view_new_with_model (GTK_TREE_MODEL (store));
-
-  renderer = gtk_cell_renderer_text_new ();
-  column = gtk_tree_view_column_new_with_attributes (_("Layer"),
-                                                     renderer,
-                                                     "text", LAYER_TITLE_COLUMN,
-                                                     NULL);
-
-  gtk_tree_view_column_set_expand (column, TRUE);
-  gtk_tree_view_append_column (GTK_TREE_VIEW (tree_view), column);
-
-
-  renderer = gtk_cell_renderer_toggle_new ();
-  g_signal_connect (renderer, "toggled", G_CALLBACK (on_enable_layer), store);
-  column = gtk_tree_view_column_new_with_attributes (_("Show"),
-                                                     renderer,
-                                                     "active", LAYER_VISIBLE_COLUMN,
-                                                     NULL);
-  gtk_tree_view_append_column (GTK_TREE_VIEW (tree_view), column);
-
-
-  selection = gtk_tree_view_get_selection (GTK_TREE_VIEW (tree_view));
-  g_signal_connect (selection, "changed", G_CALLBACK (layer_changed), vwf->wf);
+  layer_list = hyscan_gtk_layer_list_new (HYSCAN_GTK_LAYER_CONTAINER (vwf->wf));
 
   hyscan_gtk_layer_set_visible (HYSCAN_GTK_LAYER (vwf->wf_magn), FALSE);
 
   /* Регистрируем слой в layer_store. */
-  add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_grid), _("Grid"), EVO_GRID_KEY);
-  add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_mark), _("Marks"), EVO_MARK_KEY);
-  add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_metr), _("Measurements"), EVO_METR_KEY);
-  add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_shad), _("Shadow measure"), EVO_SHAD_KEY);
-  add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_coor), _("Coordinates"), EVO_COOR_KEY);
-  add_layer_row (store, HYSCAN_GTK_LAYER (vwf->wf_magn), _("Magnifier"), EVO_MAGN_KEY);
+  hyscan_gtk_layer_list_add (HYSCAN_GTK_LAYER_LIST (layer_list), HYSCAN_GTK_LAYER (vwf->wf_grid), EVO_GRID_KEY, _("Grid"));
+  hyscan_gtk_layer_list_add (HYSCAN_GTK_LAYER_LIST (layer_list), HYSCAN_GTK_LAYER (vwf->wf_mark), EVO_MARK_KEY, _("Marks"));
+  hyscan_gtk_layer_list_add (HYSCAN_GTK_LAYER_LIST (layer_list), HYSCAN_GTK_LAYER (vwf->wf_metr), EVO_METR_KEY, _("Measurements"));
+  hyscan_gtk_layer_list_add (HYSCAN_GTK_LAYER_LIST (layer_list), HYSCAN_GTK_LAYER (vwf->wf_shad), EVO_SHAD_KEY, _("Shadow measure"));
+  hyscan_gtk_layer_list_add (HYSCAN_GTK_LAYER_LIST (layer_list), HYSCAN_GTK_LAYER (vwf->wf_coor), EVO_COOR_KEY, _("Coordinates"));
+  hyscan_gtk_layer_list_add (HYSCAN_GTK_LAYER_LIST (layer_list), HYSCAN_GTK_LAYER (vwf->wf_magn), EVO_MAGN_KEY, _("Magnifier"));
 
-  gtk_widget_show_all (tree_view);
-  return tree_view;
+  hyscan_gtk_layer_list_set_visible_fn (HYSCAN_GTK_LAYER_LIST (layer_list), EVO_GRID_KEY,
+                                        (hyscan_gtk_layer_list_visible_fn) hyscan_gtk_waterfall_grid_show_grid);
+
+  {
+    GtkWidget *radio_x2, *radio_x3, *radio_box;
+
+    radio_x2 = gtk_radio_button_new_with_label (NULL, "x2");
+    radio_x3 = gtk_radio_button_new_with_label_from_widget (GTK_RADIO_BUTTON (radio_x2), "x3");
+
+    g_object_set (radio_x2, "draw-indicator", FALSE, NULL);
+    g_object_set (radio_x3, "draw-indicator", FALSE, NULL);
+
+    g_signal_connect (radio_x2, "toggled", G_CALLBACK (magnifier_x2), vwf->wf_magn);
+    g_signal_connect (radio_x3, "toggled", G_CALLBACK (magnifier_x3), vwf->wf_magn);
+
+    radio_box = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 0);
+    gtk_style_context_add_class (gtk_widget_get_style_context (radio_box), "linked");
+    gtk_box_pack_end (GTK_BOX (radio_box), radio_x3, FALSE, FALSE, 0);
+    gtk_box_pack_end (GTK_BOX (radio_box), radio_x2, FALSE, FALSE, 0);
+
+    hyscan_gtk_layer_list_set_tools (HYSCAN_GTK_LAYER_LIST (layer_list), EVO_MAGN_KEY, radio_box);
+  }
+
+  gtk_widget_show_all (layer_list);
+
+  return layer_list;
 }
 
 GtkWidget *
@@ -1256,10 +1142,6 @@ make_page_for_panel (EvoUI     *ui,
         g_signal_connect_swapped (get_widget_from_builder(b, "ss_player_slower"), "clicked", G_CALLBACK (player_slower), adj);
         g_signal_connect_swapped (get_widget_from_builder(b, "ss_player_faster"), "clicked", G_CALLBACK (player_faster), adj);
 
-                                                                                              add_to_sg (sg, b, "ss_magnifier_label");
-        g_signal_connect (get_widget_from_builder(b, "ss_magnifier_x2"), "toggled", G_CALLBACK (magnifier_x2), wf->wf_magn);
-        g_signal_connect (get_widget_from_builder(b, "ss_magnifier_x3"), "toggled", G_CALLBACK (magnifier_x3), wf->wf_magn);
-
         player_adj_value_printer (adj, label);
       }
 
@@ -1293,10 +1175,6 @@ make_page_for_panel (EvoUI     *ui,
         g_signal_connect_swapped (get_widget_from_builder(b, "pf_player_stop"), "clicked", G_CALLBACK (player_stop), adj);
         g_signal_connect_swapped (get_widget_from_builder(b, "pf_player_slower"), "clicked", G_CALLBACK (player_slower), adj);
         g_signal_connect_swapped (get_widget_from_builder(b, "pf_player_faster"), "clicked", G_CALLBACK (player_faster), adj);
-
-                                                                                              add_to_sg (sg, b, "ss_magnifier_label");
-        g_signal_connect (get_widget_from_builder(b, "pf_magnifier_x2"), "toggled", G_CALLBACK (magnifier_x2), wf->wf_magn);
-        g_signal_connect (get_widget_from_builder(b, "pf_magnifier_x3"), "toggled", G_CALLBACK (magnifier_x3), wf->wf_magn);
 
         player_adj_value_printer (adj, label);
       }
