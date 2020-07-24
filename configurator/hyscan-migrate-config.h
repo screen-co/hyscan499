@@ -29,22 +29,31 @@ struct _HyScanMigrateConfigClass
   GObjectClass parent_class;
 };
 
-enum
+/**
+ * HyScanMigrateConfigStatus:
+ * @HYSCAN_MIGRATE_CONFIG_STATUS_INVALID: ошибка
+ * @HYSCAN_MIGRATE_CONFIG_STATUS_EMPTY: профили отсутствует
+ * @HYSCAN_MIGRATE_CONFIG_STATUS_OUTDATED: есть старые версии профилей
+ * @HYSCAN_MIGRATE_CONFIG_STATUS_LATEST: все профили последней версии
+ *
+ * Состояние профилей.
+ */
+typedef enum
 {
   HYSCAN_MIGRATE_CONFIG_STATUS_INVALID,
   HYSCAN_MIGRATE_CONFIG_STATUS_EMPTY,
   HYSCAN_MIGRATE_CONFIG_STATUS_OUTDATED,
   HYSCAN_MIGRATE_CONFIG_STATUS_LATEST,
-};
+} HyScanMigrateConfigStatus;
 
-GType                  hyscan_migrate_config_get_type         (void);
+GType                     hyscan_migrate_config_get_type         (void);
 
-HyScanMigrateConfig *  hyscan_migrate_config_new              (const gchar         *path);
+HyScanMigrateConfig *     hyscan_migrate_config_new              (const gchar         *path);
 
-gboolean               hyscan_migrate_config_run              (HyScanMigrateConfig *migrate_config,
-                                                               HyScanCancellable   *cancellable);
+gboolean                  hyscan_migrate_config_run              (HyScanMigrateConfig *migrate_config,
+                                                                  HyScanCancellable   *cancellable);
 
-gint                   hyscan_migrate_config_status           (HyScanMigrateConfig *migrate_config);
+HyScanMigrateConfigStatus hyscan_migrate_config_status           (HyScanMigrateConfig *migrate_config);
 
 G_END_DECLS
 
