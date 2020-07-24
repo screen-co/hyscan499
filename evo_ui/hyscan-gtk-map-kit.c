@@ -835,7 +835,7 @@ update_mark (HyScanObjectModel *model,
   operator_name = g_strdup (mark->operator_name);
 
   hyscan_mark_set_text (mark, name, description, operator_name);
-  hyscan_object_model_modify_object (model, mark_id, (const HyScanObject *) mark);
+  hyscan_object_model_modify (model, mark_id, (const HyScanObject *) mark);
 
   hyscan_object_free ((HyScanObject *) mark);
   g_free (description);
@@ -2082,8 +2082,8 @@ hyscan_gtk_map_kit_add_record (HyScanGtkMapKit *kit,
   if (track->records == NULL || !g_strv_contains ((const gchar *const *) track->records, track_id))
     {
       hyscan_planner_track_record_append (track, track_id);
-      hyscan_object_model_modify_object (HYSCAN_OBJECT_MODEL (priv->planner_model), active_track,
-                                         (const HyScanObject *) track);
+      hyscan_object_model_modify (HYSCAN_OBJECT_MODEL (priv->planner_model), active_track,
+                                  (const HyScanObject *) track);
     }
 
   g_free (active_track);

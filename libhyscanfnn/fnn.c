@@ -1528,7 +1528,7 @@ mark_modified (HyScanGtkMarkEditor *med,
                                        &wfmark->operator_name,
                                        &wfmark->description);
 
-      hyscan_object_model_modify_object (model, mark_id, (const HyScanObject *) modified_mark);
+      hyscan_object_model_modify (model, mark_id, (const HyScanObject *) modified_mark);
 
       g_object_unref (model);
 
