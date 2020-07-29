@@ -667,7 +667,7 @@ sensor_toggle_wrapper (GtkCheckMenuItem *mitem,
 
 /* Обработчик сигнала о старте или остановке работы гидролокатора. */
 void
-ui_start_stop (HyScanSonarModel *sonar_model)
+ui_start_stop (HyScanControlModel *sonar_model)
 {
   EvoUI *ui = &global_ui;
   gboolean state;

@@ -1,4 +1,4 @@
-#include <hyscan-sonar-model.h>
+#include <hyscan-control-model.h>
 #include "hyscan-gtk-rec.h"
 
 enum
@@ -81,12 +81,12 @@ hyscan_gtk_rec_object_constructed (GObject *object)
   priv->handler_id = g_signal_connect_swapped (object, "state-set",
                                                G_CALLBACK (hyscan_gtk_rec_state_set), gtk_rec);
 
-  /* Объект управления гидролокатором может оказаться не HyScanSonarModel, поэтому надо убедиться в этом. */
+  /* Объект управления гидролокатором может оказаться не HyScanControlModel, поэтому надо убедиться в этом. */
   priv->sonar = hyscan_sonar_recorder_get_sonar (priv->recorder);
-  if (HYSCAN_IS_SONAR_MODEL (priv->sonar))
+  if (HYSCAN_IS_CONTROL_MODEL (priv->sonar))
     g_signal_connect_swapped (priv->sonar, "start-stop", G_CALLBACK (hyscan_gtk_rec_state_start_stop), gtk_rec);
   else
-    g_critical ("HyScanGtkRec: sonar is not a HyScanSonarModel, widget will not work properly");
+    g_critical ("HyScanGtkRec: sonar is not a HyScanControlModel, widget will not work properly");
 }
 
 static void
@@ -95,7 +95,7 @@ hyscan_gtk_rec_object_finalize (GObject *object)
   HyScanGtkRec *gtk_rec = HYSCAN_GTK_REC (object);
   HyScanGtkRecPrivate *priv = gtk_rec->priv;
 
-  if (HYSCAN_IS_SONAR_MODEL (priv->sonar))
+  if (HYSCAN_IS_CONTROL_MODEL (priv->sonar))
     g_signal_handlers_disconnect_by_data (priv->sonar, object);
 
   g_object_unref (priv->recorder);

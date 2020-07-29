@@ -3383,7 +3383,7 @@ sonar_state_changed (Global *global)
 /* Обработчик сигнала "before-start" модели ГЛ.
  * Отменяет запись (возвращает TRUE), если не удалось включить какую-то из панелей. */
 gboolean
-before_start (HyScanSonarModel *model,
+before_start (HyScanControlModel *model,
               Global           *global)
 {
   if (panels_turn_on (global))

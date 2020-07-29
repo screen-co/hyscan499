@@ -33,7 +33,7 @@
 #include <hyscan-fl-coords.h>
 #include <hyscan-mark-sync.h>
 #include <hyscan-api.h>
-#include <hyscan-sonar-model.h>
+#include <hyscan-control-model.h>
 
 #define hyscan_return_val_if_fail(expr,val) do {if (!(expr)) {g_warning("Failed at line %i", __LINE__); return (val);}} while (FALSE)
 #define hyscan_exit_if(expr,msg) do {if (!(expr)) break; g_message ((msg)); goto exit;} while (FALSE)
@@ -257,7 +257,7 @@ struct _Global
 
   HyScanSonarRecorder    *recorder;
   HyScanControl          *control;
-  HyScanSonarModel       *sonar_model;
+  HyScanControlModel     *sonar_model;
   gboolean                on_air;
 
   GKeyFile               *settings;
@@ -767,7 +767,7 @@ start_stop (Global                *global,
             gboolean               state);
 
 HYSCAN_API gboolean
-before_start (HyScanSonarModel *model,
+before_start (HyScanControlModel *model,
               Global           *global);
 
 HYSCAN_API void

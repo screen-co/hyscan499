@@ -443,7 +443,7 @@ done: ;
       hyscan_control_device_bind (global.control);
       hyscan_control_writer_set_db (global.control, global.db);
 
-      global.sonar_model = hyscan_sonar_model_new (global.control);
+      global.sonar_model = hyscan_control_model_new (global.control);
 
       /* Обработчик подготавливает панели перед началом работы ГЛ. */
       g_signal_connect (global.sonar_model, "before-start", G_CALLBACK (before_start), &global);
