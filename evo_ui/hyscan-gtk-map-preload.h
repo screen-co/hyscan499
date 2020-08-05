@@ -32,7 +32,7 @@ struct _HyScanGtkMapPreloadClass
 GType                  hyscan_gtk_map_preload_get_type         (void);
 
 GtkWidget *            hyscan_gtk_map_preload_new              (HyScanGtkMap     *map,
-                                                                HyScanGtkMapBase *base);
+                                                                const gchar      *base_id);
 
 G_END_DECLS
 

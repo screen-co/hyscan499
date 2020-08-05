@@ -12,12 +12,13 @@ enum
 {
   PROP_O,
   PROP_MAP,
-  PROP_BASE,
+  PROP_BASE_ID,
 };
 
 struct _HyScanGtkMapPreloadPrivate
 {
   HyScanGtkMap                *map;              /* Виджет карты. */
+  gchar                       *base_id;          /* Идентификатор слоя подложки. */
   HyScanGtkMapBase            *base;             /* Слой подложки. */
   GtkWidget                   *download_btn;     /* Кнопка загрузки тайлов. */
   HyScanMapTileLoader         *loader;           /* Загрузчик тайлов. */
@@ -68,9 +69,8 @@ hyscan_gtk_map_preload_class_init (HyScanGtkMapPreloadClass *klass)
     g_param_spec_object ("map", "HyScanGtkMap", "Map object",
                          HYSCAN_TYPE_GTK_MAP,
                          G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
-  g_object_class_install_property (object_class, PROP_BASE,
-    g_param_spec_object ("base", "HyScanGtkMapBas", "Map base layer",
-                         HYSCAN_TYPE_GTK_MAP_BASE,
+  g_object_class_install_property (object_class, PROP_BASE_ID,
+    g_param_spec_string ("base-id", "Base Layer Id", "Identifier of base layer", NULL,
                          G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
 
@@ -96,8 +96,8 @@ hyscan_gtk_map_preload_set_property (GObject      *object,
       priv->map = g_value_dup_object (value);
       break;
 
-    case PROP_BASE:
-      priv->base = g_value_dup_object (value);
+    case PROP_BASE_ID:
+      priv->base_id = g_value_dup_string (value);
       break;
 
     default:
@@ -115,6 +115,7 @@ hyscan_gtk_map_preload_object_constructed (GObject *object)
   G_OBJECT_CLASS (hyscan_gtk_map_preload_parent_class)->constructed (object);
 
   priv->preload_state = -1;
+  priv->base = HYSCAN_GTK_MAP_BASE (hyscan_gtk_layer_container_lookup (HYSCAN_GTK_LAYER_CONTAINER (priv->map), priv->base_id));
   g_signal_connect_swapped (priv->download_btn, "clicked", G_CALLBACK (hyscan_gtk_map_preload_click), preload);
 }
 
@@ -124,8 +125,8 @@ hyscan_gtk_map_preload_object_finalize (GObject *object)
   HyScanGtkMapPreload *gtk_map_preload = HYSCAN_GTK_MAP_PRELOAD (object);
   HyScanGtkMapPreloadPrivate *priv = gtk_map_preload->priv;
 
+  g_free (priv->base_id);
   g_clear_object (&priv->map);
-  g_clear_object (&priv->base);
   g_clear_object (&priv->loader);
 
   G_OBJECT_CLASS (hyscan_gtk_map_preload_parent_class)->finalize (object);
@@ -237,10 +238,10 @@ hyscan_gtk_map_preload_progress_done (gpointer data)
 
 GtkWidget *
 hyscan_gtk_map_preload_new (HyScanGtkMap     *map,
-                            HyScanGtkMapBase *base)
+                            const gchar      *base_id)
 {
   return g_object_new (HYSCAN_TYPE_GTK_MAP_PRELOAD,
                        "map", map,
-                       "base", base,
+                       "base-id", base_id,
                        NULL);
 }

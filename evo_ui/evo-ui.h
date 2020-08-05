@@ -3,7 +3,7 @@
 
 #include <fnn-types.h>
 #include <hyscan-gtk-fnn-box.h>
-#include "hyscan-gtk-map-kit.h"
+#include <hyscan-gtk-map-builder.h>
 #include <gio/gio.h>
 
 typedef struct
@@ -32,7 +32,7 @@ typedef struct
 
   GKeyFile   *settings;
 
-  HyScanGtkMapKit *mapkit;
+  HyScanGtkMapBuilder *map_builder;
   guint    track_select_tag;
   GtkCheckMenuItem *map_offline;
 } EvoUI;

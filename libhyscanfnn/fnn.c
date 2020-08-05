@@ -1500,43 +1500,49 @@ mark_model_changed (HyScanObjectModel *model,
 }
 
 void
-mark_modified (HyScanGtkMarkEditor *med,
-               Global              *global)
+mark_model_update (HyScanGtkMarkEditor *med,
+                   HyScanObjectModel   *model)
 {
   gchar *mark_id = NULL;
-  GHashTable *marks;
-  HyScanMarkWaterfall *mark;
-  HyScanObjectModel *model = hyscan_gtk_model_manager_get_acoustic_mark_model (global->model_manager);
+  HyScanMark *mark;
 
   hyscan_gtk_mark_editor_get_mark (med, &mark_id, NULL, NULL, NULL);
 
-  if ((marks = hyscan_object_model_get (model)) == NULL)
+  mark = (HyScanMark *) hyscan_object_model_get_by_id (model, mark_id);
+  if (mark == NULL)
     return;
 
-  if ((mark = g_hash_table_lookup (marks, mark_id)) != NULL)
-    {
-      HyScanMarkWaterfall *modified_mark = hyscan_mark_waterfall_copy (mark);
-      HyScanMarkWaterfall *wfmark = modified_mark;
+  g_clear_pointer (&mark->name, g_free);
+  g_clear_pointer (&mark->operator_name, g_free);
+  g_clear_pointer (&mark->description, g_free);
 
-      g_clear_pointer (&wfmark->name, g_free);
-      g_clear_pointer (&wfmark->operator_name, g_free);
-      g_clear_pointer (&wfmark->description, g_free);
+  hyscan_gtk_mark_editor_get_mark (med,
+                                   NULL,
+                                   &mark->name,
+                                   &mark->operator_name,
+                                   &mark->description);
 
-      hyscan_gtk_mark_editor_get_mark (med,
-                                       NULL,
-                                       &wfmark->name,
-                                       &wfmark->operator_name,
-                                       &wfmark->description);
+  hyscan_object_model_modify (model, mark_id, (const HyScanObject *) mark);
 
-      hyscan_object_model_modify (model, mark_id, (const HyScanObject *) modified_mark);
-
-      g_object_unref (model);
-
-      hyscan_mark_waterfall_free (modified_mark);
-    }
-
+  hyscan_object_free ((HyScanObject *) mark);
   g_free (mark_id);
-  g_hash_table_unref (marks);
+}
+
+void
+mark_modified (HyScanGtkMarkEditor *med,
+               Global              *global)
+{
+  HyScanObjectModel *model;
+
+  /* Акустически метки. */
+  model = hyscan_gtk_model_manager_get_acoustic_mark_model (global->model_manager);
+  mark_model_update (med, model);
+  g_object_unref (model);
+
+  /* Геометки. */
+  model = hyscan_gtk_model_manager_get_geo_mark_model (global->model_manager);
+  mark_model_update (med, model);
+  g_object_unref (model);
 }
 
 /* Функция прокручивает список галсов. */
@@ -3740,8 +3746,6 @@ fnn_deinit (Global *ext_global)
 
   if (settings != NULL)
     {
-      HyScanUnitsGeo geo_units;
-
       if (ext_global->panels != NULL)
         {
           GHashTableIter iter;
@@ -3773,8 +3777,12 @@ fnn_deinit (Global *ext_global)
       if (ext_global->project_name != NULL)
         keyfile_string_write_helper (settings, "common", "project", ext_global->project_name);
 
-      geo_units = hyscan_units_get_geo (ext_global->units);
-      keyfile_string_write_helper (settings, "units", "geo", hyscan_units_id_by_geo (geo_units));
+      if (ext_global->units != NULL)
+        {
+          HyScanUnitsGeo geo_units;
+          geo_units = hyscan_units_get_geo (ext_global->units);
+          keyfile_string_write_helper (settings, "units", "geo", hyscan_units_id_by_geo (geo_units));
+        }
     }
 
   tglobal = NULL;

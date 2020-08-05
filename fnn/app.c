@@ -144,7 +144,6 @@ main (int argc, char **argv)
   global.canary = 123456789;
 
   HyScanDBInfo      *db_info = NULL;
-  HyScanObjectModel *model;
 
   /* Перенаправление логов в файл. */
   #ifdef FNN_LOGGING
@@ -311,19 +310,6 @@ main (int argc, char **argv)
 
   global.settings = g_key_file_new ();
   g_key_file_load_from_file (global.settings, settings_file, G_KEY_FILE_NONE, NULL);
-
-  global.units = hyscan_units_new ();
-  /* Считываем из настроек единицы измерения. */
-  {
-    gchar *geo_units;
-
-    geo_units = keyfile_string_read_helper (global.settings, "units", "geo");
-    if (geo_units != NULL)
-      {
-        hyscan_units_set_geo (global.units, hyscan_units_geo_by_id (geo_units));
-        g_free (geo_units);
-      }
-  }
 
   /***
    *     ___   ___         ___         ___
@@ -528,8 +514,19 @@ restart:
   /* Cоздаём Менеджер Моделей. */
   {
     gchar *folder = NULL;
+    gchar *geo_units;
+
     folder = keyfile_string_read_helper (global.settings, "EVO", "export_folder");
     global.model_manager = hyscan_gtk_model_manager_new (global.project_name, global.db, global.cache, folder);
+
+    /* Считываем из настроек единицы измерения. */
+    global.units = hyscan_gtk_model_manager_get_units (global.model_manager);
+    geo_units = keyfile_string_read_helper (global.settings, "units", "geo");
+    if (geo_units != NULL)
+      {
+        hyscan_units_set_geo (global.units, hyscan_units_geo_by_id (geo_units));
+        g_free (geo_units);
+      }
     g_signal_connect (global.model_manager,
                       hyscan_gtk_model_manager_get_signal_title (global.model_manager, SIGNAL_TRACKS_CHANGED),
                       G_CALLBACK (model_manager_tracks_changed),
@@ -585,7 +582,6 @@ restart:
   gtk_tree_sortable_set_sort_column_id (GTK_TREE_SORTABLE (global.gui.track.list), 0, GTK_SORT_DESCENDING);
 
   /* Список меток. */
-  model = hyscan_gtk_model_manager_get_acoustic_mark_model (global.model_manager);
   // TODO: перепроверить, что в ран-менеджере, что в трек-чейнджед, что здесь
   global.marks.loc_storage = g_hash_table_new_full (g_str_hash, g_str_equal, g_free,
                                                     (GDestroyNotify) loc_store_free);

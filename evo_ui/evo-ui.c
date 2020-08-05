@@ -7,11 +7,15 @@
 #include <hyscan-planner-export.h>
 #include "evo-ui.h"
 #include "hyscan-gtk-rec.h"
+#include "hyscan-gtk-map-go.h"
+#include "hyscan-gtk-map-preload.h"
 
 #define GETTEXT_PACKAGE "hyscanfnn-evoui"
 #include <glib/gi18n-lib.h>
 #include <proj_api.h>
 #include <hyscan-gtk-layer-list.h>
+#include <hyscan-gtk-map-mark-list.h>
+#include <hyscan-gtk-mark-manager.h>
 
 // #define EVO_EMPTY_PAGE "empty_page"
 #define EVO_NOT_MAP "evo-not-map"
@@ -359,19 +363,19 @@ mark_exporter (GObject  *emitter,
     }
   else if (selector == IMPORT_PLANNER_XML)
     {
-      hyscan_gtk_map_kit_run_planner_import (global_ui.mapkit);
+      hyscan_gtk_map_builder_run_planner_import (global_ui.map_builder);
     }
   else if (selector == PLANNER_TO_XML || selector == PLANNER_TO_KML)
     {
       gchar *data;
       GHashTable *objects;
-      HyScanObjectModel *planner;
+      HyScanPlannerModel *planner;
 
-      planner = hyscan_gtk_map_kit_get_planner (global_ui.mapkit);
+      planner = hyscan_gtk_model_manager_get_planner_model (_global->model_manager);
       if (planner == NULL)
         return;
 
-      objects = hyscan_object_model_get (planner);
+      objects = hyscan_object_model_get (HYSCAN_OBJECT_MODEL (planner));
       g_object_unref (planner);
 
       if (objects == NULL)
@@ -622,18 +626,10 @@ player_faster (GtkAdjustment *adjustment)
 
 void
 map_offline_wrapper (GObject *emitter,
-                     HyScanGtkMapKit *map)
+                     HyScanGtkMapBuilder *map)
 {
-  hyscan_gtk_map_kit_set_offline (map,
-                                  !gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (emitter)));
-}
-
-void
-map_smooth_wrapper (GObject *emitter,
-                    HyScanGtkMapKit *map)
-{
-  hyscan_gtk_map_kit_set_smooth (map,
-                                 gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (emitter)));
+  hyscan_gtk_map_builder_set_offline (map,
+                                      !gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (emitter)));
 }
 
 void
@@ -705,19 +701,8 @@ track_select (Global *global)
   GtkTreePath *path = NULL, *path2 = NULL;
   GtkTreeIter iter;
   gchar *track_name = NULL;
-  gint track_col;
-  GtkTreeView *map_tv = hyscan_gtk_map_kit_get_track_view (ui->mapkit, &track_col);
-  GtkTreeModel *map_md = gtk_tree_view_get_model(map_tv);
 
-  /* Определяем название нового галса. */
-  gtk_tree_view_get_cursor (map_tv, &path, NULL);
-  if (path == NULL)
-    goto exit;
-
-  if (!gtk_tree_model_get_iter (map_md, &iter, path))
-    goto exit;
-
-  gtk_tree_model_get (map_md, &iter, track_col, &track_name, -1);
+  track_name = hyscan_gtk_map_builder_get_selected_track (ui->map_builder);
 
   if (track_name == NULL)
     goto exit;
@@ -1259,49 +1244,21 @@ make_page_for_panel (EvoUI     *ui,
   return box;
 }
 
-/* Находит датчик для навигации на вкладке карты. */
+/* В списке меток на карте поменялась выбранная метка. */
 static void
-mapkit_add_nav (Global           *global,
-                HyScanGtkMapKit  *mapkit,
-                HyScanFnnOffsets *o)
+mark_selected (HyScanGtkMarkEditor *mark_editor)
 {
-  HyScanAntennaOffset offset, *offset_ptr;
-  const gchar *const *sensors;
-  const gchar *sensor_name = NULL;
-  gint i;
-  GList *link;
+  HyScanMark mark = {0};
+  HyScanGeoPoint location = {0};
+  gchar *id;
+  GtkWidget *mark_list;
 
-  sensors = hyscan_control_sensors_list (global->control);
-  if (sensors == NULL)
-    return;
-
-  /* Находим датчик. */
-  for (i = 0; sensors[i] != NULL; i++)
-    {
-      if (g_strstr_len (sensors[i], -1, "gnss") == NULL)
-        continue;
-
-      sensor_name = sensors[i];
-      break;
-    }
-
-  if (sensor_name == NULL)
-    return;
-
-  /* Определяем его смещение. */
-  offset_ptr = NULL;
-  for (link = hyscan_fnn_offsets_get_keys (o); link != NULL; link = link->next)
-    {
-      if (!g_str_equal (link->data, sensor_name))
-        continue;
-
-      offset = hyscan_fnn_offsets_get_offset (o, sensor_name);
-      offset_ptr = &offset;
-      break;
-    }
-
-  hyscan_gtk_map_kit_add_nav (mapkit, HYSCAN_SENSOR (global->control), sensor_name,
-                              global->recorder, offset_ptr, 0);
+  mark_list = hyscan_gtk_map_builder_get_mark_list (global_ui.map_builder);
+  id = hyscan_gtk_map_mark_list_get_selected (HYSCAN_GTK_MAP_MARK_LIST (mark_list), &mark, &location);
+  hyscan_gtk_mark_editor_set_mark (HYSCAN_GTK_MARK_EDITOR (mark_editor), id,
+                                   mark.name, mark.operator_name, mark.description,
+                                   location.lat, location.lon);
+  g_free (id);
 }
 
 /* Самая крутая функция, строит весь уй. */
@@ -1349,29 +1306,59 @@ build_interface (Global *global)
   {
     GtkWidget *box;
     GtkTreeView * tv;
-    gchar *cache_dir = g_build_filename (g_get_user_cache_dir (), "hyscan", NULL);
-    HyScanGeoPoint center = {0, 0};
 
     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
 
-    ui->mapkit = hyscan_gtk_map_kit_new (&center, global->model_manager, global->cache, global->units, cache_dir);
+    ui->map_builder = hyscan_gtk_map_builder_new (global->model_manager);
+    hyscan_gtk_map_builder_add_tracks (ui->map_builder);
+    hyscan_gtk_map_builder_add_marks (ui->map_builder);
+    hyscan_gtk_map_builder_add_planner (ui->map_builder, TRUE);
+    hyscan_gtk_map_builder_add_planner_list (ui->map_builder);
 
-    hyscan_gtk_map_kit_add_marks (ui->mapkit);
-    hyscan_gtk_map_kit_add_planner (ui->mapkit);
+    /* Добавляем инструменты управления картой. */
+    {
+      GtkWidget *preload, *go;
+      GtkWidget *notebook;
+      GtkWidget *map = hyscan_gtk_map_builder_get_map (ui->map_builder);
+      const gchar *base_id = "base";
 
-    gtk_stack_add_named (GTK_STACK (ui->control_stack), ui->mapkit->control, EVO_MAP);
-    gtk_stack_add_named (GTK_STACK (ui->nav_stack), ui->mapkit->navigation, EVO_MAP);
-    // gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), ui->mapkit->map, EVO_MAP, _("Map"));
-    gtk_box_pack_start (GTK_BOX (box), ui->mapkit->paned, TRUE, TRUE, 0);
-    // gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), ui->mapkit->status_bar, EVO_MAP, _("Map"));
-    // gtk_box_pack_start (GTK_BOX (box), ui->mapkit->bottom_panel, FALSE, TRUE, 0);
-    gtk_box_pack_start (GTK_BOX (box), ui->mapkit->status_bar, FALSE, TRUE, 0);
+      notebook = gtk_notebook_new ();
+
+      go = hyscan_gtk_map_go_new (HYSCAN_GTK_MAP (map));
+      g_object_set (go, "margin", 6, NULL);
+      gtk_notebook_append_page (GTK_NOTEBOOK (notebook), go, gtk_label_new (_("Go to")));
+
+      preload = hyscan_gtk_map_preload_new (HYSCAN_GTK_MAP (map), base_id);
+      g_object_set (preload, "margin", 6, NULL);
+      gtk_notebook_append_page (GTK_NOTEBOOK (notebook), preload, gtk_label_new (_("Download")));
+
+      hyscan_gtk_map_builder_layer_set_tools (ui->map_builder, base_id, notebook);
+    }
+
+    /* Добавляем редактор меток. */
+    {
+      GtkWidget *mark_editor;
+      mark_editor = hyscan_gtk_mark_editor_new (global->units);
+      g_signal_connect (mark_editor, "mark-modified", G_CALLBACK (mark_modified), global);
+      g_signal_connect_swapped (hyscan_gtk_map_builder_get_mark_list (ui->map_builder),
+                                "changed", G_CALLBACK (mark_selected), mark_editor);
+      gtk_box_pack_start (GTK_BOX (hyscan_gtk_map_builder_get_left_col (ui->map_builder)), mark_editor, FALSE, FALSE, 0);
+    }
+
+    gtk_stack_add_named (GTK_STACK (ui->control_stack),
+                         hyscan_gtk_map_builder_get_right_col (ui->map_builder), EVO_MAP);
+    gtk_stack_add_named (GTK_STACK (ui->nav_stack),
+                         hyscan_gtk_map_builder_get_left_col (ui->map_builder), EVO_MAP);
+    gtk_box_pack_start (GTK_BOX (box),
+                        hyscan_gtk_map_builder_get_central (ui->map_builder), TRUE, TRUE, 0);
+    gtk_box_pack_start (GTK_BOX (box),
+                        hyscan_gtk_map_builder_get_bar (ui->map_builder),
+                        FALSE, TRUE, 0);
     gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), box, EVO_MAP, _("Map"));
     gtk_stack_set_visible_child_name(GTK_STACK (ui->acoustic_stack), EVO_MAP);
 
-    tv = hyscan_gtk_map_kit_get_track_view (ui->mapkit, NULL);
+    tv = GTK_TREE_VIEW (hyscan_gtk_map_builder_get_track_list (ui->map_builder));
     g_signal_connect_swapped (tv, "cursor-changed", G_CALLBACK (add_track_select), global);
-    g_free (cache_dir);
   }
 
 
@@ -1460,12 +1447,7 @@ build_interface (Global *global)
     /* офлайн-карта */
     mitem = gtk_check_menu_item_new_with_label (_("Online Map"));
     ui->map_offline = GTK_CHECK_MENU_ITEM (g_object_ref (mitem));
-    g_signal_connect (mitem, "toggled", G_CALLBACK (map_offline_wrapper), ui->mapkit);
-    gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
-
-    /* сглаживание показаний приёмника GPS */
-    mitem = gtk_check_menu_item_new_with_label (_("Smooth nav"));
-    g_signal_connect (mitem, "toggled", G_CALLBACK (map_smooth_wrapper), ui->mapkit);
+    g_signal_connect (mitem, "toggled", G_CALLBACK (map_offline_wrapper), ui->map_builder);
     gtk_menu_attach (GTK_MENU (menu), mitem, 0, 1, t, t+1); ++t;
 
     /* Exports */
@@ -1656,7 +1638,7 @@ build_interface (Global *global)
         g_message ("didn't apply offsets");
 
       /* Включаем на карте навигацию. */
-      mapkit_add_nav (global, ui->mapkit, o);
+      hyscan_gtk_map_builder_add_nav (ui->map_builder, global->sonar_model, global->recorder);
 
       g_object_unref (o);
       g_free (file);
@@ -1674,7 +1656,7 @@ destroy_interface (void)
   g_clear_object (&ui->acoustic_stack);
   g_clear_pointer (&ui->builders, g_hash_table_unref);
 
-  g_clear_pointer (&ui->mapkit, hyscan_gtk_map_kit_free);
+  g_clear_object (&ui->map_builder);
 
 
 }
@@ -1692,9 +1674,9 @@ kf_setting (GKeyFile *kf)
   EvoUI *ui = &global_ui;
   ui->settings = g_key_file_ref (kf);
 
-  hyscan_gtk_map_kit_kf_setup (ui->mapkit, kf);
+  hyscan_gtk_map_builder_file_read (ui->map_builder, kf);
   gtk_check_menu_item_set_active (ui->map_offline,
-                                  !hyscan_gtk_map_kit_get_offline (ui->mapkit));
+                                  !hyscan_gtk_map_builder_get_offline (ui->map_builder));
 
   return TRUE;
 }
@@ -1726,7 +1708,7 @@ kf_desetup (GKeyFile *kf)
     }
 
   /* Запоминаем карту. */
-  hyscan_gtk_map_kit_kf_desetup (ui->mapkit, kf);
+  hyscan_gtk_map_builder_file_write (ui->map_builder, kf);
 
   g_clear_pointer (&ui->settings, g_key_file_unref);
   return TRUE;

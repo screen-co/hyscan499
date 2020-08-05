@@ -22,6 +22,8 @@ add_executable (hyscan499
                 app.c
                 ${CMAKE_BINARY_DIR}/resources/hyscan499-resources.c)
 
+add_dependencies(hyscan499 evo)
+
 if (${CMAKE_C_COMPILER_ID} STREQUAL MSVC)
   if (${CMAKE_BUILD_TYPE} STREQUAL "Release")
     set_property (TARGET hyscan499 PROPERTY WIN32_EXECUTABLE true)

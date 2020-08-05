@@ -19,7 +19,6 @@ add_custom_command (OUTPUT ${CMAKE_BINARY_DIR}/resources/${UI_NAME}-resources.c
 
 
 add_library (${UI_NAME} SHARED
-             hyscan-gtk-map-kit.c
              evo-ui.c
              hyscan-gtk-rec.c
              hyscan-gtk-map-preload.c
