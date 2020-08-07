@@ -13,16 +13,11 @@ add_custom_command (OUTPUT ${CMAKE_BINARY_DIR}/resources/${UI_NAME}-resources.c
                     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
                     DEPENDS evo.ui
                             record.ui
-                            hyscan-gtk-map-preload.ui
-                            hyscan-gtk-map-go.ui
                     VERBATIM)
 
 
 add_library (${UI_NAME} SHARED
              evo-ui.c
-             hyscan-gtk-rec.c
-             hyscan-gtk-map-preload.c
-             hyscan-gtk-map-go.c
              ${CMAKE_BINARY_DIR}/resources/${UI_NAME}-resources.c)
 
 target_link_libraries (${UI_NAME}

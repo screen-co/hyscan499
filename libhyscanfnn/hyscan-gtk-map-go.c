@@ -35,7 +35,7 @@ hyscan_gtk_map_go_class_init (HyScanGtkMapGoClass *klass)
   object_class->constructed = hyscan_gtk_map_go_object_constructed;
   object_class->finalize = hyscan_gtk_map_go_object_finalize;
 
-  gtk_widget_class_set_template_from_resource (widget_class, "/org/evo/gtk/hyscan-gtk-map-go.ui");
+  gtk_widget_class_set_template_from_resource (widget_class, "/org/libhyscanfnn/gtk/hyscan-gtk-map-go.ui");
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkMapGo, lat);
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkMapGo, lon);
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkMapGo, btn);

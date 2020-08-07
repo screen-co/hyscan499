@@ -61,7 +61,7 @@ hyscan_gtk_map_preload_class_init (HyScanGtkMapPreloadClass *klass)
   object_class->constructed = hyscan_gtk_map_preload_object_constructed;
   object_class->finalize = hyscan_gtk_map_preload_object_finalize;
 
-  gtk_widget_class_set_template_from_resource (widget_class, "/org/evo/gtk/hyscan-gtk-map-preload.ui");
+  gtk_widget_class_set_template_from_resource (widget_class, "/org/libhyscanfnn/gtk/hyscan-gtk-map-preload.ui");
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkMapPreload, progress_bar);
   gtk_widget_class_bind_template_child_private (widget_class, HyScanGtkMapPreload, download_btn);
 

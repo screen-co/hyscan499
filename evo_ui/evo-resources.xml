@@ -3,7 +3,5 @@
   <gresource prefix="/org/evo/gtk">
     <file compressed="true">evo.ui</file>
     <file compressed="true">record.ui</file>
-    <file compressed="true">hyscan-gtk-map-preload.ui</file>
-    <file compressed="true">hyscan-gtk-map-go.ui</file>
   </gresource>
 </gresources>

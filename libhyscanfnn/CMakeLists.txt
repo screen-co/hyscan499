@@ -19,6 +19,8 @@ add_custom_command (OUTPUT ${CMAKE_BINARY_DIR}/resources/hyscan-fnn-resources.c
                             hyscan-gtk-project-viewer.ui
                             hyscan-gtk-con.ui
                             hyscan-fnn-fl.ui
+                            hyscan-gtk-map-preload.ui
+                            hyscan-gtk-map-go.ui
                     VERBATIM)
 
 add_library (${HYSCAN_FNN_LIBRARY} SHARED
@@ -38,6 +40,9 @@ add_library (${HYSCAN_FNN_LIBRARY} SHARED
              hyscan-gtk-dev-indicator.c
              hyscan-gtk-fnn-box.c
              hyscan-gtk-con.c
+             hyscan-gtk-rec.c
+             hyscan-gtk-map-preload.c
+             hyscan-gtk-map-go.c
              hyscan-mark-sync.c
              sonar-configure.c
              fnn.c
