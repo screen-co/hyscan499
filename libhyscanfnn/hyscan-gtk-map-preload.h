@@ -29,8 +29,10 @@ struct _HyScanGtkMapPreloadClass
   GtkBoxClass parent_class;
 };
 
+HYSCAN_API
 GType                  hyscan_gtk_map_preload_get_type         (void);
 
+HYSCAN_API
 GtkWidget *            hyscan_gtk_map_preload_new              (HyScanGtkMap     *map,
                                                                 const gchar      *base_id);
 

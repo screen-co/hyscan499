@@ -331,16 +331,6 @@ main (int argc, char **argv)
       /* Подключение к базе данных. */
       global.db = hyscan_db_new (db_uri);
       hyscan_exit_if_w_param (global.db == NULL, "can't connect to db '%s'", db_uri);
-      if (db_server_uri != NULL)
-        {
-          db_server = hyscan_db_server_new (db_server_uri, global.db, 1, 100);
-          g_message ("Starting DB server at %s...", db_server_uri);
-
-          if (hyscan_db_server_start (db_server))
-            g_message ("Server started successfully");
-          else
-            g_warning ("Failed to start DB server");
-        }
     }
   else
     {
@@ -391,6 +381,17 @@ main (int argc, char **argv)
         g_dir_close (dir);
       }
 done: ;
+    }
+
+  if (global.db != NULL && db_server_uri != NULL)
+    {
+      db_server = hyscan_db_server_new (db_server_uri, global.db, 1, 16);
+      g_message ("Starting DB server at %s...", db_server_uri);
+
+      if (hyscan_db_server_start (db_server))
+        g_message ("Server started successfully");
+      else
+        g_warning ("Failed to start DB server");
     }
 
   /* Устанавливаем иконки приложения. */

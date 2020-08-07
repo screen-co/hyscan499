@@ -29,8 +29,10 @@ struct _HyScanGtkRecClass
   GtkSwitchClass parent_class;
 };
 
+HYSCAN_API
 GType                  hyscan_gtk_rec_get_type         (void);
 
+HYSCAN_API
 GtkWidget *            hyscan_gtk_rec_new              (HyScanSonarRecorder *recorder);
 
 
