@@ -141,7 +141,7 @@ hyscan_gtk_navigator_app_class_init (HyScanGtkNavigatorAppClass *klass)
     g_param_spec_string ("db-uri", "Db URI", "Database URI", NULL,
                          G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
   g_object_class_install_property (object_class, PROP_DRIVER_PATHS,
-    g_param_spec_boxed ("drivers", "Drivers Paths", "String array of paths where to search for drivers", G_TYPE_STRV,
+    g_param_spec_boxed ("driver-paths", "Drivers Paths", "String array of paths where to search for drivers", G_TYPE_STRV,
                         G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
 
@@ -214,7 +214,10 @@ hyscan_gtk_navigator_app_object_finalize (GObject *object)
   g_clear_object (&priv->control_model);
   g_clear_object (&priv->control);
   g_clear_object (&priv->builder);
+  g_clear_pointer (&priv->settings, g_key_file_unref);
+  g_clear_pointer (&priv->driver_paths, g_strfreev);
   g_free (priv->db_uri);
+  g_free (priv->settings_file);
 
   G_OBJECT_CLASS (hyscan_gtk_navigator_app_parent_class)->finalize (object);
 }
@@ -486,6 +489,7 @@ hyscan_gtk_navigator_app_connector_close (GtkAssistant          *assistant,
   success = hyscan_gtk_con_get_result (HYSCAN_GTK_CON (assistant));
   if (!success)
     {
+      gtk_widget_destroy (GTK_WIDGET (assistant));
       g_application_quit (G_APPLICATION (navigator_app));
       return;
     }

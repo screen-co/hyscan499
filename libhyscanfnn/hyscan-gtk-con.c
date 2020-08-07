@@ -308,6 +308,7 @@ hyscan_gtk_con_run_scan (GObject *emitter,
         hyscan_gtk_con_selected_hw (HYSCAN_GTK_PROFILE (self->priv->hw_page),
                                     HYSCAN_PROFILE (pfl), self);
         gtk_assistant_set_current_page (GTK_ASSISTANT (self), self->priv->connect_page);
+        g_object_unref (pfl);
       }
   }
 
@@ -354,6 +355,7 @@ hyscan_gtk_con_make_intro_page (HyScanGtkCon *self)
                   gtk_label_set_text (priv->of_label, hyscan_profile_get_name(HYSCAN_PROFILE (ofp)));
               }
           }
+        g_object_unref (hwp);
       }
     else
       {
@@ -378,6 +380,7 @@ hyscan_gtk_con_make_intro_page (HyScanGtkCon *self)
   gtk_assistant_set_page_type (GTK_ASSISTANT (self), intro, GTK_ASSISTANT_PAGE_INTRO);
   gtk_assistant_set_page_title (GTK_ASSISTANT (self), intro, _("Intro"));
   gtk_assistant_set_page_complete (GTK_ASSISTANT (self), intro, TRUE);
+  g_object_unref (b);
 }
 
 // static void
