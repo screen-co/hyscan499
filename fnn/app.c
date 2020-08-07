@@ -30,6 +30,7 @@
 
 #define GETTEXT_PACKAGE "hyscan-499"
 #include <glib/gi18n.h>
+#include <hyscan-db-server.h>
 
 enum
 {
@@ -118,6 +119,7 @@ main (int argc, char **argv)
   gint               cache_size = 0;
 
   gchar             *db_uri = NULL;            /* Адрес базы данных. */
+  gchar             *db_server_uri = NULL;     /* Адрес запускаемого сервера БД. */
   gchar             *project_name = NULL;      /* Название проекта. */
   gdouble            sound_velocity = 1500.0;  /* Скорость звука по умолчанию. */
   gdouble            ship_speed = 1.0;         /* Скорость движения судна. */
@@ -144,6 +146,7 @@ main (int argc, char **argv)
   global.canary = 123456789;
 
   HyScanDBInfo      *db_info = NULL;
+  HyScanDBServer *db_server = NULL;
 
   /* Перенаправление логов в файл. */
   #ifdef FNN_LOGGING
@@ -182,6 +185,7 @@ main (int argc, char **argv)
     GOptionEntry common_entries[] =
       {
         { "db-uri",          'd',   0, G_OPTION_ARG_STRING,  &db_uri,          "* DB uri", NULL },
+        { "db-server",       's',   0, G_OPTION_ARG_STRING,  &db_server_uri,   "Start DB server with uri", NULL },
         { "cache",           'c',   0, G_OPTION_ARG_INT,     &cache_size,      "* Cache size", NULL },
 
         { "sound-velocity",  'v',   0, G_OPTION_ARG_DOUBLE,  &sound_velocity,  "Sound velocity, m/s", NULL },
@@ -327,6 +331,16 @@ main (int argc, char **argv)
       /* Подключение к базе данных. */
       global.db = hyscan_db_new (db_uri);
       hyscan_exit_if_w_param (global.db == NULL, "can't connect to db '%s'", db_uri);
+      if (db_server_uri != NULL)
+        {
+          db_server = hyscan_db_server_new (db_server_uri, global.db, 1, 100);
+          g_message ("Starting DB server at %s...", db_server_uri);
+
+          if (hyscan_db_server_start (db_server))
+            g_message ("Server started successfully");
+          else
+            g_warning ("Failed to start DB server");
+        }
     }
   else
     {
@@ -669,11 +683,13 @@ exit:
   g_clear_object (&global.cache);
   g_clear_object (&db_info);
   g_clear_object (&global.db);
+  g_clear_object (&db_server);
 
   g_clear_pointer (&global.panels, g_hash_table_unref);
 
   g_free (global.track_name);
   g_free (db_uri);
+  g_free (db_server_uri);
   g_free (project_name);
   g_free (config_file);
   g_free (settings_file);
