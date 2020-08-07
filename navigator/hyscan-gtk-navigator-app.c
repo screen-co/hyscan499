@@ -319,8 +319,10 @@ hyscan_gtk_navigator_app_quit_activated (GSimpleAction *action,
                                          gpointer       user_data)
 {
   GApplication *app = G_APPLICATION (user_data);
+  HyScanGtkNavigatorAppPrivate *priv = HYSCAN_GTK_NAVIGATOR_APP (app)->priv;
 
-  g_application_quit (app);
+  if (priv->window != NULL)
+    gtk_widget_destroy (priv->window);
 }
 
 /* Записывает параметры карты в GKeyFile. */
@@ -414,7 +416,8 @@ hyscan_gtk_navigator_app_compose_main_window (HyScanGtkNavigatorApp *navigator_a
   status_bar = gtk_box_new (GTK_ORIENTATION_HORIZONTAL, 6);
   g_object_set (status_bar, "margin", 3, NULL);
   gtk_box_pack_start (GTK_BOX (status_bar), hyscan_gtk_map_builder_get_bar (priv->builder), TRUE, TRUE, 0);
-  gtk_box_pack_end (GTK_BOX (status_bar), hyscan_gtk_dev_indicator_new (priv->control), FALSE, FALSE, 0);
+  if (priv->control != NULL)
+    gtk_box_pack_end (GTK_BOX (status_bar), hyscan_gtk_dev_indicator_new (priv->control), FALSE, FALSE, 0);
 
   /* Основная коробка. */
   main_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 6);
