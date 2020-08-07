@@ -9,11 +9,12 @@ case "$1" in
         pot)
             mkdir -p po
             echo "Extracting lines from glade files..."
-            find . -name "*.ui" | xargs -L 1 intltool-extract --local --type=gettext/glade
+            find . -name "*.ui"  | xargs -L 1 intltool-extract --local --type=gettext/glade
+            find ../navigator -name "*.ui" | xargs -L 1 intltool-extract --local --type=gettext/glade
             echo "Extracting lines from C source files..."
             xgettext --keyword=_ --keyword=N_ --keyword=C_:1c,2 \
              --sort-by-file -C --from-code=UTF-8 \
-            -o ${POT_FILE} *.c *.h tmp/* ../configurator/*.c
+            -o ${POT_FILE} *.c *.h tmp/* ../configurator/*.c ../navigator/*.c
             rm -rf tmp
             ;;
 

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2020-06-04 13:39+0300\n"
+"POT-Creation-Date: 2020-08-06 17:59+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -72,10 +72,71 @@ msgstr ""
 msgid "Name of DB-profile"
 msgstr ""
 
+#: ../navigator/hyscan-gtk-navigator-app.c:189
+#, c-format
+msgid "Navigator - %s"
+msgstr ""
+
+#: ../navigator/hyscan-gtk-navigator-app.c:229
+msgid "Navigator"
+msgstr ""
+
+#: ../navigator/hyscan-gtk-navigator-app.c:230
+msgid "About Navigator"
+msgstr ""
+
+#: ../navigator/hyscan-gtk-navigator-app.c:231
+msgid "Navigator application for HyScan 5"
+msgstr ""
+
+#: ../navigator/hyscan-gtk-navigator-app.c:317
+msgid "Go to"
+msgstr ""
+
+#: ../navigator/hyscan-gtk-navigator-app.c:321
+msgid "Download"
+msgstr ""
+
 #: common.ui.h:1 tmp/common.ui.h:1
 msgid "Track"
 msgstr ""
 
 #: common.ui.h:2 tmp/common.ui.h:2
 msgid "Date"
+msgstr ""
+
+#: tmp/menus.ui.h:1
+msgid "_File"
+msgstr ""
+
+#: tmp/menus.ui.h:2
+msgid "_Open project..."
+msgstr ""
+
+#: tmp/menus.ui.h:3
+msgid "E_xit"
+msgstr ""
+
+#: tmp/menus.ui.h:4
+msgid "_Map"
+msgstr ""
+
+#: tmp/menus.ui.h:5
+msgid "_Offline"
+msgstr ""
+
+#: tmp/menus.ui.h:6
+msgid "_View"
+msgstr ""
+
+#: tmp/menus.ui.h:7
+msgid "_Fullscreen"
+msgstr ""
+
+#: tmp/menus.ui.h:8
+msgid "_Help"
+msgstr ""
+
+#: tmp/menus.ui.h:9
+msgid "_About"
 msgstr ""
