@@ -30,7 +30,8 @@ struct _HyScanConfiguratorClass
 
 GType                  hyscan_configurator_get_type                (void);
 
-HyScanConfigurator *   hyscan_configurator_new                     (const gchar         *path);
+HyScanConfigurator *   hyscan_configurator_new                     (const gchar         *path,
+                                                                    const gchar         *settings_file);
 
 const gchar *          hyscan_configurator_get_db_profile_name     (HyScanConfigurator  *configurator);
 

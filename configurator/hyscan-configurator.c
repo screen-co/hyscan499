@@ -11,12 +11,14 @@ enum
 {
   PROP_O,
   PROP_PATH,
+  PROP_SETTINGS_FILE,
 };
 
 struct _HyScanConfiguratorPrivate
 {
   gchar           *path;               /* Каталог с конфигурацией HyScan. */
-  gchar           *settings_ini;       /* Путь к файлу settings.ini. */
+  gchar           *settings_file;      /* Имя файла настроек. */
+  gchar           *settings_ini;       /* Полный путь к файлу настроек. */
   gchar           *map_dir;            /* Каталог с кэшем карт. */
   gchar           *db_profile_name;    /* Имя профиля базы данных. */
   gchar           *db_dir;             /* Каталог базы данных. */
@@ -49,6 +51,9 @@ hyscan_configurator_class_init (HyScanConfiguratorClass *klass)
   g_object_class_install_property (object_class, PROP_PATH,
     g_param_spec_string ("path", "Path", "Path to configuration files", NULL,
                          G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+  g_object_class_install_property (object_class, PROP_SETTINGS_FILE,
+    g_param_spec_string ("settings-file", "Settings file", "Settings file base name", NULL,
+                         G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
 
 static void
@@ -70,11 +75,15 @@ hyscan_migrate_config_set_property (GObject      *object,
     {
       case PROP_PATH:
         priv->path = g_value_dup_string (value);
-      break;
+        break;
+
+      case PROP_SETTINGS_FILE:
+        priv->settings_file = g_value_dup_string (value);
+        break;
 
       default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
-      break;
+        break;
     }
 }
 
@@ -86,7 +95,7 @@ hyscan_configurator_object_constructed (GObject *object)
 
   G_OBJECT_CLASS (hyscan_configurator_parent_class)->constructed (object);
 
-  priv->settings_ini = g_build_filename (priv->path, "settings.ini", NULL);
+  priv->settings_ini = g_build_filename (priv->path, priv->settings_file, NULL);
   hyscan_configurator_read_map (configurator);
   if (!hyscan_configurator_read_db (configurator))
     {
@@ -110,6 +119,7 @@ hyscan_configurator_object_finalize (GObject *object)
   g_free (priv->db_profile_name);
   g_free (priv->db_dir);
   g_free (priv->map_dir);
+  g_free (priv->settings_file);
   g_free (priv->settings_ini);
   g_free (priv->path);
 
@@ -187,10 +197,12 @@ hyscan_configurator_mkdir (HyScanConfigurator *configurator,
 }
 
 HyScanConfigurator *
-hyscan_configurator_new (const gchar *path)
+hyscan_configurator_new (const gchar *path,
+                         const gchar *settings_file)
 {
   return g_object_new (HYSCAN_TYPE_CONFIGURATOR,
                        "path", path,
+                       "settings-file", settings_file,
                        NULL);
 }
 

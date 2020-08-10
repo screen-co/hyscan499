@@ -9,6 +9,8 @@
   #include <Windows.h>
 #endif
 
+#define DEFAULT_SETTINGS_INI "settings.ini"
+
 int
 main (int    argc,
       char **argv)
@@ -19,6 +21,7 @@ main (int    argc,
 
   gboolean exit_if_configured = FALSE;
   gchar *path = NULL;
+  gchar *settings_file = NULL;
   gint result = 0;
 
   setlocale (LC_ALL, "");
@@ -33,7 +36,8 @@ main (int    argc,
     GOptionContext *context;
     GOptionEntry entries[] =
     {
-      { "path",               'p',   0, G_OPTION_ARG_STRING, &path,    "Path to config directory",   NULL },
+      { "path",               'p',   0, G_OPTION_ARG_STRING, &path, "Path to config directory",   NULL },
+      { "settings-file",      's',   0, G_OPTION_ARG_STRING, &settings_file, "Settings file name (default: " DEFAULT_SETTINGS_INI ")", NULL },
       { "exit-if-configured", 'e',   0, G_OPTION_ARG_NONE,   &exit_if_configured, "Exit if already configured", NULL },
       { NULL, }
     };
@@ -62,6 +66,9 @@ main (int    argc,
 
   if (path == NULL)
     path = g_strdup (hyscan_config_get_user_files_dir ());
+
+  if (settings_file == NULL)
+    settings_file = g_strdup (DEFAULT_SETTINGS_INI);
 
   /* Запускаем миграцию конфигурации при необходимости. */
   migrate = hyscan_migrate_config_new (path);
@@ -102,7 +109,7 @@ main (int    argc,
     }
 
   /* Проверяем, что хайскан сконфигурирован. */
-  model = hyscan_configurator_new (path);
+  model = hyscan_configurator_new (path, settings_file);
   if (exit_if_configured && hyscan_configurator_is_valid (model))
     goto exit;
 
@@ -115,6 +122,7 @@ main (int    argc,
 
 exit:
   g_free (path);
+  g_free (settings_file);
   g_clear_object (&model);
   g_clear_object (&migrate);
 
