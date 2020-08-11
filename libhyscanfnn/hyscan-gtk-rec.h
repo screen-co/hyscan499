@@ -2,7 +2,6 @@
 #define __HYSCAN_GTK_REC_H__
 
 #include <gtk/gtk.h>
-#include <hyscan-sonar-recorder.h>
 
 G_BEGIN_DECLS
 
@@ -33,7 +32,7 @@ HYSCAN_API
 GType                  hyscan_gtk_rec_get_type         (void);
 
 HYSCAN_API
-GtkWidget *            hyscan_gtk_rec_new              (HyScanSonarRecorder *recorder);
+GtkWidget *            hyscan_gtk_rec_new              (HyScanControlModel *control_model);
 
 
 G_END_DECLS

@@ -516,8 +516,8 @@ run_manager (GObject *emitter)
 
       g_object_unref (model);
 
-      if (tglobal->recorder != NULL)
-        hyscan_sonar_recorder_set_project (tglobal->recorder, project);
+      if (tglobal->sonar_model != NULL)
+        hyscan_control_model_set_project (tglobal->sonar_model, project);
 
       if (tglobal->override.project_changed != NULL)
         tglobal->override.project_changed (tglobal, project);
@@ -3463,7 +3463,7 @@ set_dry (Global    *global,
 {
   global->dry = state;
 
-  hyscan_sonar_recorder_set_suffix (global->recorder, global->dry ? "-dry" : "", FALSE);
+  hyscan_control_model_set_track_sfx (global->sonar_model, global->dry ? "-dry" : "", FALSE);
 
   return TRUE;
 }

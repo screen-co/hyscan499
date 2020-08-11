@@ -445,24 +445,27 @@ hyscan_gtk_navigator_app_main_window (HyScanGtkNavigatorApp *navigator_app)
 
   /* Создаём и настраиваем билдер карты. */
   priv->builder = hyscan_gtk_map_builder_new (priv->model_manager);
+  hyscan_gtk_map_builder_add_grid (priv->builder);
+  hyscan_gtk_map_builder_add_pin (priv->builder);
+  hyscan_gtk_map_builder_add_ruler (priv->builder);
   hyscan_gtk_map_builder_add_planner (priv->builder, FALSE);
   if (priv->control_model != NULL)
-    hyscan_gtk_map_builder_add_nav (priv->builder, priv->control_model, NULL);
+    hyscan_gtk_map_builder_add_nav (priv->builder, priv->control_model, FALSE);
 
   /* Добавляем инструменты управления картой. */
   {
     GtkWidget *preload, *go;
     GtkWidget *notebook;
-    GtkWidget *map = hyscan_gtk_map_builder_get_map (priv->builder);
+    HyScanGtkMap *map = hyscan_gtk_map_builder_get_map (priv->builder);
     const gchar *base_id = "base";
 
     notebook = gtk_notebook_new ();
 
-    go = hyscan_gtk_map_go_new (HYSCAN_GTK_MAP (map));
+    go = hyscan_gtk_map_go_new (map);
     g_object_set (go, "margin", 6, NULL);
     gtk_notebook_append_page (GTK_NOTEBOOK (notebook), go, gtk_label_new (_("Go to")));
 
-    preload = hyscan_gtk_map_preload_new (HYSCAN_GTK_MAP (map), base_id);
+    preload = hyscan_gtk_map_preload_new (map, base_id);
     g_object_set (preload, "margin", 6, NULL);
     gtk_notebook_append_page (GTK_NOTEBOOK (notebook), preload, gtk_label_new (_("Download")));
 

@@ -4,15 +4,13 @@
 enum
 {
   PROP_O,
-  PROP_RECORDER,
-  PROP_SONAR,
+  PROP_CONTROL_MODEL,
 };
 
 struct _HyScanGtkRecPrivate
 {
-  HyScanSonarRecorder        *recorder;        /* Модель работы ГЛ. */
   gulong                      handler_id;      /* ИД обработчика переключения тумблера. */
-  HyScanSonar *sonar;
+  HyScanControlModel         *control_model;           /* Модель управления оборудованием. */
 };
 
 static void     hyscan_gtk_rec_set_property             (GObject               *object,
@@ -37,9 +35,9 @@ hyscan_gtk_rec_class_init (HyScanGtkRecClass *klass)
   object_class->constructed = hyscan_gtk_rec_object_constructed;
   object_class->finalize = hyscan_gtk_rec_object_finalize;
 
-  g_object_class_install_property (object_class, PROP_RECORDER,
-    g_param_spec_object ("recorder", "HyScanSonarRecorder", "HyScanSonarRecorder object",
-                         HYSCAN_TYPE_SONAR_RECORDER,
+  g_object_class_install_property (object_class, PROP_CONTROL_MODEL,
+    g_param_spec_object ("control-model", "HyScanControlModel", "HyScanControlModel object",
+                         HYSCAN_TYPE_CONTROL_MODEL,
                          G_PARAM_CONSTRUCT_ONLY | G_PARAM_WRITABLE));
 }
 
@@ -60,8 +58,8 @@ hyscan_gtk_rec_set_property (GObject      *object,
 
   switch (prop_id)
     {
-    case PROP_RECORDER:
-      priv->recorder = g_value_dup_object (value);
+    case PROP_CONTROL_MODEL:
+      priv->control_model = g_value_dup_object (value);
       break;
 
     default:
@@ -81,12 +79,7 @@ hyscan_gtk_rec_object_constructed (GObject *object)
   priv->handler_id = g_signal_connect_swapped (object, "state-set",
                                                G_CALLBACK (hyscan_gtk_rec_state_set), gtk_rec);
 
-  /* Объект управления гидролокатором может оказаться не HyScanControlModel, поэтому надо убедиться в этом. */
-  priv->sonar = hyscan_sonar_recorder_get_sonar (priv->recorder);
-  if (HYSCAN_IS_CONTROL_MODEL (priv->sonar))
-    g_signal_connect_swapped (priv->sonar, "start-stop", G_CALLBACK (hyscan_gtk_rec_state_start_stop), gtk_rec);
-  else
-    g_critical ("HyScanGtkRec: sonar is not a HyScanControlModel, widget will not work properly");
+  g_signal_connect_swapped (priv->control_model, "start-stop", G_CALLBACK (hyscan_gtk_rec_state_start_stop), gtk_rec);
 }
 
 static void
@@ -95,11 +88,10 @@ hyscan_gtk_rec_object_finalize (GObject *object)
   HyScanGtkRec *gtk_rec = HYSCAN_GTK_REC (object);
   HyScanGtkRecPrivate *priv = gtk_rec->priv;
 
-  if (HYSCAN_IS_CONTROL_MODEL (priv->sonar))
-    g_signal_handlers_disconnect_by_data (priv->sonar, object);
+  if (HYSCAN_IS_CONTROL_MODEL (priv->control_model))
+    g_signal_handlers_disconnect_by_data (priv->control_model, object);
 
-  g_object_unref (priv->recorder);
-  g_object_unref (priv->sonar);
+  g_object_unref (priv->control_model);
 
   G_OBJECT_CLASS (hyscan_gtk_rec_parent_class)->finalize (object);
 }
@@ -111,7 +103,7 @@ hyscan_gtk_rec_state_start_stop (HyScanGtkRec *gtk_rec)
   HyScanGtkRecPrivate *priv = gtk_rec->priv;
   gboolean state;
 
-  state = hyscan_sonar_state_get_start (HYSCAN_SONAR_STATE (priv->sonar), NULL, NULL, NULL, NULL);
+  state = hyscan_sonar_state_get_start (HYSCAN_SONAR_STATE (priv->control_model), NULL, NULL, NULL, NULL);
 
   /* Переводим виджет в новое состояние без обработчика. */
   g_signal_handler_block (gtk_rec, priv->handler_id);
@@ -128,18 +120,18 @@ hyscan_gtk_rec_state_set (HyScanGtkRec *gtk_rec,
   HyScanGtkRecPrivate *priv = gtk_rec->priv;
 
   if (state)
-    hyscan_sonar_recorder_start (priv->recorder);
+    hyscan_control_model_start (priv->control_model);
   else
-    hyscan_sonar_recorder_stop (priv->recorder);
+    hyscan_sonar_stop (HYSCAN_SONAR (priv->control_model));
 
   /* Ждём сигнала "start-stop", чтобы переключить тумблер в то состояние, которое соответствует статусу работы ГЛ. */
   return TRUE;
 }
 
 GtkWidget *
-hyscan_gtk_rec_new (HyScanSonarRecorder *recorder)
+hyscan_gtk_rec_new (HyScanControlModel *control_model)
 {
   return g_object_new (HYSCAN_TYPE_GTK_REC,
-                       "recorder", recorder,
+                       "control-model", control_model,
                        NULL);
 }

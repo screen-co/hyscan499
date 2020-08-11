@@ -13,7 +13,6 @@
 #include <hyscan-gtk-waterfall-magnifier.h>
 #include <hyscan-gtk-waterfall-coord.h>
 #include <hyscan-gtk-waterfall-shadowm.h>
-#include <hyscan-sonar-recorder.h>
 #include <hyscan-gtk-project-viewer.h>
 #include <hyscan-gtk-mark-editor.h>
 #include <hyscan-gtk-nav-indicator.h>
@@ -255,7 +254,6 @@ struct _Global
 
   gint                    view_selector;
 
-  HyScanSonarRecorder    *recorder;
   HyScanControl          *control;
   HyScanControlModel     *sonar_model;
   gboolean                on_air;

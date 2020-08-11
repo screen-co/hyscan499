@@ -911,7 +911,7 @@ make_record_control (Global *global,
 
   w = g_object_ref (get_widget_from_builder (b, "record_control"));
   ui->starter.dry_switch = g_object_ref (get_widget_from_builder (b, "start_stop_dry"));
-  rec_switch = hyscan_gtk_rec_new (global->recorder);
+  rec_switch = hyscan_gtk_rec_new (global->sonar_model);
 
   /* Помещаем виджет включения записи в GtkGrid. */
   gtk_widget_set_halign (rec_switch, GTK_ALIGN_CENTER);
@@ -1310,8 +1310,11 @@ build_interface (Global *global)
     box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
 
     ui->map_builder = hyscan_gtk_map_builder_new (global->model_manager);
+    hyscan_gtk_map_builder_add_grid (ui->map_builder);
     hyscan_gtk_map_builder_add_tracks (ui->map_builder);
     hyscan_gtk_map_builder_add_marks (ui->map_builder);
+    hyscan_gtk_map_builder_add_pin (ui->map_builder);
+    hyscan_gtk_map_builder_add_ruler (ui->map_builder);
     hyscan_gtk_map_builder_add_planner (ui->map_builder, TRUE);
     hyscan_gtk_map_builder_add_planner_list (ui->map_builder);
 
@@ -1638,7 +1641,7 @@ build_interface (Global *global)
         g_message ("didn't apply offsets");
 
       /* Включаем на карте навигацию. */
-      hyscan_gtk_map_builder_add_nav (ui->map_builder, global->sonar_model, global->recorder);
+      hyscan_gtk_map_builder_add_nav (ui->map_builder, global->sonar_model, TRUE);
 
       g_object_unref (o);
       g_free (file);

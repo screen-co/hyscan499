@@ -451,9 +451,7 @@ done: ;
 
       /* Обработчик смены статуса работы ГЛ. */
       g_signal_connect_swapped (global.sonar_model, "start-stop", G_CALLBACK (sonar_state_changed), &global);
-
-      global.recorder = hyscan_sonar_recorder_new (HYSCAN_SONAR (global.sonar_model), global.db);
-      hyscan_sonar_recorder_set_project (global.recorder, global.project_name);
+      hyscan_control_model_set_project (global.sonar_model, global.project_name);
 
       sensors = hyscan_control_sensors_list (global.control);
       for (; sensors != NULL && *sensors != NULL; ++sensors)
@@ -523,8 +521,8 @@ restart:
   global.sound_velocity = sound_velocity;
   global.full_screen = full_screen;
   global.project_name = g_strdup (project_name);
-  if (global.recorder != NULL)
-    hyscan_sonar_recorder_set_project (global.recorder, global.project_name);
+  if (global.sonar_model != NULL)
+    hyscan_control_model_set_project (global.sonar_model, global.project_name);
 
   /* Cоздаём Менеджер Моделей. */
   {
