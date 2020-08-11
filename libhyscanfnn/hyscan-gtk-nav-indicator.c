@@ -154,7 +154,7 @@ hyscan_gtk_nav_indicator_constructed (GObject *object)
   priv->parser.pitch = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_HYHPR, HYSCAN_NMEA_FIELD_PITCH);
   priv->parser.roll = hyscan_nmea_parser_new_empty (HYSCAN_NMEA_DATA_HYHPR, HYSCAN_NMEA_FIELD_ROLL);
 
-  priv->update_tag = g_timeout_add (1000, (GSourceFunc)(hyscan_gtk_nav_indicator_update), self);
+  priv->update_tag = g_timeout_add (500, (GSourceFunc)(hyscan_gtk_nav_indicator_update), self);
   priv->sensor_data_id = g_signal_connect (priv->sensor, "sensor-data", G_CALLBACK (hyscan_gtk_nav_indicator_sensor_data), self);
 }
 
