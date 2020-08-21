@@ -1,6 +1,7 @@
 #include "hyscan-fnn-project.h"
 #include <hyscan-gtk-project-viewer.h>
 #include <fnn-types-common.h>
+#include <hyscan-data-writer.h>
 
 enum
 {
@@ -46,6 +47,7 @@ static void    constructed       (GObject          *object);
 static void    finalize          (GObject          *object);
 static void    delete_project    (HyScanFnnProject *self);
 static void    delete_track      (HyScanFnnProject *self);
+static void    create_project    (HyScanFnnProject *self);
 static void    fill_grid         (HyScanFnnProject *self,
                                   GtkGrid          *grid);
 static void    projects_changed  (HyScanDBInfo     *db_info,
@@ -238,6 +240,25 @@ delete_track (HyScanFnnProject *self)
 
   gtk_widget_destroy (dialog);
   hyscan_db_close (priv->db, project_id);
+}
+
+static void
+create_project (HyScanFnnProject *self)
+{
+  HyScanFnnProjectPrivate *priv = self->priv;
+  HyScanDataWriter *writer;
+  gboolean created;
+
+  if (priv->project_name == NULL)
+    return;
+
+  writer = hyscan_data_writer_new ();
+  hyscan_data_writer_set_db (writer, priv->db);
+  created = hyscan_data_writer_create_project (writer, priv->project_name, -1);
+  if (!created)
+    g_warning ("HyScanFnnProject: failed to create project %s", priv->project_name);
+
+  g_object_unref (writer);
 }
 
 static void
@@ -462,6 +483,7 @@ response_clicked (GtkDialog        *self,
             text = gtk_entry_get_placeholder_text (GTK_ENTRY (entry));
 
           priv->project_name = g_strdup (text);
+          create_project (HYSCAN_FNN_PROJECT (self));
         }
       else
         {
