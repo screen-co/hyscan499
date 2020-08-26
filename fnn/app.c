@@ -678,6 +678,7 @@ exit:
   g_clear_object (&common_builder);
 
   g_clear_pointer (&global.settings, g_key_file_unref);
+  g_clear_object (&global.model_manager);
   g_clear_object (&global.units);
   g_clear_object (&global.cache);
   g_clear_object (&db_info);
