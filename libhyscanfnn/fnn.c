@@ -2863,7 +2863,9 @@ white_up (GtkWidget *widget,
             // step = 10.0;
           // else if (new_white < 90.0)
             // step = 5.0;
-          // else
+          if (new_white < 10.0)
+            step = 1.0;
+          else
             step = 5.0;
         }
         break;
@@ -2917,6 +2919,10 @@ white_down (GtkWidget *widget,
             // step = -5.0;
           // else
             // step = -10.0;
+          if (new_white > 10.0)
+            step = -5.0;
+          else
+            step = -1.0;
         }
         break;
 
@@ -3596,16 +3602,16 @@ fnn_make_color_maps (gboolean profiler)
   colormaps = g_array_new (FALSE, TRUE, sizeof (FnnColormap*));
   g_array_set_clear_func (colormaps, fnn_colormap_free);
 
-  if (profiler)
-    {
-      new_map = g_new (FnnColormap, 1);
-      new_map->name = g_strdup (_("Profiler"));
-      new_map->colors = hyscan_tile_color_compose_colormap_pf (&new_map->len);
-      new_map->bg = WHITE_BG;
-      g_array_append_vals (colormaps, &new_map, 1);
+  // if (profiler)
+  //   {
+  //     new_map = g_new (FnnColormap, 1);
+  //     new_map->name = g_strdup (_("Profiler"));
+  //     new_map->colors = hyscan_tile_color_compose_colormap_pf (&new_map->len);
+  //     new_map->bg = WHITE_BG;
+  //     g_array_append_vals (colormaps, &new_map, 1);
 
-      return colormaps;
-    }
+  //     return colormaps;
+  //   }
 
   new_map = g_new (FnnColormap, 1);
   new_map->name = g_strdup (_("Yellow"));
@@ -3652,6 +3658,17 @@ fnn_make_color_maps (gboolean profiler)
   new_map->colors = hyscan_tile_color_compose_colormap (kolors, 2, &new_map->len);
   new_map->bg = BLACK_BG;
   g_array_append_vals (colormaps, &new_map, 1);
+
+  if (profiler)
+    {
+      new_map = g_new (FnnColormap, 1);
+      new_map->name = g_strdup (_("Profiler"));
+      new_map->colors = hyscan_tile_color_compose_colormap_pf (&new_map->len);
+      new_map->bg = WHITE_BG;
+      g_array_append_vals (colormaps, &new_map, 1);
+
+      // return colormaps;
+    }
 
   return colormaps;
 }

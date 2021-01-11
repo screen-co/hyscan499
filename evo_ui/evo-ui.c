@@ -1147,6 +1147,8 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->scale_value       = get_label_from_builder (b, "pf_scale_value");       add_to_sg (sg, b, "pf_scale_label");
       panel->vis_gui->black_value       = get_label_from_builder (b, "pf_black_value");       add_to_sg (sg, b, "pf_black_label");
       panel->vis_gui->live_view         = get_widget_from_builder(b, "pf_live_view");         add_to_sg (sg, b, "pf_live_view_label");
+      panel->vis_gui->colormap_value    = get_label_from_builder (b, "pf_color_map_value");   add_to_sg (sg, b, "pf_color_map_label");
+
 
       wf = (VisualWF*)panel->vis_gui;
       layers =  make_layer_list (ui, wf);
