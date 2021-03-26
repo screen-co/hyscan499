@@ -1412,7 +1412,7 @@ make_marks_with_coords (HyScanObjectModel *model,
   gpointer key, value;
 
   /* Достаем голенькие метки. */
-  if ((pure_marks = hyscan_object_model_get (model)) == NULL)
+  if ((pure_marks = hyscan_object_store_get_all (HYSCAN_OBJECT_STORE (model), HYSCAN_TYPE_MARK_WATERFALL)) == NULL)
     return NULL;
 
   /* Заводим таблицу под метки. */
@@ -1499,8 +1499,9 @@ mark_model_changed (HyScanObjectModel *model,
   mark_sync_func (marks, global);
 }
 
-void
+static void
 mark_model_update (HyScanGtkMarkEditor *med,
+                   GType               type,
                    HyScanObjectModel   *model)
 {
   gchar *mark_id = NULL;
@@ -1508,7 +1509,7 @@ mark_model_update (HyScanGtkMarkEditor *med,
 
   hyscan_gtk_mark_editor_get_mark (med, &mark_id, NULL, NULL, NULL);
 
-  mark = (HyScanMark *) hyscan_object_model_get_by_id (model, mark_id);
+  mark = (HyScanMark *) hyscan_object_store_get (HYSCAN_OBJECT_STORE (model), type, mark_id);
   if (mark == NULL)
     return;
 
@@ -1522,7 +1523,7 @@ mark_model_update (HyScanGtkMarkEditor *med,
                                    &mark->operator_name,
                                    &mark->description);
 
-  hyscan_object_model_modify (model, mark_id, (const HyScanObject *) mark);
+  hyscan_object_store_modify (HYSCAN_OBJECT_STORE (model), mark_id, (const HyScanObject *) mark);
 
   hyscan_object_free ((HyScanObject *) mark);
   g_free (mark_id);
@@ -1536,12 +1537,12 @@ mark_modified (HyScanGtkMarkEditor *med,
 
   /* Акустически метки. */
   model = hyscan_gtk_model_manager_get_acoustic_mark_model (global->model_manager);
-  mark_model_update (med, model);
+  mark_model_update (med, HYSCAN_TYPE_MARK_WATERFALL, model);
   g_object_unref (model);
 
   /* Геометки. */
   model = hyscan_gtk_model_manager_get_geo_mark_model (global->model_manager);
-  mark_model_update (med, model);
+  mark_model_update (med, HYSCAN_TYPE_MARK_GEO, model);
   g_object_unref (model);
 }
 

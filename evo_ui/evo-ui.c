@@ -375,7 +375,7 @@ mark_exporter (GObject  *emitter,
       if (planner == NULL)
         return;
 
-      objects = hyscan_object_model_get (HYSCAN_OBJECT_MODEL (planner));
+      objects = hyscan_object_store_get_all (HYSCAN_OBJECT_STORE (planner), G_TYPE_BOXED);
       g_object_unref (planner);
 
       if (objects == NULL)
