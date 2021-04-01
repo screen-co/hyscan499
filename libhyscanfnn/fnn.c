@@ -8,6 +8,7 @@
 #include <hyscan-gtk-param-cc.h>
 #include <hyscan-gtk-export.h>
 #include <hyscan-data-schema-builder.h>
+#include <hyscan-gtk-fnn-gliko-wrapper.h>
 #include <gmodule.h>
 #include <math.h>
 
@@ -90,7 +91,7 @@ fnn_ensure_panel (gint    panelx,
           panel->sources[1] = HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_HI;
         }
 
-      vwf->colormaps = fnn_make_color_maps (FALSE);
+      vwf->colormaps = fnn_make_color_maps (FALSE, FALSE);
       vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global->cache));
       gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
 
@@ -132,7 +133,7 @@ fnn_ensure_panel (gint    panelx,
 
       panel->vis_gui = (VisualCommon*)vwf;
 
-      vwf->colormaps = fnn_make_color_maps (TRUE);
+      vwf->colormaps = fnn_make_color_maps (TRUE, FALSE);
 
       vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global->cache));
       gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
@@ -194,7 +195,7 @@ fnn_ensure_panel (gint    panelx,
 
       panel->vis_gui = (VisualCommon*)vwf;
 
-      vwf->colormaps = fnn_make_color_maps (FALSE);
+      vwf->colormaps = fnn_make_color_maps (FALSE, FALSE);
 
       vwf->wf = HYSCAN_GTK_WATERFALL (hyscan_gtk_waterfall_new (global->cache));
       gtk_cifro_area_set_scale_on_resize (GTK_CIFRO_AREA (vwf->wf), FALSE);
@@ -266,6 +267,66 @@ fnn_ensure_panel (gint    panelx,
       gtk_widget_show_all (GTK_WIDGET (vfl->fl));
       gtk_widget_show_all (GTK_WIDGET (vfl->play_control));
     }
+  else if (panelx == X_LOOKARND || panelx == X_LOOK_LOW || panelx == X_LOOK_HI)
+    {
+      VisualLA *vla = g_new0 (VisualLA, 1);
+
+      panel->vis_gui = (VisualCommon*)vla;
+
+      panel->sources = g_new0 (HyScanSourceType, 3);
+      panel->sources[2] = HYSCAN_SOURCE_INVALID;
+      panel->type = FNN_PANEL_LOOKAROUND;
+
+      if (panelx == X_LOOKARND)
+        {
+          panel->name = g_strdup ("LookAround");
+          panel->name_local = g_strdup (_("LookAround"));
+          panel->short_name = g_strdup ("LA");
+          panel->sources[0] = HYSCAN_SOURCE_LOOK_AROUND_PORT;
+          panel->sources[1] = HYSCAN_SOURCE_LOOK_AROUND_STARBOARD;
+        }
+      else if (panelx == X_ECHO_HIGH)
+        {
+          panel->name = g_strdup ("LookAroundHigh");
+          panel->name_local = g_strdup (_("LookAroundHigh"));
+          panel->short_name = g_strdup ("LAHigh");
+          panel->sources[0] = HYSCAN_SOURCE_LOOK_AROUND_PORT_HI;
+          panel->sources[1] = HYSCAN_SOURCE_LOOK_AROUND_STARBOARD_HI;
+        }
+      else if (panelx == X_ECHO_LOW)
+        {
+          panel->name = g_strdup ("LookAroundLow");
+          panel->name_local = g_strdup (_("LookAroundLow"));
+          panel->short_name = g_strdup ("LALow");
+          panel->sources[0] = HYSCAN_SOURCE_LOOK_AROUND_PORT_LOW;
+          panel->sources[1] = HYSCAN_SOURCE_LOOK_AROUND_STARBOARD_LOW;
+        }
+
+      vla->colormaps = fnn_make_color_maps (FALSE, TRUE);
+
+      vla->player = hyscan_data_player_new ();
+      vla->wrapper = hyscan_gtk_fnn_gliko_wrapper_new (vla->player);
+
+      vla->gliko = HYSCAN_GTK_GLIKO (hyscan_gtk_gliko_control_new ());
+      // vla->grid = hyscan_gtk_gliko_grid_new ();
+
+      // hyscan_gtk_gliko_overlay_set_layer (HYSCAN_GTK_GLIKO_OVERLAY (vla->gliko), 1,
+                                          // HYSCAN_GTK_GLIKO_LAYER (vla->grid));
+      // hyscan_gtk_gliko_overlay_enable_layer(HYSCAN_GTK_GLIKO_OVERLAY (vla->gliko), 1, 1);
+
+      hyscan_gtk_gliko_set_source_name (vla->gliko, 0, hyscan_source_get_id_by_type (panel->sources[0]));
+      hyscan_gtk_gliko_set_source_name (vla->gliko, 1, hyscan_source_get_id_by_type (panel->sources[1]));
+
+      hyscan_gtk_gliko_set_player (HYSCAN_GTK_GLIKO (vla->gliko), vla->player);
+      hyscan_data_player_add_channel (vla->player, hyscan_gtk_gliko_get_source (vla->gliko, 0), 1, HYSCAN_CHANNEL_DATA);
+      hyscan_data_player_add_channel (vla->player, hyscan_gtk_gliko_get_source (vla->gliko, 1), 2, HYSCAN_CHANNEL_DATA);
+
+      vla->play_control = gtk_scale_new (GTK_ORIENTATION_HORIZONTAL, hyscan_gtk_fnn_gliko_wrapper_get_adjustment(vla->wrapper));
+      gtk_scale_set_value_pos (GTK_SCALE (vla->play_control), GTK_POS_RIGHT);
+
+      vla->common.main = GTK_WIDGET (vla->gliko);
+      gtk_widget_show_all (GTK_WIDGET (vla->gliko));
+    }
   else
     {
       g_warning ("Not implemented %i", __LINE__);
@@ -303,7 +364,8 @@ fnn_ensure_panel (gint    panelx,
 
       if (panel->type == FNN_PANEL_WATERFALL ||
           panel->type == FNN_PANEL_ECHO ||
-          panel->type == FNN_PANEL_PROFILER)
+          panel->type == FNN_PANEL_PROFILER ||
+          panel->type == FNN_PANEL_LOOKAROUND)
         {
           color_map_set (global, panel->vis_current.colormap, panelx);
         }
@@ -371,6 +433,12 @@ update_panels (Global          *global,
     {HYSCAN_SOURCE_ECHOSOUNDER_HI,           X_ECHO_HIGH},
     {HYSCAN_SOURCE_ECHOSOUNDER_LOW,          X_ECHO_LOW},
     {HYSCAN_SOURCE_FORWARD_LOOK,             X_FORWARDL},
+    {HYSCAN_SOURCE_LOOK_AROUND_STARBOARD,    X_LOOKARND},
+    {HYSCAN_SOURCE_LOOK_AROUND_PORT,         X_LOOKARND},
+    {HYSCAN_SOURCE_LOOK_AROUND_PORT_LOW,      X_LOOK_LOW},
+    {HYSCAN_SOURCE_LOOK_AROUND_STARBOARD_LOW, X_LOOK_LOW},
+    {HYSCAN_SOURCE_LOOK_AROUND_PORT_HI,      X_LOOK_HI},
+    {HYSCAN_SOURCE_LOOK_AROUND_STARBOARD_HI, X_LOOK_HI},
   };
 
   for (i = 0; i < G_N_ELEMENTS(src_to_pan); ++i)
@@ -408,6 +476,7 @@ fnn_panel_destroy (gpointer data)
     case FNN_PANEL_WATERFALL:
     case FNN_PANEL_ECHO:
     case FNN_PANEL_PROFILER:
+    case FNN_PANEL_LOOKAROUND:
       wf = (VisualWF*)panel->vis_gui;
 
       g_array_unref (wf->colormaps);
@@ -1666,6 +1735,7 @@ track_changed (GtkTreeView *list,
     {
       VisualWF *wf;
       VisualFL *fl;
+      VisualLA *la;
       FnnPanel *panel = v;
 
       switch (panel->type)
@@ -1694,6 +1764,17 @@ track_changed (GtkTreeView *list,
             hyscan_forward_look_player_pause (fl->player);
 
           break;
+
+        case FNN_PANEL_LOOKAROUND:
+          la = (VisualLA*) (panel->vis_gui);
+          hyscan_data_player_set_track (la->player, global->db, global->project_name, track_name);
+          hyscan_data_player_add_channel (la->player, hyscan_gtk_gliko_get_source (la->gliko, 0), 1, HYSCAN_CHANNEL_DATA);
+          hyscan_data_player_add_channel (la->player, hyscan_gtk_gliko_get_source (la->gliko, 1), 2, HYSCAN_CHANNEL_DATA);
+
+          if (on_air)
+            hyscan_data_player_play (la->player, 1.0);
+          else
+            hyscan_data_player_pause (la->player);
         }
     }
 
@@ -1873,37 +1954,91 @@ color_map_set (Global *global,
                gint    panelx)
 {
   VisualWF *wf;
+  VisualLA *la;
   gchar   *text;
   FnnColormap *colormap;
   FnnPanel *panel = get_panel (global, panelx);
 
-  /* Проверяем тип панели. */
-  if (panel->type != FNN_PANEL_WATERFALL &&
-      panel->type != FNN_PANEL_PROFILER &&
-      panel->type != FNN_PANEL_ECHO)
+  switch (panel->type)
     {
+    case FNN_PANEL_WATERFALL:
+    case FNN_PANEL_PROFILER:
+    case FNN_PANEL_ECHO:
+      wf = (VisualWF*)panel->vis_gui;
+      if (desired_cmap >= wf->colormaps->len)
+        return FALSE;
+
+      colormap = g_array_index (wf->colormaps, FnnColormap*, desired_cmap);
+
+      hyscan_gtk_waterfall_set_colormap_for_all (wf->wf,
+                                                 colormap->colors,
+                                                 colormap->len,
+                                                 colormap->bg);
+      hyscan_gtk_waterfall_set_substrate (wf->wf, colormap->bg);
+
+      /* Проверяем, существует ли вообще виджет. */
+      break;
+      // if (wf->common.colormap_value != NULL)
+      //   {
+      //     text = g_strdup_printf ("<small><b>%s</b></small>", colormap->name);
+      //     gtk_label_set_markup (wf->common.colormap_value, text);
+      //     g_free (text);
+      //   }
+
+      // return TRUE;
+
+    case FNN_PANEL_LOOKAROUND:
+      la = (VisualLA*)panel->vis_gui;
+
+      if (desired_cmap >= la->colormaps->len)
+        return FALSE;
+
+      colormap = g_array_index (la->colormaps, FnnColormap*, desired_cmap);
+
+      hyscan_gtk_gliko_set_colormap (la->gliko, 0, colormap->colors, colormap->len, colormap->bg);
+      hyscan_gtk_gliko_set_colormap (la->gliko, 1, colormap->colors, colormap->len, colormap->bg);
+
+      /* Проверяем, существует ли вообще виджет. */
+      if (la->common.colormap_value != NULL)
+        {
+          text = g_strdup_printf ("<small><b>%s</b></small>", colormap->name);
+          gtk_label_set_markup (la->common.colormap_value, text);
+          g_free (text);
+        }
+
+      break;
+
+    default:
       g_warning ("color_map_set: wrong panel type");
       return FALSE;
     }
+  // /* Проверяем тип панели. */
+  // if (panel->type != FNN_PANEL_WATERFALL &&
+  //     panel->type != FNN_PANEL_PROFILER &&
+  //     panel->type != FNN_PANEL_ECHO)
+  //   {
+  //     g_warning ("color_map_set: wrong panel type");
+  //     return FALSE;
+  //   }
 
-  wf = (VisualWF*)panel->vis_gui;
+  // wf = (VisualWF*)panel->vis_gui;
 
-  if (desired_cmap >= wf->colormaps->len)
-    return FALSE;
+  // if (desired_cmap >= wf->colormaps->len)
+  //   return FALSE;
 
-  colormap = g_array_index (wf->colormaps, FnnColormap*, desired_cmap);
+  // colormap = g_array_index (wf->colormaps, FnnColormap*, desired_cmap);
 
-  hyscan_gtk_waterfall_set_colormap_for_all (wf->wf,
-                                             colormap->colors,
-                                             colormap->len,
-                                             colormap->bg);
-  hyscan_gtk_waterfall_set_substrate (wf->wf, colormap->bg);
+  // hyscan_gtk_waterfall_set_colormap_for_all (wf->wf,
+  //                                            colormap->colors,
+  //                                            colormap->len,
+  //                                            colormap->bg);
+  // hyscan_gtk_waterfall_set_substrate (wf->wf, colormap->bg);
 
   /* Проверяем, существует ли вообще виджет. */
-  if (wf->common.colormap_value != NULL)
+  if (panel->vis_gui->colormap_value != NULL)
     {
       text = g_strdup_printf ("<small><b>%s</b></small>", colormap->name);
-      gtk_label_set_markup (wf->common.colormap_value, text);
+      gtk_label_set_markup (panel->vis_gui->colormap_value, text);
       g_free (text);
     }
 
@@ -2771,6 +2906,7 @@ levels_set (Global  *global,
 {
   VisualWF *wf;
   VisualFL *fl;
+  VisualLA *la;
   gchar *text_black;
   gchar *text_gamma;
   gchar *text_white;
@@ -2829,6 +2965,13 @@ levels_set (Global  *global,
       hyscan_gtk_forward_look_set_brightness (fl->fl, new_white);
       break;
 
+    case FNN_PANEL_LOOKAROUND:
+      la = (VisualLA*)panel->vis_gui;
+      hyscan_gtk_gliko_set_black_point (la->gliko, new_black / 100.);
+      hyscan_gtk_gliko_set_white_point (la->gliko, new_white / 100.);
+      hyscan_gtk_gliko_set_gamma_value (la->gliko, new_gamma);
+      break;
+
     default:
       g_warning ("levels_set: wrong panel type!");
     }
@@ -2859,6 +3002,7 @@ white_up (GtkWidget *widget,
       case FNN_PANEL_WATERFALL:
       case FNN_PANEL_PROFILER:
       case FNN_PANEL_ECHO:
+      case FNN_PANEL_LOOKAROUND:
         {
           // if (new_white < 50.0)
             // step = 10.0;
@@ -2913,6 +3057,7 @@ white_down (GtkWidget *widget,
       case FNN_PANEL_WATERFALL:
       case FNN_PANEL_PROFILER:
       case FNN_PANEL_ECHO:
+      case FNN_PANEL_LOOKAROUND:
         {
           // if (new_white > 90.0)
             step = -5.0;
@@ -2969,6 +3114,7 @@ black_up (GtkWidget *widget,
       case FNN_PANEL_WATERFALL:
       case FNN_PANEL_PROFILER:
       case FNN_PANEL_ECHO:
+      case FNN_PANEL_LOOKAROUND:
         {
           // if (new_black < 50.0)
             // step = 10.0;
@@ -3021,6 +3167,7 @@ black_down (GtkWidget *widget,
       case FNN_PANEL_WATERFALL:
       case FNN_PANEL_PROFILER:
       case FNN_PANEL_ECHO:
+      case FNN_PANEL_LOOKAROUND:
         {
           // if (new_black > 90.0)
             step = -5.0;
@@ -3202,6 +3349,7 @@ live_view (GtkWidget  *widget,
 {
   VisualWF *wf;
   VisualFL *fl;
+  VisualLA *la;
   FnnPanel *panel = get_panel (tglobal, panelx);
 
   switch (panel->type)
@@ -3220,6 +3368,15 @@ live_view (GtkWidget  *widget,
         hyscan_forward_look_player_real_time (fl->player);
       else
         hyscan_forward_look_player_pause (fl->player);
+      break;
+
+    case FNN_PANEL_LOOKAROUND:
+
+      la = (VisualLA*)panel->vis_gui;
+      if (state)
+        hyscan_data_player_play (la->player, 1.0);
+      else
+        hyscan_data_player_pause (la->player);
       break;
 
     default:
@@ -3593,7 +3750,8 @@ fnn_colormap_free (gpointer data)
 }
 
 GArray *
-fnn_make_color_maps (gboolean profiler)
+fnn_make_color_maps (gboolean profiler,
+                     gboolean lookaround)
 {
   guint32 kolors[2];
   GArray * colormaps;
@@ -3622,19 +3780,22 @@ fnn_make_color_maps (gboolean profiler)
   new_map->bg = BLACK_BG;
   g_array_append_vals (colormaps, &new_map, 1);
 
-  new_map = g_new (FnnColormap, 1);
-  new_map->name = g_strdup (_("Brown"));
-  new_map->colors = g_memdup (orange, 256 * sizeof (guint32));
-  new_map->len = 256;
-  new_map->bg = BLACK_BG;
-  g_array_append_vals (colormaps, &new_map, 1);
+  if (!lookaround)
+    {
+      new_map = g_new (FnnColormap, 1);
+      new_map->name = g_strdup (_("Brown"));
+      new_map->colors = g_memdup (orange, 256 * sizeof (guint32));
+      new_map->len = 256;
+      new_map->bg = BLACK_BG;
+      g_array_append_vals (colormaps, &new_map, 1);
 
-  new_map = g_new (FnnColormap, 1);
-  new_map->name = g_strdup (_("Sepia"));
-  new_map->colors = g_memdup (sepia, 256 * sizeof (guint32));
-  new_map->len = 256;
-  new_map->bg = BLACK_BG;
-  g_array_append_vals (colormaps, &new_map, 1);
+      new_map = g_new (FnnColormap, 1);
+      new_map->name = g_strdup (_("Sepia"));
+      new_map->colors = g_memdup (sepia, 256 * sizeof (guint32));
+      new_map->len = 256;
+      new_map->bg = BLACK_BG;
+      g_array_append_vals (colormaps, &new_map, 1);
+    }
 
   new_map = g_new (FnnColormap, 1);
   new_map->name = g_strdup (_("White"));
@@ -3644,13 +3805,16 @@ fnn_make_color_maps (gboolean profiler)
   new_map->bg = BLACK_BG;
   g_array_append_vals (colormaps, &new_map, 1);
 
-  new_map = g_new (FnnColormap, 1);
-  new_map->name = g_strdup (_("Inverted"));
-  kolors[0] = hyscan_tile_color_converter_d2i (1.0, 1.0, 1.0, 1.0);
-  kolors[1] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
-  new_map->colors = hyscan_tile_color_compose_colormap (kolors, 2, &new_map->len);
-  new_map->bg = BLACK_BG;
-  g_array_append_vals (colormaps, &new_map, 1);new_map = g_new (FnnColormap, 1);
+  if (!lookaround)
+    {
+      new_map = g_new (FnnColormap, 1);
+      new_map->name = g_strdup (_("Inverted"));
+      kolors[0] = hyscan_tile_color_converter_d2i (1.0, 1.0, 1.0, 1.0);
+      kolors[1] = hyscan_tile_color_converter_d2i (0.0, 0.0, 0.0, 1.0);
+      new_map->colors = hyscan_tile_color_compose_colormap (kolors, 2, &new_map->len);
+      new_map->bg = BLACK_BG;
+      g_array_append_vals (colormaps, &new_map, 1);new_map = g_new (FnnColormap, 1);
+    }
 
   new_map = g_new (FnnColormap, 1);
   new_map->name = g_strdup (_("Green"));

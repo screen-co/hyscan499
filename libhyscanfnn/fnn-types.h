@@ -17,6 +17,9 @@
 #include <hyscan-gtk-mark-editor.h>
 #include <hyscan-gtk-nav-indicator.h>
 #include <hyscan-gtk-model-manager.h>
+#include <hyscan-gtk-gliko-control.h>
+#include <hyscan-gtk-gliko-grid.h>
+#include <hyscan-gtk-fnn-gliko-wrapper.h>
 #include <hyscan-tile-color.h>
 #include <hyscan-nmea-parser.h>
 #include <hyscan-mloc.h>
@@ -65,14 +68,17 @@ enum
 
 enum
 {
-  X_SIDESCAN  = 155642,
-  X_PROFILER  = 251539,
-  X_FORWARDL  = 356753,
-  X_ECHOSOUND = 429878,
-  X_SIDE_LOW  = 568351,
-  X_SIDE_HIGH = 609583,
-  X_ECHO_HIGH = 771575,
-  X_ECHO_LOW  = 857495,
+  X_SIDESCAN  = 100,
+  X_PROFILER  = 200,
+  X_FORWARDL  = 300,
+  X_ECHOSOUND = 400,
+  X_SIDE_LOW  = 500,
+  X_SIDE_HIGH = 600,
+  X_ECHO_HIGH = 700,
+  X_ECHO_LOW  = 800,
+  X_LOOKARND  = 900,
+  X_LOOK_HI   = 1000,
+  X_LOOK_LOW  = 1100,
 };
 
 typedef struct _FnnPanel FnnPanel;
@@ -114,6 +120,7 @@ typedef enum
   FNN_PANEL_PROFILER,
   FNN_PANEL_ECHO,
   FNN_PANEL_FORWARDLOOK,
+  FNN_PANEL_LOOKAROUND,
 } FnnPanelType;
 
 typedef struct
@@ -209,6 +216,20 @@ typedef struct
   GtkLabel                      * coords_label;
   GtkSwitch                     * mode_target;
 } VisualFL;
+
+typedef struct
+{
+  VisualCommon                    common; /* Важно, чтобы было на 1 месте. */
+
+  GArray                        * colormaps; /* struct FnnColormap */
+
+  HyScanGtkGliko                * gliko;
+  HyScanGtkGlikoGrid            * grid;
+  HyScanDataPlayer              * player;
+  HyScanGtkFnnGlikoWrapper      * wrapper;
+  GtkWidget                     * play_control;
+
+} VisualLA;
 
 struct _FnnPanel
 {
@@ -795,7 +816,8 @@ HYSCAN_API void
 fnn_colormap_free (gpointer data);
 
 HYSCAN_API GArray *
-fnn_make_color_maps (gboolean profiler);
+fnn_make_color_maps (gboolean profiler,
+                     gboolean simple_only);
 
 HYSCAN_API void
 update_panels (Global          *global,

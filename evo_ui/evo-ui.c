@@ -769,8 +769,13 @@ widget_swap (GObject     *emitter,
 
   gtk_stack_set_visible_child_name (GTK_STACK (ui->control_stack), child); // fixme!11;
   /* Теперь всякие специальные случаи. */
-  hyscan_gtk_area_set_bottom_visible (HYSCAN_GTK_AREA (ui->area),
-                                      g_str_equal (child, "ForwardLook"));
+  {
+    gboolean bottom_visible = FALSE;
+    bottom_visible = g_str_equal (child, "ForwardLook") |
+                     g_str_has_prefix (child, "LookAround");
+    hyscan_gtk_area_set_bottom_visible (HYSCAN_GTK_AREA (ui->area), bottom_visible);
+  }
+
 
 }
 
@@ -1218,7 +1223,6 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->scale_value       = get_label_from_builder (b, "fl_scale_value");       add_to_sg (sg, b, "fl_scale_label");
       panel->vis_gui->sensitivity_value = get_label_from_builder (b, "fl_sensitivity_value"); add_to_sg (sg, b, "fl_sensitivity_label");
 
-      g_message ("fl %i", panel_sources_are_in_sonar (global, panel));
       // if (!panel_sources_are_in_sonar (global, panel))
       //   break;
 
@@ -1226,6 +1230,15 @@ make_page_for_panel (EvoUI     *ui,
       // tvg = make_tvg_control (global, panel, b, sg);
       // panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");       add_to_sg (sg, b, "distance_label");
       // panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");         add_to_sg (sg, b, "signal_label");
+
+      break;
+
+    case FNN_PANEL_LOOKAROUND:
+      view = get_widget_from_builder (b, "la_view_control");
+      panel->vis_gui->black_value       = get_label_from_builder (b, "la_black_value");  add_to_sg (sg, b, "la_black_value");
+      panel->vis_gui->white_value       = get_label_from_builder (b, "la_white_value");  add_to_sg (sg, b, "la_white_value");
+      panel->vis_gui->gamma_value       = get_label_from_builder (b, "la_gamma_value");  add_to_sg (sg, b, "la_gamma_value");
+      panel->vis_gui->colormap_value    = get_label_from_builder (b, "la_color_map_value");  add_to_sg (sg, b, "la_color_map_value");
 
       break;
 
@@ -1772,11 +1785,17 @@ panel_pack (FnnPanel *panel,
   gtk_stack_add_titled (GTK_STACK (ui->acoustic_stack), visual, panel->name, panel->name_local);
   widget_swap (NULL, NULL, child_name);
 
-  /* Нижняя панель содержит виджет управления впередсмотрящим. */
+  /* Нижняя панель содержит виджет управления впередсмотрящим и круговым. */
   if (panelx == X_FORWARDL)
   {
     VisualFL *fl = (VisualFL*)panel->vis_gui;
     hyscan_gtk_area_set_bottom (HYSCAN_GTK_AREA (ui->area), fl->play_control);
+    gtk_widget_show_all(ui->area);
+  }
+  else if (panelx == X_LOOKARND || panelx == X_LOOK_LOW || panelx == X_LOOK_HI)
+  {
+    VisualLA *la = (VisualLA*)panel->vis_gui;
+    hyscan_gtk_area_set_bottom (HYSCAN_GTK_AREA (ui->area), la->play_control);
     gtk_widget_show_all(ui->area);
   }
 
@@ -1791,6 +1810,7 @@ panel_pack (FnnPanel *panel,
         gtk_adjustment_set_value (adj, balance);
     }
 
+
   return TRUE;
 }
 
@@ -1799,9 +1819,13 @@ panel_adjust_visibility (HyScanTrackInfo *track_info)
 {
   gboolean sidescan_v = FALSE;
   gboolean side_low_v = FALSE;
+  gboolean side_high_v = FALSE;
   gboolean profiler_v = FALSE;
   gboolean echosound_v = FALSE;
   gboolean forwardl_v = FALSE;
+  gboolean lookaround_v = FALSE;
+  gboolean lookaround_low_v = FALSE;
+  gboolean lookaround_high_v = FALSE;
   guint i;
 
   for (i = 0; i < HYSCAN_SOURCE_LAST; ++i)
@@ -1818,10 +1842,21 @@ panel_adjust_visibility (HyScanTrackInfo *track_info)
         case HYSCAN_SOURCE_SIDE_SCAN_PORT:           sidescan_v = TRUE; break;
         case HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_LOW:  side_low_v = TRUE; break;
         case HYSCAN_SOURCE_SIDE_SCAN_PORT_LOW:       side_low_v = TRUE; break;
+        case HYSCAN_SOURCE_SIDE_SCAN_STARBOARD_HI:   side_high_v = TRUE; break;
+        case HYSCAN_SOURCE_SIDE_SCAN_PORT_HI:        side_high_v = TRUE; break;
+
         case HYSCAN_SOURCE_PROFILER:                 profiler_v = TRUE; break;
         case HYSCAN_SOURCE_PROFILER_ECHO:            profiler_v = TRUE; break;
         case HYSCAN_SOURCE_ECHOSOUNDER:              echosound_v = TRUE; break;
+
         case HYSCAN_SOURCE_FORWARD_LOOK:             forwardl_v = TRUE; break;
+
+        case HYSCAN_SOURCE_LOOK_AROUND_STARBOARD:     lookaround_v = TRUE; break;
+        case HYSCAN_SOURCE_LOOK_AROUND_PORT:          lookaround_v = TRUE; break;
+        case HYSCAN_SOURCE_LOOK_AROUND_STARBOARD_LOW: lookaround_low_v = TRUE; break;
+        case HYSCAN_SOURCE_LOOK_AROUND_PORT_LOW:      lookaround_low_v = TRUE; break;
+        case HYSCAN_SOURCE_LOOK_AROUND_STARBOARD_HI:  lookaround_high_v = TRUE; break;
+        case HYSCAN_SOURCE_LOOK_AROUND_PORT_HI:       lookaround_high_v = TRUE; break;
       }
     }
 
@@ -1830,23 +1865,39 @@ panel_adjust_visibility (HyScanTrackInfo *track_info)
     panel_show (X_SIDESCAN, TRUE);
   if (side_low_v)
     panel_show (X_SIDE_LOW, TRUE);
+  if (side_high_v)
+    panel_show (X_SIDE_HIGH, TRUE);
   if (profiler_v)
     panel_show (X_PROFILER, TRUE);
   if (echosound_v)
     panel_show (X_ECHOSOUND, TRUE);
   if (forwardl_v)
     panel_show (X_FORWARDL, TRUE);
+  if (lookaround_v)
+    panel_show (X_LOOKARND, TRUE);
+  if (lookaround_low_v)
+    panel_show (X_LOOK_LOW, TRUE);
+  if (lookaround_high_v)
+    panel_show (X_LOOK_HI, TRUE);
 
   /* Прячем неактивированные страницы. */
   if (!sidescan_v)
     panel_show (X_SIDESCAN, FALSE);
   if (!side_low_v)
     panel_show (X_SIDE_LOW, FALSE);
+  if (!side_high_v)
+    panel_show (X_SIDE_HIGH, FALSE);
   if (!profiler_v)
     panel_show (X_PROFILER, FALSE);
   if (!echosound_v)
     panel_show (X_ECHOSOUND, FALSE);
   if (!forwardl_v)
     panel_show (X_FORWARDL, FALSE);
+  if (!lookaround_v)
+    panel_show (X_LOOKARND, FALSE);
+  if (!lookaround_low_v)
+    panel_show (X_LOOK_LOW, FALSE);
+  if (!lookaround_high_v)
+    panel_show (X_LOOK_HI, FALSE);
 
 }
