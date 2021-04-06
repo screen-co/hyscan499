@@ -116,6 +116,15 @@ connector_finished (GtkAssistant *ass,
 int
 main (int argc, char **argv)
 {
+  {
+    gdouble x = 1.0;
+    gdouble y = 0.0;
+    g_message("%f", x/y);
+    gfloat x2 = 1.0;
+    gfloat y2 = 0.0;
+    g_message("%f", x2/y2);
+
+  }
   gint               cache_size = 0;
 
   gchar             *db_uri = NULL;            /* Адрес базы данных. */
@@ -310,7 +319,7 @@ main (int argc, char **argv)
 
   /* Файл c настройками. */
   if (settings_file == NULL)
-    settings_file = g_build_filename (hyscan_config_get_user_files_dir (), "settings.ini", NULL);
+    settings_file = g_build_filename (hyscan_config_get_user_dir (), "settings.ini", NULL);
 
   global.settings = g_key_file_new ();
   g_key_file_load_from_file (global.settings, settings_file, G_KEY_FILE_NONE, NULL);
@@ -334,15 +343,10 @@ main (int argc, char **argv)
     }
   else
     {
-      const gchar **folders;
-      const gchar * const * iter;
-
       /* беру первую попавшуюся БД. Мне насрать. */
-      folders = hyscan_config_get_profile_dirs ();
-      g_message ("folders: %s %s", folders[0], folders[1]);
-      for (iter = folders; iter != NULL && *iter != NULL; ++iter)
-      {
-        gchar *folder = g_build_filename (*iter, "db-profiles", NULL);
+      g_message ("user folder: %s", hyscan_config_get_user_dir ());
+      do {
+        gchar *folder = g_build_filename (hyscan_config_get_user_dir (), "db-profiles", NULL);
         const gchar *filename;
         GError *error = NULL;
         GDir *dir;
@@ -379,7 +383,7 @@ main (int argc, char **argv)
 
         g_free (folder);
         g_dir_close (dir);
-      }
+      } while(0);
 done: ;
     }
 
@@ -417,8 +421,9 @@ done: ;
   /* теперь запускаю педрильный коннектор*/
   {
       GtkWidget *con;
+      const gchar *folders[2] = {hyscan_config_get_user_dir(), NULL};
 
-      con = hyscan_gtk_con_new ((gchar**)hyscan_config_get_profile_dirs(),
+      con = hyscan_gtk_con_new ((gchar**)folders,
                                 driver_paths, global.settings, global.db);
       g_signal_connect_swapped (con, "close", G_CALLBACK (g_print), "close\n");
       g_signal_connect_swapped (con, "cancel", G_CALLBACK (g_print), "cancel\n");
@@ -433,11 +438,14 @@ done: ;
   }
 
   /* К этому моменту подвезли global.control и global.db. Настраиваю контрол. */
-  global.infos = g_hash_table_new (g_direct_hash, g_direct_equal);
+  global.sonar_infos = g_hash_table_new (g_direct_hash, g_direct_equal);
+  global.sensor_infos = g_hash_table_new (g_str_hash, g_str_equal);
+  global.actuator_infos = g_hash_table_new (g_str_hash, g_str_equal);
   if (global.control != NULL)
     {
       guint32 n_sources;
       const gchar * const * sensors;
+      const gchar * const * actuators;
       const HyScanSourceType * source;
       guint32 i;
 
@@ -456,8 +464,17 @@ done: ;
       sensors = hyscan_control_sensors_list (global.control);
       for (; sensors != NULL && *sensors != NULL; ++sensors)
         {
+          const HyScanSensorInfoSensor *info;
+
+          info = hyscan_control_sensor_get_info (global.control, *sensors);
+          if (info == NULL)
+            continue;
+
           g_print ("Sensor found: %s\n", *sensors);
           hyscan_sensor_set_enable (HYSCAN_SENSOR (global.control), *sensors, TRUE);
+
+
+          g_hash_table_insert (global.sensor_infos, (void*)*sensors, (void*)info);
         }
 
       source = hyscan_control_sources_list (global.control, &n_sources);
@@ -470,7 +487,20 @@ done: ;
             continue;
 
           g_print ("Source found: %s\n", hyscan_source_get_id_by_type (source[i]));
-          g_hash_table_insert (global.infos, GINT_TO_POINTER (source[i]), (void*)info);
+          g_hash_table_insert (global.sonar_infos, GINT_TO_POINTER (source[i]), (void*)info);
+        }
+
+      actuators = hyscan_control_actuators_list (global.control);
+      for (; actuators != NULL && *actuators != NULL; ++actuators)
+        {
+          const HyScanActuatorInfoActuator *info;
+
+          info = hyscan_control_actuator_get_info (global.control, *actuators);
+          if (info == NULL)
+            continue;
+
+          g_print ("Actuator found: %s\n", *actuators);
+          g_hash_table_insert (global.actuator_infos, (void*)*actuators, (void*)info);
         }
     }
 

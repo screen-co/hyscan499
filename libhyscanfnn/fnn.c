@@ -318,8 +318,8 @@ fnn_ensure_panel (gint    panelx,
       hyscan_gtk_gliko_set_source_name (vla->gliko, 1, hyscan_source_get_id_by_type (panel->sources[1]));
 
       hyscan_gtk_gliko_set_player (HYSCAN_GTK_GLIKO (vla->gliko), vla->player);
-      hyscan_data_player_add_channel (vla->player, hyscan_gtk_gliko_get_source (vla->gliko, 0), 1, HYSCAN_CHANNEL_DATA);
-      hyscan_data_player_add_channel (vla->player, hyscan_gtk_gliko_get_source (vla->gliko, 1), 2, HYSCAN_CHANNEL_DATA);
+      hyscan_data_player_add_channel (vla->player, hyscan_gtk_gliko_get_source (vla->gliko, 0), 0, HYSCAN_CHANNEL_DATA);
+      hyscan_data_player_add_channel (vla->player, hyscan_gtk_gliko_get_source (vla->gliko, 1), 1, HYSCAN_CHANNEL_DATA);
 
       vla->play_control = gtk_scale_new (GTK_ORIENTATION_HORIZONTAL, hyscan_gtk_fnn_gliko_wrapper_get_adjustment(vla->wrapper));
       gtk_scale_set_value_pos (GTK_SCALE (vla->play_control), GTK_POS_RIGHT);
@@ -449,7 +449,7 @@ update_panels (Global          *global,
        * Либо его нет, но тогда и показывать нечего. */
       if (track_info != NULL && track_info->sources[s2p.source])
         fnn_ensure_panel(s2p.panelx, global);
-      else if (global->control != NULL && g_hash_table_lookup (global->infos, GINT_TO_POINTER (s2p.source)))
+      else if (global->control != NULL && g_hash_table_lookup (global->sonar_infos, GINT_TO_POINTER (s2p.source)))
         fnn_ensure_panel(s2p.panelx, global);
     }
 
@@ -1767,6 +1767,7 @@ track_changed (GtkTreeView *list,
 
         case FNN_PANEL_LOOKAROUND:
           la = (VisualLA*) (panel->vis_gui);
+          g_message ("track set %s", track_name);
           hyscan_data_player_set_track (la->player, global->db, global->project_name, track_name);
           hyscan_data_player_add_channel (la->player, hyscan_gtk_gliko_get_source (la->gliko, 0), 1, HYSCAN_CHANNEL_DATA);
           hyscan_data_player_add_channel (la->player, hyscan_gtk_gliko_get_source (la->gliko, 1), 2, HYSCAN_CHANNEL_DATA);
@@ -2183,7 +2184,7 @@ signal_finder (Global           *global,
   GList *link;
 
   /* Информация об источнике. */
-  info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (source));
+  info = g_hash_table_lookup (global->sonar_infos, GINT_TO_POINTER (source));
   hyscan_return_val_if_fail (info != NULL && info->presets != NULL, NULL);
 
   /* Ищем сигнал. */
@@ -2438,7 +2439,7 @@ log_tvg_set (Global  *global,
       source_informer ("  setting TVG", source);
 
       /* Проверяем gain0. */
-      info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (source));
+      info = g_hash_table_lookup (global->sonar_infos, GINT_TO_POINTER (source));
       hyscan_return_val_if_fail (info != NULL && info->tvg != NULL, TRUE); // TODO do something
       *gain0 = CLAMP (*gain0, info->tvg->min_gain,info->tvg->max_gain);
 
@@ -2480,7 +2481,7 @@ const_tvg_set (Global  *global,
       source_informer ("  setting TVG", source);
 
       /* Проверяем gain0. */
-      info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (source));
+      info = g_hash_table_lookup (global->sonar_infos, GINT_TO_POINTER (source));
       hyscan_return_val_if_fail (info != NULL && info->tvg != NULL, TRUE); // TODO do something
       *gain0 = CLAMP (*gain0, info->tvg->min_gain,info->tvg->max_gain);
 
@@ -2537,7 +2538,7 @@ lin_tvg_set (Global  *global,
       source_informer ("  setting TVG", source);
 
       /* Проверяем gain0. */
-      info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (source));
+      info = g_hash_table_lookup (global->sonar_infos, GINT_TO_POINTER (source));
       hyscan_return_val_if_fail (info != NULL && info->tvg != NULL, TRUE); // TODO do something
       *gain0 = CLAMP (*gain0, info->tvg->min_gain,info->tvg->max_gain);
 
@@ -2734,7 +2735,7 @@ distance_set (Global  *global,
       HyScanSonarInfoSource *info;
 
       source_informer ("  setting distance", *iter);
-      info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (*iter));
+      info = g_hash_table_lookup (global->sonar_infos, GINT_TO_POINTER (*iter));
       hyscan_return_val_if_fail (info != NULL, FALSE);
 
       if (receive_time > info->receiver->max_time || receive_time < info->receiver->min_time)
@@ -3848,7 +3849,7 @@ panel_sources_are_in_sonar (Global   *global,
    * считаем, что всё пропало. */
   for (i = panel->sources; *i != HYSCAN_SOURCE_INVALID; ++i)
     {
-      if (!g_hash_table_contains (global->infos, GINT_TO_POINTER(*i)))
+      if (!g_hash_table_contains (global->sonar_infos, GINT_TO_POINTER(*i)))
         return FALSE;
     }
 

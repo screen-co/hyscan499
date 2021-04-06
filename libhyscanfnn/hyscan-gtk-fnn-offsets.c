@@ -321,9 +321,9 @@ adjustments_new (HyScanGtkFnnOffsets *self)
   adj->starboard = gtk_adjustment_new (0.0, -10000, 10000, 1.0, 10, 10);
   adj->forward = gtk_adjustment_new (0.0, -10000, 10000, 1.0, 10, 10);
   adj->vertical = gtk_adjustment_new (0.0, -10000, 10000, 1.0, 10, 10);
-  adj->yaw = gtk_adjustment_new (0.0, -10000, 10000, 1.0, 10, 10);
-  adj->pitch = gtk_adjustment_new (0.0, -10000, 10000, 1.0, 10, 10);
-  adj->roll = gtk_adjustment_new (0.0, -10000, 10000, 1.0, 10, 10);
+  adj->yaw = gtk_adjustment_new (0.0, 0.0, 360, 0.01, 1, 1);
+  adj->pitch = gtk_adjustment_new (0.0, 0.0, 360, 0.01, 1, 1);
+  adj->roll = gtk_adjustment_new (0.0, 0.0, 360, 0.01, 1, 1);
 
   g_signal_connect (adj->starboard, "value-changed", G_CALLBACK (changed), self);
   g_signal_connect (adj->forward, "value-changed", G_CALLBACK (changed), self);

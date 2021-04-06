@@ -9,5 +9,6 @@
         <file compressed="true">hyscan-fnn-fl.ui</file>
         <file compressed="true">hyscan-gtk-map-preload.ui</file>
         <file compressed="true">hyscan-gtk-map-go.ui</file>
+        <file compressed="true">hyscan-gtk-actuator-control.ui</file>
     </gresource>
 </gresources>

@@ -93,7 +93,7 @@ hyscan_fnn_flog_open_file ()
       /* Проверяем размер лога. */
       fseek (file, 0, SEEK_END);
       flog.size = ftell (file);
-      
+
       /* Закрываем файл. */
       fclose (file);
     }
@@ -126,7 +126,7 @@ hyscan_fnn_flog_open (const gchar *component,
   flog.max_size = file_size;
 
   /* Создаём папку для записи логов. */
-  log_dir = g_build_path (G_DIR_SEPARATOR_S, hyscan_config_get_user_files_dir (), "log", NULL);
+  log_dir = g_build_path (G_DIR_SEPARATOR_S, hyscan_config_get_user_dir (), "log", NULL);
   g_message ("HyScanFnnFlog: logs are written to %s", log_dir);
   g_mkdir_with_parents (log_dir, 0755);
 

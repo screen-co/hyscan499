@@ -65,7 +65,7 @@ main (int    argc,
   }
 
   if (path == NULL)
-    path = g_strdup (hyscan_config_get_user_files_dir ());
+    path = g_strdup (hyscan_config_get_user_dir ());
 
   if (settings_file == NULL)
     settings_file = g_strdup (DEFAULT_SETTINGS_INI);

@@ -40,6 +40,7 @@ add_library (${HYSCAN_FNN_LIBRARY} SHARED
              hyscan-gtk-dev-indicator.c
              hyscan-gtk-fnn-gliko-wrapper.c
              hyscan-gtk-fnn-box.c
+             hyscan-gtk-actuator-control.c
              hyscan-gtk-con.c
              hyscan-gtk-rec.c
              hyscan-gtk-map-preload.c

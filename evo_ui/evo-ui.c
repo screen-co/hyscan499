@@ -3,6 +3,7 @@
 #include <hyscan-geo.h>
 #include <hyscan-gtk-area.h>
 #include <hyscan-gtk-fnn-offsets.h>
+#include <hyscan-gtk-actuator-control.h>
 #include "hyscan-gtk-mark-export.h"
 #include <hyscan-planner-export.h>
 #include "evo-ui.h"
@@ -635,7 +636,6 @@ map_offline_wrapper (GObject *emitter,
 void
 menu_dry_wrapper (GObject *emitter)
 {
-  EvoUI *ui = &global_ui;
   gboolean state = gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (emitter));
 
   set_dry (_global, state);
@@ -986,7 +986,7 @@ make_tvg_control (Global *global,
 
   for (; sources != NULL && *sources != HYSCAN_SOURCE_INVALID; ++sources)
     {
-      info = g_hash_table_lookup (global->infos, GINT_TO_POINTER (*sources));
+      info = g_hash_table_lookup (global->sonar_infos, GINT_TO_POINTER (*sources));
       if (info->tvg == NULL)
         {
           source_informer ("No TVG info", *sources);
@@ -1089,6 +1089,7 @@ make_page_for_panel (EvoUI     *ui,
 {
   GtkBuilder *b;
   GtkWidget *view = NULL, *sonar = NULL, *tvg = NULL, *layers = NULL;
+  GtkWidget *extra = NULL;
   GtkWidget *box;
   VisualWF *wf;
   GtkSizeGroup * sg;
@@ -1135,14 +1136,6 @@ make_page_for_panel (EvoUI     *ui,
         player_adj_value_printer (adj, label);
       }
 
-      // if (!panel_sources_are_in_sonar (global, panel))
-      //   break;
-
-      // sonar = get_widget_from_builder (b, "sonar_control");
-      // tvg = make_tvg_control (global, panel, b, sg);
-      // panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");      add_to_sg (sg, b, "distance_label");
-      // panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");        add_to_sg (sg, b, "signal_label");
-
       break;
 
     case FNN_PANEL_PROFILER:
@@ -1171,14 +1164,6 @@ make_page_for_panel (EvoUI     *ui,
         player_adj_value_printer (adj, label);
       }
 
-      // if (!panel_sources_are_in_sonar (global, panel))
-      //   break;
-
-      // sonar = get_widget_from_builder (b, "sonar_control");
-      // tvg = make_tvg_control (global, panel, b, sg);
-      // panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");     add_to_sg (sg, b, "distance_label");
-      // panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");       add_to_sg (sg, b, "signal_label");
-
       break;
 
     case FNN_PANEL_ECHO:
@@ -1206,14 +1191,6 @@ make_page_for_panel (EvoUI     *ui,
         player_adj_value_printer (adj, label);
       }
 
-      // if (!panel_sources_are_in_sonar (global, panel))
-      //   break;
-
-      // sonar = get_widget_from_builder (b, "sonar_control");
-      // tvg = make_tvg_control (global, panel, b, sg);
-      // panel->gui.distance_value         = get_label_from_builder  (b, "distance_value");      add_to_sg (sg, b, "distance_label");
-      // panel->gui.signal_value           = get_label_from_builder  (b, "signal_value");        add_to_sg (sg, b, "signal_label");
-
       break;
 
     case FNN_PANEL_FORWARDLOOK:
@@ -1240,6 +1217,8 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->gamma_value       = get_label_from_builder (b, "la_gamma_value");  add_to_sg (sg, b, "la_gamma_value");
       panel->vis_gui->colormap_value    = get_label_from_builder (b, "la_color_map_value");  add_to_sg (sg, b, "la_color_map_value");
 
+      if (1|| panel_sources_are_in_sonar (global, panel))
+        extra = hyscan_gtk_actuator_control_new (global->sonar_model);
       break;
 
     default:
@@ -1251,10 +1230,13 @@ make_page_for_panel (EvoUI     *ui,
   gtk_box_pack_start (GTK_BOX (box), view, FALSE, FALSE, 0);
   if (layers != NULL)
     gtk_box_pack_start (GTK_BOX (box), layers, FALSE, FALSE, 0);
+  if (extra != NULL)
+    gtk_box_pack_end (GTK_BOX (box), extra, FALSE, FALSE, 0);
   if (tvg != NULL)
     gtk_box_pack_end (GTK_BOX (box), tvg, FALSE, FALSE, 0);
   if (sonar != NULL)
     gtk_box_pack_end (GTK_BOX (box), sonar, FALSE, TRUE, 0);
+
 
   return box;
 }
@@ -1337,7 +1319,7 @@ build_interface (Global *global)
     {
       GtkWidget *preload, *go;
       GtkWidget *notebook;
-      GtkWidget *map = hyscan_gtk_map_builder_get_map (ui->map_builder);
+      GtkWidget *map = GTK_WIDGET (hyscan_gtk_map_builder_get_map (ui->map_builder));
       const gchar *base_id = "base";
 
       notebook = gtk_notebook_new ();
@@ -1831,7 +1813,7 @@ panel_adjust_visibility (HyScanTrackInfo *track_info)
   for (i = 0; i < HYSCAN_SOURCE_LAST; ++i)
     {
       gboolean in_track_info = track_info != NULL && track_info->sources[i];
-      gboolean in_sonar = _global->control != NULL && g_hash_table_lookup (_global->infos, GINT_TO_POINTER (i));
+      gboolean in_sonar = _global->control != NULL && g_hash_table_lookup (_global->sonar_infos, GINT_TO_POINTER (i));
 
       if (!in_track_info && !in_sonar)
         continue;

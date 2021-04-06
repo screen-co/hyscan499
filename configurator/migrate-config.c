@@ -40,7 +40,7 @@ main (int    argc,
   }
 
   if (path == NULL)
-    path = g_strdup (hyscan_config_get_user_files_dir ());
+    path = g_strdup (hyscan_config_get_user_dir ());
 
   migrate_config = hyscan_migrate_config_new (path);
   switch (hyscan_migrate_config_status (migrate_config))

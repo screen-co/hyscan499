@@ -192,7 +192,7 @@ hyscan_gtk_navigator_app_object_constructed (GObject *object)
 
   cache = HYSCAN_CACHE (hyscan_cached_new (CACHE_SIZE));
   priv->model_manager = hyscan_gtk_model_manager_new (NULL, db, cache, NULL);
-  priv->settings_file = g_build_filename (hyscan_config_get_user_files_dir (), SETTING_FILENAME, NULL);
+  priv->settings_file = g_build_filename (hyscan_config_get_user_dir (), SETTING_FILENAME, NULL);
   priv->settings = g_key_file_new ();
   g_key_file_load_from_file (priv->settings, priv->settings_file, G_KEY_FILE_NONE, NULL);
 
@@ -288,7 +288,7 @@ static void
 hyscan_gtk_navigator_app_open_activated (GSimpleAction *action,
                                          GVariant      *parameter,
                                          gpointer       user_data)
-{                                                                  
+{
   HyScanGtkNavigatorApp *navigator_app = HYSCAN_GTK_NAVIGATOR_APP (user_data);
   HyScanGtkNavigatorAppPrivate *priv = navigator_app->priv;
   HyScanDB *db;
@@ -303,7 +303,7 @@ hyscan_gtk_navigator_app_open_activated (GSimpleAction *action,
   gtk_dialog_run (GTK_DIALOG (dialog));
   hyscan_fnn_project_get (HYSCAN_FNN_PROJECT (dialog), &project_name, NULL);
   gtk_widget_destroy (dialog);
-  
+
   if (project_name != NULL)
     hyscan_gtk_model_manager_set_project_name (priv->model_manager, project_name);
 
@@ -521,7 +521,7 @@ hyscan_gtk_navigator_app_connector_window (HyScanGtkNavigatorApp *navigator_app)
 
   db = hyscan_gtk_model_manager_get_db (priv->model_manager);
 
-  connector = hyscan_gtk_con_new ((gchar**)hyscan_config_get_profile_dirs(),
+  connector = hyscan_gtk_con_new ((gchar**)hyscan_config_get_user_dir(),
                                   priv->driver_paths, priv->settings, db);
 
   gtk_application_add_window (GTK_APPLICATION (navigator_app), GTK_WINDOW (connector));

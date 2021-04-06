@@ -282,7 +282,9 @@ struct _Global
   GKeyFile               *settings;
 
   GHashTable             *panels; /* {panelx : FnnPanel} */
-  GHashTable             *infos; /* {HyScanSourceType : HyScanSonarInfoSource} */
+  GHashTable             *sonar_infos; /* {HyScanSourceType : HyScanSonarInfoSource} */
+  GHashTable             *sensor_infos; /* {gchar* : HyScanSensorInfoSensor} */
+  GHashTable             *actuator_infos; /* {gchar* : HyScanActuatorInfoActuator} */
 
   /* Менеджер моделей. */
   HyScanGtkModelManager  *model_manager;
