@@ -128,7 +128,7 @@ hyscan_gtk_actuator_control_set_property (GObject      *object,
       break;
 
     case PROP_NAME:
-      priv->name = g_variant_dup_string (value, NULL);
+      priv->name = g_value_dup_string (value);
       break;
 
     default:

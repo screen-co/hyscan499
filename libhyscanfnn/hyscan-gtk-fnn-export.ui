@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.20.0 -->
+<!-- Generated with glade 3.22.2 -->
 <interface>
   <requires lib="gtk+" version="3.20"/>
   <template class="HyScanGtkFnnExport" parent="GtkAssistant">
     <property name="can_focus">False</property>
-    <property name="use_header_bar">1</property>
+    <property name="use_header_bar">0</property>
     <child>
       <object class="GtkFileChooserWidget" id="chooser">
         <property name="visible">True</property>
@@ -40,7 +40,9 @@
           <object class="GtkProgressBar" id="progress_bar">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="fraction">0.5</property>
+            <property name="margin_left">18</property>
+            <property name="margin_right">18</property>
+            <property name="show_text">True</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -52,7 +54,6 @@
           <object class="GtkLabel" id="current">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
-            <property name="label" translatable="yes">label</property>
           </object>
           <packing>
             <property name="expand">False</property>
@@ -66,21 +67,11 @@
         <property name="has_padding">False</property>
       </packing>
     </child>
-     <child internal-child="action_area">
-      <object class="GtkBox">
-        <property name="can_focus">False</property>
-        <property name="halign">end</property>
-        <property name="margin_left">6</property>
-        <property name="margin_right">6</property>
-        <property name="margin_start">6</property>
-        <property name="margin_end">6</property>
-        <property name="margin_top">6</property>
-        <property name="margin_bottom">6</property>
-        <property name="spacing">6</property>
-      </object>
-      <packing>
-        <property name="has_padding">False</property>
-      </packing>
+    <child type="titlebar">
+      <placeholder/>
+    </child>
+    <child type="titlebar">
+      <placeholder/>
     </child>
   </template>
 </interface>

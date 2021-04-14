@@ -41,7 +41,7 @@
 
 #define GETTEXT_PACKAGE "libhyscanfnn"
 #include <glib/gi18n-lib.h>
-
+#include <hyscan-mloc.h>
 #include "hyscan-gtk-fnn-export.h"
 
 enum
@@ -61,10 +61,13 @@ struct _HyScanGtkFnnExportPrivate
   HyScanMapTrackModel *tmodel;
 
   GtkWidget           *chooser;
-  GtkWidget           *progress_bar;
+  GtkProgressBar      *progress_bar;
   GtkWidget           *progress_page;
-  GtkWidget           *page12124, page1, page12, page1212, ty_pidor;
-  GtkWidget           *current;
+  GtkLabel            *current;
+
+  gchar              **tracks;
+  GThread             *thread;
+  gint                 current_index;
 };
 
 static void    hyscan_gtk_fnn_export_set_property             (GObject               *object,
@@ -76,6 +79,8 @@ static void    hyscan_gtk_fnn_export_object_finalize          (GObject          
 static void    hyscan_gtk_fnn_export_prepare                  (GtkAssistant          *assistant,
                                                                GtkWidget             *page);
 static void    hyscan_gtk_fnn_export_apply                    (GtkAssistant          *assistant);
+static void    hyscan_gtk_fnn_export_close                    (GtkAssistant          *assistant);
+static gpointer    hyscan_gtk_fnn_export_thread               (gpointer               udata);
 
 G_DEFINE_TYPE_WITH_PRIVATE (HyScanGtkFnnExport, hyscan_gtk_fnn_export, GTK_TYPE_ASSISTANT);
 
@@ -92,14 +97,12 @@ hyscan_gtk_fnn_export_class_init (HyScanGtkFnnExportClass *klass)
 
   aclass->prepare = hyscan_gtk_fnn_export_prepare;
   aclass->apply = hyscan_gtk_fnn_export_apply;
-  aclass->close = gtk_widget_destroy;
+  aclass->close = hyscan_gtk_fnn_export_close;
 
   gtk_widget_class_set_template_from_resource (wclass, "/org/libhyscanfnn/gtk/hyscan-gtk-fnn-export.ui");
   gtk_widget_class_bind_template_child_private (wclass, HyScanGtkFnnExport, chooser);
   gtk_widget_class_bind_template_child_private (wclass, HyScanGtkFnnExport, progress_bar);
   gtk_widget_class_bind_template_child_private (wclass, HyScanGtkFnnExport, progress_page);
-  // gtk_widget_class_bind_template_child_private (wclass, HyScanGtkFnnExport, page12124);
-  // gtk_widget_class_bind_template_child_private (wclass, HyScanGtkFnnExport, page1);
   gtk_widget_class_bind_template_child_private (wclass, HyScanGtkFnnExport, current);
 
   g_object_class_install_property (oclass, PROP_DB_INFO,
@@ -120,16 +123,6 @@ hyscan_gtk_fnn_export_init (HyScanGtkFnnExport *self)
 {
   self->priv = hyscan_gtk_fnn_export_get_instance_private (self);
   gtk_widget_init_template (GTK_WIDGET (self));
-
-  /*
-  GError *err = NULL;
-  GBytes * bts =  g_resources_lookup_data ("/org/libhyscanfnn/gtk/hyscan-gtk-fnn-export.ui",
-                           G_RESOURCE_LOOKUP_FLAGS_NONE, &err);
-  if (err)
-    g_message ("fuck: %s", err->message);
-  else
-    g_message ("unfuck: %s", (gchar*)g_bytes_get_data (bts, NULL));
-  */
 }
 
 static void
@@ -194,10 +187,6 @@ hyscan_gtk_fnn_export_prepare (GtkAssistant *assistant,
 
   if (page != priv->progress_page)
     return;
-
-  /* Запускаем процесс. */
-  g_message("start export, pidorok");
-
 }
 
 static void
@@ -206,11 +195,184 @@ hyscan_gtk_fnn_export_apply (GtkAssistant *assistant)
   HyScanGtkFnnExport *self = HYSCAN_GTK_FNN_EXPORT (assistant);
   HyScanGtkFnnExportPrivate *priv = self->priv;
 
-  hyscan_map_track_model_get_tracks (priv->tmodel);
+  priv->tracks = hyscan_map_track_model_get_tracks (priv->tmodel);
   g_message ("Tracks: %s", g_strjoinv("\n\t", hyscan_map_track_model_get_tracks (priv->tmodel)));
-  g_message("apply для пидоров");
 
-  gtk_assistant_set_page_complete (assistant, priv->progress_page, TRUE);
+  priv->thread = g_thread_new ("fnn-xyz-export", hyscan_gtk_fnn_export_thread, self);
+}
+
+static void
+hyscan_gtk_fnn_export_close (GtkAssistant *assistant)
+{
+  gtk_widget_destroy (GTK_WIDGET (assistant));
+}
+
+static gboolean
+hyscan_gtk_fnn_export_update_label (gpointer data)
+{
+  HyScanGtkFnnExport *self = HYSCAN_GTK_FNN_EXPORT (data);
+  HyScanGtkFnnExportPrivate *priv = self->priv;
+  gint i, total;
+  gdouble fraction;
+
+  i = g_atomic_int_get (&priv->current_index);
+  total = g_strv_length (priv->tracks);
+  fraction = (gdouble)i / (gdouble)total;
+
+  if (i == total)
+    {
+      gtk_assistant_set_page_complete (GTK_ASSISTANT (self), priv->progress_page, TRUE);
+      gtk_label_set_text (priv->current, "All done!");
+      g_thread_join (priv->thread);
+      priv->thread = NULL;
+    }
+  else
+    {
+      gtk_label_set_text (priv->current, priv->tracks[i]);
+    }
+
+  gtk_progress_bar_set_fraction (priv->progress_bar, fraction);
+
+  return G_SOURCE_REMOVE;
+}
+
+static void
+hyscan_gtk_fnn_export_export_one (GHashTable                *track_infos,
+                                  HyScanDB                  *db,
+                                  HyScanGtkFnnExportPrivate *priv,
+                                  const gchar               *track)
+{
+  guint32 first, last, i;
+  HyScanAntennaOffset antenna;
+  HyScanGeoGeodetic coord;
+  GString *string = NULL;
+  gchar *words = NULL;
+
+  HyScanCache * cache = priv->cache;
+  gchar *project = priv->project;
+
+  HyScanNavData * dpt;
+  HyScanmLoc * mloc;
+
+  HyScanTrackInfo * info = NULL;
+  HyScanDBInfoSensorInfo *sensor_info = NULL;
+  GHashTableIter iter;
+  gpointer key, value;
+
+  info = g_hash_table_lookup (track_infos, track);
+  if (info == NULL)
+    {
+      g_warning ("Couldn't find track <%s> info.", track);
+      return;
+    }
+
+  g_hash_table_iter_init (&iter, info->sensor_infos);
+  while (g_hash_table_iter_next (&iter, &key, &value))
+    {
+      if (NULL == g_strrstr ((gchar*)key, "echosounder"))
+        continue;
+
+      sensor_info = value;
+      g_message ("Track <%s>: using <%s> as echosounder data (%i)", track, (gchar*)key, sensor_info->channel);
+      break;
+    }
+
+  if (sensor_info == NULL)
+    {
+      g_warning ("Couldn't find echosounder for track <%s>.", track);
+      return;
+    }
+
+  dpt = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track,
+                                                 sensor_info->channel,
+                                                 HYSCAN_NMEA_DATA_DPT,
+                                                 HYSCAN_NMEA_FIELD_DEPTH));
+
+  if (dpt == NULL)
+    {
+      g_warning ("Failed to open dpt parser.");
+      return;
+    }
+
+  mloc = hyscan_mloc_new (db, priv->cache, priv->project, track);
+  if (mloc == NULL)
+    {
+      g_warning ("Failed to open mLocation.");
+      g_clear_object (&dpt);
+      return;
+    }
+
+  string = g_string_new (NULL);
+  g_string_append_printf (string, "#%s;%s\n", project, track);
+  g_string_append_printf (string, "#LAT,LON,DPT\n");
+
+  hyscan_nav_data_get_range (dpt, &first, &last);
+  antenna = hyscan_nav_data_get_offset (dpt);
+
+  for (i = first; i <= last; ++i)
+    {
+      gdouble val;
+      gint64 time;
+      gboolean status;
+      gchar lat_str[1024] = {'\0'};
+      gchar lon_str[1024] = {'\0'};
+      gchar dpt_str[1024] = {'\0'};
+
+      status = hyscan_nav_data_get (dpt, NULL, i, &time, &val);
+      if (!status)
+        continue;
+
+      status = hyscan_mloc_get (mloc, NULL, time, &antenna, 0, 0, 0, &coord);
+      if (!status)
+        continue;
+
+      g_ascii_formatd (lat_str, 1024, "%12.9f", coord.lat);
+      g_ascii_formatd (lon_str, 1024, "%12.9f", coord.lon);
+      g_ascii_formatd (dpt_str, 1024, "%12.9f", val);
+      g_string_append_printf (string, "%s;%s;%s\n", lat_str, lon_str, dpt_str);
+    }
+
+  words = g_string_free (string, FALSE);
+
+  if (words == NULL)
+    return;
+
+  gchar *filename = NULL, *uri = NULL, *full_path = NULL;
+  GError *error = NULL;
+  uri = gtk_file_chooser_get_uri (GTK_FILE_CHOOSER (priv->chooser));
+  filename = g_strdup_printf ("%s-%s.xyz.txt", priv->project, track);
+  full_path = g_build_filename (uri, filename, NULL);
+  g_file_set_contents (full_path, words, strlen (words), &error);
+  g_free (words);
+}
+
+static gpointer
+hyscan_gtk_fnn_export_thread (gpointer udata)
+{
+  HyScanGtkFnnExport *self = HYSCAN_GTK_FNN_EXPORT (udata);
+  HyScanGtkFnnExportPrivate *priv = self->priv;
+  gint i, n;
+  GHashTable * track_infos;
+  // HyScanTrackInfo * info;
+  HyScanDB * db;
+
+  db = hyscan_db_info_get_db (priv->info);
+  track_infos = hyscan_db_info_get_tracks (priv->info);
+  n = g_strv_length (priv->tracks);
+  for (i = 0; i < n; ++i)
+    {
+      g_atomic_int_set (&priv->current_index, i);
+      g_idle_add (hyscan_gtk_fnn_export_update_label, self);
+      hyscan_gtk_fnn_export_export_one (track_infos, db, priv, priv->tracks[i]);
+    }
+
+  g_atomic_int_set (&priv->current_index, i);
+  g_idle_add (hyscan_gtk_fnn_export_update_label, self);
+
+  g_clear_object (&db);
+  g_hash_table_unref (track_infos);
+
+  return NULL;
 }
 
 HyScanGtkFnnExport *
