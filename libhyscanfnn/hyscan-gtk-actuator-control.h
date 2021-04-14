@@ -65,10 +65,15 @@ struct _HyScanGtkActuatorControlClass
 };
 
 HYSCAN_API
-GType                             hyscan_gtk_actuator_control_get_type         (void);
+GType         hyscan_gtk_actuator_control_get_type         (void);
 
 HYSCAN_API
-GtkWidget *                       hyscan_gtk_actuator_control_new              (HyScanControlModel *model);
+GtkWidget *   hyscan_gtk_actuator_control_new              (HyScanControlModel *model,
+                                                            const gchar        *name);
+
+HYSCAN_API
+const gchar * hyscan_gtk_actuator_control_find_actuator_by_source (HyScanControlModel *model,
+                                                                   HyScanSourceType    source);
 
 G_END_DECLS
 

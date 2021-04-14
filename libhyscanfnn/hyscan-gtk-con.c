@@ -201,7 +201,6 @@ hyscan_gtk_con_object_constructed (GObject *object)
 
   g_signal_connect (self, "apply", G_CALLBACK (hyscan_gtk_con_apply), NULL);
   g_signal_connect (self, "prepare", G_CALLBACK (hyscan_gtk_con_prepare), NULL);
-
 }
 
 static void

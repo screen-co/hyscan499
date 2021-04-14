@@ -10,7 +10,7 @@
 #include "hyscan-gtk-rec.h"
 #include "hyscan-gtk-map-go.h"
 #include "hyscan-gtk-map-preload.h"
-
+#include <hyscan-gtk-fnn-export.h>
 #define GETTEXT_PACKAGE "hyscanfnn-evoui"
 #include <glib/gi18n-lib.h>
 #include <proj_api.h>
@@ -36,6 +36,7 @@
 enum
 {
   XYZ_TO_FILE,
+  XYZ_BATCH,
   UTM_TO_FILE,
   MARKS_TO_CSV,
   MARKS_TO_CLIPBOARD,
@@ -104,7 +105,6 @@ filesave_dialog (const gchar *extension,
   g_free (filename);
 }
 
-/* OVERRIDES */
 void
 depth_writer (GObject *emitter)
 {
@@ -122,8 +122,40 @@ depth_writer (GObject *emitter)
   HyScanNavData * dpt;
   HyScanmLoc * mloc;
 
+  GHashTable * track_infos;
+  HyScanTrackInfo * info;
+  HyScanDBInfoSensorInfo *sensor_info;
+  GHashTableIter iter;
+  gpointer key, value;
+
+  track_infos = hyscan_db_info_get_tracks (_global->db_info);
+  info = g_hash_table_lookup (track_infos, track);
+  if (info == NULL)
+    {
+      g_warning ("Couldn't find track <%s> info.", track);
+      return;
+    }
+
+  g_hash_table_iter_init (&iter, info->sensor_infos);
+  while (g_hash_table_iter_next (&iter, &key, &value))
+    {
+      if (NULL == g_strrstr ((gchar*)key, "echosounder"))
+        continue;
+
+      sensor_info = value;
+      g_message ("Track <%s>: using <%s> as echosounder data (%i)", track, (gchar*)key, sensor_info->channel);
+      break;
+    }
+
+  if (sensor_info == NULL)
+    {
+      g_warning ("Couldn't find echosounder for track <%s>.", track);
+      return;
+    }
+
   dpt = HYSCAN_NAV_DATA (hyscan_nmea_parser_new (db, cache, project, track,
-                                                 2, HYSCAN_NMEA_DATA_DPT,
+                                                 sensor_info->channel,
+                                                 HYSCAN_NMEA_DATA_DPT,
                                                  HYSCAN_NMEA_FIELD_DEPTH));
 
   if (dpt == NULL)
@@ -177,6 +209,18 @@ depth_writer (GObject *emitter)
 
   filesave_dialog ("xyz.txt", project, track, words);
   g_free (words);
+}
+
+void
+depth_writer_batch (GObject *em)
+{
+  EvoUI *ui = &global_ui;
+
+  HyScanMapTrackModel *tmodel = hyscan_gtk_map_builder_get_track_model (ui->map_builder);
+  GtkWidget *w = hyscan_gtk_fnn_export_new (_global->db_info,
+                                            _global->cache,
+                                            tmodel);
+  gtk_widget_show_all (w);
 }
 
 /* честно украдено у Пылаева */
@@ -358,6 +402,10 @@ mark_exporter (GObject  *emitter,
     {
       depth_writer (NULL);
     }
+  else if (selector == XYZ_BATCH)
+    {
+      depth_writer_batch (NULL);
+    }
   else if (selector == UTM_TO_FILE)
     {
       utm_xyz (NULL);
@@ -464,6 +512,7 @@ void run_mark_manager ()
     }
 }
 
+/* OVERRIDES */
 gboolean
 evo_brightness_set_override (Global  *global,
                              gdouble  new_brightness,
@@ -1217,8 +1266,20 @@ make_page_for_panel (EvoUI     *ui,
       panel->vis_gui->gamma_value       = get_label_from_builder (b, "la_gamma_value");  add_to_sg (sg, b, "la_gamma_value");
       panel->vis_gui->colormap_value    = get_label_from_builder (b, "la_color_map_value");  add_to_sg (sg, b, "la_color_map_value");
 
-      if (1|| panel_sources_are_in_sonar (global, panel))
-        extra = hyscan_gtk_actuator_control_new (global->sonar_model);
+      if (panel_sources_are_in_sonar (global, panel))
+        {
+          const gchar *a1, *a2;
+          a1 = hyscan_gtk_actuator_control_find_actuator_by_source (global->sonar_model, panel->sources[0]);
+          a2 = hyscan_gtk_actuator_control_find_actuator_by_source (global->sonar_model, panel->sources[1]);
+          if (0 && ((a1 == NULL && a2 == NULL) || 0 != g_strcmp0 (a1, a2)))
+            {
+              g_message ("Different actuators :(");
+            }
+          else
+            {
+              extra = hyscan_gtk_actuator_control_new (global->sonar_model, a1);
+            }
+        }
       break;
 
     default:
@@ -1481,6 +1542,10 @@ build_interface (Global *global)
       g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (XYZ_TO_FILE));
       gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
 
+      mitem = gtk_menu_item_new_with_label (_("XYZ batch"));
+      g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (XYZ_BATCH));
+      gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
+
       mitem = gtk_menu_item_new_with_label (_("UTM"));
       g_signal_connect (mitem, "activate", G_CALLBACK (mark_exporter), GINT_TO_POINTER (UTM_TO_FILE));
       gtk_menu_attach (GTK_MENU (submenu), mitem, 0, 1, subt, subt+1); ++subt;
@@ -1647,7 +1712,8 @@ build_interface (Global *global)
   return TRUE;
 }
 
-G_MODULE_EXPORT void
+G_MODULE_EXPORT
+void
 destroy_interface (void)
 {
   EvoUI *ui = &global_ui;
@@ -1662,13 +1728,15 @@ destroy_interface (void)
 }
 
 
-G_MODULE_EXPORT gboolean
+G_MODULE_EXPORT
+gboolean
 kf_config (GKeyFile *kf)
 {
   return TRUE;
 }
 
-G_MODULE_EXPORT gboolean
+G_MODULE_EXPORT
+gboolean
 kf_setting (GKeyFile *kf)
 {
   EvoUI *ui = &global_ui;
@@ -1681,7 +1749,8 @@ kf_setting (GKeyFile *kf)
   return TRUE;
 }
 
-G_MODULE_EXPORT gboolean
+G_MODULE_EXPORT
+gboolean
 kf_desetup (GKeyFile *kf)
 {
   EvoUI *ui = &global_ui;
@@ -1746,7 +1815,8 @@ panel_show (gint     panelx,
 }
 
 
-G_MODULE_EXPORT gboolean
+G_MODULE_EXPORT
+gboolean
 panel_pack (FnnPanel *panel,
             gint      panelx)
 {
@@ -1796,7 +1866,8 @@ panel_pack (FnnPanel *panel,
   return TRUE;
 }
 
-G_MODULE_EXPORT void
+G_MODULE_EXPORT
+void
 panel_adjust_visibility (HyScanTrackInfo *track_info)
 {
   gboolean sidescan_v = FALSE;

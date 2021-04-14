@@ -578,6 +578,7 @@ restart:
   /* Получаем модель галсов. */
   db_info = hyscan_gtk_model_manager_get_track_model (global.model_manager);
   g_signal_connect (db_info, "projects-changed", G_CALLBACK (projects_changed), &global);
+  global.db_info = db_info;
 
   // splash = hyscan_fnn_splash_new ();
   // hyscan_fnn_splash_start (splash, "Подключение");

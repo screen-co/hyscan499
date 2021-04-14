@@ -45,6 +45,7 @@ add_library (${HYSCAN_FNN_LIBRARY} SHARED
              hyscan-gtk-rec.c
              hyscan-gtk-map-preload.c
              hyscan-gtk-map-go.c
+             hyscan-gtk-fnn-export.c
              hyscan-mark-sync.c
              sonar-configure.c
              fnn.c

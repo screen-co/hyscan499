@@ -318,6 +318,7 @@ fnn_ensure_panel (gint    panelx,
       hyscan_gtk_gliko_set_source_name (vla->gliko, 1, hyscan_source_get_id_by_type (panel->sources[1]));
 
       hyscan_gtk_gliko_set_player (HYSCAN_GTK_GLIKO (vla->gliko), vla->player);
+
       hyscan_data_player_add_channel (vla->player, hyscan_gtk_gliko_get_source (vla->gliko, 0), 0, HYSCAN_CHANNEL_DATA);
       hyscan_data_player_add_channel (vla->player, hyscan_gtk_gliko_get_source (vla->gliko, 1), 1, HYSCAN_CHANNEL_DATA);
 
@@ -1703,6 +1704,8 @@ track_changed (GtkTreeView *list,
   gpointer k, v;
   gboolean on_air;
   HyScanDBInfo *db_info = hyscan_gtk_model_manager_get_track_model (global->model_manager);
+  GHashTable *tracks = hyscan_db_info_get_tracks (db_info);
+  HyScanTrackInfo *track_info;
 
   /* Определяем название нового галса. */
   gtk_tree_view_get_cursor (list, &path, NULL);
@@ -1719,11 +1722,12 @@ track_changed (GtkTreeView *list,
   track_name = g_value_get_string (&value);
   global->track_name = g_strdup (track_name);
 
+  track_info = g_hash_table_lookup (tracks, track_name);
+
   {
-    GHashTable *tracks = hyscan_db_info_get_tracks (db_info);
-    HyScanTrackInfo *info = g_hash_table_lookup(tracks, track_name);
-    update_panels (global, info);
-    g_hash_table_unref (tracks);
+
+    update_panels (global, track_info);
+
   }
 
   /* Выясняем, ведется ли в него запись. */
@@ -1767,11 +1771,53 @@ track_changed (GtkTreeView *list,
 
         case FNN_PANEL_LOOKAROUND:
           la = (VisualLA*) (panel->vis_gui);
-          g_message ("track set %s", track_name);
           hyscan_data_player_set_track (la->player, global->db, global->project_name, track_name);
           hyscan_data_player_add_channel (la->player, hyscan_gtk_gliko_get_source (la->gliko, 0), 1, HYSCAN_CHANNEL_DATA);
           hyscan_data_player_add_channel (la->player, hyscan_gtk_gliko_get_source (la->gliko, 1), 2, HYSCAN_CHANNEL_DATA);
 
+          {
+            /* Выясняю, если канал с ангуляр сорцом.
+             * Для этого по сорс-тайпам панели определяю актуатор,
+             * а потом узнаю номер канала актуатора
+             */
+            HyScanDBInfoSourceInfo *source_info0, *source_info1;
+            HyScanDBInfoSensorInfo *sensor_info;
+            const gchar *actuator;
+
+            source_info0 = g_hash_table_lookup (track_info->source_infos, GINT_TO_POINTER (panel->sources[0]));
+            source_info1 = g_hash_table_lookup (track_info->source_infos, GINT_TO_POINTER (panel->sources[1]));
+
+            if (source_info0 == NULL || source_info1 == NULL)
+              {
+                g_message ("Didn't find actuator for %s or %s",
+                           hyscan_source_get_name_by_type (panel->sources[0]),
+                           hyscan_source_get_name_by_type (panel->sources[1]));
+                goto la_err;
+              }
+
+            if (0 != g_strcmp0 (source_info0->actuator, source_info1->actuator))
+              {
+                g_message ("LookAround: different actuators for %s and %s "
+                           "(%s and %s respectively)",
+                           hyscan_source_get_name_by_type (panel->sources[0]),
+                           hyscan_source_get_name_by_type (panel->sources[1]),
+                           source_info0->actuator,
+                           source_info1->actuator);
+                goto la_err;
+              }
+
+            actuator = source_info0->actuator;
+            sensor_info = g_hash_table_lookup (track_info->sensor_infos, actuator);
+            if (sensor_info == NULL)
+              {
+                g_message ("No info for actuator <%s>", actuator);
+                goto la_err;
+              }
+
+            hyscan_gtk_gliko_set_angular_source (la->gliko, sensor_info->channel);
+          }
+
+        la_err:
           if (on_air)
             hyscan_data_player_play (la->player, 1.0);
           else
@@ -1783,6 +1829,7 @@ track_changed (GtkTreeView *list,
     global->override.track_changed (global, track_name);
 
   g_value_unset (&value);
+  g_hash_table_unref (tracks);
 }
 
 gdouble

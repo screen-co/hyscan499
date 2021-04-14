@@ -259,7 +259,7 @@ struct _Global
 {
   gint32                  canary;
   HyScanDB               *db;
-  /*HyScanDBInfo           *db_info;*/
+  HyScanDBInfo           *db_info;
 
   gchar                  *project_name;
   gchar                  *track_name;
