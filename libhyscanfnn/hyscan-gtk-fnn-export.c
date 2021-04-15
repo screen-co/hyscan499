@@ -98,6 +98,7 @@ hyscan_gtk_fnn_export_class_init (HyScanGtkFnnExportClass *klass)
   aclass->prepare = hyscan_gtk_fnn_export_prepare;
   aclass->apply = hyscan_gtk_fnn_export_apply;
   aclass->close = hyscan_gtk_fnn_export_close;
+  aclass->cancel = hyscan_gtk_fnn_export_close;
 
   gtk_widget_class_set_template_from_resource (wclass, "/org/libhyscanfnn/gtk/hyscan-gtk-fnn-export.ui");
   gtk_widget_class_bind_template_child_private (wclass, HyScanGtkFnnExport, chooser);
@@ -162,6 +163,8 @@ hyscan_gtk_fnn_export_object_constructed (GObject *object)
 
   G_OBJECT_CLASS (hyscan_gtk_fnn_export_parent_class)->constructed (object);
 
+  priv->project = hyscan_db_info_get_project(priv->info);
+
   gtk_window_set_modal (GTK_WINDOW (self), TRUE);
 }
 
@@ -196,7 +199,6 @@ hyscan_gtk_fnn_export_apply (GtkAssistant *assistant)
   HyScanGtkFnnExportPrivate *priv = self->priv;
 
   priv->tracks = hyscan_map_track_model_get_tracks (priv->tmodel);
-  g_message ("Tracks: %s", g_strjoinv("\n\t", hyscan_map_track_model_get_tracks (priv->tmodel)));
 
   priv->thread = g_thread_new ("fnn-xyz-export", hyscan_gtk_fnn_export_thread, self);
 }
@@ -219,19 +221,18 @@ hyscan_gtk_fnn_export_update_label (gpointer data)
   total = g_strv_length (priv->tracks);
   fraction = (gdouble)i / (gdouble)total;
 
-  if (i == total)
-    {
-      gtk_assistant_set_page_complete (GTK_ASSISTANT (self), priv->progress_page, TRUE);
-      gtk_label_set_text (priv->current, "All done!");
-      g_thread_join (priv->thread);
-      priv->thread = NULL;
-    }
-  else
+  gtk_progress_bar_set_fraction (priv->progress_bar, fraction);
+  if (i != total)
     {
       gtk_label_set_text (priv->current, priv->tracks[i]);
+      return G_SOURCE_REMOVE;
     }
 
-  gtk_progress_bar_set_fraction (priv->progress_bar, fraction);
+  gtk_assistant_set_page_complete (GTK_ASSISTANT (self), priv->progress_page, TRUE);
+  gtk_label_set_text (priv->current, "All done!");
+  if (priv->thread != NULL)
+    g_thread_join (priv->thread);
+  priv->thread = NULL;
 
   return G_SOURCE_REMOVE;
 }
@@ -258,6 +259,9 @@ hyscan_gtk_fnn_export_export_one (GHashTable                *track_infos,
   HyScanDBInfoSensorInfo *sensor_info = NULL;
   GHashTableIter iter;
   gpointer key, value;
+
+  gchar *filename = NULL, *uri = NULL, *full_path = NULL;
+  GError *error = NULL;
 
   info = g_hash_table_lookup (track_infos, track);
   if (info == NULL)
@@ -337,13 +341,17 @@ hyscan_gtk_fnn_export_export_one (GHashTable                *track_infos,
   if (words == NULL)
     return;
 
-  gchar *filename = NULL, *uri = NULL, *full_path = NULL;
-  GError *error = NULL;
-  uri = gtk_file_chooser_get_uri (GTK_FILE_CHOOSER (priv->chooser));
+  uri = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (priv->chooser));
   filename = g_strdup_printf ("%s-%s.xyz.txt", priv->project, track);
   full_path = g_build_filename (uri, filename, NULL);
+  // g_message ("%s, %s, %s", uri, filename, full_path);
   g_file_set_contents (full_path, words, strlen (words), &error);
+  // if(error)
+    // g_message("err: %s", error->message);
   g_free (words);
+  g_free (uri);
+  g_free (filename);
+  g_free (full_path);
 }
 
 static gpointer
