@@ -116,15 +116,6 @@ connector_finished (GtkAssistant *ass,
 int
 main (int argc, char **argv)
 {
-  {
-    gdouble x = 1.0;
-    gdouble y = 0.0;
-    g_message("%f", x/y);
-    gfloat x2 = 1.0;
-    gfloat y2 = 0.0;
-    g_message("%f", x2/y2);
-
-  }
   gint               cache_size = 0;
 
   gchar             *db_uri = NULL;            /* Адрес базы данных. */
