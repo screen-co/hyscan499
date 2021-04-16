@@ -643,8 +643,8 @@ lin_tvg_set (Global  *global,
 HYSCAN_API gboolean
 log_tvg_set (Global  *global,
              gdouble *gain0,
-             gdouble  beta,
-             gdouble  alpha,
+             gdouble *beta,
+             gdouble *alpha,
              gint     selector);
 
 HYSCAN_API gboolean

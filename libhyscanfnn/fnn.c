@@ -2408,19 +2408,25 @@ signal_down (GtkWidget *widget,
 void
 tvg_printer (GtkLabel    *label,
              gdouble      value,
-             const gchar *units)
+             const gchar *units,
+             const gchar *precision
+             )
 {
-  gchar *text;
+  gchar *format, *text;
 
   if (label == NULL)
     return;
+  if (precision == NULL)
+    precision = "%.1f";
 
-  text = g_strdup_printf ("<small><b>%.1f%s%s</b></small>", value,
+  format = g_strdup_printf ("<small><b>" "%s" "%%s%%s</b></small>", precision);
+  text = g_strdup_printf (format, value,
                           units != NULL ? " " : "", // space
                           units != NULL ? units : ""); // units
 
   gtk_label_set_markup (label, text);
   g_free (text);
+  g_free (format);
 }
 
 void
@@ -2428,8 +2434,8 @@ tvg_label (FnnPanel *panel,
            gdouble   gain0,
            gdouble   step)
 {
-  tvg_printer (panel->gui.tvg0_value, gain0, "dB");
-  tvg_printer (panel->gui.tvg_value, step, "dB");
+  tvg_printer (panel->gui.tvg0_value, gain0, "dB", NULL);
+  tvg_printer (panel->gui.tvg_value, step, "dB", NULL);
 }
 
 void
@@ -2437,8 +2443,8 @@ auto_tvg_label (FnnPanel *panel,
                 gdouble   level,
                 gdouble   sensitivity)
 {
-  tvg_printer (panel->gui.tvg_level_value, level, NULL);
-  tvg_printer (panel->gui.tvg_sens_value, sensitivity, NULL);
+  tvg_printer (panel->gui.tvg_level_value, level, NULL, NULL);
+  tvg_printer (panel->gui.tvg_sens_value, sensitivity, NULL, NULL);
 }
 
 void
@@ -2447,29 +2453,29 @@ log_tvg_label (FnnPanel *panel,
                gdouble   beta,
                gdouble   alpha)
 {
-  tvg_printer (panel->gui.logtvg_gain0_value, gain0, "dB");
-  tvg_printer (panel->gui.logtvg_beta_value, beta, "dB");
-  tvg_printer (panel->gui.logtvg_alpha_value, alpha, "dB/m");
+  tvg_printer (panel->gui.logtvg_gain0_value, gain0, "dB", NULL);
+  tvg_printer (panel->gui.logtvg_beta_value, beta, "dB", NULL);
+  tvg_printer (panel->gui.logtvg_alpha_value, alpha, "dB/m", "%.2f");
 }
 
 void
 const_tvg_label (FnnPanel *panel,
                  gdouble   gain0)
 {
-  tvg_printer (panel->gui.consttvg_value, gain0, "dB");
+  tvg_printer (panel->gui.consttvg_value, gain0, "dB", NULL);
 }
 
 
 gboolean
 log_tvg_set (Global  *global,
              gdouble *gain0,
-             gdouble  beta,
-             gdouble  alpha,
+             gdouble *beta,
+             gdouble *alpha,
              gint     panelx)
 {
   HyScanSourceType *iter;
   FnnPanel *panel = get_panel_quiet (global, panelx);
-  g_message ("log_tvg_set: %s (%i), gain0 %f, beta %f, alpha %f", panel->name, panelx, *gain0, beta, alpha);
+  g_message ("log_tvg_set: %s (%i), gain0 %f, beta %f, alpha %f", panel->name, panelx, *gain0, *beta, *alpha);
 
   if (panel == NULL)
     {
@@ -2488,9 +2494,13 @@ log_tvg_set (Global  *global,
       /* Проверяем gain0. */
       info = g_hash_table_lookup (global->sonar_infos, GINT_TO_POINTER (source));
       hyscan_return_val_if_fail (info != NULL && info->tvg != NULL, TRUE); // TODO do something
-      *gain0 = CLAMP (*gain0, info->tvg->min_gain,info->tvg->max_gain);
+      // *gain0 = CLAMP (*gain0, info->tvg->min_gain,info->tvg->max_gain);
+      if (*beta <= 0.)
+        *beta = 0.;
+      if (*alpha <= 0.)
+        *alpha = 0.;
 
-      status = hyscan_sonar_tvg_set_logarithmic (HYSCAN_SONAR (global->sonar_model), source, *gain0, beta, alpha);
+      status = hyscan_sonar_tvg_set_logarithmic (HYSCAN_SONAR (global->sonar_model), source, *gain0, *beta, *alpha);
       if (!status)
         {
           g_message ("  failure!");
@@ -2498,7 +2508,7 @@ log_tvg_set (Global  *global,
         }
     }
 
-  log_tvg_label (panel, *gain0, beta, alpha);
+  log_tvg_label (panel, *gain0, *beta, *alpha);
   g_message ("  success");
   panel->current.mode = HYSCAN_SONAR_TVG_MODE_LOGARITHMIC;
   return TRUE;
@@ -2684,14 +2694,14 @@ TVG_FUNC_DEF(fname)                                                             
     g_warning ("%s failed", __FUNCTION__);                                      \
 }
 
-LOG_TVG_FUNC (logtvg_gain0_up,   +, 1, panel->current.log_gain0, &desired, panel->current.log_beta, panel->current.log_alpha)
-LOG_TVG_FUNC (logtvg_gain0_down, -, 1, panel->current.log_gain0, &desired, panel->current.log_beta, panel->current.log_alpha)
+LOG_TVG_FUNC (logtvg_gain0_up,   +, 1, panel->current.log_gain0, &desired, &panel->current.log_beta, &panel->current.log_alpha)
+LOG_TVG_FUNC (logtvg_gain0_down, -, 1, panel->current.log_gain0, &desired, &panel->current.log_beta, &panel->current.log_alpha)
 
-LOG_TVG_FUNC (logtvg_beta_up,    +, 1, panel->current.log_beta, &panel->current.log_gain0, desired, panel->current.log_alpha)
-LOG_TVG_FUNC (logtvg_beta_down,  -, 1, panel->current.log_beta, &panel->current.log_gain0, desired, panel->current.log_alpha)
+LOG_TVG_FUNC (logtvg_beta_up,    +, 1, panel->current.log_beta, &panel->current.log_gain0, &desired, &panel->current.log_alpha)
+LOG_TVG_FUNC (logtvg_beta_down,  -, 1, panel->current.log_beta, &panel->current.log_gain0, &desired, &panel->current.log_alpha)
 
-LOG_TVG_FUNC (logtvg_alpha_up,   +, 1, panel->current.log_alpha, &panel->current.log_gain0, panel->current.log_beta, desired)
-LOG_TVG_FUNC (logtvg_alpha_down, -, 1, panel->current.log_alpha, &panel->current.log_gain0, panel->current.log_beta, desired)
+LOG_TVG_FUNC (logtvg_alpha_up,   +, 0.01, panel->current.log_alpha, &panel->current.log_gain0, &panel->current.log_beta, &desired)
+LOG_TVG_FUNC (logtvg_alpha_down, -, 0.01, panel->current.log_alpha, &panel->current.log_gain0, &panel->current.log_beta, &desired)
 
 
 #define LIN_TVG_FUNC(fname, sign, value, from_to, param1, param2)               \
@@ -3503,8 +3513,8 @@ panel_turn_on_off (Global   *global,
       case HYSCAN_SONAR_TVG_MODE_LOGARITHMIC:
         status &= log_tvg_set (global,
                                &panel->current.log_gain0,
-                               panel->current.log_beta,
-                               panel->current.log_alpha,
+                               &panel->current.log_beta,
+                               &panel->current.log_alpha,
                                panelx);
         break;
 
