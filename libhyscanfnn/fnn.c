@@ -1891,6 +1891,7 @@ scale_set (Global   *global,
 {
   VisualWF *wf;
   VisualFL *fl;
+  VisualLA *la;
   gchar *text = NULL;
   const gdouble *scales;
   gint n_scales, i_scale;
@@ -1935,6 +1936,20 @@ scale_set (Global   *global,
           text = g_strdup_printf ("<small><b>N/A</b></small>");
         else
           text = g_strdup_printf ("<small><b>%.0f%%</b></small>", scale);
+      }
+      break;
+
+    case FNN_PANEL_LOOKAROUND:
+      {
+        la = (VisualLA*)panel->vis_gui;
+        scale = hyscan_gtk_gliko_get_scale (HYSCAN_GTK_GLIKO (la->gliko));
+
+        if (scale_up)
+          hyscan_gtk_gliko_set_scale (HYSCAN_GTK_GLIKO (la->gliko), 0.875 * scale);
+        else
+          hyscan_gtk_gliko_set_scale (HYSCAN_GTK_GLIKO (la->gliko), 1.125 * scale);
+
+        text = g_strdup_printf ("<small><b>%.2f</b></small>", scale);
       }
       break;
 

@@ -50,9 +50,6 @@
             <property name="position">1</property>
           </packing>
         </child>
-        <child>
-          <placeholder/>
-        </child>
       </object>
       <packing>
         <property name="expand">True</property>
@@ -191,6 +188,7 @@
     <child>
       <object class="GtkSwitch" id="precise">
         <property name="visible">True</property>
+        <property name="sensitive">False</property>
         <property name="can_focus">True</property>
       </object>
       <packing>

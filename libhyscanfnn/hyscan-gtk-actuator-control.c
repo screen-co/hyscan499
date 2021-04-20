@@ -55,11 +55,9 @@ struct _HyScanGtkActuatorControlPrivate
   HyScanControlModel *model;
   gchar              *name;
 
-  HyScanActuatorInfoActuator *ainfo;
+  const HyScanActuatorInfoActuator *ainfo;
   HyScanSourceType   *sources;
   gint                n_sources;
-
-  gdouble             min_rec_time;
 
   GtkLabel           *direction_label;
   GtkLabel           *sector_label;
@@ -67,6 +65,7 @@ struct _HyScanGtkActuatorControlPrivate
   GtkComboBoxText    *sector;
   GtkSpinButton      *direction;
   GtkAdjustment      *direction_adjustment;
+  GtkSwitch          *precise;
 };
 
 static void    hyscan_gtk_actuator_control_set_property             (GObject               *object,
@@ -94,6 +93,7 @@ hyscan_gtk_actuator_control_class_init (HyScanGtkActuatorControlClass *klass)
   gtk_widget_class_bind_template_child_private (wclass, HyScanGtkActuatorControl, sector);
   gtk_widget_class_bind_template_child_private (wclass, HyScanGtkActuatorControl, direction);
   gtk_widget_class_bind_template_child_private (wclass, HyScanGtkActuatorControl, direction_adjustment);
+  gtk_widget_class_bind_template_child_private (wclass, HyScanGtkActuatorControl, precise);
 
   g_object_class_install_property (oclass, PROP_MODEL,
     g_param_spec_object ("model", "model", "HyScanControlModel", HYSCAN_TYPE_CONTROL_MODEL,
@@ -108,8 +108,6 @@ hyscan_gtk_actuator_control_init (HyScanGtkActuatorControl *self)
 {
   self->priv = hyscan_gtk_actuator_control_get_instance_private (self);
   gtk_widget_init_template (GTK_WIDGET (self));
-
-  self->priv->min_rec_time = -1.;
 }
 
 static void
@@ -137,69 +135,66 @@ hyscan_gtk_actuator_control_set_property (GObject      *object,
     }
 }
 
-static void
-sector_changed (GtkComboBoxText          *combo,
-                HyScanGtkActuatorControl *self)
-{
-  const gchar *txt = gtk_combo_box_text_get_active_text (combo);
-  g_message ("Sector %s %s", txt, gtk_combo_box_get_active_id(combo));
-
-
-}
-
-static void
-spin_change (GtkSpinButton            *spin,
-             HyScanGtkActuatorControl *self)
-{
-
-  g_message ("direction %f", gtk_spin_button_get_value(spin));
-}
-
-static void
-scan (HyScanGtkActuatorControl *self)
+/* Ф-ия обрабатывает все входные данные и при необоходимости задает
+ * новые параметры актуатора в режиме сканирования. */
+static gboolean
+hyscan_gtk_actuator_control_scan (HyScanGtkActuatorControl *self)
 {
   HyScanGtkActuatorControlPrivate *priv = self->priv;
   gdouble from, to, speed, sector, direction;
+  gdouble max_rec_time = 0;
   const gchar *txt;
+  gint i;
+  gboolean precise;
 
+  /* Считываю данные с виджетов. */
+  precise = gtk_switch_get_active (priv->precise);
+  g_message ("precise: %i", precise);
   txt = gtk_combo_box_text_get_active_text (priv->sector);
   sector = g_ascii_strtod (txt, NULL);
   direction = gtk_spin_button_get_value (priv->direction);
-  /*
-  gdouble                         min_range;
-  gdouble                         max_range;
-  gdouble                         min_speed;
-  gdouble                         max_speed;
-  */
+
+  /* Начальный и конечный угол поворота. */
   from = direction - sector / 2.0;
   to = direction + sector / 2.0;
   from = CLAMP (from, priv->ainfo->min_range, priv->ainfo->max_range);
   to = CLAMP (to, priv->ainfo->min_range, priv->ainfo->max_range);
+
+  /* Скорость вращения зависит от выбранных дальностей по бортам. */
+  for (i = 0; i < priv->n_sources; ++i)
+    {
+      HyScanSourceType source = priv->sources[i];
+      HyScanSonarReceiverModeType rmode;
+      gdouble receive_time, wait_time;
+      gboolean ok;
+
+      rmode = hyscan_sonar_state_receiver_get_mode (HYSCAN_SONAR_STATE (priv->model),
+                                                    source);
+      if (rmode != HYSCAN_SONAR_RECEIVER_MODE_MANUAL)
+        {
+          g_message ("Can't scan with auto receiver");
+          return FALSE;
+        }
+
+      ok = hyscan_sonar_state_receiver_get_time (HYSCAN_SONAR_STATE (priv->model),
+                                                 source,
+                                                 &receive_time, &wait_time);
+      if (!ok)
+        return FALSE;
+
+      receive_time = receive_time + wait_time;
+      max_rec_time = MAX (receive_time, max_rec_time);
+    }
+
+  speed = 0.25 / max_rec_time;
+  if (!precise)
+    speed *= 2.0;
+
+  speed = CLAMP (speed, priv->ainfo->min_speed, priv->ainfo->max_speed);
+  g_message ("Actuator control: [%f;%f]@%f", from, to, speed);
   hyscan_actuator_scan (HYSCAN_ACTUATOR (priv->model), priv->name, from, to, speed);
-}
 
-static void
-distance_changed (HyScanControlModel       *model,
-                  HyScanSourceType          source,
-                  HyScanGtkActuatorControl *self)
-{
-  HyScanGtkActuatorControlPrivate *priv = self->priv;
-  HyScanSonarReceiverModeType rmode;
-  gboolean ok;
-  gdouble receive_time, wait_time;
-
-  rmode = hyscan_sonar_state_receiver_get_mode (HYSCAN_SONAR_STATE (model), source);
-  if (rmode != HYSCAN_SONAR_RECEIVER_MODE_MANUAL)
-    return;
-
-  ok = hyscan_sonar_state_receiver_get_time (HYSCAN_SONAR_STATE (model), source,
-                                             &receive_time, &wait_time);
-  if (!ok)
-    return;
-
-  receive_time = receive_time + wait_time;
-  if (priv->min_rec_time == -1 || receive_time < priv->min_rec_time );
-
+  return FALSE;
 }
 
 static void
@@ -208,9 +203,9 @@ hyscan_gtk_actuator_control_object_constructed (GObject *object)
   HyScanGtkActuatorControl *self = HYSCAN_GTK_ACTUATOR_CONTROL (object);
   HyScanGtkActuatorControlPrivate *priv = self->priv;
   HyScanControl *control;
-  HyScanSourceType *sources;
+  const HyScanSourceType *sources;
   guint32 n_sources, i, j;
-  HyScanSonarInfoSource *source_info;
+  const HyScanSonarInfoSource *source_info;
 
   G_OBJECT_CLASS (hyscan_gtk_actuator_control_parent_class)->constructed (object);
 
@@ -218,7 +213,6 @@ hyscan_gtk_actuator_control_object_constructed (GObject *object)
 
   /* Информация о моём актуаторе. */
   priv->ainfo = hyscan_control_actuator_get_info (control, priv->name);
-  priv->ainfo = hyscan_actuator_info_actuator_copy (priv->ainfo);
 
   /* Теперь ищу, к каким источникам он привязан, чтобы подсоединиться к сигналам
    * модели на смену параметров. */
@@ -232,23 +226,28 @@ hyscan_gtk_actuator_control_object_constructed (GObject *object)
 
   priv->sources = g_malloc0_n (sizeof(HyScanSourceType), priv->n_sources);
 
-  for (j= 0, i = 0; i < n_sources; ++i)
+  for (j = 0, i = 0; i < n_sources; ++i)
     {
       HyScanSourceType src = sources[i];
-      gchar *signal_name;
+      // gchar *signal_name;
 
       source_info = hyscan_control_source_get_info (control, src);
       if (0 != g_strcmp0 (priv->name, source_info->actuator))
         continue;
 
       priv->sources[j++] = src;
-      signal_name = g_strdup_printf ("sonar::%s", hyscan_source_get_id_by_type (src));
-      g_signal_connect (priv->model, signal_name, G_CALLBACK (distance_changed), self);
-      g_free (signal_name);
+      // signal_name = g_strdup_printf ("sonar::%s", hyscan_source_get_id_by_type (src));
+      // g_free (signal_name);
     }
 
-  g_signal_connect (priv->sector, "changed", G_CALLBACK (sector_changed), self);
-  g_signal_connect (priv->direction, "value-changed", G_CALLBACK (spin_change), self);
+  g_signal_connect_swapped (priv->model, "sonar",
+                            G_CALLBACK (hyscan_gtk_actuator_control_scan), self);
+  g_signal_connect_swapped (priv->sector, "changed",
+                            G_CALLBACK (hyscan_gtk_actuator_control_scan), self);
+  g_signal_connect_swapped (priv->direction, "value-changed",
+                            G_CALLBACK (hyscan_gtk_actuator_control_scan), self);
+  g_signal_connect_swapped (priv->precise, "state-set",
+                            G_CALLBACK (hyscan_gtk_actuator_control_scan), self);
 
   g_clear_object (&control);
 }
@@ -281,7 +280,7 @@ hyscan_gtk_actuator_control_find_actuator_by_source (HyScanControlModel *model,
                                                      HyScanSourceType    source)
 {
   HyScanControl *control;
-  HyScanSonarInfoSource *source_info;
+  const HyScanSonarInfoSource *source_info;
 
   g_return_val_if_fail (HYSCAN_IS_CONTROL_MODEL(model), NULL);
 
@@ -290,6 +289,8 @@ hyscan_gtk_actuator_control_find_actuator_by_source (HyScanControlModel *model,
     return NULL;
 
   source_info = hyscan_control_source_get_info (control, source);
+  g_clear_object (&control);
+
   if (source_info == NULL)
     return NULL;
 
