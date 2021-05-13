@@ -770,6 +770,14 @@ distance_down (GtkWidget *widget,
                gint       sonar_selector);
 
 HYSCAN_API void
+lookaround_image_rotation (GtkAdjustment *adj,
+                           gint           panelx);
+
+HYSCAN_API void
+lookaround_axis_rotation (GtkAdjustment *adj,
+                          gint           panelx);
+
+HYSCAN_API void
 signal_up (GtkWidget *widget,
            gint       selector);
 

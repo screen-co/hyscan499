@@ -1261,11 +1261,15 @@ make_page_for_panel (EvoUI     *ui,
 
     case FNN_PANEL_LOOKAROUND:
       view = get_widget_from_builder (b, "la_view_control");
-      panel->vis_gui->black_value       = get_label_from_builder (b, "la_black_value");  add_to_sg (sg, b, "la_black_value");
+      // panel->vis_gui->black_value       = get_label_from_builder (b, "la_black_value");  add_to_sg (sg, b, "la_black_value");
       panel->vis_gui->white_value       = get_label_from_builder (b, "la_white_value");  add_to_sg (sg, b, "la_white_value");
       panel->vis_gui->gamma_value       = get_label_from_builder (b, "la_gamma_value");  add_to_sg (sg, b, "la_gamma_value");
       panel->vis_gui->scale_value       = get_label_from_builder (b, "la_scale_value");  add_to_sg (sg, b, "la_scale_label");
       panel->vis_gui->colormap_value    = get_label_from_builder (b, "la_color_map_value");  add_to_sg (sg, b, "la_color_map_value");
+                                                                                             add_to_sg (sg, b, "la_axis_rot_label");
+                                                                                             add_to_sg (sg, b, "la_image_rot_label");
+
+
 
       if (panel_sources_are_in_sonar (global, panel))
         {

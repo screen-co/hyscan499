@@ -6,6 +6,14 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
   </object>
+  <object class="GtkAdjustment" id="axis_rot">
+    <property name="lower">-180</property>
+    <property name="upper">180</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+    <property name="page_size">1</property>
+    <signal name="value-changed" handler="lookaround_axis_rotation" swapped="no"/>
+  </object>
   <object class="GtkImage" id="color_map_image_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -65,6 +73,14 @@
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="icon_name">list-add-symbolic</property>
+  </object>
+  <object class="GtkAdjustment" id="image_rot">
+    <property name="lower">-180</property>
+    <property name="upper">180</property>
+    <property name="step_increment">1</property>
+    <property name="page_increment">10</property>
+    <property name="page_size">1</property>
+    <signal name="value-changed" handler="lookaround_image_rotation" swapped="no"/>
   </object>
   <object class="GtkImage" id="logtvg_alpha_image_down">
     <property name="visible">True</property>
@@ -1426,11 +1442,6 @@
     <property name="can_focus">False</property>
     <property name="icon_name">list-remove-symbolic</property>
   </object>
-  <object class="GtkImage" id="ss_white_image_down2">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="icon_name">list-remove-symbolic</property>
-  </object>
   <object class="GtkImage" id="ss_white_image_up">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -1897,16 +1908,11 @@
     <property name="icon_name">list-add-symbolic</property>
     <property name="icon_size">1</property>
   </object>
-  <object class="GtkImage" id="ss_white_image_up2">
-    <property name="visible">True</property>
-    <property name="can_focus">False</property>
-    <property name="icon_name">list-add-symbolic</property>
-    <property name="icon_size">1</property>
-  </object>
   <object class="GtkGrid" id="la_view_control">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
     <property name="valign">start</property>
+    <property name="margin_right">6</property>
     <property name="hexpand">False</property>
     <child>
       <object class="GtkLabel" id="la_white_value">
@@ -1954,18 +1960,6 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="la_gamma_label">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">end</property>
-        <property name="label" translatable="yes">Gamma</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">6</property>
-      </packing>
-    </child>
-    <child>
       <object class="GtkLabel" id="la_white_label">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
@@ -1995,51 +1989,6 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="la_gamma_value">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="valign">center</property>
-        <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
-        <property name="use_markup">True</property>
-        <property name="justify">center</property>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">6</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="la_gamma_down">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">ss_gamma_down_image1</property>
-        <signal name="clicked" handler="gamma_down" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">6</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="la_gamma_up">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">ss_gamma_up_image1</property>
-        <signal name="clicked" handler="gamma_up" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">3</property>
-        <property name="top_attach">6</property>
-      </packing>
-    </child>
-    <child>
       <object class="GtkSeparator" id="ss_balance_separator1">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
@@ -2049,80 +1998,6 @@
       <packing>
         <property name="left_attach">0</property>
         <property name="top_attach">7</property>
-        <property name="width">4</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="la_black_label">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">end</property>
-        <property name="valign">center</property>
-        <property name="label" translatable="yes">Black</property>
-        <property name="use_markup">True</property>
-        <property name="justify">center</property>
-        <property name="ellipsize">start</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">0</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="la_black_value">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="valign">center</property>
-        <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
-        <property name="use_markup">True</property>
-        <property name="justify">center</property>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">0</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="la_black_down">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">ss_white_image_down2</property>
-        <signal name="clicked" handler="black_down" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">0</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="la_black_up">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">ss_white_image_up2</property>
-        <signal name="clicked" handler="black_up" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">3</property>
-        <property name="top_attach">0</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkSeparator">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="margin_top">3</property>
-        <property name="margin_bottom">3</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">1</property>
         <property name="width">4</property>
       </packing>
     </child>
@@ -2207,7 +2082,7 @@
       </object>
       <packing>
         <property name="left_attach">0</property>
-        <property name="top_attach">10</property>
+        <property name="top_attach">16</property>
       </packing>
     </child>
     <child>
@@ -2216,70 +2091,14 @@
         <property name="can_focus">True</property>
         <property name="halign">center</property>
         <property name="valign">center</property>
+        <property name="margin_left">6</property>
+        <property name="margin_right">6</property>
         <signal name="state-set" handler="automove_switched" swapped="no"/>
       </object>
       <packing>
         <property name="left_attach">2</property>
-        <property name="top_attach">10</property>
+        <property name="top_attach">16</property>
         <property name="width">2</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="la_scale_label">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">end</property>
-        <property name="valign">center</property>
-        <property name="label" translatable="yes">Scale</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">4</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkLabel" id="la_scale_value">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="valign">center</property>
-        <property name="hexpand">True</property>
-        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
-        <property name="use_markup">True</property>
-        <property name="justify">center</property>
-      </object>
-      <packing>
-        <property name="left_attach">1</property>
-        <property name="top_attach">4</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="la_scale_down">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">ss_scale_image_down1</property>
-        <signal name="clicked" handler="scale_down" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">4</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkButton" id="la_scale_up">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="receives_default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="image">ss_scale_image_up1</property>
-        <signal name="clicked" handler="scale_up" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">3</property>
-        <property name="top_attach">4</property>
       </packing>
     </child>
     <child>
@@ -2294,6 +2113,265 @@
         <property name="top_attach">5</property>
         <property name="width">4</property>
       </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_gamma_label">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">end</property>
+        <property name="label" translatable="yes">Gamma</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_gamma_value">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="valign">center</property>
+        <property name="hexpand">True</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="use_markup">True</property>
+        <property name="justify">center</property>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="la_gamma_down">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">ss_gamma_down_image1</property>
+        <signal name="clicked" handler="gamma_down" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="la_gamma_up">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">ss_gamma_up_image1</property>
+        <signal name="clicked" handler="gamma_up" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">3</property>
+        <property name="top_attach">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_scale_label">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">end</property>
+        <property name="valign">center</property>
+        <property name="label" translatable="yes">Scale</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">6</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_scale_value">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="valign">center</property>
+        <property name="hexpand">True</property>
+        <property name="label" translatable="yes">&lt;small&gt;&lt;b&gt;xx&lt;/b&gt;&lt;/small&gt;</property>
+        <property name="use_markup">True</property>
+        <property name="justify">center</property>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">6</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="la_scale_down">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">ss_scale_image_down1</property>
+        <signal name="clicked" handler="scale_down" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">6</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkButton" id="la_scale_up">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="receives_default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+        <property name="image">ss_scale_image_up1</property>
+        <signal name="clicked" handler="scale_up" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">3</property>
+        <property name="top_attach">6</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_axis_rot_label">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">end</property>
+        <property name="valign">center</property>
+        <property name="label" translatable="yes">Axis rotate</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">10</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSpinButton">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="margin_left">6</property>
+        <property name="margin_right">6</property>
+        <property name="adjustment">axis_rot</property>
+        <property name="numeric">True</property>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">10</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="ss_balance_separator3">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">12</property>
+        <property name="width">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_image_rot_label">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="halign">end</property>
+        <property name="valign">center</property>
+        <property name="label" translatable="yes">Image rotate</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">13</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSpinButton">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="margin_left">6</property>
+        <property name="margin_right">6</property>
+        <property name="adjustment">image_rot</property>
+        <property name="numeric">True</property>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">13</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkSeparator" id="ss_balance_separator4">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="margin_top">3</property>
+        <property name="margin_bottom">3</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">15</property>
+        <property name="width">4</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkScale">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="adjustment">axis_rot</property>
+        <property name="round_digits">1</property>
+        <property name="draw_value">False</property>
+        <property name="has_origin">False</property>
+        <property name="value_pos">left</property>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">11</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkScale">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="adjustment">image_rot</property>
+        <property name="round_digits">1</property>
+        <property name="draw_value">False</property>
+        <property name="has_origin">False</property>
+        <property name="value_pos">left</property>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">14</property>
+        <property name="width">3</property>
+      </packing>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
     </child>
     <child>
       <placeholder/>
