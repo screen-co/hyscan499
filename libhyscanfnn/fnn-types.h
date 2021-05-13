@@ -778,6 +778,10 @@ lookaround_axis_rotation (GtkAdjustment *adj,
                           gint           panelx);
 
 HYSCAN_API void
+lookaround_bottom (GtkAdjustment *adj,
+                   gint           panelx);
+
+HYSCAN_API void
 signal_up (GtkWidget *widget,
            gint       selector);
 

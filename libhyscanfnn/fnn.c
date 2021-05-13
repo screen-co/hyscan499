@@ -2985,6 +2985,24 @@ lookaround_axis_rotation (GtkAdjustment *adj,
 }
 
 void
+lookaround_bottom (GtkAdjustment *adj,
+                   gint           panelx)
+{
+  VisualLA* la;
+  FnnPanel *panel = get_panel (tglobal, panelx);
+
+  if (panel->type != FNN_PANEL_LOOKAROUND)
+    {
+      g_warning ("%s: wrong panel type", __FUNCTION__);
+      return;
+    }
+
+  la = (VisualLA*) (panel->vis_gui);
+
+  hyscan_gtk_gliko_set_bottom (la->gliko, gtk_adjustment_get_value (adj));
+}
+
+void
 void_callback (gpointer data)
 {
   g_message ("This is a void callback. ");
