@@ -55,11 +55,13 @@ struct _HyScanGtkFnnGlikoWrapperPrivate
 
   GMutex            lock;
 
+  gboolean          changed;
   gint64            left;
   gint64            right;
   gint64            current;
 
   gulong            signal_handler;
+  guint             update_tag;
 };
 
 static void    hyscan_gtk_fnn_gliko_wrapper_set_property             (GObject               *object,
@@ -152,8 +154,10 @@ hyscan_gtk_fnn_gliko_wrapper_object_constructed (GObject *object)
   g_signal_connect (priv->player, "process",
                     G_CALLBACK (hyscan_gtk_fnn_gliko_wrapper_process), self);
 
-  hyscan_data_player_get_range (priv->player, &ltime, &rtime);
-  hyscan_gtk_fnn_gliko_wrapper_range (priv->player, ltime, rtime, self);
+  //hyscan_data_player_get_range (priv->player, &ltime, &rtime);
+  //hyscan_gtk_fnn_gliko_wrapper_range (priv->player, ltime, rtime, self);
+
+  priv->update_tag = g_timeout_add (100, (GSourceFunc)hyscan_gtk_fnn_gliko_wrapper_update, self);
 }
 
 static void
@@ -162,10 +166,13 @@ hyscan_gtk_fnn_gliko_wrapper_object_finalize (GObject *object)
   HyScanGtkFnnGlikoWrapper *self = HYSCAN_GTK_FNN_GLIKO_WRAPPER (object);
   HyScanGtkFnnGlikoWrapperPrivate *priv = self->priv;
 
+  g_source_remove (priv->update_tag);
+
   g_clear_object (&priv->player);
   g_clear_object (&priv->adjustment);
 
   g_mutex_clear (&priv->lock);
+
 
   G_OBJECT_CLASS (hyscan_gtk_fnn_gliko_wrapper_parent_class)->finalize (object);
 }
@@ -191,9 +198,10 @@ hyscan_gtk_fnn_gliko_wrapper_range (HyScanDataPlayer         *player,
   g_mutex_lock (&priv->lock);
   priv->left = left;
   priv->right = right;
+  priv->changed = TRUE;
   g_mutex_unlock (&priv->lock);
 
-  g_idle_add ((GSourceFunc)hyscan_gtk_fnn_gliko_wrapper_update, self);
+  //g_idle_add ((GSourceFunc)hyscan_gtk_fnn_gliko_wrapper_update, self);
 }
 
 static void
@@ -205,9 +213,10 @@ hyscan_gtk_fnn_gliko_wrapper_process (HyScanDataPlayer         *player,
 
   g_mutex_lock (&priv->lock);
   priv->current = time;
+  priv->changed = TRUE;
   g_mutex_unlock (&priv->lock);
 
-  g_idle_add ((GSourceFunc)hyscan_gtk_fnn_gliko_wrapper_update, self);
+  //g_idle_add ((GSourceFunc)hyscan_gtk_fnn_gliko_wrapper_update, self);
 }
 
 static gboolean
@@ -215,12 +224,18 @@ hyscan_gtk_fnn_gliko_wrapper_update (HyScanGtkFnnGlikoWrapper *self)
 {
   HyScanGtkFnnGlikoWrapperPrivate *priv = self->priv;
   gdouble current, left, right;
+  gboolean changed;
 
   g_mutex_lock (&priv->lock);
   current = priv->current;
   left = priv->left;
   right = priv->right;
+  changed = priv->changed;
+  priv->changed = FALSE; 
   g_mutex_unlock (&priv->lock);
+
+  if (!changed)
+    return G_SOURCE_CONTINUE;
 
   g_signal_handler_block (priv->adjustment, priv->signal_handler);
   gtk_adjustment_configure (self->priv->adjustment, current,
@@ -228,7 +243,7 @@ hyscan_gtk_fnn_gliko_wrapper_update (HyScanGtkFnnGlikoWrapper *self)
                               1.0, 1.0, 1.0);
   g_signal_handler_unblock (priv->adjustment, priv->signal_handler);
 
-  return G_SOURCE_REMOVE;
+  return G_SOURCE_CONTINUE;
 }
 
 
