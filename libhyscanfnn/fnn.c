@@ -3683,7 +3683,10 @@ before_start (HyScanControlModel *model,
               Global           *global)
 {
   if (panels_turn_on (global))
-    return FALSE;
+    {
+      gtk_widget_set_sensitive (GTK_WIDGET (global->gui.track.tree), FALSE);
+      return FALSE;
+    }
 
   /* Что-то пошло не так, отменяем запуск ГЛ. */
   g_message ("Failed to turn on some panels. Cancel sonar start");
@@ -3691,7 +3694,17 @@ before_start (HyScanControlModel *model,
   return TRUE;
 }
 
-/* Функция включает/выключает излучение. */
+/* Функция включает/выключает излучение.
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * Она не используется! См #HyScanGtkRec
+ * и две функции выше.
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * Она не используется! См #HyScanGtkRec
+ * и две функции выше.
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+ * Она не используется! См #HyScanGtkRec
+ * и две функции выше.
+ * !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! */
 gboolean
 start_stop (Global                *global,
             const HyScanTrackPlan *track_plan,
