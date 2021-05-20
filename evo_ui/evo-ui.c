@@ -1309,6 +1309,8 @@ make_page_for_panel (EvoUI     *ui,
   gtk_scrolled_window_set_policy (GTK_SCROLLED_WINDOW (scroll), GTK_POLICY_NEVER, GTK_POLICY_AUTOMATIC);
   gtk_container_add (GTK_CONTAINER (scroll), box);
 
+  gtk_widget_show_all (GTK_WIDGET (scroll));
+
   return scroll;
 }
 
