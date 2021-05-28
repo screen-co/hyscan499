@@ -319,8 +319,8 @@ fnn_ensure_panel (gint    panelx,
 
       hyscan_gtk_gliko_set_player (HYSCAN_GTK_GLIKO (vla->gliko), vla->player);
 
-      hyscan_data_player_add_channel (vla->player, hyscan_gtk_gliko_get_angular_source (vla->gliko), 1, HYSCAN_CHANNEL_DATA);
-      //hyscan_data_player_add_channel (vla->player, hyscan_gtk_gliko_get_source (vla->gliko, 0), 1, HYSCAN_CHANNEL_DATA);
+      //hyscan_data_player_add_channel (vla->player, hyscan_gtk_gliko_get_angular_source (vla->gliko), 1, HYSCAN_CHANNEL_DATA);
+      hyscan_data_player_add_channel (vla->player, hyscan_gtk_gliko_get_source (vla->gliko, 0), 1, HYSCAN_CHANNEL_DATA);
       //hyscan_data_player_add_channel (vla->player, hyscan_gtk_gliko_get_source (vla->gliko, 1), 1, HYSCAN_CHANNEL_DATA);
 
       vla->play_control = gtk_scale_new (GTK_ORIENTATION_HORIZONTAL, hyscan_gtk_fnn_gliko_wrapper_get_adjustment(vla->wrapper));
@@ -1773,8 +1773,8 @@ track_changed (GtkTreeView *list,
         case FNN_PANEL_LOOKAROUND:
           la = (VisualLA*) (panel->vis_gui);
           hyscan_data_player_set_track (la->player, global->db, global->project_name, track_name);
-          hyscan_data_player_add_channel (la->player, hyscan_gtk_gliko_get_angular_source (la->gliko), 1, HYSCAN_CHANNEL_DATA);
-          //hyscan_data_player_add_channel (la->player, hyscan_gtk_gliko_get_source (la->gliko, 0), 1, HYSCAN_CHANNEL_DATA);
+          //hyscan_data_player_add_channel (la->player, hyscan_gtk_gliko_get_angular_source (la->gliko), 1, HYSCAN_CHANNEL_DATA);
+          hyscan_data_player_add_channel (la->player, hyscan_gtk_gliko_get_source (la->gliko, 0), 1, HYSCAN_CHANNEL_DATA);
           //hyscan_data_player_add_channel (la->player, hyscan_gtk_gliko_get_source (la->gliko, 1), 1, HYSCAN_CHANNEL_DATA);
 
           {
