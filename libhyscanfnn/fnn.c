@@ -2362,7 +2362,8 @@ signal_set (Global *global,
       source_informer ("  setting signal", source);
       if (source == HYSCAN_SOURCE_PROFILER_ECHO)
         {
-          source_informer ("  skipping", source);
+          hyscan_sonar_generator_disable (HYSCAN_SONAR (global->sonar_model), source);
+          source_informer ("  disabling generator", source);
           continue;
         }
 
