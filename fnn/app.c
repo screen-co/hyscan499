@@ -227,6 +227,13 @@ main (int argc, char **argv)
     g_strfreev (args);
   }
 
+  if (driver_paths == NULL)
+    {
+      gchar *defailt_driver_paths[] = {".", NULL};
+
+      driver_paths = g_strdupv (defailt_driver_paths);
+    }
+
 #ifndef G_OS_WIN32 /* Ловим сигналы ОС. */
   {
     struct sigaction term_signal;
