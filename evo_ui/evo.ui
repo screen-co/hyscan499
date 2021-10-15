@@ -86,6 +86,11 @@
     <property name="page_increment">10</property>
     <signal name="value-changed" handler="lookaround_bottom" swapped="no"/>
   </object>
+  <object class="GtkImage" id="la_pause">
+    <property name="visible">True</property>
+    <property name="can_focus">False</property>
+    <property name="icon_name">media-playback-pause</property>
+  </object>
   <object class="GtkImage" id="logtvg_alpha_image_down">
     <property name="visible">True</property>
     <property name="can_focus">False</property>
@@ -2077,35 +2082,6 @@
       </packing>
     </child>
     <child>
-      <object class="GtkLabel" id="la_live_view_label">
-        <property name="visible">True</property>
-        <property name="can_focus">False</property>
-        <property name="halign">end</property>
-        <property name="valign">center</property>
-        <property name="label" translatable="yes">Autoscroll</property>
-      </object>
-      <packing>
-        <property name="left_attach">0</property>
-        <property name="top_attach">18</property>
-      </packing>
-    </child>
-    <child>
-      <object class="GtkSwitch" id="la_live_view">
-        <property name="visible">True</property>
-        <property name="can_focus">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <property name="margin_left">6</property>
-        <property name="margin_right">6</property>
-        <signal name="state-set" handler="automove_switched" swapped="no"/>
-      </object>
-      <packing>
-        <property name="left_attach">2</property>
-        <property name="top_attach">18</property>
-        <property name="width">2</property>
-      </packing>
-    </child>
-    <child>
       <object class="GtkSeparator" id="separator13">
         <property name="visible">True</property>
         <property name="can_focus">False</property>
@@ -2388,6 +2364,238 @@
         <property name="top_attach">16</property>
         <property name="width">3</property>
       </packing>
+    </child>
+    <child>
+      <object class="GtkGrid">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <child>
+          <object class="GtkToggleButton" id="la_pause_toggle">
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="vexpand">True</property>
+            <property name="image">la_pause</property>
+            <signal name="toggled" handler="la_pause_toggle_cb" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left_attach">0</property>
+            <property name="top_attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkToggleButton" id="la_x10_toggle">
+            <property name="label" translatable="yes">x10</property>
+            <property name="visible">True</property>
+            <property name="can_focus">True</property>
+            <property name="receives_default">True</property>
+            <property name="vexpand">True</property>
+            <property name="border_width">0</property>
+            <signal name="toggled" handler="la_x10_toggle_cb" swapped="no"/>
+          </object>
+          <packing>
+            <property name="left_attach">1</property>
+            <property name="top_attach">0</property>
+          </packing>
+        </child>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">19</property>
+        <property name="height">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkScale" id="la_player_scale">
+        <property name="visible">True</property>
+        <property name="can_focus">True</property>
+        <property name="restrict_to_fill_level">False</property>
+        <property name="fill_level">1</property>
+        <property name="round_digits">1</property>
+        <signal name="value-changed" handler="la_player_scale_cb" swapped="no"/>
+      </object>
+      <packing>
+        <property name="left_attach">1</property>
+        <property name="top_attach">19</property>
+        <property name="width">3</property>
+        <property name="height">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_head_ruler">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Ruler</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">21</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_head_degrees">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Angle</property>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">21</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_head_meters">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">Distance</property>
+      </object>
+      <packing>
+        <property name="left_attach">3</property>
+        <property name="top_attach">21</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_head_a">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">A</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">22</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_a_degrees">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">-</property>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">22</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_a_meters">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">-</property>
+      </object>
+      <packing>
+        <property name="left_attach">3</property>
+        <property name="top_attach">22</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_head_b">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">B</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">23</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_b_degrees">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">-</property>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">23</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_b_meters">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">-</property>
+      </object>
+      <packing>
+        <property name="left_attach">3</property>
+        <property name="top_attach">23</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_head_ab">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">A→B</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">24</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_ab_degrees">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">-</property>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">24</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_ab_meters">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">-</property>
+      </object>
+      <packing>
+        <property name="left_attach">3</property>
+        <property name="top_attach">24</property>
+        <property name="height">2</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_head_ba">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">B→A</property>
+      </object>
+      <packing>
+        <property name="left_attach">0</property>
+        <property name="top_attach">25</property>
+      </packing>
+    </child>
+    <child>
+      <object class="GtkLabel" id="la_ba_degrees">
+        <property name="visible">True</property>
+        <property name="can_focus">False</property>
+        <property name="label" translatable="yes">-</property>
+      </object>
+      <packing>
+        <property name="left_attach">2</property>
+        <property name="top_attach">25</property>
+      </packing>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
+    </child>
+    <child>
+      <placeholder/>
     </child>
     <child>
       <placeholder/>

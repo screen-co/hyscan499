@@ -51,6 +51,13 @@ Global *_global = NULL;
 /* Виджет для Журнала Меток. */
 GtkWidget  *mark_manager_window = NULL;
 
+static void la_ruler_changed_cb (HyScanGtkGlikoView *view, gdouble az, gdouble ar, gdouble bz, gdouble br, gpointer user_data);
+static void la_player_scale_cb (GtkRange *range, gpointer user_data);
+static void la_pause_toggle_cb (GtkToggleButton *toggle_button, gpointer user_data);
+static void la_x10_toggle_cb (GtkToggleButton *toggle_button, gpointer user_data);
+static void la_player_range_cb (HyScanDataPlayer *player, gint64 min, gint64 max, gpointer user_data);
+static void la_player_ready_cb (HyScanDataPlayer *player, gint64 time, gpointer user_data);
+
 void
 filesave_dialog (const gchar *extension,
                  const gchar *project,
@@ -1141,6 +1148,7 @@ make_page_for_panel (EvoUI     *ui,
   GtkWidget *extra = NULL;
   GtkWidget *box, *scroll;
   VisualWF *wf;
+  VisualLA *vla;
   GtkSizeGroup * sg;
 
   sg = gtk_size_group_new (GTK_SIZE_GROUP_HORIZONTAL);
@@ -1271,6 +1279,31 @@ make_page_for_panel (EvoUI     *ui,
                                                                                              add_to_sg (sg, b, "la_depth_label");
 
 
+      vla = (VisualLA *)panel->vis_gui;
+      vla->la_a_degrees = GTK_WIDGET (g_object_ref (gtk_builder_get_object (b, "la_a_degrees")));
+      vla->la_a_meters = GTK_WIDGET (g_object_ref (gtk_builder_get_object (b, "la_a_meters")));
+      vla->la_b_degrees = GTK_WIDGET (g_object_ref (gtk_builder_get_object (b, "la_b_degrees")));
+      vla->la_b_meters = GTK_WIDGET (g_object_ref (gtk_builder_get_object (b, "la_b_meters")));
+      vla->la_ab_degrees = GTK_WIDGET (g_object_ref (gtk_builder_get_object (b, "la_ab_degrees")));
+      vla->la_ab_meters = GTK_WIDGET (g_object_ref (gtk_builder_get_object (b, "la_ab_meters")));
+      vla->la_ba_degrees = GTK_WIDGET (g_object_ref (gtk_builder_get_object (b, "la_ba_degrees")));
+
+      g_signal_connect (vla->glikoview, "ruler-changed", G_CALLBACK (la_ruler_changed_cb), vla);
+
+      vla->la_player_scale = GTK_WIDGET (g_object_ref (gtk_builder_get_object (b, "la_player_scale")));
+      vla->la_pause_toggle = GTK_WIDGET (g_object_ref (gtk_builder_get_object (b, "la_pause_toggle")));
+      vla->la_x10_toggle = GTK_WIDGET (g_object_ref (gtk_builder_get_object (b, "la_x10_toggle")));
+
+      g_signal_connect (vla->la_player_scale, "value-changed", G_CALLBACK (la_player_scale_cb), vla);
+      g_signal_connect (vla->la_pause_toggle, "toggled", G_CALLBACK (la_pause_toggle_cb), vla);
+      g_signal_connect (vla->la_x10_toggle, "toggled", G_CALLBACK (la_x10_toggle_cb), vla);
+
+      g_signal_connect (vla->player, "range", G_CALLBACK (la_player_range_cb), vla);
+      g_signal_connect (vla->player, "ready", G_CALLBACK (la_player_ready_cb), vla);
+
+      vla->speed = 1.0;
+      vla->player_min = 0;
+      vla->player_position_changed = 0;
 
       if (panel_sources_are_in_sonar (global, panel))
         {
@@ -1285,6 +1318,7 @@ make_page_for_panel (EvoUI     *ui,
             {
               extra = hyscan_gtk_actuator_control_new (global->sonar_model, a1);
             }
+          hyscan_data_player_play (vla->player, vla->speed);
         }
       break;
 
@@ -1856,12 +1890,14 @@ panel_pack (FnnPanel *panel,
     hyscan_gtk_area_set_bottom (HYSCAN_GTK_AREA (ui->area), fl->play_control);
     gtk_widget_show_all(ui->area);
   }
+  /*
   else if (panelx == X_LOOKARND || panelx == X_LOOK_LOW || panelx == X_LOOK_HI)
   {
     VisualLA *la = (VisualLA*)panel->vis_gui;
     hyscan_gtk_area_set_bottom (HYSCAN_GTK_AREA (ui->area), la->play_control);
     gtk_widget_show_all(ui->area);
   }
+  */
 
   if (panel->type == FNN_PANEL_WATERFALL)
     {
@@ -1966,3 +2002,149 @@ panel_adjust_visibility (HyScanTrackInfo *track_info)
     panel_show (X_LOOK_HI, FALSE);
 
 }
+
+static gdouble
+range360 (const gdouble a)
+{
+  guint i;
+  gdouble d;
+
+  d = a * 65536.0 / 360.0;
+  i = (int) d;
+  d = (i & 0xFFFF);
+  return d * 360.0 / 65536.0;
+}
+
+static void
+la_ruler_changed_cb (HyScanGtkGlikoView *view, gdouble point_a_z, gdouble point_a_r, gdouble point_b_z, gdouble point_b_r, gpointer user_data)
+{
+  VisualLA *vla = (VisualLA *)user_data;
+  gchar tmp[64];
+  gdouble x1, y1, x2, y2, d;
+  gdouble point_ab_z;
+  gdouble point_ba_z;
+  const gdouble radians_to_degrees = 180.0 / G_PI;
+  const gdouble degrees_to_radians = G_PI / 180.0;
+  gdouble a = hyscan_gtk_gliko_get_full_rotation (HYSCAN_GTK_GLIKO (view));
+
+  hyscan_gtk_gliko_polar2pixel (HYSCAN_GTK_GLIKO (view), point_a_z, point_a_r, &x1, &y1);
+  hyscan_gtk_gliko_polar2pixel (HYSCAN_GTK_GLIKO (view), point_b_z, point_b_r, &x2, &y2);
+
+  point_ab_z = range360 (atan2 (x2 - x1, y1 - y2) * radians_to_degrees - a);
+  point_ba_z = range360 (atan2 (x1 - x2, y2 - y1) * radians_to_degrees - a);
+
+  x1 = point_a_r * sin (point_a_z * degrees_to_radians);
+  y1 = point_a_r * cos (point_a_z * degrees_to_radians);
+
+  x2 = point_b_r * sin (point_b_z * degrees_to_radians);
+  y2 = point_b_r * cos (point_b_z * degrees_to_radians);
+
+  d = sqrt ((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+
+  g_ascii_formatd (tmp, sizeof (tmp), "%.0f\302\260", point_a_z);
+  gtk_label_set_text (GTK_LABEL( vla->la_a_degrees ), tmp);
+  g_ascii_formatd (tmp, sizeof (tmp), "%.1f m", point_a_r);
+  gtk_label_set_text (GTK_LABEL( vla->la_a_meters ), tmp);
+
+  g_ascii_formatd (tmp, sizeof (tmp), "%.0f\302\260", point_b_z);
+  gtk_label_set_text (GTK_LABEL( vla->la_b_degrees ), tmp);
+  g_ascii_formatd (tmp, sizeof (tmp), "%.1f m", point_b_r);
+  gtk_label_set_text (GTK_LABEL( vla->la_b_meters ), tmp);
+
+  g_ascii_formatd (tmp, sizeof (tmp), "%.0f\302\260", point_ab_z);
+  gtk_label_set_text (GTK_LABEL( vla->la_ab_degrees ), tmp);
+  g_ascii_formatd (tmp, sizeof (tmp), "%.1f m", d);
+  gtk_label_set_text (GTK_LABEL( vla->la_ab_meters ), tmp);
+
+  g_ascii_formatd (tmp, sizeof (tmp), "%.0f\302\260", point_ba_z);
+  gtk_label_set_text (GTK_LABEL( vla->la_ba_degrees ), tmp );
+
+  /*
+  g_snprintf (tmp, sizeof (tmp), "%s\302\260/%s м", tmpz, tmpr);
+  gtk_label_set_text (GTK_LABEL (label_a), tmp);
+
+  g_ascii_formatd (tmpz, sizeof (tmpz), "%.0f", point_b_z);
+  g_ascii_formatd (tmpr, sizeof (tmpr), "%.1f", point_b_r);
+  g_snprintf (tmp, sizeof (tmp), "%s\302\260/%s м", tmpz, tmpr);
+  gtk_label_set_text (GTK_LABEL (label_b), tmp);
+
+  g_ascii_formatd (tmpz, sizeof (tmpz), "%.0f", point_ab_z);
+  g_ascii_formatd (tmpr, sizeof (tmpr), "%.1f", d);
+  g_snprintf (tmp, sizeof (tmp), "%s\302\260/%s м", tmpz, tmpr);
+  gtk_label_set_text (GTK_LABEL (label_ab), tmp);
+
+  g_ascii_formatd (tmpz, sizeof (tmpz), "%.0f", point_ba_z);
+  g_snprintf (tmp, sizeof (tmp), "%s\302\260/%s м", tmpz, tmpr);
+  gtk_label_set_text (GTK_LABEL (label_ba), tmp);
+  */
+}
+
+static void
+la_player_scale_cb (GtkRange *range, gpointer user_data)
+{
+  VisualLA *vla = (VisualLA *)user_data;
+
+  if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (vla->la_pause_toggle)))
+    {
+      hyscan_data_player_seek (vla->player, vla->player_min + (gint64) (1000000 * gtk_range_get_value (range)));
+      vla->player_position_changed = 1;
+    }
+}
+
+static void
+la_pause_toggle_cb (GtkToggleButton *toggle_button, gpointer user_data)
+{
+  VisualLA *vla = (VisualLA *)user_data;
+
+  if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (toggle_button)))
+    {
+      hyscan_data_player_pause (vla->player);
+      gtk_widget_set_sensitive (GTK_WIDGET (vla->la_player_scale), TRUE);
+      hyscan_gtk_gliko_set_playback (HYSCAN_GTK_GLIKO (vla->glikoview), 0);
+      vla->player_position_changed = 0;
+    }
+  else
+    {
+      hyscan_gtk_gliko_set_playback (HYSCAN_GTK_GLIKO (vla->glikoview), vla->player_position_changed ? 2 : 1);
+      vla->player_position_changed = 0;
+      hyscan_data_player_play (vla->player, vla->speed);
+      gtk_widget_set_sensitive (GTK_WIDGET (vla->la_player_scale), FALSE);
+    }
+}
+
+static void
+la_x10_toggle_cb (GtkToggleButton *toggle_button, gpointer user_data)
+{
+  VisualLA *vla = (VisualLA *)user_data;
+
+  if (gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (toggle_button)))
+    {
+      vla->speed = 10.0;
+    }
+  else
+    {
+      vla->speed = 1.0;
+    }
+  hyscan_data_player_play (vla->player, vla->speed);
+}
+
+static void
+la_player_range_cb (HyScanDataPlayer *player, gint64 min, gint64 max, gpointer user_data)
+{
+  VisualLA *vla = (VisualLA *)user_data;
+
+  vla->player_min = min;
+  gtk_range_set_range (GTK_RANGE (vla->la_player_scale), 0.0, 0.000001 * (max - min));
+}
+
+static void
+la_player_ready_cb (HyScanDataPlayer *player, gint64 time, gpointer user_data)
+{
+  VisualLA *vla = (VisualLA *)user_data;
+
+  if (!gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON (vla->la_pause_toggle)))
+    {
+      gtk_range_set_value (GTK_RANGE (vla->la_player_scale), 0.000001 * (time - vla->player_min));
+    }
+}
+

@@ -307,7 +307,8 @@ fnn_ensure_panel (gint    panelx,
       vla->player = hyscan_data_player_new ();
       vla->wrapper = hyscan_gtk_fnn_gliko_wrapper_new (vla->player);
 
-      vla->gliko = HYSCAN_GTK_GLIKO (hyscan_gtk_gliko_control_new ());
+      vla->glikoview = hyscan_gtk_gliko_view_new ();
+      vla->gliko = HYSCAN_GTK_GLIKO (vla->glikoview);
       // vla->grid = hyscan_gtk_gliko_grid_new ();
 
       // hyscan_gtk_gliko_overlay_set_layer (HYSCAN_GTK_GLIKO_OVERLAY (vla->gliko), 1,
@@ -323,8 +324,8 @@ fnn_ensure_panel (gint    panelx,
       hyscan_data_player_add_channel (vla->player, hyscan_gtk_gliko_get_source (vla->gliko, 0), 1, HYSCAN_CHANNEL_DATA);
       //hyscan_data_player_add_channel (vla->player, hyscan_gtk_gliko_get_source (vla->gliko, 1), 1, HYSCAN_CHANNEL_DATA);
 
-      vla->play_control = gtk_scale_new (GTK_ORIENTATION_HORIZONTAL, hyscan_gtk_fnn_gliko_wrapper_get_adjustment(vla->wrapper));
-      gtk_scale_set_value_pos (GTK_SCALE (vla->play_control), GTK_POS_RIGHT);
+      //vla->play_control = gtk_scale_new (GTK_ORIENTATION_HORIZONTAL, hyscan_gtk_fnn_gliko_wrapper_get_adjustment(vla->wrapper));
+      //gtk_scale_set_value_pos (GTK_SCALE (vla->play_control), GTK_POS_RIGHT);
 
       vla->common.main = GTK_WIDGET (vla->gliko);
       gtk_widget_show_all (GTK_WIDGET (vla->gliko));
@@ -1820,10 +1821,10 @@ track_changed (GtkTreeView *list,
           }
 
         la_err:
-          if (on_air)
+          //if (on_air)
             hyscan_data_player_play (la->player, 1.0);
-          else
-            hyscan_data_player_pause (la->player);
+          //else
+          //  hyscan_data_player_pause (la->player);
         }
     }
 
@@ -3499,14 +3500,14 @@ live_view (GtkWidget  *widget,
         hyscan_forward_look_player_pause (fl->player);
       break;
 
-    case FNN_PANEL_LOOKAROUND:
+    /*case FNN_PANEL_LOOKAROUND:
 
       la = (VisualLA*)panel->vis_gui;
       if (state)
         hyscan_data_player_play (la->player, 1.0);
       else
         hyscan_data_player_pause (la->player);
-      break;
+      break;*/
 
     default:
       g_warning ("live_view: wrong panel type!");

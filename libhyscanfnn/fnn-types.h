@@ -17,8 +17,8 @@
 #include <hyscan-gtk-mark-editor.h>
 #include <hyscan-gtk-nav-indicator.h>
 #include <hyscan-gtk-model-manager.h>
-#include <hyscan-gtk-gliko-control.h>
-#include <hyscan-gtk-gliko-grid.h>
+#include <hyscan-gtk-gliko-view.h>
+//#include <hyscan-gtk-gliko-grid.h>
 #include <hyscan-gtk-fnn-gliko-wrapper.h>
 #include <hyscan-tile-color.h>
 #include <hyscan-nmea-parser.h>
@@ -224,10 +224,27 @@ typedef struct
   GArray                        * colormaps; /* struct FnnColormap */
 
   HyScanGtkGliko                * gliko;
-  HyScanGtkGlikoGrid            * grid;
+  HyScanGtkGlikoView            * glikoview;
+  //HyScanGtkGlikoGrid            * grid;
   HyScanDataPlayer              * player;
   HyScanGtkFnnGlikoWrapper      * wrapper;
-  GtkWidget                     * play_control;
+  //GtkWidget                     * play_control;
+
+  GtkWidget                     *la_a_degrees;
+  GtkWidget                     *la_a_meters;
+  GtkWidget                     *la_b_degrees;
+  GtkWidget                     *la_b_meters;
+  GtkWidget                     *la_ab_degrees;
+  GtkWidget                     *la_ab_meters;
+  GtkWidget                     *la_ba_degrees;
+
+  GtkWidget *la_player_scale;
+  GtkWidget *la_pause_toggle;
+  GtkWidget *la_x10_toggle;
+
+  gdouble speed;
+  gint64 player_min;
+  int player_position_changed;
 
 } VisualLA;
 
