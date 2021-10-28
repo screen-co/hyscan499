@@ -569,7 +569,8 @@ restart:
         g_free (geo_units);
       }
     g_signal_connect (global.model_manager,
-                      hyscan_gtk_model_manager_get_signal_title (global.model_manager, SIGNAL_TRACKS_CHANGED),
+                      hyscan_gtk_model_manager_get_signal_title (global.model_manager,
+                                                                 HYSCAN_MODEL_MANAGER_SIGNAL_TRACKS_CHANGED),
                       G_CALLBACK (model_manager_tracks_changed),
                       &global);
   }
@@ -631,7 +632,8 @@ restart:
   global.gui.meditor = hyscan_gtk_mark_editor_new (global.units);
 
   g_signal_connect (global.model_manager,
-                    hyscan_gtk_model_manager_get_signal_title (global.model_manager, SIGNAL_ACOUSTIC_MARKS_CHANGED),
+                    hyscan_gtk_model_manager_get_signal_title (global.model_manager,
+                                                               HYSCAN_MODEL_MANAGER_SIGNAL_ACOUSTIC_MARKS_CHANGED),
                     G_CALLBACK (model_manager_acoustic_mark_model_changed),
                     &global);
   g_signal_connect (global.gui.meditor, "mark-modified", G_CALLBACK (mark_modified), &global);
